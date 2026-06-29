@@ -75,7 +75,14 @@ service cloud.firestore {
             staffProfile().role is string ||
             staffProfile().positionCodeYY is string ||
             staffProfile().divisionCodeYY is string ||
-            staffProfile().positions is list
+            staffProfile().positions is list ||
+            staffProfile().allowedPages is list ||
+            staffProfile().allowedPageIds is list ||
+            staffProfile().allowedStaffPages is list ||
+            staffProfile().staffPages is list ||
+            staffProfile().pages is list ||
+            staffProfile().pageAccess is list ||
+            staffProfile().pagePermissions is list
           )
         );
     }
@@ -98,6 +105,264 @@ service cloud.firestore {
             )
           )
         );
+    }
+
+    function hasStaffPageAccess(page) {
+      return isHeadStaff() ||
+        (
+          hasStaffProfile() &&
+          (
+            profilePageListHasAccess(staffProfile(), page) ||
+            profilePositionsHavePageAccess(page) ||
+            !profileOrPositionsHaveExplicitPageList()
+          )
+        );
+    }
+
+    function canManageBorrowAssets() {
+      return isBootstrapHeadStaff() ||
+        (
+          signedIn() &&
+          profileCanManageBorrowAssets(staffProfile())
+        );
+    }
+
+    function profileCanManageBorrowAssets(profile) {
+      return profileIsStaff(profile) &&
+        profileHasStaffPageAccessAny(profile, [
+          "borrow-assets-staff",
+          "borrow-assets",
+          "ยืม-คืนพัสดุ"
+        ]);
+    }
+
+    function profileIsStaff(profile) {
+      return profile.role is string ||
+        profile.positionCodeYY is string ||
+        profile.divisionCodeYY is string ||
+        profile.positions is list ||
+        profile.allowedPages is list ||
+        profile.allowedPageIds is list ||
+        profile.allowedStaffPages is list ||
+        profile.staffPages is list ||
+        profile.pages is list ||
+        profile.pageAccess is list ||
+        profile.pagePermissions is list;
+    }
+
+    function profileIsHeadStaff(profile) {
+      return profile.role == "0" ||
+        profile.positionCodeYY == "00" ||
+        profile.divisionCodeYY == "00" ||
+        (
+          profile.divisionCodesYY is list &&
+          profile.divisionCodesYY.hasAny(["00"])
+        ) ||
+        (
+          profile.position is string &&
+          profile.position.matches(".*เหรัญญิก.*")
+        );
+    }
+
+    function profileHasStaffPageAccessAny(profile, pages) {
+      return profileIsHeadStaff(profile) ||
+        profilePageListHasAny(profile, pages) ||
+        profilePositionsHaveAnyPageAccessForProfile(profile, pages) ||
+        !profileOrPositionsHaveExplicitPageListForProfile(profile);
+    }
+
+    function profileOrPositionsHaveExplicitPageListForProfile(profile) {
+      return profileHasExplicitPageList(profile) ||
+        profilePositionsHaveExplicitPageListForProfile(profile);
+    }
+
+    function profilePositionHasAnyPageAccessForProfile(profile, index, pages) {
+      return profile.positions is list &&
+        profile.positions.size() > index &&
+        positionPageListHasAny(profile.positions[index], pages);
+    }
+
+    function profilePositionHasExplicitPageListForProfile(profile, index) {
+      return profile.positions is list &&
+        profile.positions.size() > index &&
+        profile.positions[index] is map &&
+        profileHasExplicitPageList(profile.positions[index]);
+    }
+
+    function profilePositionsHaveAnyPageAccessForProfile(profile, pages) {
+      return profilePositionHasAnyPageAccessForProfile(profile, 0, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 1, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 2, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 3, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 4, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 5, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 6, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 7, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 8, pages) ||
+        profilePositionHasAnyPageAccessForProfile(profile, 9, pages);
+    }
+
+    function profilePositionsHaveExplicitPageListForProfile(profile) {
+      return profilePositionHasExplicitPageListForProfile(profile, 0) ||
+        profilePositionHasExplicitPageListForProfile(profile, 1) ||
+        profilePositionHasExplicitPageListForProfile(profile, 2) ||
+        profilePositionHasExplicitPageListForProfile(profile, 3) ||
+        profilePositionHasExplicitPageListForProfile(profile, 4) ||
+        profilePositionHasExplicitPageListForProfile(profile, 5) ||
+        profilePositionHasExplicitPageListForProfile(profile, 6) ||
+        profilePositionHasExplicitPageListForProfile(profile, 7) ||
+        profilePositionHasExplicitPageListForProfile(profile, 8) ||
+        profilePositionHasExplicitPageListForProfile(profile, 9);
+    }
+
+    function profileHasExplicitPageList(profile) {
+      return profile.allowedPages is list ||
+        profile.allowedPageIds is list ||
+        profile.allowedStaffPages is list ||
+        profile.staffPages is list ||
+        profile.pages is list ||
+        profile.pageAccess is list ||
+        profile.pagePermissions is list;
+    }
+
+    function profilePageListHasAccess(profile, page) {
+      return profilePageListHasAny(profile, [page]);
+    }
+
+    function profilePageListHasAny(profile, pages) {
+      return (
+          profile.allowedPages is list &&
+          profile.allowedPages.hasAny(pages)
+        ) ||
+        (
+          profile.allowedPageIds is list &&
+          profile.allowedPageIds.hasAny(pages)
+        ) ||
+        (
+          profile.allowedStaffPages is list &&
+          profile.allowedStaffPages.hasAny(pages)
+        ) ||
+        (
+          profile.staffPages is list &&
+          profile.staffPages.hasAny(pages)
+        ) ||
+        (
+          profile.pages is list &&
+          profile.pages.hasAny(pages)
+        ) ||
+        (
+          profile.pageAccess is list &&
+          profile.pageAccess.hasAny(pages)
+        ) ||
+        (
+          profile.pagePermissions is list &&
+          profile.pagePermissions.hasAny(pages)
+        );
+    }
+
+    function hasStaffPageAccessAny(pages) {
+      return isHeadStaff() ||
+        (
+          hasStaffProfile() &&
+          (
+            profilePageListHasAny(staffProfile(), pages) ||
+            profilePositionsHaveAnyPageAccess(pages) ||
+            !profileOrPositionsHaveExplicitPageList()
+          )
+        );
+    }
+
+    function profileOrPositionsHaveExplicitPageList() {
+      return profileHasExplicitPageList(staffProfile()) ||
+        profilePositionsHaveExplicitPageList();
+    }
+
+    function positionPageListHasAccess(position, page) {
+      return position is map &&
+        (
+          profilePageListHasAccess(position, page) ||
+          (
+            position.permissions is map &&
+            profilePageListHasAccess(position.permissions, page)
+          ) ||
+          (
+            position.access is map &&
+            profilePageListHasAccess(position.access, page)
+          )
+        );
+    }
+
+    function profilePositionHasPageAccess(index, page) {
+      return staffProfile().positions is list &&
+        staffProfile().positions.size() > index &&
+        positionPageListHasAccess(staffProfile().positions[index], page);
+    }
+
+    function positionPageListHasAny(position, pages) {
+      return position is map &&
+        (
+          profilePageListHasAny(position, pages) ||
+          (
+            position.permissions is map &&
+            profilePageListHasAny(position.permissions, pages)
+          ) ||
+          (
+            position.access is map &&
+            profilePageListHasAny(position.access, pages)
+          )
+        );
+    }
+
+    function profilePositionHasAnyPageAccess(index, pages) {
+      return staffProfile().positions is list &&
+        staffProfile().positions.size() > index &&
+        positionPageListHasAny(staffProfile().positions[index], pages);
+    }
+
+    function profilePositionHasExplicitPageList(index) {
+      return staffProfile().positions is list &&
+        staffProfile().positions.size() > index &&
+        staffProfile().positions[index] is map &&
+        profileHasExplicitPageList(staffProfile().positions[index]);
+    }
+
+    function profilePositionsHavePageAccess(page) {
+      return profilePositionHasPageAccess(0, page) ||
+        profilePositionHasPageAccess(1, page) ||
+        profilePositionHasPageAccess(2, page) ||
+        profilePositionHasPageAccess(3, page) ||
+        profilePositionHasPageAccess(4, page) ||
+        profilePositionHasPageAccess(5, page) ||
+        profilePositionHasPageAccess(6, page) ||
+        profilePositionHasPageAccess(7, page) ||
+        profilePositionHasPageAccess(8, page) ||
+        profilePositionHasPageAccess(9, page);
+    }
+
+    function profilePositionsHaveAnyPageAccess(pages) {
+      return profilePositionHasAnyPageAccess(0, pages) ||
+        profilePositionHasAnyPageAccess(1, pages) ||
+        profilePositionHasAnyPageAccess(2, pages) ||
+        profilePositionHasAnyPageAccess(3, pages) ||
+        profilePositionHasAnyPageAccess(4, pages) ||
+        profilePositionHasAnyPageAccess(5, pages) ||
+        profilePositionHasAnyPageAccess(6, pages) ||
+        profilePositionHasAnyPageAccess(7, pages) ||
+        profilePositionHasAnyPageAccess(8, pages) ||
+        profilePositionHasAnyPageAccess(9, pages);
+    }
+
+    function profilePositionsHaveExplicitPageList() {
+      return profilePositionHasExplicitPageList(0) ||
+        profilePositionHasExplicitPageList(1) ||
+        profilePositionHasExplicitPageList(2) ||
+        profilePositionHasExplicitPageList(3) ||
+        profilePositionHasExplicitPageList(4) ||
+        profilePositionHasExplicitPageList(5) ||
+        profilePositionHasExplicitPageList(6) ||
+        profilePositionHasExplicitPageList(7) ||
+        profilePositionHasExplicitPageList(8) ||
+        profilePositionHasExplicitPageList(9);
     }
 
     function isOwnerByUid(uid) {
@@ -327,7 +592,7 @@ service cloud.firestore {
     }
 
     function canReadBorrowRequest() {
-      return isStaff() || isOwnerByEmail(resource.data.requesterEmail);
+      return canManageBorrowAssets() || isOwnerByEmail(resource.data.requesterEmail);
     }
 
     function canUserCancelBorrowRequest() {
@@ -339,16 +604,16 @@ service cloud.firestore {
     }
 
     function canStaffUpdateBorrowRequest() {
-      return isStaff() &&
+      return canManageBorrowAssets() &&
         validBorrowStatus(request.resource.data.status) &&
         unchanged("requesterEmail");
     }
 
     match /borrowAssetCatalog/{assetCode} {
-      allow get, list: if isStaff() ||
+      allow get, list: if canManageBorrowAssets() ||
         resource.data.approved == true ||
         resource.data.status == "active";
-      allow create, update, delete: if isStaff();
+      allow create, update, delete: if canManageBorrowAssets();
     }
 
     match /borrowAssetRequests/{requestId} {
@@ -356,12 +621,12 @@ service cloud.firestore {
       allow get: if canReadBorrowRequest();
       allow list: if canReadBorrowRequest();
       allow update: if canStaffUpdateBorrowRequest() || canUserCancelBorrowRequest();
-      allow delete: if isStaff();
+      allow delete: if canManageBorrowAssets();
     }
 
     match /borrowAssetStockReservations/{assetCode} {
-      allow read: if isStaff();
-      allow create, update: if isStaff();
+      allow read: if canManageBorrowAssets();
+      allow create, update: if canManageBorrowAssets();
       allow delete: if false;
     }
 

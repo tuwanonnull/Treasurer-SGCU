@@ -1884,7 +1884,7 @@ function initAuthUI() {
       return { ok: true, code: "" };
     } catch (err) {
       const code = (err?.code || "unknown").toString();
-      console.error("save user profile to firestore failed - app.sorting-auth.js:979", err);
+      console.error("save user profile to firestore failed - app.sorting-auth.js:1887", err);
       return { ok: false, code };
     }
   }
@@ -2450,6 +2450,16 @@ function initAuthUI() {
     if (!isNavPageVisible(currentPage) && window.__sgcuStaffApplicationFlowActive !== true) {
       goToFirstVisibleNavPageWithPreference(preferredPage);
     }
+    window.dispatchEvent(
+      new CustomEvent("sgcu:staff-auth-updated", {
+        detail: {
+          isAuthenticated: isAuth,
+          hasStaff,
+          email: (firebaseUser?.email || "").toString().trim().toLowerCase(),
+          allowedPages: hasStaff ? Array.from(getAllowedStaffPagesByProfile(staffAuthUser)) : []
+        }
+      })
+    );
   }
 
   onAuthStateChanged(auth, (user) => {
@@ -2460,7 +2470,7 @@ function initAuthUI() {
           if (startedAt && Date.now() - startedAt >= sessionMaxAgeMs) {
             clearAuthSession();
             signOut(auth).catch((err) => {
-              console.error("auto logout error (session expired) - app.sorting-auth.js", err);
+              console.error("auto logout error (session expired) - app.sorting-auth.js:2463", err);
             });
             refreshAuthDisplay(null);
             window.dispatchEvent(
@@ -2483,7 +2493,7 @@ function initAuthUI() {
         const message = getAuthEmailRequirementMessage(user.email);
         clearAuthSession();
         signOut(auth).catch((err) => {
-          console.error("auto logout error (email domain not allowed)", err);
+          console.error("auto logout error (email domain not allowed) - app.sorting-auth.js:2486", err);
         });
         refreshAuthDisplay(null);
         if (loginPageStatusEl) {
@@ -2504,7 +2514,7 @@ function initAuthUI() {
       if (startedAt && Date.now() - startedAt >= sessionMaxAgeMs) {
         clearAuthSession();
         signOut(auth).catch((err) => {
-          console.error("auto logout error (session expired) - app.sorting-auth.js:1417", err);
+          console.error("auto logout error (session expired) - app.sorting-auth.js:2507", err);
         });
         refreshAuthDisplay(null);
         window.dispatchEvent(
@@ -2598,7 +2608,7 @@ function initAuthUI() {
         const allowed = await isAllowedAuthEmailAsync(user?.email);
         if (!allowed) {
           await signOut(auth).catch((err) => {
-            console.error("logout error (email domain not allowed)", err);
+            console.error("logout error (email domain not allowed) - app.sorting-auth.js:2601", err);
           });
           const err = new Error(getAuthEmailRequirementMessage(user?.email));
           err.code = "auth/email-domain-not-allowed";
@@ -2655,7 +2665,7 @@ function initAuthUI() {
     refreshAuthDisplay(auth.currentUser);
     clearAuthSession();
     signOut(auth).catch((err) => {
-      console.error("logout error  app.js:3632 - app.sorting-auth.js:1515", err);
+      console.error("logout error  app.js:3632 - app.sorting-auth.js:2658", err);
     });
     loginProfileLoadedForEmail = "";
     setLoginProfileStatus("ออกจากระบบแล้ว", "#6b7280");

@@ -1321,6 +1321,23 @@ function initStaffAccessPages() {
     return id || "-";
   };
   const getDefaultAllowedPagesByYY = (yy) => {
+    const code = normalizeCode2(yy);
+    if (code === "00") {
+      return [
+        "dashboard-staff",
+        "treasurer-handover-staff",
+        "system-data-staff",
+        "budget-approval-staff",
+        "borrow-assets-staff",
+        "meeting-room-staff",
+        "staff-approval",
+        "org-representative-approval-staff",
+        "content-management-staff",
+        "content-news-staff",
+        "content-documents-staff",
+        "login"
+      ];
+    }
     return ["login"];
   };
   const normalizeAllowedPages = (pages, fallbackYY = "") => {
@@ -1653,6 +1670,13 @@ function initStaffAccessPages() {
   const buildProfileFieldsFromPositions = (positions = []) => {
     const normalized = normalizePositionsArray(positions);
     const primary = normalized[0] || null;
+    const allowedPages = Array.from(
+      new Set(
+        normalized
+          .flatMap((item) => normalizeConfiguredAllowedPages(item.allowedPages || []))
+          .filter(Boolean)
+      )
+    );
     return {
       positions: normalized,
       role: normalized.length ? deriveLegacyRoleFromPositions(normalized) : "",
@@ -1660,7 +1684,8 @@ function initStaffAccessPages() {
       positionCode: primary?.code || "",
       positionCodeYY: primary?.yy || "",
       divisionCodeYY: primary?.yy || "",
-      divisionCodesYY: Array.from(new Set(normalized.map((item) => normalizeCode2(item.yy)).filter(Boolean)))
+      divisionCodesYY: Array.from(new Set(normalized.map((item) => normalizeCode2(item.yy)).filter(Boolean))),
+      allowedPages
     };
   };
 

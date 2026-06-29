@@ -153,10 +153,12 @@ function initBorrowAssetsApp() {
   const collectionSnapshotCounts = new Map();
   const collectionSnapshotErrors = new Map();
   let staffActionInFlight = false;
+  let borrowStaffAccessCheckSeq = 0;
   let hasBorrowNotificationBaseline = false;
   let previousBorrowNotificationByKey = new Map();
   let hasStaffBorrowNotificationBaseline = false;
   let previousStaffBorrowNotificationByKey = new Map();
+  let lastBorrowStaffAccessResult = null;
   const staffRequestPageByMode = {
     queue: 1,
     history: 1
@@ -735,6 +737,117 @@ function initBorrowAssetsApp() {
       normalizeAccountEmail(email) === currentAccount;
   };
 
+  const STAFF_PROFILE_COLLECTION =
+    appConfig.firestore?.collections?.staffProfiles || "staffProfiles";
+  const STAFF_HEAD_EMAILS = new Set([
+    "tuwanon.kimchiang@gmail.com",
+    "treasurer.sgcu68@gmail.com"
+  ]);
+  const BORROW_STAFF_PAGE_ALIASES = new Set([
+    "borrow-assets-staff",
+    "borrow-assets",
+    "ยืม-คืนพัสดุ"
+  ]);
+
+  const flattenPageValues = (value) => {
+    if (Array.isArray(value)) return value.flatMap((item) => flattenPageValues(item));
+    if (typeof value === "string") {
+      return value
+        .split(/[,;|\n]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    if (value && typeof value === "object") {
+      const picked = ["id", "page", "pageId", "value", "name", "label", "route"]
+        .map((key) => value[key])
+        .filter((item) => item !== undefined && item !== null && item !== "");
+      const truthyKeys = Object.entries(value)
+        .filter(([, enabled]) => enabled === true || enabled === "true" || enabled === 1 || enabled === "1")
+        .map(([key]) => key);
+      return [...picked, ...truthyKeys].flatMap((item) => flattenPageValues(item));
+    }
+    return [];
+  };
+
+  const readPageListInput = (entry = {}) => {
+    if (!entry || typeof entry !== "object") return [];
+    return (
+      entry.allowedPages ??
+      entry.allowedPageIds ??
+      entry.allowedStaffPages ??
+      entry.staffPages ??
+      entry.pages ??
+      entry.pageAccess ??
+      entry.pagePermissions ??
+      entry.permissions?.allowedPages ??
+      entry.permissions?.pages ??
+      entry.access?.allowedPages ??
+      entry.access?.pages ??
+      []
+    );
+  };
+
+  const hasBorrowStaffPage = (entry = {}) =>
+    flattenPageValues(readPageListInput(entry)).some((page) => BORROW_STAFF_PAGE_ALIASES.has(page));
+
+  const hasExplicitPageList = (entry = {}) => {
+    if (!entry || typeof entry !== "object") return false;
+    return [
+      entry.allowedPages,
+      entry.allowedPageIds,
+      entry.allowedStaffPages,
+      entry.staffPages,
+      entry.pages,
+      entry.pageAccess,
+      entry.pagePermissions,
+      entry.permissions?.allowedPages,
+      entry.permissions?.pages,
+      entry.access?.allowedPages,
+      entry.access?.pages
+    ].some((value) => flattenPageValues(value).length > 0);
+  };
+
+  const readBorrowStaffProfileAccess = async (email) => {
+    const normalizedEmail = (email || "").toString().trim().toLowerCase();
+    if (!normalizedEmail) return { ok: false, reason: "no-email" };
+    if (STAFF_HEAD_EMAILS.has(normalizedEmail)) return { ok: true, reason: "head-override" };
+    if (!firestore.db || !firestore.doc || !firestore.getDoc) return { ok: false, reason: "store-not-ready" };
+
+    try {
+      const ref = firestore.doc(firestore.db, STAFF_PROFILE_COLLECTION, normalizedEmail);
+      const snap = await firestore.getDoc(ref);
+      if (!snap?.exists?.()) {
+        return { ok: false, reason: "missing-profile", path: `${STAFF_PROFILE_COLLECTION}/${normalizedEmail}` };
+      }
+      const data = snap.data() || {};
+      const positions = Array.isArray(data.positions) ? data.positions : [];
+      const hasStaffShape = Boolean(
+        typeof data.role === "string" ||
+        typeof data.positionCodeYY === "string" ||
+        typeof data.divisionCodeYY === "string" ||
+        positions.length ||
+        hasExplicitPageList(data)
+      );
+      const topLevelAccess = hasBorrowStaffPage(data);
+      const positionAccess = positions.some((position) => hasBorrowStaffPage(position));
+      const hasAnyExplicitPages = hasExplicitPageList(data) || positions.some((position) => hasExplicitPageList(position));
+      return {
+        ok: hasStaffShape && (topLevelAccess || positionAccess || !hasAnyExplicitPages),
+        reason: hasStaffShape ? "profile-loaded" : "not-staff-profile",
+        path: `${STAFF_PROFILE_COLLECTION}/${normalizedEmail}`,
+        topLevelAccess,
+        positionAccess,
+        hasAnyExplicitPages
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        reason: (error?.code || "profile-read-failed").toString(),
+        path: `${STAFF_PROFILE_COLLECTION}/${normalizedEmail}`
+      };
+    }
+  };
+
   const readBorrowProfiles = () => {
     try {
       const rawPrimary = window.localStorage?.getItem(BORROW_PROFILE_STORAGE_KEY);
@@ -880,10 +993,7 @@ function initBorrowAssetsApp() {
 
   const hasStaffPermission = () => {
     if (typeof staffAuthUser !== "undefined" && !!staffAuthUser) return true;
-    const email = readCurrentUserEmail();
-    const currentHash = (window.location.hash || "").replace("#", "").trim();
-    const isStaffBorrowPage = currentHash === "borrow-assets-staff";
-    return !!email && isStaffBorrowPage;
+    return false;
   };
 
   const ensureStaffPermission = (silent = false) => {
@@ -1310,8 +1420,26 @@ function initBorrowAssetsApp() {
     return deltas;
   };
 
+  const makeBorrowStockDocId = (code = "") => {
+    const normalized = (code || "").toString().trim().toUpperCase();
+    if (!normalized) return "";
+    return encodeURIComponent(normalized).replace(/\./g, "%2E");
+  };
+
+  const formatBorrowStatusUpdateError = (error, fallback = "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่") => {
+    const code = (error?.code || "").toString().trim();
+    const message = (error?.message || "").toString().trim();
+    if (code === "permission-denied") return "ไม่มีสิทธิ์อัปเดตสถานะคำขอนี้ (Firestore Rules)";
+    if (code === "resource-exhausted") return "อนุมัติไม่สำเร็จ: พัสดุคงเหลือไม่พอ";
+    if (code === "not-found") return "ไม่พบคำขอนี้ในระบบ";
+    if (code === "invalid-argument") return `อัปเดตสถานะไม่สำเร็จ (invalid-argument${message ? `: ${message}` : ""})`;
+    if (code) return `${fallback} (${code}${message ? `: ${message}` : ""})`;
+    return message ? `${fallback} (${message})` : fallback;
+  };
+
   const applyStockDeltasInTransaction = async (transaction, deltas, actorEmail = "") => {
     if (!deltas.size) return;
+    const stockUpdates = [];
     for (const [code, delta] of deltas.entries()) {
       if (!code || !delta) continue;
       const catalogRow = assetRowMap.get(code);
@@ -1319,32 +1447,43 @@ function initBorrowAssetsApp() {
       const hasFiniteLimit = Number.isFinite(maxRemaining) && maxRemaining >= 0;
       if (!hasFiniteLimit) continue;
 
-      const stockRef = firestore.doc(firestore.db, BORROW_ASSET_STOCK_COLLECTION, code);
-      const stockSnap = await transaction.get(stockRef);
-      const currentReserved = toSafeInt(stockSnap.data()?.reserved);
-      let nextReserved = currentReserved + delta;
+      const stockDocId = makeBorrowStockDocId(code);
+      if (!stockDocId) continue;
+      const stockRef = firestore.doc(firestore.db, BORROW_ASSET_STOCK_COLLECTION, stockDocId);
+      stockUpdates.push({ code, delta, maxRemaining, stockRef });
+    }
 
-      if (ENABLE_ASSET_AVAILABILITY_CHECK && delta > 0 && nextReserved > maxRemaining) {
-        const err = new Error(`พัสดุ ${code} คงเหลือไม่พอ`);
+    const stockSnapshots = [];
+    for (const item of stockUpdates) {
+      stockSnapshots.push(await transaction.get(item.stockRef));
+    }
+
+    stockUpdates.forEach((item, index) => {
+      const stockSnap = stockSnapshots[index];
+      const currentReserved = toSafeInt(stockSnap.data()?.reserved);
+      let nextReserved = currentReserved + item.delta;
+
+      if (ENABLE_ASSET_AVAILABILITY_CHECK && item.delta > 0 && nextReserved > item.maxRemaining) {
+        const err = new Error(`พัสดุ ${item.code} คงเหลือไม่พอ`);
         err.code = "resource-exhausted";
-        err.assetCode = code;
-        err.available = Math.max(0, maxRemaining - currentReserved);
+        err.assetCode = item.code;
+        err.available = Math.max(0, item.maxRemaining - currentReserved);
         throw err;
       }
       if (nextReserved < 0) nextReserved = 0;
 
       transaction.set(
-        stockRef,
+        item.stockRef,
         {
-          code,
+          code: item.code,
           reserved: nextReserved,
-          maxRemaining,
+          maxRemaining: item.maxRemaining,
           updatedBy: actorEmail || "",
           updatedAt: firestore.serverTimestamp()
         },
         { merge: true }
       );
-    }
+    });
   };
 
   const normalizeDeletedFlag = (value) => {
@@ -3179,13 +3318,8 @@ function initBorrowAssetsApp() {
           renderBorrowDetailBody(latest, "บันทึกสถานะเรียบร้อยแล้ว", "#047857");
         }
       } catch (error) {
-        const code = (error?.code || "").toString().trim();
         if (messageEl instanceof HTMLElement) {
-          messageEl.textContent = code === "permission-denied"
-            ? "ไม่มีสิทธิ์บันทึกสถานะนี้ (Firestore Rules)"
-            : code === "resource-exhausted"
-              ? "พัสดุคงเหลือไม่พอสำหรับการอนุมัติ กรุณาตรวจสอบจำนวนอีกครั้ง"
-            : "บันทึกสถานะไม่สำเร็จ กรุณาลองใหม่";
+          messageEl.textContent = formatBorrowStatusUpdateError(error, "บันทึกสถานะไม่สำเร็จ กรุณาลองใหม่");
           messageEl.style.color = "#b91c1c";
         }
       } finally {
@@ -3253,7 +3387,8 @@ function initBorrowAssetsApp() {
     };
   };
 
-  const subscribeBorrowRequests = () => {
+  const subscribeBorrowRequests = async () => {
+    const accessCheckSeq = ++borrowStaffAccessCheckSeq;
     resolveFirestoreBridge();
     if (!hasFirestore) {
       borrowRequests = [];
@@ -3299,11 +3434,40 @@ function initBorrowAssetsApp() {
     });
 
     const currentEmail = readCurrentUserEmail();
-    const shouldReadAllRequests = !!(
+    let shouldReadAllRequests = !!(
       typeof staffAuthUser !== "undefined" &&
       staffAuthUser &&
       currentEmail
     );
+
+    const currentHash = (window.location.hash || "").replace("#", "").trim();
+    const isStaffBorrowPage = currentHash === "borrow-assets-staff";
+    lastBorrowStaffAccessResult = null;
+
+    if (isStaffBorrowPage && currentEmail) {
+      setStaffQueueStatusMessage("กำลังตรวจสอบสิทธิ์ Staff สำหรับหน้ายืม-คืนพัสดุ...");
+      const access = await readBorrowStaffProfileAccess(currentEmail);
+      if (accessCheckSeq !== borrowStaffAccessCheckSeq) return;
+      lastBorrowStaffAccessResult = access;
+      shouldReadAllRequests = access.ok;
+      if (!shouldReadAllRequests) {
+        const detail = access.reason === "missing-profile"
+          ? `ไม่พบ ${access.path}`
+          : access.reason === "not-staff-profile"
+            ? `${access.path} ยังไม่มี field staff profile ที่ rules ใช้ตรวจสิทธิ์`
+            : access.reason === "permission-denied"
+              ? `อ่าน ${access.path} ไม่ได้ (permission-denied)`
+              : access.hasAnyExplicitPages
+                ? `${access.path} ไม่มีสิทธิ์ borrow-assets-staff ใน allowedPages`
+                : `${access.path || "staffProfiles"} ยังไม่ผ่านสิทธิ์จัดการพัสดุ`;
+        borrowRequests = [];
+        myRequestsLoadState = "idle";
+        myRequestsLoadError = "";
+        renderBorrowRequests();
+        setStaffQueueStatusMessage(detail);
+        return;
+      }
+    }
 
     if (!currentEmail && !shouldReadAllRequests) {
       borrowRequests = [];
@@ -3406,8 +3570,14 @@ function initBorrowAssetsApp() {
           }
           if (code === "permission-denied") {
             if (hasStaffPermission() && loggedIn) {
+              const access = lastBorrowStaffAccessResult;
+              const detail = access?.path
+                ? access.reason === "profile-loaded"
+                  ? `${access.path} ผ่าน preflight แล้ว แต่ Firestore Rules ยังปฏิเสธ ${collectionName}; ตรวจว่า allowedPages มี borrow-assets-staff และ Rules ถูก deploy ล่าสุด`
+                  : `${access.path} ตรวจสิทธิ์ Staff ไม่ผ่าน (${access.reason || "unknown"})`
+                : `บัญชี Staff นี้ยังไม่มีสิทธิ์อ่านข้อมูลใน ${collectionName} (Firestore Rules)`;
               setStaffQueueStatusMessage(
-                `บัญชี Staff นี้ยังไม่มีสิทธิ์อ่านข้อมูลใน ${collectionName} (Firestore Rules)`
+                detail
               );
             } else if (!loggedIn) {
               setStaffQueueStatusMessage("กรุณาเข้าสู่ระบบก่อนดูคิวคำขอ");
@@ -3791,11 +3961,8 @@ function initBorrowAssetsApp() {
           setStaffQueueMessage("ลบคำขอเรียบร้อย", "#047857");
         }
       } catch (error) {
-        const code = (error?.code || "").toString().trim();
         setStaffQueueMessage(
-          code === "resource-exhausted"
-            ? "อนุมัติไม่สำเร็จ: พัสดุคงเหลือไม่พอ"
-            : "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่",
+          formatBorrowStatusUpdateError(error),
           "#b91c1c"
         );
         console.error("borrow request status update failed - app.borrow-assets.js:2389", error);
@@ -3909,13 +4076,8 @@ function initBorrowAssetsApp() {
         target.value = prevValue;
         target.classList.remove("is-pending", "is-approved", "is-rejected", "is-cancel-requested", "is-delete");
         target.classList.add(borrowStatusSelectClass(prevValue));
-        const code = (error?.code || "").toString().trim();
         setStaffQueueMessage(
-          code === "permission-denied"
-            ? "ไม่มีสิทธิ์อัปเดตสถานะคำขอนี้ (Firestore Rules)"
-            : code === "resource-exhausted"
-              ? "อนุมัติไม่สำเร็จ: พัสดุคงเหลือไม่พอ"
-            : "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่",
+          formatBorrowStatusUpdateError(error),
           "#b91c1c"
         );
       }
@@ -4162,6 +4324,12 @@ function initBorrowAssetsApp() {
       scheduleFirestoreRetry();
     });
   }
+
+  window.addEventListener("sgcu:staff-auth-updated", () => {
+    currentUserEmail = readCurrentUserEmail();
+    renderBorrowRequests();
+    subscribeBorrowRequests();
+  });
 
   window.addEventListener("sgcu:user-profile-updated", (event) => {
     const detail = event?.detail || {};
