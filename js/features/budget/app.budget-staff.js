@@ -1964,6 +1964,27 @@
     chartInstance?.resize?.();
   };
 
+  const updateBudgetOrgSummaryXAxisMax = (chart = chartInstance) => {
+    if (!chart?.data?.datasets?.length || !chart.options?.scales?.x) return;
+    const labelCount = chart.data.labels?.length || 0;
+    let maxValue = 0;
+    for (let i = 0; i < labelCount; i += 1) {
+      const totalsByStack = new Map();
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        if (!chart.isDatasetVisible(datasetIndex)) return;
+        const value = Number(dataset.data?.[i] || 0);
+        if (!Number.isFinite(value) || value <= 0) return;
+        const stackKey = dataset.stack || `dataset-${datasetIndex}`;
+        totalsByStack.set(stackKey, (totalsByStack.get(stackKey) || 0) + value);
+      });
+      totalsByStack.forEach((value) => {
+        maxValue = Math.max(maxValue, value);
+      });
+    }
+    chart.options.scales.x.max = maxValue > 0 ? maxValue * 1.08 : undefined;
+    chart.options.scales.x.suggestedMax = undefined;
+  };
+
   window.sgcuRefreshBudgetStaffCharts = () => {
     if (getActivePageName() !== "budget-approval-staff") return;
     if (currentBudgetStaffTab === "overview") {
@@ -2108,6 +2129,11 @@
         plugins: {
           legend: {
             position: "bottom",
+            onClick(e, legendItem, legend) {
+              window.Chart.defaults.plugins.legend.onClick.call(this, e, legendItem, legend);
+              updateBudgetOrgSummaryXAxisMax(legend.chart);
+              legend.chart.update("none");
+            },
             labels: {
               font: { size: 11 },
               usePointStyle: true,
@@ -2155,6 +2181,7 @@
         scales: {
           x: {
             stacked: true,
+            beginAtZero: true,
             suggestedMax: Math.max(
               0,
               ...rows.map((row) => Number(row.requested || 0)),
@@ -2192,6 +2219,8 @@
       orgSummaryCaptionEl.textContent = `${orgSummaryCaptionEl.textContent} • เส้นขีดคือเพดานงบ`;
     }
     resizeBudgetOrgSummaryChart(rows);
+    updateBudgetOrgSummaryXAxisMax(chartInstance);
+    chartInstance.update("none");
   };
 
   const renderRows = () => {

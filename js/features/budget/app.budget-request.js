@@ -1526,7 +1526,7 @@ function initBudgetApprovalRequestPage() {
     if (orgTotalsTableBodyEl) {
       orgTotalsTableBodyEl.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>
+          <td colspan="5" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>
         </tr>
       `;
     }
@@ -1691,18 +1691,23 @@ function initBudgetApprovalRequestPage() {
 
     void renderOrgBudgetTotalsChart(summaryRows);
 
-    orgTotalsTableBodyEl.innerHTML = summaryRows.map((item) => `
-      <tr>
+    const primaryRepresentative = getPrimaryApprovedRepresentative();
+    orgTotalsTableBodyEl.innerHTML = summaryRows.map((item) => {
+      const isOwnOrg = primaryRepresentative &&
+        findApprovedRepresentativeForOrg(orgType, item.organizationName)?.id === primaryRepresentative.id;
+      return `
+      <tr class="${isOwnOrg ? "budget-org-totals-row-own" : ""}">
         <td style="text-align:left;" data-label="องค์กร">
           <div class="budget-request-history-project-name">${escapeHtml(item.organizationName)}</div>
+          <div class="section-text-sm budget-request-history-project-meta">${escapeHtml(orgType)}</div>
         </td>
-        <td style="text-align:left;" data-label="ประเภทองค์กร">${escapeHtml(orgType)}</td>
         <td style="text-align:right;" data-label="จำนวนโครงการ">${item.projectCount}</td>
         <td style="text-align:right;" data-label="ยอดขอ">${formatCurrency(item.requestedAmount)}</td>
         <td style="text-align:right;" data-label="ยอดอนุมัติ">${formatCurrency(item.approvedAmount)}</td>
         <td style="text-align:right;" data-label="รออนุมัติ">${formatCurrency(item.pendingAmount)}</td>
       </tr>
-    `).join("");
+    `;
+    }).join("");
 
     if (orgTotalsCaptionEl) {
       const chartCaption = `กราฟแสดง ${summaryRows.length.toLocaleString("th-TH")} องค์กร`;

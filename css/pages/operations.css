@@ -2033,6 +2033,14 @@
   min-width: 820px;
 }
 
+.budget-org-totals-row-own td {
+  background: #fff1f8;
+}
+
+.budget-org-totals-row-own td:first-child {
+  box-shadow: inset 4px 0 0 #ec4899;
+}
+
 .budget-org-totals-chart-card {
   margin: 0 0 14px;
 }
@@ -2087,6 +2095,22 @@
     box-shadow: 0 8px 22px rgba(148, 163, 184, 0.14);
   }
 
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own {
+    position: relative;
+    border-color: rgba(236, 72, 153, 0.34);
+    background: #fff1f8;
+    box-shadow: 0 12px 28px rgba(236, 72, 153, 0.14);
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own::before {
+    content: "";
+    position: absolute;
+    inset: 10px auto 10px 0;
+    width: 4px;
+    border-radius: 0 999px 999px 0;
+    background: #ec4899;
+  }
+
   .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td {
     display: grid;
     grid-template-columns: 104px minmax(0, 1fr);
@@ -2098,6 +2122,14 @@
     white-space: normal;
     align-items: start;
     overflow-wrap: anywhere;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own td {
+    background: transparent;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own td:first-child {
+    box-shadow: none;
   }
 
   .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td::before {
