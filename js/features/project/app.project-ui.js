@@ -1187,10 +1187,21 @@ function initDashboardBudgetComparisonToggle() {
     }
     window.requestAnimationFrame(() => {
       if (nextView === "org") {
+        if (typeof setActiveProjectStatusContext === "function") {
+          setActiveProjectStatusContext("staff");
+        }
+        if (
+          typeof updateProjectBudgetComparisonChart === "function" &&
+          typeof getVisibleProjectsForContext === "function"
+        ) {
+          updateProjectBudgetComparisonChart(getVisibleProjectsForContext("staff"));
+        }
         projectBudgetComparisonChart?.resize?.();
+        projectBudgetComparisonChart?.update?.("none");
       } else {
         homeKpiChart?.resize?.();
       }
+      window.setTimeout(() => window.sgcuScheduleVisibleChartsRefresh?.("dashboard-staff"), 80);
     });
   };
 

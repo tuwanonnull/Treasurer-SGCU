@@ -1769,6 +1769,16 @@
     return Number(budgetGroupCeilings[groupName] || 0);
   };
 
+  const getConsiderationAmount = (item) => {
+    const status = normalizeText(item?.status || "pending").toLowerCase();
+    const requestedAmount = Number(item?.estimatedExpense || 0);
+    const approvedAmount = Number(item?.approvedAmount || 0);
+    if ((status === "pending" || status === "reviewing") && approvedAmount <= 0) {
+      return requestedAmount;
+    }
+    return approvedAmount;
+  };
+
   const updateSummary = () => {
     const activeRows = getOverviewFilteredRows();
     const orgSet = new Set(activeRows.map((item) => `${normalizeText(item.organizationType)}::${normalizeText(item.organizationName)}`).filter((key) => key !== "::"));
@@ -1777,9 +1787,10 @@
     const selectedCeiling = getSelectedOverviewCeiling();
     const hasCompleteCeiling = selectedCeiling.complete !== false && Number(selectedCeiling.amount || 0) > 0;
     const effectiveCeiling = hasCompleteCeiling ? selectedCeiling.amount : 0;
-    const reductionNeeded = effectiveCeiling > 0 ? Math.max(requestedSum - effectiveCeiling, 0) : 0;
-    const reductionPercent = requestedSum > 0 ? (reductionNeeded * 100) / requestedSum : 0;
-    const remainingCeiling = effectiveCeiling > 0 ? Math.max(effectiveCeiling - requestedSum, 0) : 0;
+    const considerationSum = activeRows.reduce((sum, item) => sum + getConsiderationAmount(item), 0);
+    const reductionNeeded = effectiveCeiling > 0 ? Math.max(considerationSum - effectiveCeiling, 0) : 0;
+    const reductionPercent = considerationSum > 0 ? (reductionNeeded * 100) / considerationSum : 0;
+    const remainingCeiling = effectiveCeiling > 0 ? Math.max(effectiveCeiling - considerationSum, 0) : 0;
 
     orgCountEl.textContent = orgSet.size.toLocaleString("th-TH");
     projectCountEl.textContent = activeRows.length.toLocaleString("th-TH");
@@ -1794,9 +1805,9 @@
     if (!hasCompleteCeiling) {
       reductionCaptionEl.textContent = selectedCeiling.message || "กำหนดเพดานงบเพื่อให้ระบบคำนวณคำแนะนำ";
     } else if (reductionNeeded > 0) {
-      reductionCaptionEl.textContent = `${selectedCeiling.label}: ต้องลด ${formatMoney(reductionNeeded)} บาท (${reductionPercent.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%) ให้เหลือไม่เกิน ${formatMoney(effectiveCeiling)} บาท`;
+      reductionCaptionEl.textContent = `${selectedCeiling.label}: ต้องลดยอดหลังพิจารณา ${formatMoney(reductionNeeded)} บาท (${reductionPercent.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%) ให้เหลือไม่เกิน ${formatMoney(effectiveCeiling)} บาท`;
     } else {
-      reductionCaptionEl.textContent = `${selectedCeiling.label}: ยอดของบรวมยังอยู่ในเพดาน เหลือ ${formatMoney(remainingCeiling)} บาท`;
+      reductionCaptionEl.textContent = `${selectedCeiling.label}: ยอดหลังพิจารณารวมยังอยู่ในเพดาน เหลือ ${formatMoney(remainingCeiling)} บาท`;
     }
 
     const pendingCount = activeRows.filter((item) => normalizeText(item.status || "pending").toLowerCase() === "pending").length;
@@ -1839,8 +1850,10 @@
         pending: 0,
         requested: 0,
         activeRequested: 0,
+        considerationAmount: 0,
         approved: 0,
-        reviewing: 0
+        reviewing: 0,
+        difference: 0
       };
       const requestedAmount = Number(item.estimatedExpense || 0);
       const approvedAmount = Number(item.approvedAmount || 0);
@@ -1848,15 +1861,17 @@
       row.requested += requestedAmount;
       if (!isExcludedFromBudgetOrgChart(item)) {
         row.activeRequested += requestedAmount;
+        row.considerationAmount += getConsiderationAmount(item);
         if (status === "pending") row.pending += 1;
         if (status === "reviewing") row.reviewing += Math.max(requestedAmount - approvedAmount, 0);
+        if (status !== "reviewing" && approvedAmount <= 0) row.difference += requestedAmount;
         row.approved += approvedAmount;
       }
       grouped.set(key, row);
     });
     return Array.from(grouped.values()).map((row) => ({
       ...row,
-      difference: Math.max(row.activeRequested - row.approved - row.reviewing, 0),
+      difference: Math.max(row.difference, 0),
       ceiling: row.summaryLevel === "group" ? getOrgSummaryGroupCeiling(row.organizationName) : 0
     }));
   };
@@ -1949,6 +1964,16 @@
     chartInstance?.resize?.();
   };
 
+  window.sgcuRefreshBudgetStaffCharts = () => {
+    if (getActivePageName() !== "budget-approval-staff") return;
+    if (currentBudgetStaffTab === "overview") {
+      void renderOrgSummaryChart();
+      return;
+    }
+    chartInstance?.resize?.();
+    chartInstance?.update?.("none");
+  };
+
   const renderOrgSummaryChart = async () => {
     await window.sgcuVendorLoader?.ensureChart?.();
     const groupFilter = normalizeText(orgSummaryGroupEl.value) || "all";
@@ -2014,7 +2039,7 @@
           const height = Math.max(18, (element?.height || 22) + 6);
           const top = Math.max(chartArea.top, centerY - height / 2);
           const bottom = Math.min(chartArea.bottom, centerY + height / 2);
-          const isOver = Number(row.requested || 0) > ceiling;
+          const isOver = Number(row.considerationAmount || 0) > ceiling;
           ctx.strokeStyle = isOver ? "#dc2626" : "#334155";
           ctx.fillStyle = isOver ? "#dc2626" : "#334155";
           ctx.lineWidth = 1.5;
@@ -2108,7 +2133,7 @@
                 const row = rows[items?.[0]?.dataIndex || 0];
                 return [
                   `ยอดขอรวม: ${formatMoney(row?.requested || 0)} บาท`,
-                  `ยอดที่ใช้พิจารณา: ${formatMoney(row?.activeRequested || 0)} บาท`,
+                  `ยอดที่ใช้เทียบเพดาน: ${formatMoney(row?.considerationAmount || 0)} บาท`,
                   `ยอดอนุมัติรวม: ${formatMoney(row?.approved || 0)} บาท`,
                   `กำลังพิจารณา: ${formatMoney(row?.reviewing || 0)} บาท`,
                   `ส่วนที่ยังไม่อนุมัติ: ${formatMoney(row?.difference || 0)} บาท`,
@@ -2133,6 +2158,7 @@
             suggestedMax: Math.max(
               0,
               ...rows.map((row) => Number(row.requested || 0)),
+              ...rows.map((row) => Number(row.considerationAmount || 0)),
               ...rows.map((row) => Number(row.ceiling || 0))
             ),
             ticks: {

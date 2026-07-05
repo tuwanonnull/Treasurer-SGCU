@@ -604,6 +604,80 @@ function syncChartsToContext(key) {
   ctx.projectBudgetComparisonChart = projectBudgetComparisonChart;
 }
 
+function refreshVisibleChartsForPage(page = "") {
+  const activePage =
+    (page || document.querySelector(".page-view.active")?.dataset?.page || "").toString().trim();
+  const ctxKey = activePage === "project-status" ? "public" : activePage === "dashboard-staff" ? "staff" : "";
+
+  if (ctxKey && typeof refreshProjectStatus === "function") {
+    refreshProjectStatus(ctxKey);
+  }
+
+  const charts = [];
+  if (ctxKey) {
+    const ctx = projectStatusContexts[ctxKey] || {};
+    if (typeof getVisibleProjectsForContext === "function") {
+      const visibleProjects = getVisibleProjectsForContext(ctxKey);
+      setActiveProjectStatusContext(ctxKey);
+      if (typeof updateClosureStatusChart === "function") {
+        updateClosureStatusChart(visibleProjects);
+      }
+      if (typeof updateApprovedBudgetPie === "function") {
+        updateApprovedBudgetPie(visibleProjects);
+      }
+      if (typeof updateTrendLineChart === "function") {
+        updateTrendLineChart(visibleProjects);
+      }
+      const orgBudgetPanel = ctx.projectBudgetComparisonCanvas?.closest?.("[data-dashboard-budget-panel]");
+      const isOrgBudgetPanelVisible = !orgBudgetPanel || !orgBudgetPanel.hidden;
+      if (isOrgBudgetPanelVisible && typeof updateProjectBudgetComparisonChart === "function") {
+        updateProjectBudgetComparisonChart(visibleProjects);
+      }
+      syncChartsToContext(ctxKey);
+    }
+    charts.push(
+      ctx.budgetByMonthChart,
+      ctx.statusPieChart,
+      ctx.trendLineChart,
+      ctx.projectBudgetComparisonChart
+    );
+    if (ctxKey === "staff") {
+      charts.push(
+        homeKpiChart,
+        closureRateDonutChart,
+        approvalRateDonutChart,
+        kpiOnTimeDonutChart,
+        kpiBudgetUsageDonutChart,
+        clubDebtSummaryChart,
+        clubDebtAgeChart
+      );
+    }
+  }
+
+  charts
+    .filter((chart, index, list) => chart && list.indexOf(chart) === index)
+    .forEach((chart) => {
+      chart.resize?.();
+      chart.update?.("none");
+    });
+
+  if (activePage === "budget-approval-staff") {
+    window.sgcuRefreshBudgetStaffCharts?.();
+  }
+}
+
+function scheduleVisibleChartsRefresh(page = "") {
+  const activePage =
+    (page || document.querySelector(".page-view.active")?.dataset?.page || "").toString().trim();
+  window.requestAnimationFrame(() => {
+    refreshVisibleChartsForPage(activePage);
+    window.setTimeout(() => refreshVisibleChartsForPage(activePage), 80);
+  });
+}
+
+window.sgcuRefreshVisibleCharts = refreshVisibleChartsForPage;
+window.sgcuScheduleVisibleChartsRefresh = scheduleVisibleChartsRefresh;
+
 /* Initialize Hamburger Menu (Accessibility Fix) */
 document.addEventListener("DOMContentLoaded", () => {
   const hamburgerBtn = document.getElementById("hamburgerBtn");

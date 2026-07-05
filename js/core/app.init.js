@@ -985,6 +985,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.syncProjectMobileActionBar === "function") {
       window.syncProjectMobileActionBar();
     }
+    window.sgcuScheduleVisibleChartsRefresh?.(page);
   };
 
   const loadProjectStatusPageData = async (page) => {
@@ -1408,6 +1409,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.dispatchEvent(new CustomEvent("sgcu:page-active", { detail: { page: targetPage } }));
     requestAnimationFrame(() => {
       window.dispatchEvent(new CustomEvent("sgcu:page-active", { detail: { page: targetPage } }));
+      window.sgcuScheduleVisibleChartsRefresh?.(targetPage);
     });
 
     if (page === "home") {
@@ -1479,6 +1481,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.syncProjectMobileActionBar === "function") {
       window.syncProjectMobileActionBar();
     }
+    window.sgcuScheduleVisibleChartsRefresh?.(page);
 
     if (previousPage && previousPage !== page) {
       window.sgcuAnalytics?.trackPageView?.(page);
