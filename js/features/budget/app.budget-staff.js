@@ -1863,9 +1863,9 @@
         row.activeRequested += requestedAmount;
         row.considerationAmount += getConsiderationAmount(item);
         if (status === "pending") row.pending += 1;
-        if (status === "reviewing") row.reviewing += Math.max(requestedAmount - approvedAmount, 0);
-        if (status !== "reviewing" && approvedAmount <= 0) row.difference += requestedAmount;
-        row.approved += approvedAmount;
+        if (status === "reviewing") row.reviewing += approvedAmount;
+        if (status === "pending" && approvedAmount <= 0) row.difference += requestedAmount;
+        if (status !== "reviewing") row.approved += approvedAmount;
       }
       grouped.set(key, row);
     });

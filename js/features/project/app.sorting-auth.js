@@ -1965,6 +1965,60 @@ function initAuthUI() {
     ].some((key) => (profile[key] || "").toString().trim() !== "");
   }
 
+  function isLoginProfileComplete(profile) {
+    if (!profile || typeof profile !== "object") return false;
+    const safeProfile = normalizeLoginProfileAcademicFields(profile);
+    const profileType = (safeProfile.profileType || "student").toString().trim().toLowerCase();
+    const firstName = (safeProfile.firstName || "").toString().trim();
+    const lastName = (safeProfile.lastName || "").toString().trim();
+    if (!firstName || !lastName) return false;
+    if (profileType === "affairs") return true;
+
+    const nickname = (safeProfile.nickname || "").toString().trim();
+    const studentId = (safeProfile.studentId || "").toString().trim();
+    const phone = (safeProfile.phone || "").toString().trim();
+    const lineId = (safeProfile.lineId || "").toString().trim();
+    const derived = deriveLoginProfileStudentMeta(studentId, {
+      email: safeProfile.authEmail || safeProfile.email || ""
+    });
+    const faculty = (safeProfile.faculty || derived.faculty || "").toString().trim();
+    const year = (safeProfile.year || derived.year || "").toString().trim();
+
+    return Boolean(
+      nickname &&
+      /^[0-9]{10}$/.test(studentId) &&
+      faculty &&
+      year &&
+      /^0\d{9}$/.test(phone) &&
+      lineId
+    );
+  }
+
+  function publishLoginProfileState(firebaseUser, profile = null, options = {}) {
+    const authEmail = (firebaseUser?.email || profile?.authEmail || profile?.email || "").toString().trim().toLowerCase();
+    const accountEmail = normalizeAccountEmail(authEmail || profile?.accountEmail || "");
+    const isAuthenticated = !!firebaseUser;
+    const isComplete = isAuthenticated ? isLoginProfileComplete({
+      ...(profile || {}),
+      authEmail,
+      email: accountEmail,
+      accountEmail
+    }) : true;
+    const state = {
+      isAuthenticated,
+      isComplete,
+      isLoading: Boolean(options.isLoading),
+      email: accountEmail,
+      authEmail,
+      message: isComplete
+        ? ""
+        : "กรุณากรอกและบันทึกข้อมูลบัญชีผู้ใช้ให้เรียบร้อยก่อนใช้งานส่วนอื่น"
+    };
+    window.sgcuLoginProfileState = state;
+    window.dispatchEvent(new CustomEvent("sgcu:login-profile-state", { detail: state }));
+    return state;
+  }
+
   function setFirstLoginPromptVisible(isVisible) {
     const visible = !!isVisible;
     if (loginProfileFirstLoginPromptEl) {
@@ -2029,7 +2083,7 @@ function initAuthUI() {
         loginProfilePhoneEl.required = false;
         loginProfilePhoneEl.type = "text";
         loginProfilePhoneEl.removeAttribute("pattern");
-        loginProfilePhoneEl.placeholder = "เช่น เบอร์โทร / LINE / Email";
+        loginProfilePhoneEl.placeholder = "เช่น เบอร์โทร / เบอร์โต๊ะสำนักงาน / LINE / Email";
       }
     }
     if (loginProfilePhoneLabelEl) {
@@ -2211,6 +2265,7 @@ function initAuthUI() {
     if (!authEmail || !email) {
       loginProfileLoadedForEmail = "";
       clearLoginProfileFields();
+      publishLoginProfileState(firebaseUser, null, { isLoading: false });
       return;
     }
     if (!forceReload && !forceRemote && loginProfileLoadedForEmail === email) {
@@ -2242,6 +2297,9 @@ function initAuthUI() {
     } else {
       setLoginProfileStatus("ระบบเลือกประเภทผู้ใช้งานเป็นนิสิตไว้ก่อน กรุณากรอกข้อมูลผู้ใช้และกดบันทึก", "#6b7280");
     }
+    publishLoginProfileState(firebaseUser, localProfiles[email] || profile, {
+      isLoading: !hasLocalProfile && canUseRemoteProfileStore()
+    });
     loginProfileLoadedForEmail = email;
     if (forceReload) {
       setLoginProfileStatus("กำลังโหลดข้อมูลผู้ใช้ล่าสุดจาก Firebase...", "#0f766e");
@@ -2250,7 +2308,11 @@ function initAuthUI() {
     const currentSeq = ++loginProfileLoadSeq;
     void readRemoteLoginProfile(firebaseUser).then((remoteProfile) => {
       const currentEmail = normalizeAccountEmail(auth.currentUser?.email || "");
-      if (!remoteProfile || currentSeq !== loginProfileLoadSeq || currentEmail !== email) return;
+      if (currentSeq !== loginProfileLoadSeq || currentEmail !== email) return;
+      if (!remoteProfile) {
+        publishLoginProfileState(firebaseUser, localProfiles[email] || profile, { isLoading: false });
+        return;
+      }
       const normalizedRemoteProfile = normalizeLoginProfileAcademicFields({
         ...remoteProfile,
         authEmail,
@@ -2269,9 +2331,14 @@ function initAuthUI() {
         updatedAt: Date.now()
       };
       writeLoginProfiles(cached);
+      publishLoginProfileState(firebaseUser, cached[email], { isLoading: false });
       window.dispatchEvent(new CustomEvent("sgcu:user-profile-updated", {
         detail: { email, authEmail, accountEmail: email, profile: cached[email] }
       }));
+    }).catch(() => {
+      const currentEmail = normalizeAccountEmail(auth.currentUser?.email || "");
+      if (currentSeq !== loginProfileLoadSeq || currentEmail !== email) return;
+      publishLoginProfileState(firebaseUser, localProfiles[email] || profile, { isLoading: false });
     });
   }
 
@@ -2352,6 +2419,7 @@ function initAuthUI() {
     writeLoginProfiles(profiles);
     setFirstLoginPromptVisible(false);
     applyStaffViewMode();
+    publishLoginProfileState(firebaseUser, profiles[email], { isLoading: false });
     window.dispatchEvent(new CustomEvent("sgcu:user-profile-updated", {
       detail: { email, authEmail, accountEmail: email, profile: profiles[email] }
     }));
@@ -2439,6 +2507,7 @@ function initAuthUI() {
     if (!isAuth) {
       setFirstLoginPromptVisible(false);
       setLoginProfileStatus("เข้าสู่ระบบก่อนจึงจะบันทึกข้อมูลผู้ใช้ได้", "#6b7280");
+      publishLoginProfileState(null, null, { isLoading: false });
     }
     applyStaffViewMode();
     toggleProjectStatusAccess(isAuth, "public");

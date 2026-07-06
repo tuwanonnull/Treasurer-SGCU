@@ -906,6 +906,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const globalConsentKeyPrefix = `globalServiceConsent-${globalConsentVersion}`;
   const globalConsentPersistentKeyPrefix = `globalServiceConsent-persistent-${globalConsentVersion}`;
   const consentRequiredPages = new Set(["borrow-assets", "meeting-room-booking"]);
+  const profileGateExemptPages = new Set(["login"]);
   const globalConsentModal = document.getElementById("globalConsentModal");
   const globalConsentConfirm = document.getElementById("globalConsentConfirm");
   const globalConsentCancel = document.getElementById("globalConsentCancel");
@@ -963,6 +964,120 @@ document.addEventListener("DOMContentLoaded", async () => {
     const fn = window[taskName];
     if (typeof fn === "function") {
       await fn();
+    }
+  };
+  const getLoginProfileGateState = () => {
+    const state = window.sgcuLoginProfileState || {};
+    return {
+      isAuthenticated: Boolean(state.isAuthenticated || isUserAuthenticated),
+      isComplete: state.isComplete !== false,
+      isLoading: Boolean(state.isLoading),
+      message: (state.message || "กรุณากรอกและบันทึกข้อมูลบัญชีผู้ใช้ให้เรียบร้อยก่อนใช้งานส่วนอื่น").toString()
+    };
+  };
+  const shouldBlockForIncompleteLoginProfile = (page) => {
+    if (profileGateExemptPages.has(page)) return false;
+    const state = getLoginProfileGateState();
+    return Boolean(state.isAuthenticated && !state.isComplete);
+  };
+  const showLoginProfileGateMessage = () => {
+    const state = getLoginProfileGateState();
+    const statusEl = document.getElementById("loginProfileStatus");
+    if (statusEl) {
+      statusEl.textContent = state.isLoading
+        ? "กำลังตรวจสอบข้อมูลบัญชีผู้ใช้ กรุณากรอกและบันทึกข้อมูลให้ครบก่อนใช้งานส่วนอื่น"
+        : state.message;
+      statusEl.style.color = "#b91c1c";
+    }
+  };
+  const isElementVisible = (el) => {
+    if (!(el instanceof HTMLElement)) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden" && el.getClientRects().length > 0;
+  };
+  const getFirstIncompleteLoginProfileField = () => {
+    const form = document.getElementById("loginProfileForm");
+    if (!form) return null;
+    const fields = Array.from(form.querySelectorAll("input, select, textarea"))
+      .filter((field) => field instanceof HTMLElement && !field.disabled && isElementVisible(field));
+    const invalidRequired = fields.find((field) => {
+      if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return false;
+      if (!field.required) return false;
+      return typeof field.checkValidity === "function" && !field.checkValidity();
+    });
+    if (invalidRequired instanceof HTMLElement) return invalidRequired;
+
+    const studentFieldsEl = document.getElementById("loginProfileStudentFields");
+    const studentIdEl = document.getElementById("loginProfileStudentId");
+    const facultyEl = document.getElementById("loginProfileFaculty");
+    const yearEl = document.getElementById("loginProfileYear");
+    const isStudentProfile = isElementVisible(studentFieldsEl);
+    const missingStudentMeta =
+      isStudentProfile &&
+      (
+        !(facultyEl?.value || "").toString().trim() ||
+        !(yearEl?.value || "").toString().trim()
+      );
+    if (missingStudentMeta && studentIdEl instanceof HTMLElement && isElementVisible(studentIdEl)) {
+      return studentIdEl;
+    }
+
+    return fields.find((field) => field instanceof HTMLElement) || null;
+  };
+  const getVisibleViewportBounds = () => {
+    const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 0;
+    const headerEl = document.querySelector(".site-header");
+    const bottomNavEl = document.querySelector(".mobile-bottom-nav");
+    const headerHeight = isElementVisible(headerEl) ? headerEl.getBoundingClientRect().height : 0;
+    const bottomNavHeight = isElementVisible(bottomNavEl) ? bottomNavEl.getBoundingClientRect().height : 0;
+    const top = headerHeight + 12;
+    const bottom = Math.max(top + 120, viewportHeight - bottomNavHeight - 12);
+    return { top, bottom, height: Math.max(120, bottom - top) };
+  };
+  const getScrollTargetForLoginProfileField = (field) => {
+    if (!(field instanceof HTMLElement)) return document.getElementById("loginProfileCard");
+    const bounds = getVisibleViewportBounds();
+    const candidates = [
+      document.getElementById("loginProfileCard"),
+      field.closest(".login-profile-block"),
+      field.closest(".borrow-form-row"),
+      field.closest(".borrow-form-field"),
+      field
+    ].filter((candidate) => candidate instanceof HTMLElement && isElementVisible(candidate));
+    const largestFitting = candidates.find((candidate) => candidate.getBoundingClientRect().height <= bounds.height);
+    return largestFitting || candidates[candidates.length - 1] || field;
+  };
+  const scrollElementIntoBalancedView = (element) => {
+    if (!(element instanceof HTMLElement)) return;
+    const bounds = getVisibleViewportBounds();
+    const rect = element.getBoundingClientRect();
+    const targetTopInViewport = rect.height > bounds.height
+      ? bounds.top
+      : bounds.top + ((bounds.height - rect.height) / 2);
+    const nextTop = Math.max(0, window.scrollY + rect.top - targetTopInViewport);
+    window.scrollTo({ top: nextTop, left: 0, behavior: "smooth" });
+  };
+  const scrollLoginProfileGateTargetIntoView = () => {
+    window.requestAnimationFrame(() => {
+      const alignTarget = () => {
+        const field = getFirstIncompleteLoginProfileField();
+        const scrollTarget = getScrollTargetForLoginProfileField(field) || document.getElementById("loginProfileCard");
+        if (scrollTarget instanceof HTMLElement) {
+          scrollElementIntoBalancedView(scrollTarget);
+        }
+        if (field instanceof HTMLElement && typeof field.focus === "function") {
+          field.focus({ preventScroll: true });
+        }
+      };
+      window.setTimeout(alignTarget, 80);
+      window.setTimeout(alignTarget, 520);
+    });
+  };
+  const replaceHashWithLogin = () => {
+    if (history.replaceState) {
+      history.replaceState(null, "", "#login");
+    } else {
+      window.location.hash = "#login";
     }
   };
 
@@ -1300,6 +1415,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    if (shouldBlockForIncompleteLoginProfile(targetPage)) {
+      replaceHashWithLogin();
+      await switchPage("login", { fromHash: true, bypassConsent: true });
+      showLoginProfileGateMessage();
+      scrollLoginProfileGateTargetIntoView();
+      return;
+    }
+
     // Route guard: กันการเข้าหน้า protected/staff ผ่าน hash โดยตรง
     if (!isNavPageVisible(targetPage)) {
       const preferredPage = getPreferredPageForState(isUserAuthenticated);
@@ -1534,6 +1657,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       void switchPage(hashPage, { fromHash: true });
     }
   });
+
+  window.addEventListener("sgcu:login-profile-state", (event) => {
+    const state = event?.detail || {};
+    const activePage = document.querySelector(".page-view.active")?.dataset.page || currentPage || "";
+    if (state.isAuthenticated && state.isComplete === false && shouldBlockForIncompleteLoginProfile(activePage)) {
+      replaceHashWithLogin();
+      void switchPage("login", { fromHash: true, bypassConsent: true }).then(() => {
+        showLoginProfileGateMessage();
+        scrollLoginProfileGateTargetIntoView();
+      });
+    }
+  });
+  if (shouldBlockForIncompleteLoginProfile(document.querySelector(".page-view.active")?.dataset.page || currentPage || "")) {
+    replaceHashWithLogin();
+    void switchPage("login", { fromHash: true, bypassConsent: true }).then(() => {
+      showLoginProfileGateMessage();
+      scrollLoginProfileGateTargetIntoView();
+    });
+  }
 
   // ===== 10) Hamburger + เมนูมือถือ =====
   const hamburgerBtn = document.getElementById("hamburgerBtn");
