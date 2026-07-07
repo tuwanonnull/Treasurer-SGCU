@@ -178,7 +178,6 @@
             <section class="panel project-staff-workflow-card project-staff-check-card">
               <div class="project-staff-ops-section-head">
                 <div>
-                  <span class="project-staff-ops-kicker">Data readiness</span>
                   <h3 class="panel-title">ความพร้อมของข้อมูล</h3>
                   <p>แสดงโครงการที่ยังต้องติดตามในแต่ละกระบวนการ พร้อมระยะเวลาที่เหลือหรือเลยกำหนดแล้ว</p>
                 </div>
@@ -542,7 +541,7 @@
               <div class="table-wrapper dashboard-audit-table-wrapper">
                 <div class="project-table-wrapper dashboard-audit-table-scroll">
                   <table id="dashboardAuditLogTable">
-                    <caption id="dashboardAuditLogCaption">แสดง 0 รายการล่าสุด</caption>
+                    <caption id="dashboardAuditLogCaption" hidden></caption>
                     <thead>
                       <tr>
                         <th>เวลา</th>
@@ -556,6 +555,12 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+              <div id="dashboardAuditLogPagination" class="list-pagination-controls dashboard-audit-pagination" hidden>
+                <span id="dashboardAuditLogPaginationSummary" class="list-pagination-summary">แสดง 0 รายการ</span>
+                <button id="dashboardAuditLogPrevPageBtn" class="btn-ghost list-pagination-btn" type="button" disabled>ก่อนหน้า</button>
+                <span id="dashboardAuditLogPageLabel" class="list-pagination-page">หน้า 1</span>
+                <button id="dashboardAuditLogNextPageBtn" class="btn-ghost list-pagination-btn" type="button" disabled>ถัดไป</button>
               </div>
             </section>
           </div>

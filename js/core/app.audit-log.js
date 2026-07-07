@@ -254,6 +254,26 @@
     return [date, time].filter(Boolean).join(" ");
   };
 
+  const formatMoney = (value) => {
+    const number = Number(String(value ?? "").replace(/,/g, ""));
+    if (!Number.isFinite(number)) return "";
+    return `${number.toLocaleString("th-TH", { maximumFractionDigits: 2 })} บาท`;
+  };
+
+  const formatCount = (value, unit = "รายการ") => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return "";
+    return `${number.toLocaleString("th-TH")} ${unit}`;
+  };
+
+  const labeled = (label, value) => {
+    const text = normalizeText(value);
+    return text ? `${label}: ${text}` : "";
+  };
+
+  const getMetadata = (item = {}) =>
+    item.metadata && typeof item.metadata === "object" ? item.metadata : {};
+
   const getAuditPayload = (item = {}) => {
     const after = item.after && typeof item.after === "object" ? item.after : null;
     const before = item.before && typeof item.before === "object" ? item.before : null;
@@ -269,10 +289,49 @@
     return afterStatus || beforeStatus || "";
   };
 
+  const getFieldChangeText = (before = {}, after = {}, fields = []) => {
+    const changes = [];
+    fields.forEach(({ key, label, format }) => {
+      const beforeValue = before && Object.prototype.hasOwnProperty.call(before, key) ? before[key] : undefined;
+      const afterValue = after && Object.prototype.hasOwnProperty.call(after, key) ? after[key] : undefined;
+      const beforeText = normalizeText(typeof format === "function" ? format(beforeValue) : beforeValue);
+      const afterText = normalizeText(typeof format === "function" ? format(afterValue) : afterValue);
+      if (beforeText || afterText) {
+        if (beforeText && afterText && beforeText !== afterText) {
+          changes.push(`${label}: ${beforeText} -> ${afterText}`);
+        } else if (!beforeText && afterText) {
+          changes.push(`${label}: ${afterText}`);
+        } else if (beforeText && !afterText) {
+          changes.push(`${label}: ล้างค่าเดิม ${beforeText}`);
+        }
+      }
+    });
+    return changes;
+  };
+
+  const getBulkCountText = (item = {}, data = {}) => {
+    const metadata = getMetadata(item);
+    const count = metadata.count ?? metadata.deletedRequestCount ?? data.importedCount ?? data.updates?.length;
+    return formatCount(count);
+  };
+
   const detailText = (item = {}) => {
     const entityType = normalizeText(item.entityType);
     const action = normalizeText(item.action);
     const data = getAuditPayload(item);
+    const before = item.before && typeof item.before === "object" ? item.before : {};
+    const after = item.after && typeof item.after === "object" ? item.after : {};
+    const metadata = getMetadata(item);
+
+    if (entityType === "budgetApprovalSettings") {
+      const roundLabel = [data.year || data.budgetRoundYear, data.roundNo || data.budgetRoundNo].filter(Boolean).join(" / ");
+      return [
+        labeled("รอบ", roundLabel || item.entityId),
+        labeled("ปิดรับ", [data.budgetRequestDeadline, data.budgetRequestDeadlineTime].filter(Boolean).join(" ")),
+        labeled("เพดานงบ", formatMoney(data.budgetCeiling)),
+        labeled("ลบคำขอพร้อมรอบ", formatCount(metadata.deletedRequestCount))
+      ].filter(Boolean).join(" | ");
+    }
 
     if (entityType === "meetingRoomBooking") {
       const room = normalizeText(data.roomName || data.roomDisplay || data.roomId) || "ไม่ระบุห้อง";
@@ -285,25 +344,73 @@
             `${data.rescheduleRequestedStartTime || "-"}-${data.rescheduleRequestedEndTime || "-"}`
           ].filter(Boolean).join(" ")}`
         : "";
-      return [room, schedule, status, reschedule].filter(Boolean).join(" | ");
+      return [
+        labeled("ห้อง", room),
+        labeled("วันเวลา", schedule),
+        labeled("สถานะ", status),
+        labeled("ผู้ขอ", data.requester),
+        labeled("เหตุผล", data.cancelRequestReason || data.rescheduleRequestReason || data.rejectionReason),
+        reschedule
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "meetingRoom") {
       const room = normalizeText(data.name) || normalizeText(item.entityId) || "ไม่ระบุห้อง";
       const access = data.bookingAccess === "staff_only" ? "สตาฟจองเท่านั้น" : data.bookingAccess === "public" ? "คนทั่วไปจอง" : "";
-      return [room, access].filter(Boolean).join(" | ");
+      const changes = getFieldChangeText(before, after, [
+        { key: "name", label: "ชื่อห้อง" },
+        { key: "bookingAccess", label: "สิทธิ์จอง", format: (value) => value === "staff_only" ? "สตาฟจองเท่านั้น" : value === "public" ? "คนทั่วไปจอง" : value }
+      ]);
+      return [
+        labeled("ห้อง", room),
+        labeled("สิทธิ์จอง", access),
+        ...changes
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "meetingRoomHoliday") {
-      return [normalizeText(data.date), normalizeText(data.name)].filter(Boolean).join(" | ");
+      return [
+        labeled("วันที่", data.date),
+        labeled("ชื่อวันหยุด", data.name)
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "budgetApprovalRequest") {
+      if (item.entityId === "bulk") {
+        const sample = Array.isArray(data.updates)
+          ? data.updates.slice(0, 3).map((entry) => normalizeText(entry.code || entry.projectCodeGenerated || entry.id)).filter(Boolean).join(", ")
+          : "";
+        return [
+          labeled("จำนวน", getBulkCountText(item, data)),
+          labeled("ตัวอย่าง", sample),
+          labeled("แหล่งข้อมูล", metadata.sourceCollection)
+        ].filter(Boolean).join(" | ");
+      }
+      const requestedAmount = formatMoney(data.estimatedExpense || data.requestedAmount);
+      const approvedAmount = formatMoney(data.approvedAmount);
+      const changes = getFieldChangeText(before, after, [
+        { key: "projectName", label: "โครงการ" },
+        { key: "organizationName", label: "องค์กร" },
+        { key: "status", label: "สถานะ", format: statusLabel },
+        { key: "estimatedExpense", label: "ยอดขอ", format: formatMoney },
+        { key: "approvedAmount", label: "ยอดอนุมัติ", format: formatMoney },
+        { key: "projectCodeGenerated", label: "รหัสโครงการ" }
+      ]);
       return [
-        normalizeText(data.projectName),
-        normalizeText(data.organizationName),
-        statusLabel(data.status),
-        data.approvedAmount != null ? `อนุมัติ ${data.approvedAmount}` : ""
+        labeled("โครงการ", data.projectName),
+        labeled("องค์กร", data.organizationName),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status)),
+        labeled("ยอดขอ", requestedAmount),
+        labeled("ยอดอนุมัติ", approvedAmount),
+        labeled("รหัสโครงการ", data.projectCodeGenerated),
+        ...changes.filter((text) =>
+          !text.startsWith("โครงการ:") &&
+          !text.startsWith("องค์กร:") &&
+          !text.startsWith("สถานะ:") &&
+          !text.startsWith("ยอดขอ:") &&
+          !text.startsWith("ยอดอนุมัติ:") &&
+          !text.startsWith("รหัสโครงการ:")
+        )
       ].filter(Boolean).join(" | ");
     }
 
@@ -311,56 +418,120 @@
       const assets = Array.isArray(data.assets)
         ? data.assets.map((asset) => normalizeText(asset.name || asset.assetName || asset.code)).filter(Boolean).slice(0, 3).join(", ")
         : "";
+      const changes = getFieldChangeText(before, after, [
+        { key: "status", label: "สถานะ", format: statusLabel },
+        { key: "pickupDate", label: "วันรับของ" },
+        { key: "returnDate", label: "วันคืนของ" }
+      ]);
       return [
-        normalizeText(data.projectName),
-        assets,
-        statusLabel(data.status)
+        labeled("โครงการ", data.projectName),
+        labeled("พัสดุ", assets),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status)),
+        labeled("วันรับของ", data.pickupDate),
+        labeled("วันคืนของ", data.returnDate),
+        labeled("หมายเหตุ", data.staffNote),
+        ...changes.filter((text) =>
+          !text.startsWith("สถานะ:") &&
+          !text.startsWith("วันรับของ:") &&
+          !text.startsWith("วันคืนของ:")
+        )
       ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "newsItem") {
-      return [normalizeText(data.title), statusLabel(data.status)].filter(Boolean).join(" | ");
+      return [
+        labeled("จำนวน", getBulkCountText(item, data)),
+        labeled("หัวข้อ", data.title),
+        labeled("หมวด", data.category),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status))
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "downloadDocument") {
-      return [normalizeText(data.name), normalizeText(data.category), statusLabel(data.status)].filter(Boolean).join(" | ");
+      const sample = Array.isArray(data.updates)
+        ? data.updates.slice(0, 3).map((entry) => normalizeText(entry.id)).filter(Boolean).join(", ")
+        : "";
+      return [
+        labeled("จำนวน", getBulkCountText(item, data)),
+        labeled("เอกสาร", data.name),
+        labeled("หมวด", data.category),
+        labeled("องค์กร", data.org),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status)),
+        labeled("ตัวอย่าง", sample)
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "authEmailAccess") {
       const active = data.active === false ? "ปิดใช้งาน" : data.active === true ? "เปิดใช้งาน" : "";
-      return [normalizeText(data.email || item.entityId), active, normalizeText(data.reason)].filter(Boolean).join(" | ");
+      return [
+        labeled("อีเมล", data.email || item.entityId),
+        labeled("สถานะ", active),
+        labeled("เริ่ม", data.startsAt),
+        labeled("หมดอายุ", data.endsAt),
+        labeled("เหตุผล", data.reason)
+      ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "staffPosition") {
+      const changes = getFieldChangeText(before, after, [
+        { key: "name", label: "ตำแหน่ง" },
+        { key: "divisionCodeYY", label: "หมวดงาน" },
+        { key: "levelCodeZZ", label: "ระดับ" }
+      ]);
       return [
-        normalizeText(data.name),
-        normalizeText(data.divisionCodeYY),
-        normalizeText(data.levelCodeZZ)
+        labeled("ตำแหน่ง", data.name),
+        labeled("หมวดงาน", data.divisionCodeYY),
+        labeled("ระดับ", data.levelCodeZZ),
+        ...changes.filter((text) =>
+          !text.startsWith("ตำแหน่ง:") &&
+          !text.startsWith("หมวดงาน:") &&
+          !text.startsWith("ระดับ:")
+        )
       ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "staffApplication") {
+      const changes = getFieldChangeText(before, after, [
+        { key: "status", label: "สถานะ", format: statusLabel },
+        { key: "approvedPosition", label: "ตำแหน่งอนุมัติ" },
+        { key: "requestedPosition", label: "ตำแหน่งที่สมัคร" }
+      ]);
       return [
-        normalizeText(data.applicantName || data.applicantEmail),
-        normalizeText(data.approvedPosition || data.requestedPosition),
-        statusLabel(data.status)
+        labeled("ผู้สมัคร", data.applicantName || data.applicantEmail || data.email),
+        labeled("ตำแหน่ง", data.approvedPosition || data.requestedPosition),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status)),
+        labeled("เหตุผล", data.reason || data.staffNote),
+        ...changes.filter((text) =>
+          !text.startsWith("สถานะ:") &&
+          !text.startsWith("ตำแหน่งอนุมัติ:") &&
+          !text.startsWith("ตำแหน่งที่สมัคร:")
+        )
       ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "orgRepresentativeApplication") {
+      const changes = getFieldChangeText(before, after, [
+        { key: "status", label: "สถานะ", format: statusLabel },
+        { key: "organizationName", label: "องค์กร" },
+        { key: "orgName", label: "องค์กร" }
+      ]);
       return [
-        normalizeText(data.applicantEmail || data.email),
-        normalizeText(data.organizationName || data.orgName),
-        statusLabel(data.status)
+        labeled("ผู้สมัคร", data.applicantName || data.applicantEmail || data.email),
+        labeled("องค์กร", data.organizationName || data.orgName),
+        labeled("สถานะ", getStatusChangeText(item) || statusLabel(data.status)),
+        labeled("เหตุผล", data.reason || data.staffNote),
+        ...changes.filter((text) => !text.startsWith("สถานะ:") && !text.startsWith("องค์กร:"))
       ].filter(Boolean).join(" | ");
     }
 
     if (entityType === "organizationCatalogItem") {
       return [
-        normalizeText(data.formName || data.name),
-        normalizeText(data.group),
-        normalizeText(data.code || data.documentRunCode),
-        statusLabel(data.status)
+        labeled("จำนวน", getBulkCountText(item, data)),
+        labeled("องค์กร", data.formName || data.name),
+        labeled("ประเภท", data.group),
+        labeled("รหัส", data.code || data.documentRunCode),
+        labeled("ปีการศึกษา", data.academicYear),
+        labeled("สถานะ", statusLabel(data.status))
       ].filter(Boolean).join(" | ");
     }
 
@@ -425,8 +596,13 @@
     filterType: "all",
     query: "",
     startDate: "",
-    endDate: ""
+    endDate: "",
+    pageIndex: 0,
+    pages: [],
+    hasNextPage: false,
+    isLoadingPage: false
   };
+  const AUDIT_LOG_PAGE_SIZE = 100;
 
   const getTypeGroup = (item = {}) => {
     const action = normalizeText(item.action);
@@ -451,9 +627,9 @@
     item.entityId
   ].map(normalizeText).join(" ").toLowerCase();
 
-  const getFilteredRows = () => {
+  const getFilteredRows = (sourceRows = state.rows) => {
     const query = normalizeText(state.query).toLowerCase();
-    return state.rows.filter((item) => {
+    return (Array.isArray(sourceRows) ? sourceRows : []).filter((item) => {
       if (state.filterType !== "all" && getTypeGroup(item) !== state.filterType) return false;
       if (!isInDateRange(item)) return false;
       if (query && !getSearchText(item).includes(query)) return false;
@@ -461,8 +637,7 @@
     });
   };
 
-  const getRowsForExport = () => {
-    const rows = getFilteredRows();
+  const mapRowsForExport = (rows = []) => {
     return rows.map((item) => ({
       "เวลา": toDisplayDateTime(item.timestamp),
       "การกระทำ": actionLabel(item.action),
@@ -474,21 +649,116 @@
     }));
   };
 
+  const getRowsForExport = () => mapRowsForExport(getFilteredRows());
+
+  const hasExportDateRange = () => !!(normalizeText(state.startDate) || normalizeText(state.endDate));
+
+  const buildExportFileName = () => {
+    const start = normalizeText(state.startDate) || "เริ่มต้น";
+    const end = normalizeText(state.endDate) || "ล่าสุด";
+    return hasExportDateRange() ? `sgcu-activity-log-${start}-to-${end}` : "sgcu-activity-log";
+  };
+
+  const fetchRowsForExportFromFirestore = async () => {
+    const firestore = getFirestore();
+    if (!firestore.db || !firestore.collection || !firestore.query || !firestore.where || !firestore.orderBy || !firestore.getDocs) {
+      throw new Error("firestore-export-unavailable");
+    }
+    const constraints = [];
+    const start = parseDateBoundary(state.startDate, false);
+    const end = parseDateBoundary(state.endDate, true);
+    if (start) constraints.push(firestore.where("timestamp", ">=", start));
+    if (end) constraints.push(firestore.where("timestamp", "<=", end));
+    constraints.push(firestore.orderBy("timestamp", "desc"));
+    const queryRef = firestore.query(
+      firestore.collection(firestore.db, collectionName()),
+      ...constraints
+    );
+    const snapshot = await firestore.getDocs(queryRef);
+    const rows = [];
+    snapshot.forEach((docSnap) => rows.push({ id: docSnap.id, ...(docSnap.data() || {}) }));
+    return rows;
+  };
+
+  const fetchAuditLogPageFromFirestore = async (cursor = null) => {
+    const firestore = getFirestore();
+    if (!firestore.db || !firestore.collection || !firestore.query || !firestore.orderBy || !firestore.getDocs || !firestore.limit) {
+      throw new Error("firestore-page-unavailable");
+    }
+    const constraints = [];
+    const start = parseDateBoundary(state.startDate, false);
+    const end = parseDateBoundary(state.endDate, true);
+    if (start && firestore.where) constraints.push(firestore.where("timestamp", ">=", start));
+    if (end && firestore.where) constraints.push(firestore.where("timestamp", "<=", end));
+    constraints.push(firestore.orderBy("timestamp", "desc"));
+    if (cursor && firestore.startAfter) constraints.push(firestore.startAfter(cursor));
+    constraints.push(firestore.limit(AUDIT_LOG_PAGE_SIZE + 1));
+    const queryRef = firestore.query(
+      firestore.collection(firestore.db, collectionName()),
+      ...constraints
+    );
+    const snapshot = await firestore.getDocs(queryRef);
+    const docs = Array.isArray(snapshot.docs) ? snapshot.docs : [];
+    const visibleDocs = docs.slice(0, AUDIT_LOG_PAGE_SIZE);
+    const rows = visibleDocs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+    return {
+      rows,
+      cursor: visibleDocs.length ? visibleDocs[visibleDocs.length - 1] : cursor,
+      hasNextPage: docs.length > AUDIT_LOG_PAGE_SIZE
+    };
+  };
+
+  const exportCsv = async (buttonEl = null) => {
+    if (!window.sgcuCsvExport?.download) {
+      setStatus("ไม่พบตัวช่วย Export CSV", "error");
+      return;
+    }
+    const shouldQueryFirestore = hasExportDateRange();
+    const previousText = buttonEl?.textContent || "";
+    if (buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.textContent = shouldQueryFirestore ? "กำลังดึงข้อมูล..." : "กำลัง Export...";
+    }
+    try {
+      let sourceRows = state.rows;
+      if (shouldQueryFirestore) {
+        setStatus("กำลังดึง Activity Log จาก Firestore ตามช่วงวันที่...", "");
+        sourceRows = await fetchRowsForExportFromFirestore();
+      }
+      const filteredRows = shouldQueryFirestore ? getFilteredRows(sourceRows) : getFilteredRows();
+      const rows = mapRowsForExport(filteredRows);
+      if (!rows.length) {
+        setStatus("ไม่พบ Activity Log ตามตัวกรองที่เลือก", "error");
+        return;
+      }
+      window.sgcuCsvExport.download({
+        headers: ["เวลา", "การกระทำ", "ประเภท/รหัส", "รายละเอียด", "ผู้ทำรายการ", "ที่มา", "Metadata"],
+        rows,
+        fileName: buildExportFileName()
+      });
+      setStatus(`Export Activity Log แล้ว ${rows.length.toLocaleString("th-TH")} รายการ`, "success");
+    } catch (error) {
+      console.error("export audit log failed - app.audit-log.js:741", error);
+      setStatus("Export Activity Log ไม่สำเร็จ ตรวจสิทธิ์ Staff หรือช่วงวันที่ที่เลือก", "error");
+    } finally {
+      if (buttonEl) {
+        buttonEl.disabled = getFilteredRows().length === 0 && !hasExportDateRange();
+        buttonEl.textContent = previousText;
+      }
+    }
+  };
+
   const renderRows = (items = []) => {
     const body = document.getElementById("dashboardAuditLogBody");
-    const caption = document.getElementById("dashboardAuditLogCaption");
     const exportBtn = document.getElementById("dashboardAuditLogExportCsvBtn");
     if (!body) return;
     if (items !== state.rows) {
       state.rows = Array.isArray(items) ? items : [];
     }
-    const rows = getFilteredRows().slice(0, 100);
+    const rows = getFilteredRows();
     window.__sgcuAuditLogRows = rows;
-    if (caption) {
-      const total = state.rows.length;
-      caption.textContent = `แสดง ${rows.length} จาก ${total} รายการล่าสุด`;
-    }
-    if (exportBtn) exportBtn.disabled = rows.length === 0;
+    if (exportBtn) exportBtn.disabled = rows.length === 0 && !hasExportDateRange();
+    renderPagination(rows.length);
     if (!rows.length) {
       body.innerHTML = `<tr class="dashboard-audit-empty-row"><td colspan="4">ยังไม่มี Activity Log</td></tr>`;
       return;
@@ -504,46 +774,86 @@
     `).join("");
   };
 
+  const renderPagination = (visibleCount = getFilteredRows().length) => {
+    const wrap = document.getElementById("dashboardAuditLogPagination");
+    const summary = document.getElementById("dashboardAuditLogPaginationSummary");
+    const pageLabel = document.getElementById("dashboardAuditLogPageLabel");
+    const prevBtn = document.getElementById("dashboardAuditLogPrevPageBtn");
+    const nextBtn = document.getElementById("dashboardAuditLogNextPageBtn");
+    if (!wrap) return;
+    wrap.hidden = false;
+    if (summary) {
+      summary.textContent = state.isLoadingPage
+        ? "กำลังโหลดรายการ..."
+        : `แสดง ${visibleCount.toLocaleString("th-TH")} จาก ${state.rows.length.toLocaleString("th-TH")} รายการในหน้านี้`;
+    }
+    if (pageLabel) pageLabel.textContent = `หน้า ${(state.pageIndex + 1).toLocaleString("th-TH")}`;
+    if (prevBtn) prevBtn.disabled = state.isLoadingPage || state.pageIndex <= 0;
+    if (nextBtn) nextBtn.disabled = state.isLoadingPage || !state.hasNextPage;
+  };
+
+  const loadAuditPage = async (pageIndex = 0) => {
+    const targetPage = Math.max(0, Number(pageIndex) || 0);
+    if (state.isLoadingPage) return;
+    const cachedPage = state.pages[targetPage];
+    if (cachedPage) {
+      state.pageIndex = targetPage;
+      state.rows = cachedPage.rows || [];
+      state.hasNextPage = !!cachedPage.hasNextPage || targetPage < state.pages.length - 1;
+      renderRows(state.rows);
+      setStatus("");
+      return;
+    }
+    const previousPage = targetPage > 0 ? state.pages[targetPage - 1] : null;
+    if (targetPage > 0 && !previousPage) return;
+    state.isLoadingPage = true;
+    renderPagination();
+    setStatus("กำลังโหลด Activity Log...", "");
+    try {
+      const page = await fetchAuditLogPageFromFirestore(previousPage?.cursor || null);
+      state.pages[targetPage] = page;
+      state.pageIndex = targetPage;
+      state.rows = page.rows || [];
+      state.hasNextPage = !!page.hasNextPage;
+      renderRows(state.rows);
+      setStatus("");
+    } catch (error) {
+      console.error("load audit log page failed - app.audit-log.js:821", error);
+      state.rows = [];
+      state.hasNextPage = false;
+      renderRows([]);
+      setStatus(error?.code === "permission-denied" ? "บัญชีนี้ยังไม่มีสิทธิ์อ่าน Activity Log" : "โหลด Activity Log ไม่สำเร็จ", "error");
+    } finally {
+      state.isLoadingPage = false;
+      renderPagination();
+    }
+  };
+
+  const resetAuditPages = () => {
+    state.rows = [];
+    state.pageIndex = 0;
+    state.pages = [];
+    state.hasNextPage = false;
+    void loadAuditPage(0);
+  };
+
   const initDashboard = () => {
     const body = document.getElementById("dashboardAuditLogBody");
     if (!body || body.dataset.auditReady === "true") return;
     body.dataset.auditReady = "true";
 
     const firestore = getFirestore();
-    if (!firestore.db || !firestore.collection || !firestore.query || !firestore.orderBy || !firestore.onSnapshot) {
+    if (!firestore.db || !firestore.collection || !firestore.query || !firestore.orderBy || !firestore.getDocs || !firestore.limit) {
       renderRows([]);
       setStatus("ระบบ Activity Log ยังไม่พร้อมใช้งาน", "error");
       return;
     }
 
-    setStatus("กำลังโหลด Activity Log...", "");
-    const queryRef = firestore.query(
-      firestore.collection(firestore.db, collectionName()),
-      firestore.orderBy("timestamp", "desc"),
-      ...(firestore.limit ? [firestore.limit(100)] : [])
-    );
-    firestore.onSnapshot(
-      queryRef,
-      (snapshot) => {
-        const rows = [];
-        snapshot.forEach((docSnap) => rows.push({ id: docSnap.id, ...(docSnap.data() || {}) }));
-        renderRows(rows);
-        setStatus("");
-      },
-      (error) => {
-        renderRows([]);
-        setStatus(error?.code === "permission-denied" ? "บัญชีนี้ยังไม่มีสิทธิ์อ่าน Activity Log" : "โหลด Activity Log ไม่สำเร็จ", "error");
-      }
-    );
+    resetAuditPages();
 
     const exportBtn = document.getElementById("dashboardAuditLogExportCsvBtn");
     exportBtn?.addEventListener("click", () => {
-      const rows = getRowsForExport();
-      window.sgcuCsvExport?.download?.({
-        headers: ["เวลา", "การกระทำ", "ประเภท/รหัส", "รายละเอียด", "ผู้ทำรายการ", "ที่มา", "Metadata"],
-        rows,
-        fileName: "sgcu-activity-log"
-      });
+      void exportCsv(exportBtn);
     });
 
     const typeFilter = document.getElementById("dashboardAuditLogTypeFilter");
@@ -551,17 +861,19 @@
     const endDateInput = document.getElementById("dashboardAuditLogEndDate");
     const searchInput = document.getElementById("dashboardAuditLogSearchInput");
     const searchClear = document.getElementById("dashboardAuditLogSearchClear");
+    const prevPageBtn = document.getElementById("dashboardAuditLogPrevPageBtn");
+    const nextPageBtn = document.getElementById("dashboardAuditLogNextPageBtn");
     typeFilter?.addEventListener("change", () => {
       state.filterType = normalizeText(typeFilter.value) || "all";
       renderRows(state.rows);
     });
     startDateInput?.addEventListener("change", () => {
       state.startDate = normalizeText(startDateInput.value);
-      renderRows(state.rows);
+      resetAuditPages();
     });
     endDateInput?.addEventListener("change", () => {
       state.endDate = normalizeText(endDateInput.value);
-      renderRows(state.rows);
+      resetAuditPages();
     });
     searchInput?.addEventListener("input", () => {
       state.query = normalizeText(searchInput.value);
@@ -578,6 +890,12 @@
       if (searchInput) searchInput.value = "";
       renderRows(state.rows);
       searchInput?.focus();
+    });
+    prevPageBtn?.addEventListener("click", () => {
+      void loadAuditPage(state.pageIndex - 1);
+    });
+    nextPageBtn?.addEventListener("click", () => {
+      void loadAuditPage(state.pageIndex + 1);
     });
   };
 

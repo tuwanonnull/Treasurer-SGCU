@@ -1086,14 +1086,31 @@ function updateTrendLineChart(filtered) {
   const entries = Array.from(buckets.values()).sort((a, b) => a.date - b.date);
   const trimmed = entries.slice(-10);
   const monthNamesShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-  const labels = trimmed.map(({ date }) => {
+  const formatMonthLabel = (date) => {
     const year = date.getFullYear().toString().slice(-2);
     return `${monthNamesShort[date.getMonth()]} ${year}`;
-  });
-  const data = trimmed.map((entry) => entry.count);
+  };
+  let labels = trimmed.map(({ date }) => formatMonthLabel(date));
+  let data = trimmed.map((entry) => entry.count);
 
+  if (trimmed.length === 1) {
+    const currentDate = trimmed[0].date;
+    const previousDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    labels = [formatMonthLabel(previousDate), formatMonthLabel(currentDate), formatMonthLabel(nextDate)];
+    data = [0, trimmed[0].count, 0];
+  }
+
+  const dataset = trendLineChart.data.datasets[0];
+  const isSingleMonth = trimmed.length === 1;
   trendLineChart.data.labels = labels;
-  trendLineChart.data.datasets[0].data = data;
+  dataset.data = data;
+  dataset.type = "line";
+  dataset.borderWidth = isSingleMonth ? 3 : 2;
+  dataset.pointRadius = isSingleMonth ? 4 : 3;
+  dataset.pointHoverRadius = isSingleMonth ? 5 : 4;
+  dataset.barThickness = undefined;
+  dataset.maxBarThickness = undefined;
   trendLineChart.update("none");
 }
 

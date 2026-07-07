@@ -79,6 +79,10 @@
   gap: 7px;
 }
 
+.login-profile-form .borrow-form-row.is-affairs-contact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .login-profile-type-row .borrow-form-field {
   gap: 8px;
 }

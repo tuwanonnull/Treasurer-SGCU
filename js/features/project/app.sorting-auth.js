@@ -1580,6 +1580,7 @@ function initAuthUI() {
   const loginProfileFacultyWarningEl = document.getElementById("loginProfileFacultyWarning");
   const loginProfileYearEl = document.getElementById("loginProfileYear");
   const loginProfileYearWarningEl = document.getElementById("loginProfileYearWarning");
+  const loginProfileContactRowEl = document.getElementById("loginProfileContactRow");
   const loginProfilePhoneEl = document.getElementById("loginProfilePhone");
   const loginProfilePhoneLabelEl = document.getElementById("loginProfilePhoneLabel");
   const loginProfileLineIdEl = document.getElementById("loginProfileLineId");
@@ -2151,6 +2152,9 @@ function initAuthUI() {
     const isStudent = getLoginProfileType() === "student";
     if (loginProfileStudentFieldsEl) {
       loginProfileStudentFieldsEl.style.display = isStudent ? "" : "none";
+    }
+    if (loginProfileContactRowEl) {
+      loginProfileContactRowEl.classList.toggle("is-affairs-contact", !isStudent);
     }
     if (loginProfileNicknameEl) loginProfileNicknameEl.required = isStudent;
     if (loginProfileStudentIdEl) loginProfileStudentIdEl.required = isStudent;
