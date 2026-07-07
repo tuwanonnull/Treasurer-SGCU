@@ -16,14 +16,6 @@
                 </div>
               </div>
             </div>
-            <div class="tabs dashboard-staff-main-tabs" role="tablist" aria-label="เลือกมุมมองภาพรวมโครงการ">
-              <button type="button" class="tab-btn view-toggle-btn is-active" data-project-workflow-tab="overview">
-                สรุปภาพรวม
-              </button>
-              <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-tab="checks">
-                ตรวจข้อมูล
-              </button>
-            </div>
           </div>
 
           <div id="filterBarHostDashboardStaff">
@@ -67,14 +59,43 @@
               </div>
             </div>
           </div>
+          <div class="tabs dashboard-staff-main-tabs dashboard-section-nav" aria-label="ไปยังส่วนในหน้าภาพรวมโครงการ">
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff">
+              ตัวกรอง
+            </button>
+            <button type="button" class="tab-btn view-toggle-btn is-active" data-project-workflow-toc="checks" data-project-workflow-target="projectStaffOpsPanelStaff">
+              ความพร้อมข้อมูล
+            </button>
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="metrics" data-project-workflow-target="dashboardMetricsSectionStaff">
+              ภาพรวมตัวเลข
+            </button>
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="followup" data-project-workflow-target="dashboardFollowupSectionStaff">
+              ติดตามงาน
+            </button>
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="analysis" data-project-workflow-target="dashboardAnalysisSectionStaff">
+              วิเคราะห์
+            </button>
+          </div>
 
           <div id="projectDataLoadStateStaff" class="project-data-load-state" hidden></div>
 
-          <div id="dashboardStaffOverviewPanel" class="dashboard-staff-main-panel" data-project-workflow-panel="overview">
+          <div id="dashboardStaffOverviewPanel" class="dashboard-staff-main-panel">
           <div id="dashboardOverviewSkeletonStaff" class="dashboard-overview-skeleton" aria-hidden="true">
-            <div class="dashboard-skeleton-header">
+            <div class="dashboard-skeleton-card dashboard-skeleton-readiness-card">
               <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
               <span class="dashboard-skeleton-line dashboard-skeleton-caption"></span>
+              <div class="dashboard-skeleton-pill-row">
+                <span class="dashboard-skeleton-pill"></span>
+                <span class="dashboard-skeleton-pill"></span>
+              </div>
+              <div class="dashboard-skeleton-table dashboard-skeleton-readiness-table">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="dashboard-skeleton-header">
+              <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
             </div>
             <div class="dashboard-skeleton-metric-grid">
               <div class="dashboard-skeleton-card">
@@ -92,6 +113,9 @@
                 <span class="dashboard-skeleton-line dashboard-skeleton-value dashboard-skeleton-value-wide"></span>
                 <span class="dashboard-skeleton-line dashboard-skeleton-caption"></span>
               </div>
+            </div>
+            <div class="dashboard-skeleton-header">
+              <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
             </div>
             <div class="dashboard-skeleton-donut-grid">
               <div class="dashboard-skeleton-card dashboard-skeleton-donut-card">
@@ -115,6 +139,9 @@
                 <span class="dashboard-skeleton-line dashboard-skeleton-caption"></span>
               </div>
             </div>
+            <div class="dashboard-skeleton-header">
+              <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
+            </div>
             <div class="dashboard-skeleton-chart-grid">
               <div class="dashboard-skeleton-card dashboard-skeleton-chart-card">
                 <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
@@ -135,6 +162,9 @@
                 </div>
               </div>
             </div>
+            <div class="dashboard-skeleton-header">
+              <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
+            </div>
             <div class="dashboard-skeleton-card dashboard-skeleton-table-card">
               <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
               <div class="dashboard-skeleton-table">
@@ -144,13 +174,47 @@
               </div>
             </div>
           </div>
-          <section id="dashboardOverviewContentStaff" class="dashboard-overview section-appear section-delay-1">
-            <header class="panel-header">
-              <div>
-                <h3 class="panel-title">ภาพรวมโครงการ</h3>
+          <section id="projectStaffOpsPanelStaff" class="project-staff-ops-panel dashboard-data-readiness-section section-appear section-delay-1">
+            <section class="panel project-staff-workflow-card project-staff-check-card">
+              <div class="project-staff-ops-section-head">
+                <div>
+                  <span class="project-staff-ops-kicker">Data readiness</span>
+                  <h3 class="panel-title">ความพร้อมของข้อมูล</h3>
+                  <p>แสดงโครงการที่ยังต้องติดตามในแต่ละกระบวนการ พร้อมระยะเวลาที่เหลือหรือเลยกำหนดแล้ว</p>
+                </div>
+                <div class="tabs project-staff-check-tabs" role="tablist" aria-label="เลือกกระบวนการที่ต้องตรวจ">
+                  <button type="button" class="tab-btn view-toggle-btn project-staff-check-tab is-active" data-project-check-type="advance">
+                    ยืมรองจ่าย <span id="projectAdvanceBlockedCountStaff">0</span>
+                  </button>
+                  <button type="button" class="tab-btn view-toggle-btn project-staff-check-tab" data-project-check-type="transfer">
+                    โอนงบประมาณ <span id="projectTransferBlockedCountStaff">0</span>
+                  </button>
+                </div>
               </div>
-            </header>
 
+              <div class="project-staff-check-group is-critical">
+                <div class="project-staff-alert-table-wrap">
+                  <table class="project-staff-alert-table">
+                    <thead>
+                      <tr>
+                        <th>รหัส</th>
+                        <th>โครงการ</th>
+                        <th>ระยะเวลาที่เหลือ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="projectAdvanceBlockedTableBodyStaff">
+                      <tr><td colspan="3">ยังไม่มีรายการ</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </section>
+          <section id="dashboardOverviewContentStaff" class="dashboard-overview section-appear section-delay-1">
+            <section id="dashboardMetricsSectionStaff" class="dashboard-section">
+              <header class="dashboard-section-header">
+                <h3 class="dashboard-section-title">ภาพรวมตัวเลขและสัดส่วน</h3>
+              </header>
             <div class="dashboard-grid">
               <article class="dashboard-metric">
                 <div class="metric-label">งบประมาณเฉลี่ยต่อโครงการ</div>
@@ -205,7 +269,12 @@
                 <div class="metric-caption" id="kpiOnTimeCaption">กำลังประมวลผล</div>
               </article>
             </div>
+            </section>
 
+            <section id="dashboardFollowupSectionStaff" class="dashboard-section">
+              <header class="dashboard-section-header">
+                <h3 class="dashboard-section-title">งานที่ต้องติดตาม</h3>
+              </header>
             <div class="dashboard-charts-grid section-appear section-delay-2" style="margin-top:12px;">
               <article class="chart-card">
                   <header class="chart-header">
@@ -296,7 +365,14 @@
                   </table>
                 </div>
               </article>
+            </div>
+            </section>
 
+            <section id="dashboardAnalysisSectionStaff" class="dashboard-section">
+              <header class="dashboard-section-header">
+                <h3 class="dashboard-section-title">วิเคราะห์เพิ่มเติม</h3>
+              </header>
+            <div class="dashboard-lower" style="margin-top:12px;">
               <article class="chart-card dashboard-budget-comparison-card dashboard-card-wide">
                 <header class="chart-header">
                   <div>
@@ -352,45 +428,10 @@
                 </div>
               </article>
             </div>
+            </section>
           </section>
           </div>
 
-          <section id="projectStaffOpsPanelStaff" class="project-staff-ops-panel section-appear section-delay-1" data-project-workflow-panel="checks" hidden>
-            <section class="panel project-staff-workflow-card project-staff-check-card">
-              <div class="project-staff-ops-section-head">
-                <div>
-                  <span class="project-staff-ops-kicker">Data checks</span>
-                  <h3 class="panel-title">ตรวจข้อมูลก่อนดำเนินงาน</h3>
-                  <p>แสดงโครงการที่ยังต้องติดตามในแต่ละกระบวนการ พร้อมระยะเวลาที่เหลือหรือเลยกำหนดแล้ว</p>
-                </div>
-                <div class="tabs project-staff-check-tabs" role="tablist" aria-label="เลือกกระบวนการที่ต้องตรวจ">
-                  <button type="button" class="tab-btn view-toggle-btn project-staff-check-tab is-active" data-project-check-type="advance">
-                    ยืมรองจ่าย <span id="projectAdvanceBlockedCountStaff">0</span>
-                  </button>
-                  <button type="button" class="tab-btn view-toggle-btn project-staff-check-tab" data-project-check-type="transfer">
-                    โอนงบประมาณ <span id="projectTransferBlockedCountStaff">0</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="project-staff-check-group is-critical">
-                <div class="project-staff-alert-table-wrap">
-                  <table class="project-staff-alert-table">
-                    <thead>
-                      <tr>
-                        <th>รหัส</th>
-                        <th>โครงการ</th>
-                        <th>ระยะเวลาที่เหลือ</th>
-                      </tr>
-                    </thead>
-                    <tbody id="projectAdvanceBlockedTableBodyStaff">
-                      <tr><td colspan="3">ยังไม่มีรายการ</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </section>
-          </section>
         </div>
       </section>
 

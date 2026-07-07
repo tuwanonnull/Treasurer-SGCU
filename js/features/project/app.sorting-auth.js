@@ -8,7 +8,9 @@ const lastProjectStatusProjectsRefByContext = {
   staff: null
 };
 let activeStaffProjectCheckType = "advance";
-let activeStaffProjectWorkflowTab = "overview";
+let activeStaffProjectWorkflowTab = "checks";
+let staffProjectWorkflowSpyReady = false;
+let staffProjectWorkflowScrollSpyRaf = 0;
 const lastStaffProjectCheckRows = {
   advance: [],
   transfer: []
@@ -433,17 +435,31 @@ function syncStaffProjectCheckTabs() {
   });
 }
 
+function setActiveStaffProjectWorkflowTab(tab = "checks") {
+  const normalized = (tab || "checks").toString().trim() || "checks";
+  activeStaffProjectWorkflowTab = normalized;
+  document.querySelectorAll("[data-project-workflow-tab]").forEach((btn) => {
+    const btnTab = btn.dataset.projectWorkflowTab || "checks";
+    const isActive = btnTab === activeStaffProjectWorkflowTab;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+  document.querySelectorAll("[data-project-workflow-toc]").forEach((btn) => {
+    const btnTab = btn.dataset.projectWorkflowToc || "";
+    const isActive = btnTab === activeStaffProjectWorkflowTab;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-current", isActive ? "true" : "false");
+  });
+  window.syncDashboardMobileActionBar?.();
+}
+
 function syncStaffProjectWorkflowTabs() {
   document.querySelectorAll("[data-project-workflow-tab]").forEach((btn) => {
     const tab = btn.dataset.projectWorkflowTab || "checks";
-    const isActive = tab === activeStaffProjectWorkflowTab;
-    btn.classList.toggle("is-active", isActive);
-    btn.setAttribute("aria-selected", isActive ? "true" : "false");
     if (btn.dataset.projectWorkflowBound === "true") return;
     btn.dataset.projectWorkflowBound = "true";
     btn.addEventListener("click", () => {
-      activeStaffProjectWorkflowTab = tab;
-      syncStaffProjectWorkflowTabs();
+      setActiveStaffProjectWorkflowTab(tab);
     });
   });
 
@@ -453,25 +469,84 @@ function syncStaffProjectWorkflowTabs() {
     if (btn.dataset.projectWorkflowTocBound === "true") return;
     btn.dataset.projectWorkflowTocBound = "true";
     btn.addEventListener("click", () => {
-      activeStaffProjectWorkflowTab = tab;
-      syncStaffProjectWorkflowTabs();
+      setActiveStaffProjectWorkflowTab(tab);
+      const targetId = btn.dataset.projectWorkflowTarget || "";
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (tab === "filters") {
+        window.setTimeout(() => {
+          document.getElementById("yearSelectStaff")?.focus?.({ preventScroll: true });
+        }, 320);
+      }
     });
   });
 
+  setActiveStaffProjectWorkflowTab(activeStaffProjectWorkflowTab);
   document.querySelectorAll("[data-project-workflow-panel]").forEach((panel) => {
     const tab = panel.dataset.projectWorkflowPanel || "checks";
     panel.hidden = tab !== activeStaffProjectWorkflowTab;
   });
+  initStaffProjectWorkflowScrollSpy();
 }
 
-function setStaffProjectWorkflowTab(tab = "overview") {
+function setStaffProjectWorkflowTab(tab = "checks") {
   const normalized = (tab || "").toString().trim();
   if (!normalized) return;
-  activeStaffProjectWorkflowTab = normalized;
-  syncStaffProjectWorkflowTabs();
+  setActiveStaffProjectWorkflowTab(normalized);
 }
 
 window.sgcuSetStaffProjectWorkflowTab = setStaffProjectWorkflowTab;
+
+function initStaffProjectWorkflowScrollSpy() {
+  if (staffProjectWorkflowSpyReady) return;
+  const navButtons = Array.from(document.querySelectorAll("[data-project-workflow-toc]"))
+    .filter((btn) => (btn.dataset.projectWorkflowToc || "") !== "filters");
+  const sections = navButtons
+    .map((btn) => ({
+      tab: btn.dataset.projectWorkflowToc || "",
+      el: document.getElementById(btn.dataset.projectWorkflowTarget || "")
+    }))
+    .filter((item) => item.tab && item.el);
+  if (!sections.length) return;
+
+  const getHeaderOffset = () => {
+    const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
+    const navHeight = document.querySelector(".dashboard-section-nav")?.getBoundingClientRect().height || 0;
+    return headerHeight + navHeight + 24;
+  };
+
+  const updateActiveFromScroll = () => {
+    staffProjectWorkflowScrollSpyRaf = 0;
+    const activePage = document.querySelector(".page-view.active")?.dataset.page || "";
+    if (activePage !== "dashboard-staff") return;
+
+    const checkpoint = getHeaderOffset();
+    let current = sections[0];
+    sections.forEach((item) => {
+      const rect = item.el.getBoundingClientRect();
+      if (rect.top <= checkpoint) current = item;
+    });
+
+    const last = sections[sections.length - 1];
+    if (last?.el && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
+      current = last;
+    }
+    if (current?.tab && current.tab !== activeStaffProjectWorkflowTab) {
+      setActiveStaffProjectWorkflowTab(current.tab);
+    }
+  };
+
+  const scheduleUpdate = () => {
+    if (staffProjectWorkflowScrollSpyRaf) return;
+    staffProjectWorkflowScrollSpyRaf = window.requestAnimationFrame(updateActiveFromScroll);
+  };
+
+  window.addEventListener("scroll", scheduleUpdate, { passive: true });
+  window.addEventListener("resize", scheduleUpdate);
+  window.addEventListener("sgcu:page-active", scheduleUpdate);
+  staffProjectWorkflowSpyReady = true;
+  scheduleUpdate();
+}
 
 function updateStaffProjectOperationsPanel(filtered) {
   const ctx = projectStatusContexts.staff || {};
@@ -482,6 +557,7 @@ function updateStaffProjectOperationsPanel(filtered) {
     ctx.projectStaffOpsPanelEl.hidden = true;
     return;
   }
+  ctx.projectStaffOpsPanelEl.hidden = false;
 
   syncStaffProjectWorkflowTabs();
   const closureExportProjects = filterClosureMailMergeProjects(data, "staff");
@@ -683,6 +759,7 @@ function setLoading(isLoading, ctxKey = activeProjectStatusContext) {
   const calendarSkel = ctx.calendarSkeletonEl;
   const dashboardSkel = ctx.dashboardOverviewSkeletonEl;
   const dashboardContent = ctx.dashboardOverviewContentEl;
+  const dashboardReadiness = ctx.projectStaffOpsPanelEl;
 
   if (budgetSkel) budgetSkel.style.display = isLoading ? "block" : "none";
   if (statusSkel) statusSkel.style.display = isLoading ? "flex" : "none";
@@ -694,16 +771,19 @@ function setLoading(isLoading, ctxKey = activeProjectStatusContext) {
   if (statusCanvas) statusCanvas.style.visibility = isLoading ? "hidden" : "visible";
   if (ctx.tableBodyEl) ctx.tableBodyEl.style.visibility = isLoading ? "hidden" : "visible";
   if (ctx.calendarContainerEl) ctx.calendarContainerEl.style.visibility = isLoading ? "hidden" : "visible";
+  if (dashboardReadiness) dashboardReadiness.style.visibility = isLoading ? "hidden" : "visible";
   if (dashboardContent) dashboardContent.style.visibility = isLoading ? "hidden" : "visible";
 
   budgetCanvas?.parentElement?.classList.toggle("is-loading", isLoading);
   statusCanvas?.parentElement?.classList.toggle("is-loading", isLoading);
   ctx.projectTableAreaEl?.classList.toggle("is-loading", isLoading);
+  dashboardReadiness?.classList.toggle("is-loading", isLoading);
   dashboardContent?.classList.toggle("is-loading", isLoading);
 
   budgetCanvas?.parentElement?.setAttribute("aria-busy", isLoading ? "true" : "false");
   statusCanvas?.parentElement?.setAttribute("aria-busy", isLoading ? "true" : "false");
   ctx.projectTableAreaEl?.setAttribute("aria-busy", isLoading ? "true" : "false");
+  dashboardReadiness?.setAttribute("aria-busy", isLoading ? "true" : "false");
   dashboardContent?.setAttribute("aria-busy", isLoading ? "true" : "false");
 
   if (isLoading) {
@@ -752,6 +832,7 @@ function toggleProjectStatusAccess(isAuthenticated, ctxKey = activeProjectStatus
     if (!isAuthenticated) {
       ctx.projectStaffOpsPanelEl.hidden = true;
     } else {
+      ctx.projectStaffOpsPanelEl.hidden = false;
       syncStaffProjectWorkflowTabs();
     }
   }

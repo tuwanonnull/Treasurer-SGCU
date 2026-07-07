@@ -651,6 +651,7 @@
 .dashboard-skeleton-line,
 .dashboard-skeleton-donut,
 .dashboard-skeleton-bar,
+.dashboard-skeleton-pill,
 .dashboard-skeleton-table span {
   display: block;
   border-radius: 999px;
@@ -691,6 +692,26 @@
 .dashboard-skeleton-caption {
   width: 68%;
   height: 11px;
+}
+
+.dashboard-skeleton-readiness-card {
+  min-height: 210px;
+}
+
+.dashboard-skeleton-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dashboard-skeleton-pill {
+  width: 132px;
+  height: 34px;
+}
+
+.dashboard-skeleton-readiness-table {
+  grid-template-columns: minmax(72px, 0.65fr) minmax(170px, 2fr) minmax(120px, 0.8fr);
 }
 
 .dashboard-skeleton-donut-card {
@@ -859,11 +880,25 @@
     border-radius: 14px;
   }
 
+  .dashboard-skeleton-readiness-card {
+    min-height: 188px;
+  }
+
+  .dashboard-skeleton-pill-row {
+    justify-content: stretch;
+  }
+
+  .dashboard-skeleton-pill {
+    flex: 1 1 0;
+    width: auto;
+  }
+
   .dashboard-skeleton-chart-card {
     min-height: 206px;
   }
 
-  .dashboard-skeleton-table {
+  .dashboard-skeleton-table,
+  .dashboard-skeleton-readiness-table {
     grid-template-columns: minmax(0, 1fr) 76px;
     gap: 14px 12px;
   }

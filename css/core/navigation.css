@@ -429,6 +429,7 @@
 }
 
 .mobile-project-action-bar,
+.mobile-dashboard-action-bar,
 .mobile-meeting-action-bar,
 .mobile-budget-action-bar {
   display: none;
@@ -752,6 +753,10 @@
     display: none;
   }
 
+  .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {
+    display: none !important;
+  }
+
   .page-view[data-page="project-status"].active #calendarView .calendar-controls {
     display: none;
   }
@@ -806,6 +811,7 @@
   }
 
   .mobile-project-action-bar.is-visible,
+  .mobile-dashboard-action-bar.is-visible,
   .mobile-meeting-action-bar.is-visible,
   .mobile-budget-action-bar.is-visible {
     position: fixed;
@@ -829,7 +835,12 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .mobile-dashboard-action-bar.is-visible {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   body.mobile-menu-open .mobile-project-action-bar.is-visible,
+  body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
   body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
   body.mobile-menu-open .mobile-budget-action-bar.is-visible {
     display: none;
@@ -852,6 +863,7 @@
   }
 
   .mobile-project-action,
+  .mobile-dashboard-action,
   .mobile-meeting-action,
   .mobile-budget-action {
     appearance: none;
@@ -879,6 +891,7 @@
   }
 
   .mobile-project-action[hidden],
+  .mobile-dashboard-action[hidden],
   .mobile-budget-action[hidden] {
     display: none;
   }
@@ -889,6 +902,7 @@
   }
 
   .mobile-project-action-icon,
+  .mobile-dashboard-action-icon,
   .mobile-meeting-action-icon,
   .mobile-budget-action-icon {
     font-size: 15px;
@@ -897,6 +911,8 @@
 
   .mobile-project-action:hover,
   .mobile-project-action:focus-visible,
+  .mobile-dashboard-action:hover,
+  .mobile-dashboard-action:focus-visible,
   .mobile-meeting-action:hover,
   .mobile-meeting-action:focus-visible,
   .mobile-budget-action:hover,
@@ -907,6 +923,7 @@
   }
 
   .mobile-project-action.is-active,
+  .mobile-dashboard-action.is-active,
   .mobile-meeting-action.is-active,
   .mobile-budget-action.is-active {
     background: linear-gradient(135deg, #fff7fb 0%, #ffe4f1 100%);
@@ -915,6 +932,7 @@
   }
 
   .mobile-project-action:disabled,
+  .mobile-dashboard-action:disabled,
   .mobile-meeting-action:disabled,
   .mobile-budget-action:disabled {
     opacity: 0.42;
@@ -923,6 +941,7 @@
   }
 
   .mobile-project-action.has-active-filters::after,
+  .mobile-dashboard-action.has-active-filters::after,
   .mobile-meeting-action.has-active-filters::after,
   .mobile-budget-action.has-active-filters::after {
     content: attr(data-filter-count);
@@ -1139,6 +1158,7 @@
   }
 
   .mobile-project-action-bar.is-visible,
+  .mobile-dashboard-action-bar.is-visible,
   .mobile-meeting-action-bar.is-visible,
   .mobile-budget-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
@@ -1279,6 +1299,7 @@
   }
 
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
+  html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
   html.sgcu-standalone .mobile-budget-action-bar.is-visible {
     position: fixed;
@@ -1302,6 +1323,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  html.sgcu-standalone .mobile-dashboard-action-bar.is-visible {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   html.sgcu-standalone .mobile-project-action-bar.is-summary-actions {
     left: max(8px, env(safe-area-inset-left, 0px));
     right: max(8px, env(safe-area-inset-right, 0px));
@@ -1319,6 +1344,7 @@
   }
 
   html.sgcu-standalone .mobile-project-action,
+  html.sgcu-standalone .mobile-dashboard-action,
   html.sgcu-standalone .mobile-meeting-action {
     appearance: none;
     position: relative;
@@ -1419,12 +1445,14 @@
   }
 
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
+  html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
   html.sgcu-standalone .mobile-budget-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
   }
 
   html.sgcu-standalone body.mobile-menu-open .mobile-project-action-bar.is-visible,
+  html.sgcu-standalone body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-budget-action-bar.is-visible {
     display: none;
