@@ -476,6 +476,21 @@
           <span>Export</span>
         </button>
       </nav>
+
+      <nav class="mobile-borrow-action-bar" aria-label="คำสั่งจัดการยืม-คืนพัสดุบนมือถือ">
+        <button class="mobile-borrow-action is-active" type="button" data-borrow-mobile-action="queue">
+          <span class="mobile-borrow-action-icon" aria-hidden="true">▤</span>
+          <span>รายการ</span>
+        </button>
+        <button class="mobile-borrow-action" type="button" data-borrow-mobile-action="history">
+          <span class="mobile-borrow-action-icon" aria-hidden="true">≡</span>
+          <span>ประวัติ</span>
+        </button>
+        <button class="mobile-borrow-action" type="button" data-borrow-mobile-action="filters">
+          <span class="mobile-borrow-action-icon" aria-hidden="true">⌕</span>
+          <span>ตัวกรอง</span>
+        </button>
+      </nav>
     </header>
 
     <main class="main">
@@ -1255,7 +1270,7 @@
       };
     </script>
     <script src="js/integrations/app.web-push.js" defer></script>
-    <script src="js/core/app.feature-loader.js?v=20260628-dashboard-debt-active-only-1" defer></script>
+    <script src="js/core/app.feature-loader.js?v=20260708-requester-profile-type-1" defer></script>
     <script src="js/core/app.init.js?v=20260627-project-budget-comparison-chart-1" defer></script>
   </body>
 </html>

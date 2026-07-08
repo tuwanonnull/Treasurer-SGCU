@@ -19,12 +19,17 @@
   width: 112px;
 }
 
+.meeting-day-modal-table tbody td[data-label="ผู้ขอ"],
 .meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"],
 .meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"] .meeting-row-meta {
   min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.meeting-day-modal-table tbody td[data-label="ผู้ขอ"] {
+  line-height: 1.45;
 }
 
 @media (max-width: 860px) {

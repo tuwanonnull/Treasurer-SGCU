@@ -114,6 +114,33 @@ function initMeetingRoomStaffApproval() {
     if (value === "approved" || value === "rejected" || value === "cancel_requested" || value === "reschedule_requested" || value === "no_show") return value;
     return "pending";
   };
+  const normalizeRequesterProfileType = (value = "") => {
+    const text = (value || "").toString().trim().toLowerCase();
+    if (text === "affairs" || text === "staff" || text === "personnel" || text === "บุคลากร") return "affairs";
+    if (text === "student" || text === "นิสิต") return "student";
+    return "";
+  };
+  const getRequesterProfileTypeLabel = (value = "") => {
+    const type = normalizeRequesterProfileType(value);
+    if (type === "affairs") return "บุคลากร";
+    if (type === "student") return "นิสิต";
+    return "";
+  };
+  const deriveRequesterProfileType = (item = {}) => {
+    const explicitType = normalizeRequesterProfileType(item.requesterProfileType || item.profileType);
+    if (explicitType) return explicitType;
+    const email = (item.requesterEmail || item.email || "").toString().trim().toLowerCase();
+    if (!email) return "";
+    const domain = email.split("@")[1] || "";
+    if (domain.startsWith("student.") || domain.includes(".student.")) return "student";
+    if (domain === "chula.ac.th" || domain.endsWith(".chula.ac.th")) return "affairs";
+    return "";
+  };
+  const formatRequesterDisplay = (item = {}) => {
+    const requester = (item.requester || "").toString().trim() || "-";
+    const label = getRequesterProfileTypeLabel(deriveRequesterProfileType(item));
+    return requester !== "-" && label ? `${requester} (${label})` : requester;
+  };
   const NO_SHOW_REASON_MARKER = "[NO_SHOW]";
   const isNoShowReason = (reason) =>
     (reason || "").toString().trim().toUpperCase().startsWith(NO_SHOW_REASON_MARKER);
@@ -342,7 +369,7 @@ function initMeetingRoomStaffApproval() {
               >
                 <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
                 <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
-                <td data-label="ผู้ขอ">${escapeText(item.requester || "-")}</td>
+                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
                 <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}</td>
                 <td data-label="สถานะ">
                   <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
@@ -384,7 +411,7 @@ function initMeetingRoomStaffApproval() {
         ["ห้องประชุม", normalizeRoomDisplay(booking.roomId, booking.roomName)],
         ["วันที่", formatDate(booking.date)],
         ["เวลา", `${booking.startTime || "-"} - ${booking.endTime || "-"}`],
-        ["ผู้ขอ", booking.requester || "-"],
+        ["ผู้ขอ", formatRequesterDisplay(booking)],
         ["ข้อมูลติดต่อ", contactText],
         ["วัตถุประสงค์", booking.purpose || "-"],
         ["สถานะ", statusText(booking.status)]
@@ -478,6 +505,7 @@ function initMeetingRoomStaffApproval() {
       startTime: data.startTime || "",
       endTime: data.endTime || "",
       requester: data.requester || "",
+      requesterProfileType: normalizeRequesterProfileType(data.requesterProfileType || data.profileType),
       purpose: data.purpose || "",
       rejectionReason: data.rejectionReason || "",
       contactPhone: data.contactPhone || "",
@@ -527,6 +555,7 @@ function initMeetingRoomStaffApproval() {
     startTime: item.startTime || "",
     endTime: item.endTime || "",
     requester: item.requester || "",
+    requesterProfileType: normalizeRequesterProfileType(item.requesterProfileType || item.profileType),
     requesterEmail: (item.requesterEmail || "").toString().trim().toLowerCase(),
     purpose: item.purpose || "",
     rejectionReason: item.rejectionReason || "",
@@ -1648,7 +1677,7 @@ function initMeetingRoomStaffApproval() {
       formatDate(booking.date),
       booking.startTime,
       booking.endTime,
-      booking.requester,
+      formatRequesterDisplay(booking),
       booking.purpose,
       statusText(booking.status)
     ]
@@ -1679,7 +1708,7 @@ function initMeetingRoomStaffApproval() {
       "วันที่": booking.date || "",
       "เวลาเริ่ม": booking.startTime || "",
       "เวลาสิ้นสุด": booking.endTime || "",
-      "ผู้ขอ": booking.requester || "",
+      "ผู้ขอ": formatRequesterDisplay(booking),
       "อีเมล": booking.requesterEmail || booking.email || "",
       "เบอร์โทร": booking.contactPhone || booking.phone || "",
       "ช่องทางติดต่อ": booking.contactInfo || booking.lineId || "",
@@ -1854,7 +1883,7 @@ function initMeetingRoomStaffApproval() {
         .map((item) => {
           const roomName = normalizeRoomDisplay(item.roomId, item.roomName);
           return `<div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
-            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${item.requester || "-"}`
+            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
           )}">
             ${escapeText(`${item.startTime || "-"}-${item.endTime || "-"} ${roomName}`)}
           </div>`;
@@ -1935,7 +1964,7 @@ function initMeetingRoomStaffApproval() {
                 <td data-label="ห้อง">${escapeText(roomName)}</td>
                 <td data-label="วันที่">${escapeText(dateText)}</td>
                 <td data-label="เวลา">${escapeText(timeText)}</td>
-                <td data-label="ผู้ขอ">${escapeText(booking.requester || "-")}</td>
+                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(booking))}</td>
                 <td data-label="วัตถุประสงค์">
                   <div class="meeting-staff-purpose-cell">${escapeText(booking.purpose || "-")}${rescheduleLine}${rejectedLine}</div>
                 </td>
@@ -1993,7 +2022,7 @@ function initMeetingRoomStaffApproval() {
                 <td data-label="ห้อง">${escapeText(roomName)}</td>
                 <td data-label="วันที่">${escapeText(dateText)}</td>
                 <td data-label="เวลา">${escapeText(timeText)}</td>
-                <td data-label="ผู้ขอ">${escapeText(booking.requester || "-")}</td>
+                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(booking))}</td>
                 <td data-label="วัตถุประสงค์">
                   <div class="meeting-staff-purpose-cell">${escapeText(booking.purpose || "-")}${rescheduleLine}${rejectedLine}</div>
                 </td>

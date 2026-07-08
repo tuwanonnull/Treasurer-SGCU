@@ -431,7 +431,8 @@
 .mobile-project-action-bar,
 .mobile-dashboard-action-bar,
 .mobile-meeting-action-bar,
-.mobile-budget-action-bar {
+.mobile-budget-action-bar,
+.mobile-borrow-action-bar {
   display: none;
 }
 
@@ -813,7 +814,8 @@
   .mobile-project-action-bar.is-visible,
   .mobile-dashboard-action-bar.is-visible,
   .mobile-meeting-action-bar.is-visible,
-  .mobile-budget-action-bar.is-visible {
+  .mobile-budget-action-bar.is-visible,
+  .mobile-borrow-action-bar.is-visible {
     position: fixed;
     left: max(8px, env(safe-area-inset-left, 0px));
     right: max(8px, env(safe-area-inset-right, 0px));
@@ -835,6 +837,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .mobile-borrow-action-bar.is-visible {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .mobile-dashboard-action-bar.is-visible {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -842,7 +848,8 @@
   body.mobile-menu-open .mobile-project-action-bar.is-visible,
   body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
   body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
-  body.mobile-menu-open .mobile-budget-action-bar.is-visible {
+  body.mobile-menu-open .mobile-budget-action-bar.is-visible,
+  body.mobile-menu-open .mobile-borrow-action-bar.is-visible {
     display: none;
   }
 
@@ -865,7 +872,8 @@
   .mobile-project-action,
   .mobile-dashboard-action,
   .mobile-meeting-action,
-  .mobile-budget-action {
+  .mobile-budget-action,
+  .mobile-borrow-action {
     appearance: none;
     position: relative;
     min-width: 0;
@@ -892,7 +900,8 @@
 
   .mobile-project-action[hidden],
   .mobile-dashboard-action[hidden],
-  .mobile-budget-action[hidden] {
+  .mobile-budget-action[hidden],
+  .mobile-borrow-action[hidden] {
     display: none;
   }
 
@@ -904,7 +913,8 @@
   .mobile-project-action-icon,
   .mobile-dashboard-action-icon,
   .mobile-meeting-action-icon,
-  .mobile-budget-action-icon {
+  .mobile-budget-action-icon,
+  .mobile-borrow-action-icon {
     font-size: 15px;
     line-height: 1;
   }
@@ -916,7 +926,9 @@
   .mobile-meeting-action:hover,
   .mobile-meeting-action:focus-visible,
   .mobile-budget-action:hover,
-  .mobile-budget-action:focus-visible {
+  .mobile-budget-action:focus-visible,
+  .mobile-borrow-action:hover,
+  .mobile-borrow-action:focus-visible {
     background: rgba(255, 241, 242, 0.72);
     color: #be185d;
     outline: none;
@@ -925,7 +937,8 @@
   .mobile-project-action.is-active,
   .mobile-dashboard-action.is-active,
   .mobile-meeting-action.is-active,
-  .mobile-budget-action.is-active {
+  .mobile-budget-action.is-active,
+  .mobile-borrow-action.is-active {
     background: linear-gradient(135deg, #fff7fb 0%, #ffe4f1 100%);
     color: #9d174d;
     box-shadow: 0 8px 18px rgba(157, 23, 77, 0.12);
@@ -934,7 +947,8 @@
   .mobile-project-action:disabled,
   .mobile-dashboard-action:disabled,
   .mobile-meeting-action:disabled,
-  .mobile-budget-action:disabled {
+  .mobile-budget-action:disabled,
+  .mobile-borrow-action:disabled {
     opacity: 0.42;
     cursor: not-allowed;
     box-shadow: none;
@@ -943,7 +957,8 @@
   .mobile-project-action.has-active-filters::after,
   .mobile-dashboard-action.has-active-filters::after,
   .mobile-meeting-action.has-active-filters::after,
-  .mobile-budget-action.has-active-filters::after {
+  .mobile-budget-action.has-active-filters::after,
+  .mobile-borrow-action.has-active-filters::after {
     content: attr(data-filter-count);
     position: absolute;
     top: 4px;
@@ -1160,7 +1175,8 @@
   .mobile-project-action-bar.is-visible,
   .mobile-dashboard-action-bar.is-visible,
   .mobile-meeting-action-bar.is-visible,
-  .mobile-budget-action-bar.is-visible {
+  .mobile-budget-action-bar.is-visible,
+  .mobile-borrow-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
   }
 }
@@ -1301,7 +1317,8 @@
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
   html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
-  html.sgcu-standalone .mobile-budget-action-bar.is-visible {
+  html.sgcu-standalone .mobile-budget-action-bar.is-visible,
+  html.sgcu-standalone .mobile-borrow-action-bar.is-visible {
     position: fixed;
     left: max(8px, env(safe-area-inset-left, 0px));
     right: max(8px, env(safe-area-inset-right, 0px));
@@ -1321,6 +1338,10 @@
 
   html.sgcu-standalone .mobile-budget-action-bar.is-visible {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  html.sgcu-standalone .mobile-borrow-action-bar.is-visible {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   html.sgcu-standalone .mobile-dashboard-action-bar.is-visible {
@@ -1447,14 +1468,16 @@
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
   html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
-  html.sgcu-standalone .mobile-budget-action-bar.is-visible {
+  html.sgcu-standalone .mobile-budget-action-bar.is-visible,
+  html.sgcu-standalone .mobile-borrow-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
   }
 
   html.sgcu-standalone body.mobile-menu-open .mobile-project-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
-  html.sgcu-standalone body.mobile-menu-open .mobile-budget-action-bar.is-visible {
+  html.sgcu-standalone body.mobile-menu-open .mobile-budget-action-bar.is-visible,
+  html.sgcu-standalone body.mobile-menu-open .mobile-borrow-action-bar.is-visible {
     display: none;
   }
 }

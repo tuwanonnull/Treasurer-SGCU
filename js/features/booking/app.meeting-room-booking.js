@@ -142,6 +142,33 @@ function initMeetingRoomBookingApp() {
     if (value === "approved" || value === "rejected" || value === "cancel_requested" || value === "reschedule_requested" || value === "no_show") return value;
     return "pending";
   };
+  const normalizeRequesterProfileType = (value = "") => {
+    const text = (value || "").toString().trim().toLowerCase();
+    if (text === "affairs" || text === "staff" || text === "personnel" || text === "บุคลากร") return "affairs";
+    if (text === "student" || text === "นิสิต") return "student";
+    return "";
+  };
+  const getRequesterProfileTypeLabel = (value = "") => {
+    const type = normalizeRequesterProfileType(value);
+    if (type === "affairs") return "บุคลากร";
+    if (type === "student") return "นิสิต";
+    return "";
+  };
+  const deriveRequesterProfileType = (item = {}) => {
+    const explicitType = normalizeRequesterProfileType(item.requesterProfileType || item.profileType);
+    if (explicitType) return explicitType;
+    const email = (item.requesterEmail || item.email || "").toString().trim().toLowerCase();
+    if (!email) return "";
+    const domain = email.split("@")[1] || "";
+    if (domain.startsWith("student.") || domain.includes(".student.")) return "student";
+    if (domain === "chula.ac.th" || domain.endsWith(".chula.ac.th")) return "affairs";
+    return "";
+  };
+  const formatRequesterDisplay = (item = {}) => {
+    const requester = (item.requester || "").toString().trim() || "-";
+    const label = getRequesterProfileTypeLabel(deriveRequesterProfileType(item));
+    return requester !== "-" && label ? `${requester} (${label})` : requester;
+  };
   const isNoShowReason = (reason) =>
     (reason || "").toString().trim().toUpperCase().startsWith(NO_SHOW_REASON_MARKER);
   const buildNoShowReason = (reason = "") => {
@@ -370,7 +397,8 @@ function initMeetingRoomBookingApp() {
       firstName: (profile.firstName || "").toString().trim(),
       lastName: (profile.lastName || "").toString().trim(),
       phone: (profile.phone || "").toString().trim(),
-      lineId: (profile.lineId || "").toString().trim()
+      lineId: (profile.lineId || "").toString().trim(),
+      profileType: normalizeRequesterProfileType(profile.profileType || window.currentUserProfileType || "student")
     };
     const fullName = [activeMeetingProfile.firstName, activeMeetingProfile.lastName]
       .map((part) => (part || "").toString().trim())
@@ -909,6 +937,7 @@ function initMeetingRoomBookingApp() {
     startTime: item.startTime || "",
     endTime: item.endTime || "",
     requester: item.requester || "",
+    requesterProfileType: normalizeRequesterProfileType(item.requesterProfileType || item.profileType),
     purpose: item.purpose || "",
     contactPhone: item.contactPhone || "",
     contactInfo: item.contactInfo || "",
@@ -1073,6 +1102,7 @@ function initMeetingRoomBookingApp() {
       startTime: data.startTime || "",
       endTime: data.endTime || "",
       requester: data.requester || "",
+      requesterProfileType: normalizeRequesterProfileType(data.requesterProfileType || data.profileType),
       purpose: data.purpose || "",
       rejectionReason: data.rejectionReason || "",
       contactPhone: data.contactPhone || "",
@@ -1121,6 +1151,7 @@ function initMeetingRoomBookingApp() {
     startTime: item.startTime || "",
     endTime: item.endTime || "",
     requester: item.requester || "",
+    requesterProfileType: normalizeRequesterProfileType(item.requesterProfileType || item.profileType),
     requesterEmail: (item.requesterEmail || "").toString().trim().toLowerCase(),
     purpose: item.purpose || "",
     rejectionReason: item.rejectionReason || "",
@@ -1266,7 +1297,7 @@ function initMeetingRoomBookingApp() {
     if (pendingCountEl) pendingCountEl.textContent = String(upcoming);
     if (latestDateEl) {
       latestDateEl.textContent = latest
-        ? `อัปเดตล่าสุด: ${formatDate(latest.date)} ${latest.startTime || ""}-${latest.endTime || ""} (${latest.requester || "ผู้จอง"})`
+        ? `อัปเดตล่าสุด: ${formatDate(latest.date)} ${latest.startTime || ""}-${latest.endTime || ""} (${formatRequesterDisplay(latest) || "ผู้จอง"})`
         : "ยังไม่มีข้อมูล";
     }
 
@@ -1294,7 +1325,7 @@ function initMeetingRoomBookingApp() {
                 <td>${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
                 <td>${escapeText(formatDate(item.date))}</td>
                 <td>${escapeText(item.startTime || "-")} - ${escapeText(item.endTime || "-")}</td>
-                <td>${escapeText(item.requester || "-")}</td>
+                <td>${escapeText(formatRequesterDisplay(item))}</td>
                 <td>
                   ${escapeText(item.purpose || "-")}${projectLine}${contactLine}${rejectedLine}
                 </td>
@@ -1898,7 +1929,7 @@ function initMeetingRoomBookingApp() {
     const dateText = formatDate(booking.date);
     const timeText = `${booking.startTime || "-"} - ${booking.endTime || "-"}`;
     const rows = [
-      ["ผู้ขอ", booking.requester || "-"],
+      ["ผู้ขอ", formatRequesterDisplay(booking)],
       ["ประเภทคำขอ", projectText],
       ["วัตถุประสงค์", booking.purpose || "-"]
     ];
@@ -2019,7 +2050,7 @@ function initMeetingRoomBookingApp() {
               <div class="meeting-day-list-meta">
                 <div class="meeting-day-list-meta-row">
                   <span class="meeting-day-list-meta-label">ผู้ขอ</span>
-                  <span class="meeting-day-list-meta-value">${escapeText(item.requester || "-")}</span>
+                  <span class="meeting-day-list-meta-value">${escapeText(formatRequesterDisplay(item))}</span>
                 </div>
                 <div class="meeting-day-list-meta-row">
                   <span class="meeting-day-list-meta-label">วัตถุประสงค์</span>
@@ -2086,7 +2117,7 @@ function initMeetingRoomBookingApp() {
               <tr data-booking-id="${escapeText(item.id || "")}">
                 <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
                 <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
-                <td data-label="ผู้ขอ">${escapeText(item.requester || "-")}</td>
+                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
                 <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}${item.status === "rejected" && item.rejectionReason ? `<div class="meeting-row-meta">เหตุผลไม่อนุมัติ: ${escapeText(item.rejectionReason)}</div>` : ""}</td>
                 <td data-label="สถานะ">
                   <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
@@ -2202,7 +2233,7 @@ function initMeetingRoomBookingApp() {
         .map((item) => {
           const roomName = normalizeRoomDisplay(item.roomId, item.roomName);
           return `<div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
-            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${item.requester || "-"}`
+            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
           )}">
             ${escapeText(`${item.startTime || "-"}-${item.endTime || "-"} ${roomName}`)}
           </div>`;
@@ -2276,6 +2307,7 @@ function initMeetingRoomBookingApp() {
             startTime: payload.startTime,
             endTime: payload.endTime,
             requester: payload.requester,
+            requesterProfileType: normalizeRequesterProfileType(payload.requesterProfileType || payload.profileType),
             requesterEmail: payload.requesterEmail || "",
             purpose: payload.purpose,
             contactPhone: payload.contactPhone || "",
@@ -2517,6 +2549,7 @@ function initMeetingRoomBookingApp() {
     const requester = meetingProfile
       ? [meetingProfile.firstName, meetingProfile.lastName].filter(Boolean).join(" ")
       : "";
+    const requesterProfileType = normalizeRequesterProfileType(meetingProfile?.profileType || window.currentUserProfileType || "student");
     const contactPhone = (meetingProfile?.phone || "").toString().trim();
     const contactInfo = (meetingProfile?.lineId || "").toString().trim();
     const projectMode = (document.getElementById("meetingProjectMode")?.value || DEFAULT_PROJECT_MODE).toString();
@@ -2605,6 +2638,7 @@ function initMeetingRoomBookingApp() {
       startTime,
       endTime,
       requester,
+      requesterProfileType,
       purpose,
       contactPhone,
       contactInfo,
@@ -2635,6 +2669,7 @@ function initMeetingRoomBookingApp() {
         startTime,
         endTime,
         requester,
+        requesterProfileType,
         purpose,
         contactPhone,
         contactInfo,

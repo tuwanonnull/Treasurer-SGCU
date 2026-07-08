@@ -57,6 +57,24 @@ function initBorrowAssetsApp() {
   const staffHistoryTableBody = document.getElementById("staffBorrowHistoryTableBody");
   const staffBorrowExportCsvBtn = document.getElementById("staffBorrowExportCsvBtn");
   const staffBorrowNotificationStatusEl = document.getElementById("staffBorrowNotificationStatus");
+  const staffBorrowRequestSearch = document.getElementById("staffBorrowRequestSearch");
+  const staffBorrowRequestSearchClear = document.getElementById("staffBorrowRequestSearchClear");
+  const staffBorrowRequestStatusFilter = document.getElementById("staffBorrowRequestStatusFilter");
+  const staffBorrowRequestOrgFilter = document.getElementById("staffBorrowRequestOrgFilter");
+  const staffBorrowRequestDeptFilter = document.getElementById("staffBorrowRequestDeptFilter");
+  const staffBorrowRequestDueFilter = document.getElementById("staffBorrowRequestDueFilter");
+  const staffBorrowRequestPickupFrom = document.getElementById("staffBorrowRequestPickupFrom");
+  const staffBorrowRequestPickupTo = document.getElementById("staffBorrowRequestPickupTo");
+  const staffBorrowRequestReturnFrom = document.getElementById("staffBorrowRequestReturnFrom");
+  const staffBorrowRequestReturnTo = document.getElementById("staffBorrowRequestReturnTo");
+  const staffBorrowRequestFilterSummary = document.getElementById("staffBorrowRequestFilterSummary");
+  const staffBorrowRequestFiltersBar = document.querySelector(".borrow-staff-request-filters");
+  const staffBorrowRequestFilterFields = document.getElementById("staffBorrowRequestFilterFields");
+  const staffBorrowMobileActionBar = document.querySelector(".mobile-borrow-action-bar");
+  const staffBorrowMobileActionBtns = Array.from(document.querySelectorAll("[data-borrow-mobile-action]"));
+  const staffBorrowMobileFilterBtn = staffBorrowMobileActionBtns.find(
+    (btn) => btn.dataset.borrowMobileAction === "filters"
+  );
   const staffBorrowPickupDaysForm = document.getElementById("staffBorrowPickupDaysForm");
   const staffBorrowPickupDayInputs = Array.from(document.querySelectorAll("[data-staff-borrow-pickup-day]"));
   const staffBorrowPickupDaysSaveBtn = document.getElementById("staffBorrowPickupDaysSaveBtn");
@@ -66,6 +84,32 @@ function initBorrowAssetsApp() {
   const staffSummaryCards = Array.from(
     document.querySelectorAll("#staffBorrowQueue .cards[data-role='legacy-staff-summary'] .card-value")
   );
+
+  const staffBorrowFilterSheet = document.createElement("div");
+  staffBorrowFilterSheet.className = "mobile-filter-sheet mobile-borrow-filter-sheet";
+  staffBorrowFilterSheet.setAttribute("aria-hidden", "true");
+  staffBorrowFilterSheet.innerHTML = `
+    <div class="mobile-filter-backdrop" data-borrow-filter-close></div>
+    <section class="mobile-filter-dialog" role="dialog" aria-modal="true" aria-labelledby="borrowMobileFilterTitle">
+      <header class="mobile-filter-header">
+        <div>
+          <h2 id="borrowMobileFilterTitle" class="mobile-filter-title">ตัวกรองคำขอยืมพัสดุ</h2>
+          <p class="mobile-filter-caption">กรองตามสถานะ หน่วยงาน กำหนดคืน และช่วงวันที่</p>
+        </div>
+        <button class="mobile-filter-close" type="button" aria-label="ปิดตัวกรอง" data-borrow-filter-close>×</button>
+      </header>
+      <div class="mobile-filter-body"></div>
+      <footer class="mobile-filter-footer">
+        <button class="btn-ghost mobile-filter-reset" type="button">ล้างตัวกรอง</button>
+        <button class="btn-primary mobile-filter-done" type="button">เสร็จ</button>
+      </footer>
+    </section>
+  `;
+  document.body.appendChild(staffBorrowFilterSheet);
+  const staffBorrowFilterSheetBody = staffBorrowFilterSheet.querySelector(".mobile-filter-body");
+  const staffBorrowFilterSheetResetBtn = staffBorrowFilterSheet.querySelector(".mobile-filter-reset");
+  const staffBorrowFilterSheetDoneBtn = staffBorrowFilterSheet.querySelector(".mobile-filter-done");
+  let staffBorrowFilterFieldsPlaceholder = null;
 
   const hasBorrowFormSection = !!(borrowAssetList && addBorrowAssetRow);
   const appConfig = typeof SGCU_APP_CONFIG === "object" && SGCU_APP_CONFIG ? SGCU_APP_CONFIG : {};
@@ -343,6 +387,8 @@ function initBorrowAssetsApp() {
   };
 
   const OTHER_ORG_VALUE = "__other__";
+  const EXTERNAL_ORG_FILTER_VALUE = "__external__";
+  const EXTERNAL_ORG_LABEL = "หน่วยงานภายนอก / อื่น ๆ";
   const parseBorrowAcademicReferenceDate = (value) => {
     if (!value) return new Date();
     if (typeof value === "number" && Number.isFinite(value)) return new Date(value);
@@ -564,7 +610,7 @@ function initBorrowAssetsApp() {
 
     const otherOption = document.createElement("option");
     otherOption.value = OTHER_ORG_VALUE;
-    otherOption.textContent = "อื่น ๆ";
+    otherOption.textContent = EXTERNAL_ORG_LABEL;
     borrowProjectName.appendChild(otherOption);
 
     if (currentValue) {
@@ -1314,9 +1360,11 @@ function initBorrowAssetsApp() {
     `).join("");
   };
 
-  const renderStaffBorrowOverview = () => {
+  const renderStaffBorrowOverview = (items = null) => {
     if (!staffBorrowOverviewCards && !staffBorrowFollowupTableBody) return;
-    const allItems = borrowRequests.filter((item) => !item.isDeleted);
+    const allItems = Array.isArray(items)
+      ? items.filter((item) => !item.isDeleted)
+      : borrowRequests.filter((item) => !item.isDeleted);
     const pending = allItems.filter((item) => item.status === STATUS_PENDING).length;
     const borrowed = allItems.filter((item) => item.status === STATUS_APPROVED || item.status === STATUS_RECEIVED).length;
     const overdue = allItems.filter((item) => buildBorrowFollowupMeta(item).overdue).length;
@@ -1843,9 +1891,207 @@ function initBorrowAssetsApp() {
       .filter((item) => staffRequestTabMode === "history"
         ? STAFF_HISTORY_TAB_STATUSES.has(item.status)
         : STAFF_REQUEST_TAB_STATUSES.has(item.status))
+      .filter(matchesStaffBorrowRequestFilters)
       .sort((a, b) => (staffRequestTabMode === "history"
         ? (b.updatedAtMs || 0) - (a.updatedAtMs || 0)
         : (b.submittedAtMs || 0) - (a.submittedAtMs || 0)));
+
+  const buildStaffBorrowRequestSearchText = (item) =>
+    [
+      item.requestNo,
+      item.id,
+      item.createdDate,
+      item.academicYear,
+      item.firstName,
+      item.lastName,
+      item.nickname,
+      item.requesterEmail,
+      item.accountEmail,
+      item.studentId,
+      item.faculty,
+      item.year,
+      item.phone,
+      item.lineId,
+      item.projectName,
+      item.projectDept,
+      item.projectDetail,
+      item.staffNote,
+      statusText(item.status),
+      summarizeAssetsInline(item.assets),
+      ...(Array.isArray(item.assets)
+        ? item.assets.flatMap((asset) => [asset?.code, asset?.name, asset?.unit])
+        : [])
+    ]
+      .map((value) => (value == null ? "" : String(value).trim().toLowerCase()))
+      .join(" ");
+
+  const dateInRange = (value, fromValue, toValue) => {
+    const date = parseDateYmd(value);
+    const from = parseDateYmd(fromValue);
+    const to = parseDateYmd(toValue);
+    if ((from || to) && !date) return false;
+    if (from && date.getTime() < from.getTime()) return false;
+    if (to && date.getTime() > to.getTime()) return false;
+    return true;
+  };
+
+  const getStaffBorrowDueState = (item) => {
+    if (item.status !== STATUS_APPROVED && item.status !== STATUS_RECEIVED) return "normal";
+    const meta = buildBorrowFollowupMeta(item);
+    if (meta.dayDiff == null) return "missing";
+    if (meta.overdue) return "overdue";
+    if (meta.dayDiff === 0) return "today";
+    if (meta.dueSoon) return "soon";
+    return "normal";
+  };
+
+  const getBorrowMasterOrgTypeSet = () => new Set(collectBorrowOrgTypeOptions());
+
+  const isExternalBorrowRequest = (item, masterOrgTypeSet = getBorrowMasterOrgTypeSet()) => {
+    const source = (item?.projectOrgSource || "").toString().trim().toLowerCase();
+    if (source === "external" || source === "other") return true;
+    if (source === "master") return false;
+    const projectName = (item?.projectName || "").toString().trim();
+    return !!projectName && !masterOrgTypeSet.has(projectName);
+  };
+
+  function matchesStaffBorrowRequestFilters(item) {
+    const term = (staffBorrowRequestSearch?.value || "").trim().toLowerCase();
+    const status = staffBorrowRequestStatusFilter?.value || "all";
+    const org = staffBorrowRequestOrgFilter?.value || "all";
+    const dept = staffBorrowRequestDeptFilter?.value || "all";
+    const due = staffBorrowRequestDueFilter?.value || "all";
+
+    if (term && !buildStaffBorrowRequestSearchText(item).includes(term)) return false;
+    if (status !== "all" && item.status !== status) return false;
+    if (org === EXTERNAL_ORG_FILTER_VALUE) {
+      if (!isExternalBorrowRequest(item)) return false;
+    } else if (org !== "all" && (item.projectName || "") !== org) {
+      return false;
+    }
+    if (dept !== "all") {
+      const deptMatch = org === EXTERNAL_ORG_FILTER_VALUE
+        ? (item.projectDept || "") === dept || (item.projectName || "") === dept
+        : (item.projectDept || "") === dept;
+      if (!deptMatch) return false;
+    }
+    if (due !== "all" && getStaffBorrowDueState(item) !== due) return false;
+    if (!dateInRange(item.pickupDate, staffBorrowRequestPickupFrom?.value || "", staffBorrowRequestPickupTo?.value || "")) {
+      return false;
+    }
+    if (!dateInRange(item.returnDate, staffBorrowRequestReturnFrom?.value || "", staffBorrowRequestReturnTo?.value || "")) {
+      return false;
+    }
+    return true;
+  }
+
+  const hasActiveStaffBorrowRequestFilters = () =>
+    !!(
+      (staffBorrowRequestSearch?.value || "").trim() ||
+      (staffBorrowRequestStatusFilter?.value || "all") !== "all" ||
+      (staffBorrowRequestOrgFilter?.value || "all") !== "all" ||
+      (staffBorrowRequestDeptFilter?.value || "all") !== "all" ||
+      (staffBorrowRequestDueFilter?.value || "all") !== "all" ||
+      staffBorrowRequestPickupFrom?.value ||
+      staffBorrowRequestPickupTo?.value ||
+      staffBorrowRequestReturnFrom?.value ||
+      staffBorrowRequestReturnTo?.value
+    );
+
+  const countActiveStaffBorrowRequestFilters = () => {
+    const values = [
+      (staffBorrowRequestStatusFilter?.value || "all") !== "all" ? staffBorrowRequestStatusFilter?.value : "",
+      (staffBorrowRequestOrgFilter?.value || "all") !== "all" ? staffBorrowRequestOrgFilter?.value : "",
+      (staffBorrowRequestDeptFilter?.value || "all") !== "all" ? staffBorrowRequestDeptFilter?.value : "",
+      (staffBorrowRequestDueFilter?.value || "all") !== "all" ? staffBorrowRequestDueFilter?.value : "",
+      staffBorrowRequestPickupFrom?.value || "",
+      staffBorrowRequestPickupTo?.value || "",
+      staffBorrowRequestReturnFrom?.value || "",
+      staffBorrowRequestReturnTo?.value || ""
+    ];
+    return values.filter(Boolean).length;
+  };
+
+  const updateStaffBorrowMobileFilterToggle = () => {
+    if (!staffBorrowMobileFilterBtn) return;
+    const count = countActiveStaffBorrowRequestFilters();
+    staffBorrowMobileFilterBtn.classList.toggle("has-active-filters", count > 0);
+    staffBorrowMobileFilterBtn.dataset.filterCount = count ? String(count) : "";
+    staffBorrowMobileFilterBtn.setAttribute(
+      "aria-label",
+      count ? `เปิดตัวกรองคำขอยืมพัสดุ (${count} เงื่อนไขใช้งานอยู่)` : "เปิดตัวกรองคำขอยืมพัสดุ"
+    );
+  };
+
+  const renderStaffBorrowRequestFilterSummary = (filteredCount, totalCount) => {
+    if (!staffBorrowRequestFilterSummary) return;
+    const hasFilters = hasActiveStaffBorrowRequestFilters();
+    staffBorrowRequestFilterSummary.textContent = hasFilters
+      ? `แสดง ${filteredCount} จาก ${totalCount} รายการตามตัวกรอง`
+      : `แสดง ${totalCount} รายการ`;
+  };
+
+  const populateStaffBorrowRequestFilterOptions = () => {
+    const masterOrgTypeSet = getBorrowMasterOrgTypeSet();
+    const getRequestOnlyValues = (fieldName, matcher = null) =>
+      borrowRequests
+        .filter((item) => !item.isDeleted)
+        .filter((item) => !matcher || matcher(item))
+        .map((item) => (item?.[fieldName] || "").toString().trim())
+        .filter(Boolean);
+
+    const fillSelect = (selectEl, values, defaultLabel, { disabled = false } = {}) => {
+      if (!selectEl) return;
+      const current = selectEl.value || "all";
+      const options = Array.from(new Set(values.map((value) => (value || "").toString().trim()).filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, "th"));
+      selectEl.innerHTML = [
+        `<option value="all">${safeEscape(defaultLabel)}</option>`,
+        ...options.map((value) => `<option value="${safeEscape(value)}">${safeEscape(value)}</option>`)
+      ].join("");
+      selectEl.value = options.includes(current) ? current : "all";
+      selectEl.disabled = !!disabled;
+    };
+
+    const orgOptions = [
+      ...collectBorrowOrgTypeOptions(),
+      EXTERNAL_ORG_FILTER_VALUE
+    ];
+    const orgLabelByValue = new Map([[EXTERNAL_ORG_FILTER_VALUE, EXTERNAL_ORG_LABEL]]);
+    const fillOrgSelect = (selectEl) => {
+      if (!selectEl) return;
+      const current = selectEl.value || "all";
+      const options = Array.from(new Set(orgOptions.map((value) => (value || "").toString().trim()).filter(Boolean)));
+      const sorted = options
+        .filter((value) => value !== EXTERNAL_ORG_FILTER_VALUE)
+        .sort((a, b) => a.localeCompare(b, "th"));
+      if (options.includes(EXTERNAL_ORG_FILTER_VALUE)) sorted.push(EXTERNAL_ORG_FILTER_VALUE);
+      selectEl.innerHTML = [
+        `<option value="all">ทุกประเภทองค์กร</option>`,
+        ...sorted.map((value) => `<option value="${safeEscape(value)}">${safeEscape(orgLabelByValue.get(value) || value)}</option>`)
+      ].join("");
+      selectEl.value = sorted.includes(current) ? current : "all";
+      selectEl.disabled = false;
+    };
+    fillOrgSelect(staffBorrowRequestOrgFilter);
+
+    const selectedOrg = (staffBorrowRequestOrgFilter?.value || "all").toString().trim();
+    if (!selectedOrg || selectedOrg === "all") {
+      fillSelect(staffBorrowRequestDeptFilter, [], "เลือกประเภทองค์กรก่อน", { disabled: true });
+      return;
+    }
+
+    const deptOptions = selectedOrg === EXTERNAL_ORG_FILTER_VALUE
+      ? [
+        ...getRequestOnlyValues("projectDept", (item) => isExternalBorrowRequest(item, masterOrgTypeSet)),
+        ...getRequestOnlyValues("projectName", (item) => isExternalBorrowRequest(item, masterOrgTypeSet))
+      ]
+      : [
+        ...collectBorrowOrgNameOptions(selectedOrg),
+        ...getRequestOnlyValues("projectDept", (item) => (item.projectName || "").toString().trim() === selectedOrg)
+      ];
+    fillSelect(staffBorrowRequestDeptFilter, deptOptions, "ทุกฝ่าย / ชมรม");
+  };
 
   const buildSearchText = (row) => {
     if (row.searchText) return row.searchText;
@@ -2577,19 +2823,22 @@ function initBorrowAssetsApp() {
   const renderStaffQueue = () => {
     if (!staffQueueTableBody) return;
     setStaffRequestPanelMeta();
-    const list = [...borrowRequests]
+    const totalList = [...borrowRequests]
       .filter((item) => !item.isDeleted)
       .filter((item) => STAFF_REQUEST_TAB_STATUSES.has(item.status))
       .sort((a, b) => (b.submittedAtMs || 0) - (a.submittedAtMs || 0));
+    const list = totalList.filter(matchesStaffBorrowRequestFilters);
     if (staffRequestTabMode !== "queue") {
       renderStaffSummary();
       return;
     }
+    renderStaffBorrowOverview(list);
+    renderStaffBorrowRequestFilterSummary(list.length, totalList.length);
     if (!list.length) {
       renderStaffRequestPager({ total: 0 });
       staffQueueTableBody.innerHTML = `
         <tr>
-          <td colspan="5">ยังไม่มีคำขอในระบบ</td>
+          <td colspan="5">${hasActiveStaffBorrowRequestFilters() ? "ไม่พบคำขอตามตัวกรอง" : "ยังไม่มีคำขอในระบบ"}</td>
         </tr>
       `;
       renderStaffSummary();
@@ -2629,10 +2878,11 @@ function initBorrowAssetsApp() {
 
   const renderStaffHistory = () => {
     if (!staffQueueTableBody) return;
-    const historyList = [...borrowRequests]
+    const totalHistoryList = [...borrowRequests]
       .filter((item) => !item.isDeleted)
       .filter((item) => STAFF_HISTORY_TAB_STATUSES.has(item.status))
       .sort((a, b) => (b.updatedAtMs || 0) - (a.updatedAtMs || 0));
+    const historyList = totalHistoryList.filter(matchesStaffBorrowRequestFilters);
     if (staffRequestTabMode !== "history") {
       if (staffHistoryTableBody) {
         if (!historyList.length) {
@@ -2647,11 +2897,13 @@ function initBorrowAssetsApp() {
       }
       return;
     }
+    renderStaffBorrowOverview(historyList);
+    renderStaffBorrowRequestFilterSummary(historyList.length, totalHistoryList.length);
     if (!historyList.length) {
       renderStaffRequestPager({ total: 0 });
       staffQueueTableBody.innerHTML = `
         <tr>
-          <td colspan="5">ยังไม่มีประวัติคำขอ</td>
+          <td colspan="5">${hasActiveStaffBorrowRequestFilters() ? "ไม่พบประวัติตามตัวกรอง" : "ยังไม่มีประวัติคำขอ"}</td>
         </tr>
       `;
       if (staffHistoryTableBody) {
@@ -3331,7 +3583,8 @@ function initBorrowAssetsApp() {
   const renderBorrowRequests = () => {
     renderMyRequests();
     renderMyBorrowOverview();
-    renderStaffBorrowOverview();
+    populateStaffBorrowRequestFilterOptions();
+    updateStaffBorrowMobileFilterToggle();
     renderStaffQueue();
     renderStaffHistory();
   };
@@ -3375,6 +3628,7 @@ function initBorrowAssetsApp() {
       academicYear: (safeData.academicYear || safeData.schoolYear || "").toString().trim(),
       projectName: (safeData.projectName || "").toString().trim(),
       projectDept: (safeData.projectDept || "").toString().trim(),
+      projectOrgSource: (safeData.projectOrgSource || "").toString().trim().toLowerCase(),
       projectDetail: (safeData.projectDetail || "").toString().trim(),
       pickupDate: (safeData.pickupDate || "").toString().trim(),
       originalPickupDate: (safeData.originalPickupDate || "").toString().trim(),
@@ -3659,7 +3913,7 @@ function initBorrowAssetsApp() {
     const nextRequestNo = generateBorrowRequestNo();
     if (!nextRequestNo) {
       setBorrowMessage(
-        "ไม่พบรหัสองค์กรจากข้อมูลกลาง (คอลัมน์ C) กรุณาตรวจสอบประเภทองค์กร/ฝ่ายหรือเลือก 'อื่น ๆ'",
+        `ไม่พบรหัสองค์กรจากข้อมูลกลาง (คอลัมน์ C) กรุณาตรวจสอบประเภทองค์กร/ฝ่ายหรือเลือก '${EXTERNAL_ORG_LABEL}'`,
         "#b91c1c"
       );
       return;
@@ -3678,6 +3932,7 @@ function initBorrowAssetsApp() {
       lineId: requesterProfile.lineId,
       projectName: getBorrowProjectNameValueForSubmit(),
       projectDept: getBorrowProjectDeptValueForSubmit(),
+      projectOrgSource: borrowProjectName?.value === OTHER_ORG_VALUE ? "external" : "master",
       projectDetail: borrowProjectDetail?.value.trim() || "",
       pickupDate: borrowPickupDate?.value || "",
       originalPickupDate: borrowPickupDate?.value || "",
@@ -4243,6 +4498,54 @@ function initBorrowAssetsApp() {
     });
   }
 
+  const resetStaffBorrowRequestPages = () => {
+    staffRequestPageByMode.queue = 1;
+    staffRequestPageByMode.history = 1;
+  };
+
+  const applyStaffBorrowRequestFilters = () => {
+    resetStaffBorrowRequestPages();
+    updateStaffBorrowMobileFilterToggle();
+    renderBorrowRequests();
+  };
+
+  const clearStaffBorrowRequestFilters = () => {
+    if (staffBorrowRequestSearch) staffBorrowRequestSearch.value = "";
+    clearStaffBorrowAdvancedFilters();
+  };
+
+  const clearStaffBorrowAdvancedFilters = () => {
+    if (staffBorrowRequestStatusFilter) staffBorrowRequestStatusFilter.value = "all";
+    if (staffBorrowRequestOrgFilter) staffBorrowRequestOrgFilter.value = "all";
+    if (staffBorrowRequestDeptFilter) staffBorrowRequestDeptFilter.value = "all";
+    if (staffBorrowRequestDueFilter) staffBorrowRequestDueFilter.value = "all";
+    if (staffBorrowRequestPickupFrom) staffBorrowRequestPickupFrom.value = "";
+    if (staffBorrowRequestPickupTo) staffBorrowRequestPickupTo.value = "";
+    if (staffBorrowRequestReturnFrom) staffBorrowRequestReturnFrom.value = "";
+    if (staffBorrowRequestReturnTo) staffBorrowRequestReturnTo.value = "";
+    applyStaffBorrowRequestFilters();
+  };
+
+  [
+    staffBorrowRequestSearch,
+    staffBorrowRequestPickupFrom,
+    staffBorrowRequestPickupTo,
+    staffBorrowRequestReturnFrom,
+    staffBorrowRequestReturnTo
+  ].forEach((input) => {
+    input?.addEventListener("input", applyStaffBorrowRequestFilters);
+  });
+  [
+    staffBorrowRequestStatusFilter,
+    staffBorrowRequestOrgFilter,
+    staffBorrowRequestDeptFilter,
+    staffBorrowRequestDueFilter
+  ].forEach((select) => {
+    select?.addEventListener("change", applyStaffBorrowRequestFilters);
+  });
+  staffBorrowRequestSearchClear?.addEventListener("click", clearStaffBorrowRequestFilters);
+  updateStaffBorrowMobileFilterToggle();
+
   staffAssetsPagerEl?.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLButtonElement)) return;
@@ -4255,8 +4558,128 @@ function initBorrowAssetsApp() {
   });
 
   const staffTabBtns = document.querySelectorAll(".tab-btn[data-assets-staff-tab]");
+  const staffMainTabBtns = document.querySelectorAll(".tab-btn[data-assets-staff-main-tab]");
   const staffBorrowQueue = document.getElementById("staffBorrowQueue");
+  const staffBorrowInventory = document.getElementById("staffBorrowInventory");
   const staffBorrowHistory = document.getElementById("staffBorrowHistory");
+  const isStaffBorrowMobile = () =>
+    !window.matchMedia || window.matchMedia("(max-width: 840px)").matches;
+  const isStaffBorrowRequestsMainTabActive = () =>
+    Array.from(staffMainTabBtns).some(
+      (btn) => (btn.dataset.assetsStaffMainTab || "requests") === "requests" && btn.classList.contains("is-active")
+    );
+  const closeStaffBorrowFilterSheet = () => {
+    if (staffBorrowFilterFieldsPlaceholder && staffBorrowRequestFilterFields) {
+      staffBorrowFilterFieldsPlaceholder.parentNode?.insertBefore(
+        staffBorrowRequestFilterFields,
+        staffBorrowFilterFieldsPlaceholder
+      );
+      staffBorrowFilterFieldsPlaceholder.remove();
+      staffBorrowFilterFieldsPlaceholder = null;
+      staffBorrowRequestFilterFields.removeAttribute("data-mobile-filter-mounted");
+      staffBorrowRequestFilterFields.style.removeProperty("display");
+    }
+    staffBorrowFilterSheet.classList.remove("is-open");
+    staffBorrowFilterSheet.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("mobile-filter-open");
+  };
+  const openStaffBorrowFilterSheet = () => {
+    if (!staffBorrowRequestFilterFields || !staffBorrowFilterSheetBody) return;
+    if (!isStaffBorrowMobile()) {
+      staffBorrowRequestFiltersBar?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    closeStaffBorrowFilterSheet();
+    staffBorrowFilterFieldsPlaceholder = document.createComment("borrow-mobile-filter-placeholder");
+    staffBorrowRequestFilterFields.parentNode?.insertBefore(
+      staffBorrowFilterFieldsPlaceholder,
+      staffBorrowRequestFilterFields
+    );
+    staffBorrowRequestFilterFields.setAttribute("data-mobile-filter-mounted", "true");
+    staffBorrowFilterSheetBody.appendChild(staffBorrowRequestFilterFields);
+    staffBorrowRequestFilterFields.style.display = "grid";
+    staffBorrowFilterSheet.classList.add("is-open");
+    staffBorrowFilterSheet.setAttribute("aria-hidden", "false");
+    document.body.classList.add("mobile-filter-open");
+    window.setTimeout(() => {
+      const firstControl = staffBorrowRequestFilterFields.querySelector("select, input, textarea, button");
+      firstControl?.focus?.({ preventScroll: true });
+    }, 260);
+  };
+  const syncStaffBorrowMobileActionBar = () => {
+    const activePage = document.querySelector(".page-view.active")?.dataset.page || "";
+    if (activePage !== "borrow-assets-staff" && staffBorrowFilterSheet.classList.contains("is-open")) {
+      closeStaffBorrowFilterSheet();
+    }
+    const shouldShow = activePage === "borrow-assets-staff" && isStaffBorrowRequestsMainTabActive();
+    staffBorrowMobileActionBar?.classList.toggle("is-visible", shouldShow);
+    if (activePage === "borrow-assets-staff") {
+      document.body.classList.toggle("has-mobile-context-actions", shouldShow);
+    }
+    const filterOpen = staffBorrowFilterSheet.classList.contains("is-open");
+    staffBorrowMobileActionBtns.forEach((btn) => {
+      const action = btn.dataset.borrowMobileAction;
+      btn.classList.toggle(
+        "is-active",
+        (action === "queue" && staffRequestTabMode !== "history" && !filterOpen) ||
+          (action === "history" && staffRequestTabMode === "history" && !filterOpen) ||
+          (action === "filters" && filterOpen)
+      );
+    });
+    updateStaffBorrowMobileFilterToggle();
+  };
+  const setStaffBorrowMobileFilterOpen = (isOpen) => {
+    if (isOpen) {
+      openStaffBorrowFilterSheet();
+    } else {
+      closeStaffBorrowFilterSheet();
+    }
+    staffBorrowMobileFilterBtn?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    syncStaffBorrowMobileActionBar();
+  };
+  const scrollToStaffBorrowRequests = (target = staffBorrowQueue) => {
+    if (!isStaffBorrowMobile()) return;
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const setStaffBorrowMainTab = (tabName) => {
+    const activeTab = tabName === "inventory" ? "inventory" : "requests";
+    if (activeTab !== "requests") {
+      setStaffBorrowMobileFilterOpen(false);
+    }
+    if (staffBorrowQueue) {
+      const showRequests = activeTab === "requests";
+      staffBorrowQueue.style.display = showRequests ? "block" : "none";
+      staffBorrowQueue.classList.toggle("section-visible", showRequests);
+    }
+    if (staffBorrowInventory) {
+      const showInventory = activeTab === "inventory";
+      staffBorrowInventory.style.display = showInventory ? "block" : "none";
+      staffBorrowInventory.classList.toggle("section-visible", showInventory);
+    }
+    staffMainTabBtns.forEach((btn) => {
+      const matched = (btn.dataset.assetsStaffMainTab || "requests") === activeTab;
+      btn.classList.toggle("is-active", matched);
+      btn.setAttribute("aria-selected", matched ? "true" : "false");
+    });
+    if (activeTab === "inventory") {
+      if (borrowAssetsRows.length) {
+        applyBorrowAssetsFilters();
+      } else {
+        void loadBorrowAssets();
+      }
+    } else {
+      renderBorrowRequests();
+    }
+    syncStaffBorrowMobileActionBar();
+  };
+  if (staffMainTabBtns.length && staffBorrowQueue && staffBorrowInventory) {
+    setStaffBorrowMainTab("requests");
+    staffMainTabBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setStaffBorrowMainTab(btn.dataset.assetsStaffMainTab || "requests");
+      });
+    });
+  }
   if (staffTabBtns.length && staffBorrowQueue && staffBorrowHistory) {
     staffBorrowHistory.style.display = "none";
     staffBorrowHistory.classList.remove("section-visible");
@@ -4272,9 +4695,51 @@ function initBorrowAssetsApp() {
         });
         setStaffRequestPanelMeta();
         renderBorrowRequests();
+        setStaffBorrowMobileFilterOpen(false);
+        syncStaffBorrowMobileActionBar();
       });
     });
   }
+  staffBorrowMobileActionBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.borrowMobileAction;
+      if (action === "queue") {
+        setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-tab="queue"]')?.click();
+        scrollToStaffBorrowRequests(staffBorrowQueue);
+      } else if (action === "history") {
+        setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-tab="history"]')?.click();
+        scrollToStaffBorrowRequests(staffBorrowQueue);
+      } else if (action === "filters") {
+        const isOpen = !staffBorrowFilterSheet.classList.contains("is-open");
+        setStaffBorrowMobileFilterOpen(isOpen);
+      }
+      window.setTimeout(syncStaffBorrowMobileActionBar, 0);
+    });
+  });
+  staffBorrowFilterSheet.querySelectorAll("[data-borrow-filter-close]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setStaffBorrowMobileFilterOpen(false);
+    });
+  });
+  staffBorrowFilterSheetDoneBtn?.addEventListener("click", () => {
+    setStaffBorrowMobileFilterOpen(false);
+  });
+  staffBorrowFilterSheetResetBtn?.addEventListener("click", () => {
+    clearStaffBorrowAdvancedFilters();
+    window.setTimeout(syncStaffBorrowMobileActionBar, 0);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && staffBorrowFilterSheet.classList.contains("is-open")) {
+      setStaffBorrowMobileFilterOpen(false);
+    }
+  });
+  const staffBorrowMobileActionObserver = new MutationObserver(syncStaffBorrowMobileActionBar);
+  document.querySelectorAll(".page-view").forEach((pageEl) => {
+    staffBorrowMobileActionObserver.observe(pageEl, { attributes: true, attributeFilter: ["class"] });
+  });
+  syncStaffBorrowMobileActionBar();
 
   staffRequestPagerEl?.addEventListener("click", (event) => {
     const target = event.target;

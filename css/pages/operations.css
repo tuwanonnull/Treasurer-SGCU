@@ -8842,6 +8842,30 @@
   margin: -2px 0 10px;
 }
 
+.borrow-staff-main-tabs {
+  justify-content: flex-end;
+}
+
+.filter-bar.borrow-staff-request-filters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  margin: 10px 0 8px;
+}
+
+.filter-bar.borrow-staff-request-filters .borrow-staff-request-filter-search {
+  grid-column: 1 / -1;
+  order: 2;
+}
+
+.borrow-staff-request-filter-fields {
+  display: contents;
+}
+
+.borrow-staff-request-filter-summary {
+  margin: 0 0 10px;
+}
+
 .borrow-my-requests-table,
 .borrow-staff-requests-table {
   border-collapse: separate;
@@ -9197,6 +9221,113 @@
 }
 
 @media (max-width: 840px) {
+  .borrow-staff-main-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .borrow-staff-main-tabs .view-toggle-btn {
+    flex: 1 1 0;
+  }
+
+  .filter-bar.borrow-staff-request-filters {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: end;
+    padding: 10px;
+    border: 1px solid rgba(226, 232, 240, 0.92);
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .filter-bar.borrow-staff-request-filters .borrow-staff-request-filter-search {
+    grid-column: 1 / -1;
+    order: 0;
+  }
+
+  .borrow-staff-request-filter-fields {
+    display: none;
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding-top: 2px;
+    order: 2;
+  }
+
+  .borrow-staff-request-filter-summary {
+    margin: 0 0 8px;
+    font-size: 12px;
+  }
+
+  .mobile-filter-body .borrow-staff-request-filter-fields[data-mobile-filter-mounted] {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .mobile-borrow-filter-sheet .mobile-filter-dialog {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-borrow-filter-sheet .mobile-filter-dialog::before,
+  .mobile-borrow-filter-sheet .mobile-filter-header,
+  .mobile-borrow-filter-sheet .mobile-filter-footer {
+    flex: 0 0 auto;
+  }
+
+  .mobile-borrow-filter-sheet .mobile-filter-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-bottom: 22px;
+  }
+
+  .mobile-filter-body .borrow-staff-request-filter-fields[data-mobile-filter-mounted] .filter-group {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-filter-body .borrow-staff-request-filter-fields[data-mobile-filter-mounted] select,
+  .mobile-filter-body .borrow-staff-request-filter-fields[data-mobile-filter-mounted] input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  #staffBorrowOverviewCards.borrow-overview-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #staffBorrowOverviewCards.borrow-overview-cards .card {
+    min-height: 92px;
+    padding: 12px;
+  }
+
+  #staffBorrowOverviewCards.borrow-overview-cards .card-title {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .page-view[data-page="borrow-assets-staff"].active .panel-header-tabs {
+    display: none;
+  }
+
+  #staffBorrowOverviewCards.borrow-overview-cards .card-value {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  #staffBorrowOverviewCards.borrow-overview-cards .card-caption {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
   .borrow-staff-requests-wrapper {
     max-height: none;
     overflow: visible;

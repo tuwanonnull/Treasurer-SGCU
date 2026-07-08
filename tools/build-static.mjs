@@ -95,6 +95,15 @@ async function copyFeatureDirectories() {
   }
 }
 
+async function copyRuntimeScriptDirectories() {
+  const runtimeDirs = ["core", "integrations", "motion"];
+  for (const dirName of runtimeDirs) {
+    const sourceDir = path.join(rootDir, "js", dirName);
+    if (!(await exists(sourceDir))) continue;
+    await copyRecursive(sourceDir, path.join(distDir, "js", dirName));
+  }
+}
+
 async function listProjectFiles(source, ignoreNames = scanIgnoreNames) {
   const entries = await fs.readdir(source, { withFileTypes: true });
   const files = [];
@@ -347,6 +356,7 @@ async function build() {
   await validateNoConflictMarkers();
   await fs.rm(distDir, { recursive: true, force: true });
   await copyRecursive(rootDir, distDir);
+  await copyRuntimeScriptDirectories();
   await copyFeatureDirectories();
   await applyTextTransforms();
   await createHashRouteRedirects();

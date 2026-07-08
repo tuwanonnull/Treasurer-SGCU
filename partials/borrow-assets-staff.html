@@ -6,50 +6,93 @@
               <h2 class="page-title">จัดการยืม-คืนพัสดุ</h2>
               <p class="page-subtitle">จัดคิวคำขอ ตรวจสอบความพร้อม และแจ้งผลให้ผู้ขอ</p>
             </div>
+            <div class="tabs borrow-staff-main-tabs" aria-label="เลือกมุมมองจัดการยืมคืนพัสดุ">
+              <button class="tab-btn view-toggle-btn is-active" data-assets-staff-main-tab="requests" type="button">
+                คำขอยืม-คืน
+              </button>
+              <button class="tab-btn view-toggle-btn" data-assets-staff-main-tab="inventory" type="button">
+                คลังพัสดุ
+              </button>
+            </div>
           </div>
 
           <div id="staffBorrowQueue" class="section-appear section-delay-1">
             <div id="staffBorrowOverviewCards" class="cards borrow-overview-cards" aria-live="polite"></div>
-            <section class="management-link-panel management-link-panel-slim" data-management-visibility="staff" hidden>
-              <div class="management-link-copy">
-                <span class="management-link-kicker">ข้อมูลคลังพัสดุ</span>
-                <h3>รายการพัสดุ</h3>
-                <p>แก้รายการ รหัส จำนวน ที่เก็บ และสถานะอนุญาตให้ยืมจากแหล่งข้อมูลคลังพัสดุ เมื่อสรุป database ใหม่แล้วให้ใส่ลิงก์จัดการไว้ตรงนี้</p>
-              </div>
-              <a
-                class="btn-primary management-link-button"
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-management-link="managementLinks.borrowAssets"
-                data-management-disabled-text="รอ database ใหม่"
-              >
-                เปิดรายการพัสดุ
-              </a>
-            </section>
-            <div class="panel panel-hover borrow-staff-settings-panel">
-              <div class="panel-header">
-                <div>
-                  <div class="panel-title">วันที่เปิดรับพัสดุ</div>
-                  <div class="panel-caption">กำหนดวันที่ผู้ขอสามารถเลือกเป็นวันรับพัสดุได้</div>
+            <div class="filter-bar borrow-staff-request-filters" aria-label="ตัวกรองคำขอยืมพัสดุ">
+              <div class="filter-group filter-search borrow-staff-request-filter-search">
+                <label for="staffBorrowRequestSearch">ค้นหาคำขอ</label>
+                <div class="search-box">
+                  <input
+                    id="staffBorrowRequestSearch"
+                    type="search"
+                    placeholder="เลขคำขอ ผู้ขอ รหัสนิสิต พัสดุ หรือกิจกรรม"
+                  />
+                  <button
+                    id="staffBorrowRequestSearchClear"
+                    class="search-clear"
+                    type="button"
+                    aria-label="ล้างตัวกรองทั้งหมด"
+                    title="ล้างตัวกรองทั้งหมด"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
-              <form id="staffBorrowPickupDaysForm" class="borrow-staff-pickup-days-form">
-                <div class="settings-weekday-grid" role="group" aria-label="วันที่เปิดรับพัสดุ">
-                  <label><input type="checkbox" value="1" data-staff-borrow-pickup-day /> จันทร์</label>
-                  <label><input type="checkbox" value="2" data-staff-borrow-pickup-day /> อังคาร</label>
-                  <label><input type="checkbox" value="3" data-staff-borrow-pickup-day /> พุธ</label>
-                  <label><input type="checkbox" value="4" data-staff-borrow-pickup-day /> พฤหัส</label>
-                  <label><input type="checkbox" value="5" data-staff-borrow-pickup-day /> ศุกร์</label>
-                  <label><input type="checkbox" value="6" data-staff-borrow-pickup-day /> เสาร์</label>
-                  <label><input type="checkbox" value="0" data-staff-borrow-pickup-day /> อาทิตย์</label>
+              <div id="staffBorrowRequestFilterFields" class="borrow-staff-request-filter-fields">
+                <div class="filter-group">
+                  <label for="staffBorrowRequestStatusFilter">สถานะ</label>
+                  <select id="staffBorrowRequestStatusFilter">
+                    <option value="all">ทุกสถานะ</option>
+                    <option value="pending">รออนุมัติ</option>
+                    <option value="approved">อนุมัติแล้ว</option>
+                    <option value="received">รับของแล้ว</option>
+                    <option value="rejected">ไม่อนุมัติ</option>
+                    <option value="cancelled">ยกเลิก</option>
+                    <option value="returned">คืนแล้ว</option>
+                  </select>
                 </div>
-                <div class="borrow-staff-settings-actions">
-                  <button id="staffBorrowPickupDaysSaveBtn" class="btn-primary" type="submit">บันทึกวันรับพัสดุ</button>
-                  <div id="staffBorrowPickupDaysMessage" class="section-text-sm settings-status" aria-live="polite"></div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestOrgFilter">ประเภทองค์กร</label>
+                  <select id="staffBorrowRequestOrgFilter">
+                    <option value="all">ทุกประเภทองค์กร</option>
+                  </select>
                 </div>
-              </form>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestDeptFilter">ฝ่าย / ชมรม</label>
+                  <select id="staffBorrowRequestDeptFilter">
+                    <option value="all">ทุกฝ่าย / ชมรม</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestDueFilter">กำหนดคืน</label>
+                  <select id="staffBorrowRequestDueFilter">
+                    <option value="all">ทุกกำหนดคืน</option>
+                    <option value="overdue">เกินกำหนดคืน</option>
+                    <option value="today">ครบกำหนดวันนี้</option>
+                    <option value="soon">ใกล้ครบกำหนด</option>
+                    <option value="normal">ยังไม่ถึงกำหนดติดตาม</option>
+                    <option value="missing">ไม่พบวันคืน</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestPickupFrom">วันที่รับตั้งแต่</label>
+                  <input id="staffBorrowRequestPickupFrom" type="date" />
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestPickupTo">วันที่รับถึง</label>
+                  <input id="staffBorrowRequestPickupTo" type="date" />
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestReturnFrom">วันที่คืนตั้งแต่</label>
+                  <input id="staffBorrowRequestReturnFrom" type="date" />
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestReturnTo">วันที่คืนถึง</label>
+                  <input id="staffBorrowRequestReturnTo" type="date" />
+                </div>
+              </div>
             </div>
+            <div id="staffBorrowRequestFilterSummary" class="panel-meta borrow-staff-request-filter-summary" aria-live="polite"></div>
             <div class="panel panel-hover">
               <div class="panel-header">
                 <div>
@@ -119,6 +162,26 @@
               </div>
             </div>
 
+          </div>
+
+          <div id="staffBorrowInventory" class="section-appear section-delay-1" style="display: none;">
+            <section class="management-link-panel management-link-panel-slim" data-management-visibility="staff" hidden>
+              <div class="management-link-copy">
+                <span class="management-link-kicker">ข้อมูลคลังพัสดุ</span>
+                <h3>รายการพัสดุ</h3>
+                <p>แก้รายการ รหัส จำนวน ที่เก็บ และสถานะอนุญาตให้ยืมจากแหล่งข้อมูลคลังพัสดุ เมื่อสรุป database ใหม่แล้วให้ใส่ลิงก์จัดการไว้ตรงนี้</p>
+              </div>
+              <a
+                class="btn-primary management-link-button"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-management-link="managementLinks.borrowAssets"
+                data-management-disabled-text="รอ database ใหม่"
+              >
+                เปิดรายการพัสดุ
+              </a>
+            </section>
             <div class="panel panel-hover section-appear section-delay-2" style="margin-top: 18px;">
               <div class="panel-header">
                 <div>
@@ -177,6 +240,29 @@
                   </tbody>
                 </table>
               </div>
+            </div>
+            <div class="panel panel-hover borrow-staff-settings-panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">ตั้งค่าการยืมพัสดุ</div>
+                  <div class="panel-caption">กำหนดวันที่ผู้ขอสามารถเลือกเป็นวันรับพัสดุได้</div>
+                </div>
+              </div>
+              <form id="staffBorrowPickupDaysForm" class="borrow-staff-pickup-days-form">
+                <div class="settings-weekday-grid" role="group" aria-label="วันที่เปิดรับพัสดุ">
+                  <label><input type="checkbox" value="1" data-staff-borrow-pickup-day /> จันทร์</label>
+                  <label><input type="checkbox" value="2" data-staff-borrow-pickup-day /> อังคาร</label>
+                  <label><input type="checkbox" value="3" data-staff-borrow-pickup-day /> พุธ</label>
+                  <label><input type="checkbox" value="4" data-staff-borrow-pickup-day /> พฤหัส</label>
+                  <label><input type="checkbox" value="5" data-staff-borrow-pickup-day /> ศุกร์</label>
+                  <label><input type="checkbox" value="6" data-staff-borrow-pickup-day /> เสาร์</label>
+                  <label><input type="checkbox" value="0" data-staff-borrow-pickup-day /> อาทิตย์</label>
+                </div>
+                <div class="borrow-staff-settings-actions">
+                  <button id="staffBorrowPickupDaysSaveBtn" class="btn-primary" type="submit">บันทึกวันรับพัสดุ</button>
+                  <div id="staffBorrowPickupDaysMessage" class="section-text-sm settings-status" aria-live="polite"></div>
+                </div>
+              </form>
             </div>
           </div>
 

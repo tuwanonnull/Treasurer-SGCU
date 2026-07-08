@@ -97,6 +97,33 @@
     }
     return "pending";
   };
+  const normalizeRequesterProfileType = (value = "") => {
+    const text = (value || "").toString().trim().toLowerCase();
+    if (text === "affairs" || text === "staff" || text === "personnel" || text === "บุคลากร") return "affairs";
+    if (text === "student" || text === "นิสิต") return "student";
+    return "";
+  };
+  const getRequesterProfileTypeLabel = (value = "") => {
+    const type = normalizeRequesterProfileType(value);
+    if (type === "affairs") return "บุคลากร";
+    if (type === "student") return "นิสิต";
+    return "";
+  };
+  const deriveRequesterProfileType = (item = {}) => {
+    const explicitType = normalizeRequesterProfileType(item.requesterProfileType || item.profileType);
+    if (explicitType) return explicitType;
+    const email = (item.requesterEmail || item.email || "").toString().trim().toLowerCase();
+    if (!email) return "";
+    const domain = email.split("@")[1] || "";
+    if (domain.startsWith("student.") || domain.includes(".student.")) return "student";
+    if (domain === "chula.ac.th" || domain.endsWith(".chula.ac.th")) return "affairs";
+    return "";
+  };
+  const formatRequesterDisplay = (item = {}) => {
+    const requester = (item.requester || "").toString().trim() || "-";
+    const label = getRequesterProfileTypeLabel(deriveRequesterProfileType(item));
+    return requester !== "-" && label ? `${requester} (${label})` : requester;
+  };
 
   const getHolidayYears = () => {
     const currentYear = new Date().getFullYear();
@@ -290,7 +317,7 @@
                   <tr>
                     <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
                     <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
-                    <td data-label="ผู้ขอ">${escapeText(item.requester || "-")}</td>
+                    <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
                     <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}</td>
                     <td data-label="สถานะ"><span class="badge ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span></td>
                   </tr>
@@ -355,7 +382,7 @@
           const roomName = normalizeRoomDisplay(item.roomId, item.roomName);
           const label = `${item.startTime || "-"}-${item.endTime || "-"} ${roomName}`;
           return `<div class="calendar-event ${calendarStatusClass(item.status)}" title="${escapeText(
-            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${item.requester || "-"}`
+            `${roomName} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
           )}">${escapeText(label)}</div>`;
         })
         .join("");
@@ -469,6 +496,8 @@
           startTime: data.startTime || "",
           endTime: data.endTime || "",
           requester: data.requester || "",
+          requesterProfileType: normalizeRequesterProfileType(data.requesterProfileType || data.profileType),
+          requesterEmail: (data.requesterEmail || "").toString().trim().toLowerCase(),
           purpose: data.purpose || "",
           status: normalizedStatus
         };

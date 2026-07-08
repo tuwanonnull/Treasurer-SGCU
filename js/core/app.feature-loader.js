@@ -47,10 +47,10 @@
       ],
       "borrow-assets": "js/features/borrow/app.borrow-assets.js?v=20260614-borrow-hard-delete-1",
       "borrow-assets-staff": "js/features/borrow/app.borrow-assets.js?v=20260614-borrow-hard-delete-1",
-      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20260623-audit-hardening-1",
+      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20260708-requester-profile-type-1",
       "meeting-room-staff": [
-        "js/features/booking/app.meeting-room-booking.js?v=20260623-audit-hardening-1",
-        "js/features/booking/app.meeting-room-staff.js?v=20260623-audit-hardening-1"
+        "js/features/booking/app.meeting-room-booking.js?v=20260708-requester-profile-type-1",
+        "js/features/booking/app.meeting-room-staff.js?v=20260708-requester-profile-type-1"
       ],
       "budget-approval-request": "js/features/budget/app.budget-request.js?v=20260623-audit-hardening-1",
       login: [
