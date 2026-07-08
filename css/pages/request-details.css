@@ -1,3 +1,32 @@
+/*
+  Meeting day modals are reused by booking, staff, and public calendar views.
+  Keep long purpose text inside the dialog instead of widening the table.
+*/
+.meeting-day-modal-table {
+  table-layout: fixed;
+}
+
+.meeting-day-modal-table thead th:nth-child(1) {
+  width: 104px;
+}
+
+.meeting-day-modal-table thead th:nth-child(2),
+.meeting-day-modal-table thead th:nth-child(3) {
+  width: 148px;
+}
+
+.meeting-day-modal-table thead th:nth-child(5) {
+  width: 112px;
+}
+
+.meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"],
+.meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"] .meeting-row-meta {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 @media (max-width: 860px) {
   .news-preview-frame iframe {
     min-height: 320px;
