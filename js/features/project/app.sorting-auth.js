@@ -2756,7 +2756,19 @@ function initAuthUI() {
       });
     }
 
-    signInWithPopup(auth, new GoogleAuthProvider())
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
+
+    const startPopupSignIn = () => signInWithPopup(auth, provider);
+    const signInPromise = auth.currentUser
+      ? signOut(auth).catch((err) => {
+          console.warn("pre-login sign out failed - app.sorting-auth.js", err);
+        }).then(startPopupSignIn)
+      : startPopupSignIn();
+
+    signInPromise
       .then(async (credential) => {
         const user = credential?.user || auth.currentUser;
         const allowed = await isAllowedAuthEmailAsync(user?.email);

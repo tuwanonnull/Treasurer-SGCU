@@ -133,13 +133,14 @@ function initCharts(ctxKey = activeProjectStatusContext) {
         labels: [],
         datasets: [
           makeStackDataset(PROJECT_PENDING_APPROVAL_STATUS, "#d1d5db", 0),
-          makeStackDataset("โครงการที่อนุมัติแล้ว", "#fbbf24", 1),
-          makeStackDataset("โครงการที่วันเลยจัดแล้ว", "#f97316", 2),
-          makeStackDataset("โครงการที่เลยกำหนดส่งปิดแล้ว", "#ef4444", 3),
-          makeStackDataset("ปิดโครงการแล้ว (ส่วน อบจ.)", "#86efac", 4),
-          makeStackDataset("ปิดโครงการสมบูรณ์", "#22c55e", 5),
-          makeStackDataset("ยกเลิกโครงการ", "#6b7280", 6),
-          makeStackDataset("ไม่ส่งปิดโครงการ", "#111827", 7)
+          makeStackDataset("ไม่อนุมัติ / ไม่ผ่าน", "#be123c", 1),
+          makeStackDataset("โครงการที่อนุมัติแล้ว", "#fbbf24", 2),
+          makeStackDataset("โครงการที่วันเลยจัดแล้ว", "#f97316", 3),
+          makeStackDataset("โครงการที่เลยกำหนดส่งปิดแล้ว", "#ef4444", 4),
+          makeStackDataset("ปิดโครงการแล้ว (ส่วน อบจ.)", "#86efac", 5),
+          makeStackDataset("ปิดโครงการสมบูรณ์", "#22c55e", 6),
+          makeStackDataset("ยกเลิกโครงการ", "#6b7280", 7),
+          makeStackDataset("ไม่ส่งปิดโครงการ", "#111827", 8)
         ]
       },
       options: {
@@ -668,11 +669,22 @@ function updateClosureStatusChart(filtered) {
   );
 
   const isNoCloseSubmission = (p) => isProjectNoClose(p);
+  const isRejectedApprovalStatus = (p) => {
+    const mainStatus = (p.statusMain || p.approvalStatus || "").toString().trim();
+    if (!mainStatus || mainStatus === "ยกเลิกโครงการ") return false;
+    return (
+      mainStatus.includes("ไม่ผ่าน") ||
+      mainStatus.includes("ไม่อนุมัติ") ||
+      mainStatus.includes("ไม่รับรอง") ||
+      mainStatus.includes("ไม่รับหลักการ")
+    );
+  };
 
   const classifyClosureBucket = (p) => {
     const mainStatus = (p.statusMain || "").trim();
     if (isNoCloseSubmission(p)) return "black";
     if (isProjectCancelled(p)) return "gray";
+    if (isRejectedApprovalStatus(p)) return "rejected";
     if (mainStatus !== "อนุมัติโครงการ" && mainStatus !== "ยกเลิกโครงการ") {
       return "pending";
     }
@@ -690,6 +702,7 @@ function updateClosureStatusChart(filtered) {
 
   const createClosureStats = () => ({
     pending: 0,
+    rejected: 0,
     yellow: 0,
     orange: 0,
     red: 0,
@@ -708,6 +721,7 @@ function updateClosureStatusChart(filtered) {
 
   const applyClosureChartData = (labels, statsByLabel) => {
     const pendingData = [];
+    const rejectedData = [];
     const yellowData = [];
     const orangeData = [];
     const redData = [];
@@ -719,6 +733,7 @@ function updateClosureStatusChart(filtered) {
     labels.forEach((label) => {
       const stats = statsByLabel[label] || createClosureStats();
       pendingData.push(stats.pending);
+      rejectedData.push(stats.rejected);
       yellowData.push(stats.yellow);
       orangeData.push(stats.orange);
       redData.push(stats.red);
@@ -730,13 +745,14 @@ function updateClosureStatusChart(filtered) {
 
     budgetByMonthChart.data.labels = labels;
     budgetByMonthChart.data.datasets[0].data = pendingData;
-    budgetByMonthChart.data.datasets[1].data = yellowData;
-    budgetByMonthChart.data.datasets[2].data = orangeData;
-    budgetByMonthChart.data.datasets[3].data = redData;
-    budgetByMonthChart.data.datasets[4].data = greenLightData;
-    budgetByMonthChart.data.datasets[5].data = greenDarkData;
-    budgetByMonthChart.data.datasets[6].data = grayData;
-    budgetByMonthChart.data.datasets[7].data = blackData;
+    budgetByMonthChart.data.datasets[1].data = rejectedData;
+    budgetByMonthChart.data.datasets[2].data = yellowData;
+    budgetByMonthChart.data.datasets[3].data = orangeData;
+    budgetByMonthChart.data.datasets[4].data = redData;
+    budgetByMonthChart.data.datasets[5].data = greenLightData;
+    budgetByMonthChart.data.datasets[6].data = greenDarkData;
+    budgetByMonthChart.data.datasets[7].data = grayData;
+    budgetByMonthChart.data.datasets[8].data = blackData;
 
     updateClosureXAxisMax();
     resizeClosureChart(labels.length);
