@@ -1455,15 +1455,16 @@ function initBorrowAssetsApp() {
     return qtyByCode;
   };
 
-  const buildReservationDeltas = (prevStatus, nextStatus, assets = []) => {
+  const buildReservationDeltas = (prevStatus, nextStatus, assets = [], nextAssets = assets) => {
     const wasReserved = isReservedStockStatus(prevStatus);
     const willBeReserved = isReservedStockStatus(nextStatus);
-    if (wasReserved === willBeReserved) return new Map();
-    const sign = willBeReserved ? 1 : -1;
-    const qtyByCode = buildAssetQtyByCode(assets);
+    const previousQtyByCode = wasReserved ? buildAssetQtyByCode(assets) : new Map();
+    const nextQtyByCode = willBeReserved ? buildAssetQtyByCode(nextAssets) : new Map();
+    const codes = new Set([...previousQtyByCode.keys(), ...nextQtyByCode.keys()]);
     const deltas = new Map();
-    qtyByCode.forEach((qty, code) => {
-      deltas.set(code, qty * sign);
+    codes.forEach((code) => {
+      const delta = (nextQtyByCode.get(code) || 0) - (previousQtyByCode.get(code) || 0);
+      if (delta) deltas.set(code, delta);
     });
     return deltas;
   };
@@ -3310,6 +3311,7 @@ function initBorrowAssetsApp() {
       const qty = Number(asset?.qty || 0);
       return sum + (Number.isFinite(qty) ? qty : 0);
     }, 0);
+    const canManageStatus = ensureStaffPermission(true);
     const assetsRows = assets.length
       ? assets.map((asset, index) => {
         const qtyNum = Number(asset.qty || 0);
@@ -3319,7 +3321,19 @@ function initBorrowAssetsApp() {
             <td data-label="#">${index + 1}</td>
             <td data-label="รหัส">${safeEscape(asset.code || "-")}</td>
             <td data-label="รายการ">${safeEscape(asset.name || "-")}</td>
-            <td data-label="จำนวน">${safeEscape(qtyText)}</td>
+            <td data-label="จำนวน">${canManageStatus
+              ? `<input
+                  class="borrow-request-asset-qty-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputmode="numeric"
+                  value="${safeEscape(qtyText)}"
+                  data-asset-index="${index}"
+                  aria-label="จำนวน ${safeEscape(asset.name || asset.code || `รายการที่ ${index + 1}`)}"
+                />`
+              : safeEscape(qtyText)
+            }</td>
             <td data-label="หน่วย">${safeEscape(asset.unit || "-")}</td>
           </tr>
         `;
@@ -3329,7 +3343,6 @@ function initBorrowAssetsApp() {
           <td colspan="5" class="borrow-request-assets-empty" data-label="รายการพัสดุ">ไม่มีรายการพัสดุ</td>
         </tr>
       `;
-    const canManageStatus = ensureStaffPermission(true);
     const safeMessage = safeEscape(statusMessage || "");
     const studentMeta = [item.faculty, item.year ? `ชั้นปี ${item.year}` : "",item.studentId].filter(Boolean).join(" • ");
     const requesterEmailMeta = (item.requesterEmail || "").toString().trim();
@@ -3406,23 +3419,9 @@ function initBorrowAssetsApp() {
         ${canManageStatus
           ? `
             <div class="borrow-request-detail-section">
-	              <div class="borrow-request-detail-section-title">ปรับสถานะและวันนัดรับ</div>
+              <div class="borrow-request-detail-section-title">ปรับสถานะและวันนัดรับ</div>
               <div class="borrow-request-detail-controls">
-                  <select
-                    id="borrowRequestDetailStatusSelect"
-                  class="staff-status-select"
-                    data-request-id="${safeEscape(item.id || "")}"
-                    data-request-source="${safeEscape(item.sourceCollection || "")}"
-                    aria-label="ปรับสถานะคำขอยืมพัสดุ"
-                  >
-                    <option value="${STATUS_PENDING}" ${item.status === STATUS_PENDING ? "selected" : ""}>${borrowStatusLabel(STATUS_PENDING)}</option>
-                    <option value="${STATUS_APPROVED}" ${item.status === STATUS_APPROVED ? "selected" : ""}>${borrowStatusLabel(STATUS_APPROVED)}</option>
-                    <option value="${STATUS_RECEIVED}" ${item.status === STATUS_RECEIVED ? "selected" : ""}>${borrowStatusLabel(STATUS_RECEIVED)}</option>
-                    <option value="${STATUS_REJECTED}" ${item.status === STATUS_REJECTED ? "selected" : ""}>${borrowStatusLabel(STATUS_REJECTED)}</option>
-                    <option value="${STATUS_CANCELLED}" ${item.status === STATUS_CANCELLED ? "selected" : ""}>${borrowStatusLabel(STATUS_CANCELLED)}</option>
-	                    <option value="${STATUS_RETURNED}" ${item.status === STATUS_RETURNED ? "selected" : ""}>${borrowStatusLabel(STATUS_RETURNED)}</option>
-	                  </select>
-                  <div class="borrow-form-row">
+                  <div class="borrow-request-detail-schedule-row">
                     <div class="borrow-form-field">
                       <label class="login-label" for="borrowRequestDetailPickupDateInput">วันนัดรับพัสดุ</label>
                       <input
@@ -3440,6 +3439,23 @@ function initBorrowAssetsApp() {
                         type="date"
                         value="${safeEscape(item.returnDate || "")}"
                       />
+                    </div>
+                    <div class="borrow-form-field">
+                      <label class="login-label" for="borrowRequestDetailStatusSelect">สถานะ</label>
+                      <select
+                        id="borrowRequestDetailStatusSelect"
+                        class="staff-status-select"
+                        data-request-id="${safeEscape(item.id || "")}"
+                        data-request-source="${safeEscape(item.sourceCollection || "")}"
+                        aria-label="ปรับสถานะคำขอยืมพัสดุ"
+                      >
+                        <option value="${STATUS_PENDING}" ${item.status === STATUS_PENDING ? "selected" : ""}>${borrowStatusLabel(STATUS_PENDING)}</option>
+                        <option value="${STATUS_APPROVED}" ${item.status === STATUS_APPROVED ? "selected" : ""}>${borrowStatusLabel(STATUS_APPROVED)}</option>
+                        <option value="${STATUS_RECEIVED}" ${item.status === STATUS_RECEIVED ? "selected" : ""}>${borrowStatusLabel(STATUS_RECEIVED)}</option>
+                        <option value="${STATUS_REJECTED}" ${item.status === STATUS_REJECTED ? "selected" : ""}>${borrowStatusLabel(STATUS_REJECTED)}</option>
+                        <option value="${STATUS_CANCELLED}" ${item.status === STATUS_CANCELLED ? "selected" : ""}>${borrowStatusLabel(STATUS_CANCELLED)}</option>
+                        <option value="${STATUS_RETURNED}" ${item.status === STATUS_RETURNED ? "selected" : ""}>${borrowStatusLabel(STATUS_RETURNED)}</option>
+                      </select>
                     </div>
                   </div>
 	                  <textarea
@@ -3526,6 +3542,28 @@ function initBorrowAssetsApp() {
       const nextReturnDate = returnDateInput instanceof HTMLInputElement ? returnDateInput.value.trim() : "";
       const nextStatus = normalizeRequestStatus(select.value);
       const messageEl = borrowDetailBodyEl.querySelector("#borrowRequestDetailStatusMessage");
+      const requestItem = getBorrowRequestByKey(requestId, sourceCollection);
+      const currentAssets = Array.isArray(requestItem?.assets) ? requestItem.assets : [];
+      const qtyInputs = Array.from(borrowDetailBodyEl.querySelectorAll(".borrow-request-asset-qty-input"));
+      const nextAssets = currentAssets.map((asset) => ({ ...asset }));
+      let hasInvalidQty = qtyInputs.length !== currentAssets.length;
+      qtyInputs.forEach((input) => {
+        if (!(input instanceof HTMLInputElement)) return;
+        const index = Number(input.dataset.assetIndex);
+        const qty = Number(input.value);
+        if (!Number.isInteger(index) || !nextAssets[index] || !Number.isInteger(qty) || qty < 1) {
+          hasInvalidQty = true;
+          return;
+        }
+        nextAssets[index].qty = qty;
+      });
+      if (hasInvalidQty) {
+        if (messageEl instanceof HTMLElement) {
+          messageEl.textContent = "จำนวนพัสดุต้องเป็นเลขจำนวนเต็มตั้งแต่ 1 ขึ้นไป";
+          messageEl.style.color = "#b91c1c";
+        }
+        return;
+      }
       const nextPickupDateObj = parseDateYmd(nextPickupDate);
       const nextReturnDateObj = parseDateYmd(nextReturnDate);
       if (!nextPickupDateObj || !nextReturnDateObj) {
@@ -3550,7 +3588,8 @@ function initBorrowAssetsApp() {
       try {
         await updateBorrowRequestStatus(requestId, nextStatus, noteText, sourceCollection, {
           pickupDate: nextPickupDate,
-          returnDate: nextReturnDate
+          returnDate: nextReturnDate,
+          assets: nextAssets
         });
         const targetItem = getBorrowRequestByKey(requestId, sourceCollection);
         if (targetItem) {
@@ -3558,6 +3597,7 @@ function initBorrowAssetsApp() {
           targetItem.status = nextStatus;
           targetItem.pickupDate = nextPickupDate;
           targetItem.returnDate = nextReturnDate;
+          targetItem.assets = nextAssets;
           targetItem.originalPickupDate = targetItem.originalPickupDate || previousPickupDate;
           targetItem.staffNote = noteText || (
             nextPickupDate !== previousPickupDate ? formatPickupAppointmentNote(nextPickupDate) : ""
@@ -3996,6 +4036,10 @@ function initBorrowAssetsApp() {
     const targetCollection = requestItem?.sourceCollection || sourceCollection || BORROW_REQUEST_COLLECTION;
     const hasPickupDatePatch = Object.prototype.hasOwnProperty.call(datePatch, "pickupDate");
     const hasReturnDatePatch = Object.prototype.hasOwnProperty.call(datePatch, "returnDate");
+    const hasAssetsPatch = Object.prototype.hasOwnProperty.call(datePatch, "assets");
+    const nextAssets = hasAssetsPatch && Array.isArray(datePatch.assets)
+      ? datePatch.assets
+      : (Array.isArray(requestItem?.assets) ? requestItem.assets : []);
     const nextPickupDate = (hasPickupDatePatch ? datePatch.pickupDate : requestItem?.pickupDate || "").toString().trim();
     const nextReturnDate = (hasReturnDatePatch ? datePatch.returnDate : requestItem?.returnDate || "").toString().trim();
     const pickupChanged = !!nextPickupDate && !!requestItem?.pickupDate && nextPickupDate !== requestItem.pickupDate;
@@ -4014,6 +4058,9 @@ function initBorrowAssetsApp() {
     }
     if (hasReturnDatePatch && nextReturnDate && nextReturnDate !== requestItem?.returnDate) {
       payload.returnDate = nextReturnDate;
+    }
+    if (hasAssetsPatch) {
+      payload.assets = nextAssets;
     }
     if (pickupChanged && !requestItem?.originalPickupDate) {
       payload.originalPickupDate = requestItem.pickupDate;
@@ -4041,7 +4088,7 @@ function initBorrowAssetsApp() {
       }
       const data = requestSnap.data() || {};
       const currentStatus = normalizeRequestStatus(data.status);
-      const deltas = buildReservationDeltas(currentStatus, targetStatus, data.assets || []);
+      const deltas = buildReservationDeltas(currentStatus, targetStatus, data.assets || [], nextAssets);
       await applyStockDeltasInTransaction(transaction, deltas, actorEmail);
       transaction.update(docRef, payload);
     });

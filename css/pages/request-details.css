@@ -457,8 +457,40 @@
   font-weight: 700;
 }
 
+.borrow-request-assets-table tbody td {
+  vertical-align: middle;
+}
+
+.borrow-request-assets-table th:nth-child(3),
+.borrow-request-assets-table td:nth-child(3) {
+  width: 45%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .borrow-request-assets-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.borrow-request-asset-qty-input {
+  width: 64px;
+  height: 32px;
+  min-height: 0;
+  padding: 3px 7px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.borrow-request-asset-qty-input:focus {
+  border-color: #be185d;
+  outline: 2px solid rgba(190, 24, 93, 0.14);
+  outline-offset: 1px;
 }
 
 .borrow-request-assets-empty {
@@ -468,6 +500,21 @@
 .borrow-request-detail-controls {
   display: grid;
   gap: 8px;
+}
+
+.borrow-request-detail-schedule-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.borrow-request-detail-schedule-row .staff-status-select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background-color: #ffffff;
 }
 
 .borrow-request-detail-note {
@@ -898,6 +945,10 @@
     gap: 6px;
   }
 
+  .borrow-request-detail-schedule-row {
+    grid-template-columns: 1fr;
+  }
+
   .borrow-request-summary-card {
     padding: 8px 10px;
   }
@@ -941,7 +992,7 @@
     display: grid;
     grid-template-columns: 74px minmax(0, 1fr);
     gap: 8px;
-    align-items: start;
+    align-items: center;
     padding: 8px 10px;
     border-bottom: 1px solid #f1f5f9;
     line-height: 1.45;
@@ -966,7 +1017,12 @@
   }
 
   .borrow-request-assets-table tbody td[data-label="รายการ"] {
+    width: auto;
+    min-width: 0;
     font-weight: 700;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .borrow-request-assets-empty {
