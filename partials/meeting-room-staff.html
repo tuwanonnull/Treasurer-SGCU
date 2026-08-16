@@ -174,11 +174,6 @@
                 </div>
                 <div id="meetingHolidayCalendar" class="meeting-holiday-calendar"></div>
               </div>
-              <div class="meeting-holiday-list-head">
-                <strong>วันปิดให้บริการในเดือนนี้</strong>
-                <span>กดวันที่ในปฏิทินเพื่อเพิ่มรายการ</span>
-              </div>
-              <div id="meetingHolidayManageList" class="meeting-room-manage-list meeting-holiday-summary-list"></div>
             </div>
           </div>
 
@@ -248,6 +243,30 @@
                 <button class="btn-primary" type="submit">บันทึก</button>
               </div>
             </form>
+          </dialog>
+
+          <dialog id="meetingRoomDeleteDialog" class="meeting-settings-dialog meeting-delete-dialog">
+            <div class="meeting-settings-dialog-card">
+              <div class="meeting-settings-dialog-header">
+                <div>
+                  <div class="panel-title">ยืนยันการลบห้องประชุม</div>
+                  <div class="panel-caption">รายการนี้จะถูกนำออกจากตัวเลือกการจองห้อง</div>
+                </div>
+                <button class="modal-close meeting-settings-dialog-close" type="button" aria-label="ปิด">✕</button>
+              </div>
+              <div class="meeting-delete-warning">
+                <span class="meeting-delete-warning-icon" aria-hidden="true">!</span>
+                <div>
+                  <strong id="meetingRoomDeleteName">ห้องประชุม</strong>
+                  <p>เมื่อลบแล้วจะไม่สามารถเรียกคืนข้อมูลห้องนี้ได้ กรุณาตรวจสอบก่อนดำเนินการ</p>
+                </div>
+              </div>
+              <div id="meetingRoomDeleteDialogMessage" class="section-text-sm" aria-live="polite"></div>
+              <div class="meeting-settings-dialog-actions">
+                <button class="btn-ghost meeting-settings-dialog-cancel" type="button">ยกเลิก</button>
+                <button id="meetingRoomDeleteConfirmBtn" class="btn-primary meeting-delete-confirm-btn" type="button">ลบห้องประชุม</button>
+              </div>
+            </div>
           </dialog>
 
           <dialog id="meetingHolidayAddDialog" class="meeting-settings-dialog">

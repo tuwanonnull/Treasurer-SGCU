@@ -71,6 +71,10 @@ function initMeetingRoomStaffApproval() {
   const roomEditAccessFieldset = document.getElementById("meetingRoomEditAccess");
   const roomEditDeleteBtn = document.getElementById("meetingRoomEditDeleteBtn");
   const roomEditDialogMessage = document.getElementById("meetingRoomEditDialogMessage");
+  const roomDeleteDialog = document.getElementById("meetingRoomDeleteDialog");
+  const roomDeleteNameEl = document.getElementById("meetingRoomDeleteName");
+  const roomDeleteConfirmBtn = document.getElementById("meetingRoomDeleteConfirmBtn");
+  const roomDeleteDialogMessage = document.getElementById("meetingRoomDeleteDialogMessage");
   const holidayAddDialog = document.getElementById("meetingHolidayAddDialog");
   const roomAddOpenBtn = document.getElementById("meetingRoomAddOpenBtn");
   const holidayAddOpenBtn = document.getElementById("meetingHolidayAddOpenBtn");
@@ -144,6 +148,15 @@ function initMeetingRoomStaffApproval() {
       .forEach((button) => button.addEventListener("click", closeRoomEditDialog));
     roomEditDialog.addEventListener("click", (event) => {
       if (event.target === roomEditDialog) closeRoomEditDialog();
+    });
+  }
+
+  if (roomDeleteDialog) {
+    const closeRoomDeleteDialog = () => roomDeleteDialog.close();
+    roomDeleteDialog.querySelectorAll(".meeting-settings-dialog-close, .meeting-settings-dialog-cancel")
+      .forEach((button) => button.addEventListener("click", closeRoomDeleteDialog));
+    roomDeleteDialog.addEventListener("click", (event) => {
+      if (event.target === roomDeleteDialog) closeRoomDeleteDialog();
     });
   }
 
@@ -792,7 +805,7 @@ function initMeetingRoomStaffApproval() {
   };
 
   const setRoomManageMessage = (text = "", color = "#374151") => {
-    [roomManageMessage, roomManageDialogMessage, roomEditDialogMessage].filter(Boolean).forEach((element) => {
+    [roomManageMessage, roomManageDialogMessage, roomEditDialogMessage, roomDeleteDialogMessage].filter(Boolean).forEach((element) => {
       element.textContent = text;
       element.style.color = color;
     });
@@ -905,7 +918,7 @@ function initMeetingRoomStaffApproval() {
   };
 
   const renderHolidayManageList = () => {
-    if (!holidayManageList) return;
+    if (!holidayCalendarEl) return;
     if (holidayManageCountEl) {
       holidayManageCountEl.textContent = `พบ ${customHolidays.length} วัน`;
     }
@@ -944,32 +957,6 @@ function initMeetingRoomStaffApproval() {
       }
       holidayCalendarEl.innerHTML = cells.join("");
     }
-    if (!monthHolidays.length) {
-      holidayManageList.innerHTML = '<div class="meeting-room-manage-empty">ยังไม่มีวันปิดให้บริการในเดือนนี้</div>';
-      return;
-    }
-    holidayManageList.innerHTML = monthHolidays
-      .map((item) => {
-        return `
-          <div class="meeting-room-manage-item">
-            <div>
-              <div class="meeting-room-holiday-date">${formatDate(item.date)}</div>
-              <div class="meeting-room-manage-name">${escapeText(item.name || "วันหยุด")}</div>
-            </div>
-            <div class="meeting-room-manage-actions">
-              <button
-                type="button"
-                class="btn-ghost meeting-room-manage-btn"
-                data-action="remove-holiday"
-                data-holiday-id="${escapeText(item.id)}"
-              >
-                ลบ
-              </button>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
   };
 
   const setStaffActionMessage = (text = "", color = "#374151") => {
@@ -2541,9 +2528,10 @@ function initMeetingRoomStaffApproval() {
         const date = button.dataset.date || "";
         const existingHoliday = customHolidays.find((item) => item.date === date);
         if (existingHoliday) {
-          const target = holidayManageList?.querySelector(`[data-holiday-id="${existingHoliday.id}"]`);
-          target?.closest(".meeting-room-manage-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
-          setHolidayManageMessage(`วันที่ ${formatDate(date)} ปิดให้บริการ: ${existingHoliday.name}`, "#9d174d");
+          const shouldRemove = window.confirm(
+            `ลบวันปิดให้บริการ “${existingHoliday.name}” วันที่ ${formatDate(date)} ใช่หรือไม่`
+          );
+          if (shouldRemove) void removeHoliday(existingHoliday.id);
         } else if (holidayAddDialog) {
           if (holidayManageDateInput) holidayManageDateInput.value = date;
           if (holidayManageNameInput) holidayManageNameInput.value = "";
@@ -2814,12 +2802,22 @@ function initMeetingRoomStaffApproval() {
   }
 
   if (roomEditDeleteBtn) {
-    roomEditDeleteBtn.addEventListener("click", async () => {
+    roomEditDeleteBtn.addEventListener("click", () => {
       const room = rooms.find((item) => item.id === activeManageRoomId);
       if (!room || room.isDefault || rooms.length <= 1) return;
-      if (!window.confirm(`ยืนยันการลบ “${room.name}” ใช่หรือไม่`)) return;
+      if (roomDeleteNameEl) roomDeleteNameEl.textContent = room.name;
+      if (roomDeleteDialogMessage) roomDeleteDialogMessage.textContent = "";
+      roomEditDialog?.close();
+      roomDeleteDialog?.showModal();
+    });
+  }
+
+  if (roomDeleteConfirmBtn) {
+    roomDeleteConfirmBtn.addEventListener("click", async () => {
+      roomDeleteConfirmBtn.disabled = true;
       const didRemove = await removeRoom(activeManageRoomId);
-      if (didRemove) roomEditDialog?.close();
+      roomDeleteConfirmBtn.disabled = false;
+      if (didRemove) roomDeleteDialog?.close();
     });
   }
 
