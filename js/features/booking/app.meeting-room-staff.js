@@ -22,15 +22,22 @@ function initMeetingRoomStaffApproval() {
   const exportCsvBtnEl = document.getElementById("meetingRoomExportCsvBtn");
   const roomManageForm = document.getElementById("meetingRoomManageForm");
   const roomManageInput = document.getElementById("meetingRoomManageInput");
+  const roomManageAccessFieldset = document.getElementById("meetingRoomManageAccess");
   const roomManageMessage = document.getElementById("meetingRoomManageMessage");
+  const roomManageDialogMessage = document.getElementById("meetingRoomManageDialogMessage");
   const roomManageList = document.getElementById("meetingRoomManageList");
   const roomManageCountEl = document.getElementById("meetingRoomManageCount");
   const holidayManageForm = document.getElementById("meetingHolidayManageForm");
   const holidayManageDateInput = document.getElementById("meetingHolidayManageDate");
   const holidayManageNameInput = document.getElementById("meetingHolidayManageName");
   const holidayManageMessage = document.getElementById("meetingHolidayManageMessage");
+  const holidayManageDialogMessage = document.getElementById("meetingHolidayManageDialogMessage");
   const holidayManageList = document.getElementById("meetingHolidayManageList");
   const holidayManageCountEl = document.getElementById("meetingHolidayManageCount");
+  const holidayCalendarEl = document.getElementById("meetingHolidayCalendar");
+  const holidayCalendarTitleEl = document.getElementById("meetingHolidayCalendarTitle");
+  const holidayCalendarPrevBtn = document.getElementById("meetingHolidayCalendarPrev");
+  const holidayCalendarNextBtn = document.getElementById("meetingHolidayCalendarNext");
   const staffCalendarPanel = document.getElementById("meetingRoomStaffCalendar");
   const staffCalendarTitle = document.getElementById("meetingStaffCalendarTitle");
   const staffCalendarPrevBtn = document.getElementById("meetingStaffCalendarPrevMonth");
@@ -52,9 +59,92 @@ function initMeetingRoomStaffApproval() {
   const tabButtons = Array.from(
     document.querySelectorAll(".tab-btn[data-meeting-staff-tab]")
   );
+  const mainTabButtons = Array.from(
+    document.querySelectorAll(".tab-btn[data-meeting-staff-main-tab]")
+  );
+  const requestsViewEl = document.getElementById("meetingStaffRequestsView");
+  const settingsViewEl = document.getElementById("meetingStaffSettingsView");
+  const roomAddDialog = document.getElementById("meetingRoomAddDialog");
+  const roomEditDialog = document.getElementById("meetingRoomEditDialog");
+  const roomEditForm = document.getElementById("meetingRoomEditForm");
+  const roomEditNameInput = document.getElementById("meetingRoomEditName");
+  const roomEditAccessFieldset = document.getElementById("meetingRoomEditAccess");
+  const roomEditDeleteBtn = document.getElementById("meetingRoomEditDeleteBtn");
+  const roomEditDialogMessage = document.getElementById("meetingRoomEditDialogMessage");
+  const holidayAddDialog = document.getElementById("meetingHolidayAddDialog");
+  const roomAddOpenBtn = document.getElementById("meetingRoomAddOpenBtn");
+  const holidayAddOpenBtn = document.getElementById("meetingHolidayAddOpenBtn");
 
   if (!allTableBody) {
     return false;
+  }
+
+  const setMainView = (view = "requests") => {
+    const showSettings = view === "settings";
+    if (requestsViewEl) requestsViewEl.style.display = showSettings ? "none" : "block";
+    if (settingsViewEl) settingsViewEl.style.display = showSettings ? "block" : "none";
+    mainTabButtons.forEach((button) => {
+      const isActive = button.dataset.meetingStaffMainTab === view;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+    document
+      .querySelector('section[data-page="meeting-room-staff"]')
+      ?.classList.toggle("is-settings-view", showSettings);
+    window.syncDashboardMobileActionBar?.();
+  };
+
+  mainTabButtons.forEach((button) => {
+    button.addEventListener("click", () => setMainView(button.dataset.meetingStaffMainTab));
+  });
+  setMainView("requests");
+
+  const bindSettingsDialog = (dialog, openButton, focusTarget) => {
+    if (!dialog || !openButton) return;
+    const close = () => dialog.close();
+    openButton.addEventListener("click", () => {
+      if (dialog === roomAddDialog && roomManageDialogMessage) roomManageDialogMessage.textContent = "";
+      if (dialog === roomAddDialog) setAccessToggleValue(roomManageAccessFieldset, "public");
+      if (dialog === holidayAddDialog && holidayManageDialogMessage) holidayManageDialogMessage.textContent = "";
+      dialog.showModal();
+      window.setTimeout(() => focusTarget?.focus(), 0);
+    });
+    dialog.querySelectorAll(".meeting-settings-dialog-close, .meeting-settings-dialog-cancel")
+      .forEach((button) => button.addEventListener("click", close));
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) close();
+    });
+  };
+  bindSettingsDialog(roomAddDialog, roomAddOpenBtn, roomManageInput);
+  bindSettingsDialog(holidayAddDialog, holidayAddOpenBtn, holidayManageDateInput);
+
+  function setAccessToggleValue(fieldset, value = "public") {
+    if (!fieldset) return;
+    const normalizedValue = normalizeRoomBookingAccess(value);
+    const input = fieldset.querySelector(`input[type="radio"][value="${normalizedValue}"]`);
+    if (input) input.checked = true;
+    const help = fieldset.querySelector("[data-access-help]");
+    if (help) {
+      help.textContent = normalizedValue === "staff_only"
+        ? "ห้องนี้จะแสดงและเปิดให้จองเฉพาะ Staff"
+        : "ผู้ใช้งานทั่วไปสามารถส่งคำขอจองห้องนี้ได้";
+    }
+  }
+
+  const readAccessToggleValue = (fieldset) =>
+    fieldset?.querySelector('input[type="radio"]:checked')?.value || "public";
+
+  [roomManageAccessFieldset, roomEditAccessFieldset].filter(Boolean).forEach((fieldset) => {
+    fieldset.addEventListener("change", () => setAccessToggleValue(fieldset, readAccessToggleValue(fieldset)));
+  });
+
+  if (roomEditDialog) {
+    const closeRoomEditDialog = () => roomEditDialog.close();
+    roomEditDialog.querySelectorAll(".meeting-settings-dialog-close, .meeting-settings-dialog-cancel")
+      .forEach((button) => button.addEventListener("click", closeRoomEditDialog));
+    roomEditDialog.addEventListener("click", (event) => {
+      if (event.target === roomEditDialog) closeRoomEditDialog();
+    });
   }
 
   const appConfig = typeof SGCU_APP_CONFIG === "object" && SGCU_APP_CONFIG ? SGCU_APP_CONFIG : {};
@@ -467,8 +557,9 @@ function initMeetingRoomStaffApproval() {
     history: 1
   };
   let isSeedingDefaultRooms = false;
-  let editingRoomId = "";
+  let activeManageRoomId = "";
   let calendarCursor = new Date();
+  let holidayCalendarCursor = new Date();
   let activeStaffDayModalDate = "";
   let historyStartDateFilter = "";
   let historyEndDateFilter = "";
@@ -701,15 +792,17 @@ function initMeetingRoomStaffApproval() {
   };
 
   const setRoomManageMessage = (text = "", color = "#374151") => {
-    if (!roomManageMessage) return;
-    roomManageMessage.textContent = text;
-    roomManageMessage.style.color = color;
+    [roomManageMessage, roomManageDialogMessage, roomEditDialogMessage].filter(Boolean).forEach((element) => {
+      element.textContent = text;
+      element.style.color = color;
+    });
   };
 
   const setHolidayManageMessage = (text = "", color = "#374151") => {
-    if (!holidayManageMessage) return;
-    holidayManageMessage.textContent = text;
-    holidayManageMessage.style.color = color;
+    [holidayManageMessage, holidayManageDialogMessage].filter(Boolean).forEach((element) => {
+      element.textContent = text;
+      element.style.color = color;
+    });
   };
 
   const setStaffRequestReminder = (text = "", color = "#9f1239") => {
@@ -816,13 +909,46 @@ function initMeetingRoomStaffApproval() {
     if (holidayManageCountEl) {
       holidayManageCountEl.textContent = `พบ ${customHolidays.length} วัน`;
     }
-    if (!customHolidays.length) {
-      holidayManageList.innerHTML = '<div class="meeting-room-manage-empty">ยังไม่มีวันหยุดเพิ่มเติม</div>';
+    const monthState = getCalendarMonthState(holidayCalendarCursor);
+    const monthPrefix = `${monthState.year}-${String(monthState.month + 1).padStart(2, "0")}`;
+    const monthHolidays = customHolidays
+      .slice()
+      .filter((item) => String(item.date || "").startsWith(monthPrefix))
+      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+    if (holidayCalendarTitleEl) {
+      holidayCalendarTitleEl.textContent = `${MONTH_NAMES_TH[monthState.month]} ${monthState.year + 543}`;
+    }
+    if (holidayCalendarEl) {
+      const daysInMonth = new Date(monthState.year, monthState.month + 1, 0).getDate();
+      const holidayByDate = new Map(monthHolidays.map((item) => [item.date, item]));
+      const cells = [];
+      for (let index = 0; index < monthState.firstDay.getDay(); index += 1) {
+        cells.push('<span class="meeting-holiday-day is-empty" aria-hidden="true"></span>');
+      }
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const dateKey = toDateKey(new Date(monthState.year, monthState.month, day));
+        const item = holidayByDate.get(dateKey);
+        const isToday = dateKey === toDateKey(new Date());
+        cells.push(`
+          <button
+            class="meeting-holiday-day${item ? " is-closed" : ""}${isToday ? " is-today" : ""}"
+            type="button"
+            data-action="select-holiday-date"
+            data-date="${dateKey}"
+            title="${item ? escapeText(item.name || "วันปิดให้บริการ") : "เพิ่มวันปิดให้บริการ"}"
+          >
+            <span class="meeting-holiday-day-number">${day}</span>
+            ${item ? `<span class="meeting-holiday-day-label">${escapeText(item.name || "วันปิดให้บริการ")}</span>` : ""}
+          </button>
+        `);
+      }
+      holidayCalendarEl.innerHTML = cells.join("");
+    }
+    if (!monthHolidays.length) {
+      holidayManageList.innerHTML = '<div class="meeting-room-manage-empty">ยังไม่มีวันปิดให้บริการในเดือนนี้</div>';
       return;
     }
-    holidayManageList.innerHTML = customHolidays
-      .slice()
-      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")))
+    holidayManageList.innerHTML = monthHolidays
       .map((item) => {
         return `
           <div class="meeting-room-manage-item">
@@ -1058,88 +1184,16 @@ function initMeetingRoomStaffApproval() {
     }
     roomManageList.innerHTML = rooms
       .map((room) => {
-        const isEditing = editingRoomId === room.id;
         return `
-          <div class="meeting-room-manage-item">
-            ${isEditing
-              ? `
-                <input
-                  type="text"
-                  class="login-input meeting-room-manage-edit-input"
-                  data-role="room-edit-input"
-                  data-room-id="${room.id}"
-                  value="${room.name}"
-                  maxlength="100"
-                />
-              `
-              : `
-                <div class="meeting-room-manage-name">${room.name}</div>
-                <div class="meeting-room-manage-access-pill ${roomBookingAccessClass(room.bookingAccess)}">
-                  <span class="meeting-room-manage-access-bar" aria-hidden="true"></span>
-                  <span>${roomBookingAccessLabel(room.bookingAccess)}</span>
-                </div>
-              `
-            }
-            <div class="meeting-room-manage-actions">
-              <button
-                type="button"
-                class="btn-ghost meeting-room-manage-btn meeting-room-access-btn is-public-btn ${room.bookingAccess === "public" ? "is-active" : ""}"
-                data-action="set-room-access"
-                data-room-id="${room.id}"
-                data-access="public"
-              >
-                คนทั่วไปจอง
-              </button>
-              <button
-                type="button"
-                class="btn-ghost meeting-room-manage-btn meeting-room-access-btn is-staff-only-btn ${room.bookingAccess === "staff_only" ? "is-active" : ""}"
-                data-action="set-room-access"
-                data-room-id="${room.id}"
-                data-access="staff_only"
-              >
-                สตาฟจองเท่านั้น
-              </button>
-              ${isEditing
-                ? `
-                  <button
-                    type="button"
-                    class="btn-primary meeting-room-manage-btn"
-                    data-action="rename-room-save"
-                    data-room-id="${room.id}"
-                  >
-                    บันทึก
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-ghost meeting-room-manage-btn"
-                    data-action="rename-room-cancel"
-                    data-room-id="${room.id}"
-                  >
-                    ยกเลิก
-                  </button>
-                `
-                : `
-                  <button
-                    type="button"
-                    class="btn-ghost meeting-room-manage-btn"
-                    data-action="rename-room-start"
-                    data-room-id="${room.id}"
-                  >
-                    แก้ไข
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-ghost meeting-room-manage-btn"
-                    data-action="remove-room"
-                    data-room-id="${room.id}"
-                    ${room.isDefault ? "disabled" : ""}
-                  >
-                    ลบ
-                  </button>
-                `
-              }
+          <button class="meeting-room-manage-item meeting-room-manage-item-button" type="button" data-action="open-room-manage" data-room-id="${room.id}" aria-label="แก้ไขห้อง ${room.name}">
+            <div>
+              <div class="meeting-room-manage-name">${room.name}</div>
+              <div class="meeting-room-manage-access-pill ${roomBookingAccessClass(room.bookingAccess)}">
+                <span class="meeting-room-manage-access-bar" aria-hidden="true"></span>
+                <span>${roomBookingAccessLabel(room.bookingAccess)}</span>
+              </div>
             </div>
-          </div>
+          </button>
         `;
       })
       .join("");
@@ -1275,25 +1329,26 @@ function initMeetingRoomStaffApproval() {
     }
   };
 
-  const addRoom = async (nameValue) => {
+  const addRoom = async (nameValue, accessValue = "public") => {
     const name = (nameValue || "").toString().trim().replace(/\s+/g, " ");
+    const bookingAccess = normalizeRoomBookingAccess(accessValue);
     if (!name) {
       setRoomManageMessage("กรุณากรอกชื่อห้องประชุม", "#b91c1c");
-      return;
+      return false;
     }
     const duplicate = rooms.some((room) => room.name.toLowerCase() === name.toLowerCase());
     if (duplicate) {
       setRoomManageMessage("มีห้องประชุมชื่อนี้อยู่แล้ว", "#b91c1c");
-      return;
+      return false;
     }
     if (!hasFirestore) {
       setRoomManageMessage("ระบบยังไม่เชื่อมต่อ Firestore", "#b91c1c");
-      return;
+      return false;
     }
     try {
       const createdDoc = await firestore.addDoc(firestore.collection(firestore.db, ROOM_COLLECTION_NAME), {
         name,
-        bookingAccess: "public",
+        bookingAccess,
         createdAt: firestore.serverTimestamp(),
         updatedAt: firestore.serverTimestamp()
       });
@@ -1302,13 +1357,15 @@ function initMeetingRoomStaffApproval() {
         "meetingRoom",
         createdDoc?.id || "",
         null,
-        { id: createdDoc?.id || "", name, bookingAccess: "public" },
+        { id: createdDoc?.id || "", name, bookingAccess },
         { context: "staff_room_manage" }
       );
       setRoomManageMessage("เพิ่มห้องประชุมเรียบร้อยแล้ว", "#047857");
       if (roomManageInput) roomManageInput.value = "";
+      return true;
     } catch (err) {
       setRoomManageMessage("ไม่สามารถเพิ่มห้องประชุมได้ในขณะนี้", "#b91c1c");
+      return false;
     }
   };
 
@@ -1317,20 +1374,20 @@ function initMeetingRoomStaffApproval() {
     const name = (nameValue || "").toString().trim();
     if (!date) {
       setHolidayManageMessage("กรุณาเลือกวันที่วันหยุด", "#b91c1c");
-      return;
+      return false;
     }
     if (!name) {
       setHolidayManageMessage("กรุณากรอกชื่อวันหยุด", "#b91c1c");
-      return;
+      return false;
     }
     if (!hasFirestore) {
       setHolidayManageMessage("ระบบยังไม่เชื่อมต่อ Firestore", "#b91c1c");
-      return;
+      return false;
     }
     const duplicate = customHolidays.some((item) => item.date === date);
     if (duplicate) {
       setHolidayManageMessage("มีวันหยุดวันที่นี้อยู่แล้ว", "#b91c1c");
-      return;
+      return false;
     }
     try {
       const createdDoc = await firestore.addDoc(firestore.collection(firestore.db, HOLIDAY_COLLECTION_NAME), {
@@ -1350,8 +1407,10 @@ function initMeetingRoomStaffApproval() {
       setHolidayManageMessage("เพิ่มวันหยุดเรียบร้อยแล้ว", "#047857");
       if (holidayManageDateInput) holidayManageDateInput.value = "";
       if (holidayManageNameInput) holidayManageNameInput.value = "";
+      return true;
     } catch (err) {
       setHolidayManageMessage("ไม่สามารถเพิ่มวันหยุดได้ในขณะนี้", "#b91c1c");
+      return false;
     }
   };
 
@@ -1375,12 +1434,12 @@ function initMeetingRoomStaffApproval() {
   };
 
   const removeRoom = async (roomId) => {
-    if (!roomId || !hasFirestore) return;
+    if (!roomId || !hasFirestore) return false;
     const room = rooms.find((item) => item.id === roomId);
-    if (!room || room.isDefault) return;
+    if (!room || room.isDefault) return false;
     if (rooms.length <= 1) {
       setRoomManageMessage("ต้องมีห้องประชุมอย่างน้อย 1 ห้อง", "#b91c1c");
-      return;
+      return false;
     }
     try {
       await firestore.deleteDoc(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId));
@@ -1393,30 +1452,32 @@ function initMeetingRoomStaffApproval() {
         { context: "staff_room_manage" }
       );
       setRoomManageMessage("ลบห้องประชุมเรียบร้อยแล้ว", "#047857");
+      return true;
     } catch (err) {
       setRoomManageMessage("ไม่สามารถลบห้องประชุมได้ในขณะนี้", "#b91c1c");
+      return false;
     }
   };
 
   const renameRoom = async (roomId, nextNameValue) => {
-    if (!roomId || !hasFirestore) return;
+    if (!roomId || !hasFirestore) return false;
     const room = rooms.find((item) => item.id === roomId);
-    if (!room) return;
+    if (!room) return false;
     const nextName = (nextNameValue || "").toString().trim().replace(/\s+/g, " ");
     if (!nextName) {
       setRoomManageMessage("กรุณากรอกชื่อห้องประชุมใหม่", "#b91c1c");
-      return;
+      return false;
     }
     if (nextName.toLowerCase() === room.name.toLowerCase()) {
       setRoomManageMessage("ชื่อห้องประชุมยังเหมือนเดิม", "#6b7280");
-      return;
+      return true;
     }
     const duplicate = rooms.some(
       (item) => item.id !== roomId && item.name.toLowerCase() === nextName.toLowerCase()
     );
     if (duplicate) {
       setRoomManageMessage("มีห้องประชุมชื่อนี้อยู่แล้ว", "#b91c1c");
-      return;
+      return false;
     }
     try {
       await firestore.updateDoc(
@@ -1434,20 +1495,21 @@ function initMeetingRoomStaffApproval() {
         { id: room.id, name: nextName, bookingAccess: room.bookingAccess || "public" },
         { context: "staff_room_manage" }
       );
-      editingRoomId = "";
       renderRoomManageList();
       setRoomManageMessage("แก้ไขชื่อห้องประชุมเรียบร้อยแล้ว", "#047857");
+      return true;
     } catch (err) {
       setRoomManageMessage("ไม่สามารถแก้ไขชื่อห้องประชุมได้ในขณะนี้", "#b91c1c");
+      return false;
     }
   };
 
   const updateRoomBookingAccess = async (roomId, accessValue) => {
-    if (!roomId || !hasFirestore) return;
+    if (!roomId || !hasFirestore) return false;
     const room = rooms.find((item) => item.id === roomId);
-    if (!room) return;
+    if (!room) return false;
     const nextAccess = normalizeRoomBookingAccess(accessValue);
-    if (room.bookingAccess === nextAccess) return;
+    if (room.bookingAccess === nextAccess) return true;
     try {
       await firestore.updateDoc(
         firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId),
@@ -1470,8 +1532,10 @@ function initMeetingRoomStaffApproval() {
           : `อัปเดตแล้ว: ${room.name} เป็น "คนทั่วไปจอง"`,
         "#047857"
       );
+      return true;
     } catch (err) {
       setRoomManageMessage("ไม่สามารถอัปเดตสิทธิ์การจองได้ในขณะนี้", "#b91c1c");
+      return false;
     }
   };
 
@@ -2473,48 +2537,37 @@ function initMeetingRoomStaffApproval() {
       }
       const action = button.dataset.action;
       const id = button.dataset.id;
-      if (action === "rename-room-start") {
+      if (action === "select-holiday-date") {
+        const date = button.dataset.date || "";
+        const existingHoliday = customHolidays.find((item) => item.date === date);
+        if (existingHoliday) {
+          const target = holidayManageList?.querySelector(`[data-holiday-id="${existingHoliday.id}"]`);
+          target?.closest(".meeting-room-manage-item")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          setHolidayManageMessage(`วันที่ ${formatDate(date)} ปิดให้บริการ: ${existingHoliday.name}`, "#9d174d");
+        } else if (holidayAddDialog) {
+          if (holidayManageDateInput) holidayManageDateInput.value = date;
+          if (holidayManageNameInput) holidayManageNameInput.value = "";
+          if (holidayManageDialogMessage) holidayManageDialogMessage.textContent = "";
+          holidayAddDialog.showModal();
+          window.setTimeout(() => holidayManageNameInput?.focus(), 0);
+        }
+        return;
+      }
+      if (action === "open-room-manage") {
         const roomId = button.dataset.roomId;
         if (!roomId) return;
-        editingRoomId = roomId;
-        renderRoomManageList();
+        const room = rooms.find((item) => item.id === roomId);
+        if (!room || !roomEditDialog) return;
+        activeManageRoomId = roomId;
+        if (roomEditNameInput) roomEditNameInput.value = room.name;
+        setAccessToggleValue(roomEditAccessFieldset, room.bookingAccess);
+        if (roomEditDialogMessage) roomEditDialogMessage.textContent = "";
+        if (roomEditDeleteBtn) roomEditDeleteBtn.disabled = room.isDefault || rooms.length <= 1;
+        roomEditDialog.showModal();
         window.setTimeout(() => {
-          const input = root.querySelector(
-            `.meeting-room-manage-edit-input[data-room-id="${roomId}"]`
-          );
-          if (input instanceof HTMLInputElement) {
-            input.focus();
-            input.select();
-          }
+          roomEditNameInput?.focus();
+          roomEditNameInput?.select();
         }, 0);
-        return;
-      }
-      if (action === "rename-room-cancel") {
-        editingRoomId = "";
-        renderRoomManageList();
-        return;
-      }
-      if (action === "rename-room-save") {
-        const roomId = button.dataset.roomId;
-        if (!roomId) return;
-        const input = root.querySelector(
-          `.meeting-room-manage-edit-input[data-room-id="${roomId}"]`
-        );
-        const nextName = input instanceof HTMLInputElement ? input.value : "";
-        void renameRoom(roomId, nextName);
-        return;
-      }
-      if (action === "set-room-access") {
-        const roomId = button.dataset.roomId;
-        const access = button.dataset.access;
-        if (!roomId || !access) return;
-        void updateRoomBookingAccess(roomId, access);
-        return;
-      }
-      if (action === "remove-room") {
-        const roomId = button.dataset.roomId;
-        if (!roomId) return;
-        void removeRoom(roomId);
         return;
       }
       if (action === "remove-holiday") {
@@ -2703,18 +2756,70 @@ function initMeetingRoomStaffApproval() {
   }
 
   if (roomManageForm) {
-    roomManageForm.addEventListener("submit", (event) => {
+    roomManageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      void addRoom(roomManageInput?.value || "");
+      const didAdd = await addRoom(
+        roomManageInput?.value || "",
+        readAccessToggleValue(roomManageAccessFieldset)
+      );
+      if (didAdd) roomAddDialog?.close();
     });
   }
   renderRoomManageList();
   renderHolidayManageList();
 
   if (holidayManageForm) {
-    holidayManageForm.addEventListener("submit", (event) => {
+    holidayManageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      void addHoliday(holidayManageDateInput?.value || "", holidayManageNameInput?.value || "");
+      const didAdd = await addHoliday(holidayManageDateInput?.value || "", holidayManageNameInput?.value || "");
+      if (didAdd) holidayAddDialog?.close();
+    });
+  }
+
+  if (holidayCalendarPrevBtn) {
+    holidayCalendarPrevBtn.addEventListener("click", () => {
+      holidayCalendarCursor = new Date(
+        holidayCalendarCursor.getFullYear(),
+        holidayCalendarCursor.getMonth() - 1,
+        1
+      );
+      renderHolidayManageList();
+    });
+  }
+
+  if (holidayCalendarNextBtn) {
+    holidayCalendarNextBtn.addEventListener("click", () => {
+      holidayCalendarCursor = new Date(
+        holidayCalendarCursor.getFullYear(),
+        holidayCalendarCursor.getMonth() + 1,
+        1
+      );
+      renderHolidayManageList();
+    });
+  }
+
+  if (roomEditForm) {
+    roomEditForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const room = rooms.find((item) => item.id === activeManageRoomId);
+      if (!room) return;
+      const nameUpdated = await renameRoom(activeManageRoomId, roomEditNameInput?.value || "");
+      if (!nameUpdated) return;
+      const accessUpdated = await updateRoomBookingAccess(
+        activeManageRoomId,
+        readAccessToggleValue(roomEditAccessFieldset)
+      );
+      if (accessUpdated) roomEditDialog?.close();
+    });
+  }
+
+  if (roomEditDeleteBtn) {
+    roomEditDeleteBtn.addEventListener("click", async () => {
+      const room = rooms.find((item) => item.id === activeManageRoomId);
+      if (!room || room.isDefault || rooms.length <= 1) return;
+      if (!window.confirm(`ยืนยันการลบ “${room.name}” ใช่หรือไม่`)) return;
+      const didRemove = await removeRoom(activeManageRoomId);
+      if (didRemove) roomEditDialog?.close();
     });
   }
 

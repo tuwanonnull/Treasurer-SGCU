@@ -631,9 +631,244 @@
   border-radius: 14px;
 }
 
+.meeting-settings-dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  color: inherit;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.meeting-settings-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.meeting-settings-dialog-card {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+}
+
+.meeting-settings-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.meeting-settings-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.meeting-access-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.meeting-access-fieldset .login-label {
+  margin-bottom: 7px;
+}
+
+.meeting-access-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #f9a8d4;
+  border-radius: 999px;
+  background: #fdf2f8;
+}
+
+.meeting-access-option {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.meeting-access-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.meeting-access-option span {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #be185d;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.75;
+  text-align: center;
+  transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.meeting-access-option input:checked + span {
+  color: #be185d;
+  background: #ffe4f1;
+  opacity: 1;
+}
+
+.meeting-access-option input:focus-visible + span {
+  outline: 3px solid rgba(236, 72, 153, 0.24);
+  outline-offset: 2px;
+}
+
+.meeting-access-help {
+  min-height: 18px;
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.meeting-settings-dialog-action-spacer {
+  flex: 1;
+}
+
+.meeting-room-delete-action {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.meeting-room-delete-action:hover:not(:disabled) {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
 .meeting-room-holiday-panel .panel-body {
   background: linear-gradient(180deg, #ffffff, #fff8fb);
   border-radius: 14px;
+}
+
+.meeting-holiday-calendar-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.meeting-holiday-calendar-toolbar .btn-ghost {
+  min-width: 38px;
+  padding: 7px 10px;
+  box-shadow: none;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.meeting-holiday-calendar-title {
+  color: var(--theme-pink-800);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.meeting-holiday-calendar-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.meeting-holiday-weekdays,
+.meeting-holiday-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(72px, 1fr));
+  gap: 6px;
+  min-width: 560px;
+}
+
+.meeting-holiday-weekdays {
+  margin-bottom: 6px;
+}
+
+.meeting-holiday-weekdays span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.meeting-holiday-day {
+  min-height: 76px;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.meeting-holiday-day:hover {
+  border-color: rgba(236, 72, 153, 0.32);
+  background: #fffafd;
+}
+
+.meeting-holiday-day.is-empty {
+  border-color: transparent;
+  background: transparent;
+  pointer-events: none;
+}
+
+.meeting-holiday-day.is-today {
+  border-color: rgba(236, 72, 153, 0.5);
+}
+
+.meeting-holiday-day.is-closed {
+  border-color: rgba(236, 72, 153, 0.3);
+  background: #fdf2f8;
+}
+
+.meeting-holiday-day-number {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.meeting-holiday-day-label {
+  display: -webkit-box;
+  margin-top: 8px;
+  overflow: hidden;
+  color: #9d174d;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.meeting-holiday-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 10px;
+  color: #475569;
+  font-size: 12px;
+}
+
+.meeting-holiday-list-head strong {
+  color: var(--theme-pink-800);
+  font-size: 13px;
+}
+
+.meeting-holiday-summary-list {
+  grid-template-columns: 1fr;
 }
 
 .meeting-room-manage-form {
@@ -665,24 +900,47 @@
 
 .meeting-room-manage-list {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
 }
 
 .meeting-room-manage-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px #f1f5f9;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fffafd 100%);
+  border: 1px solid rgba(244, 114, 182, 0.16);
+  box-shadow: 0 8px 22px rgba(236, 72, 153, 0.08);
+}
+
+.meeting-room-manage-item-button {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.meeting-room-manage-item-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(236, 72, 153, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #fffafd 100%);
+  box-shadow: 0 12px 26px rgba(236, 72, 153, 0.14);
+}
+
+.meeting-room-manage-item-button:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.24);
+  outline-offset: 2px;
 }
 
 .meeting-room-manage-name {
   font-size: 14px;
-  font-weight: 500;
-  color: #111827;
+  font-weight: 700;
+  color: var(--theme-pink-800);
+  line-height: 1.35;
 }
 
 .meeting-room-holiday-date {
@@ -692,13 +950,18 @@
 }
 
 .meeting-room-manage-access-pill {
-  margin-top: 6px;
+  width: fit-content;
+  min-height: 26px;
+  margin-top: 9px;
+  padding: 3px 8px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.05);
+  font-size: 11px;
   font-weight: 600;
-  color: #374151;
+  color: #475569;
 }
 
 .meeting-room-manage-access-bar {
@@ -1172,5 +1435,35 @@
   .staff-action-menu {
     right: auto;
     left: 0;
+  }
+}
+.meeting-staff-main-tabs {
+  justify-content: flex-end;
+}
+
+#meetingRoomAddOpenBtn,
+#meetingHolidayAddOpenBtn,
+#meetingRoomAddOpenBtn:hover,
+#meetingHolidayAddOpenBtn:hover {
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .meeting-room-manage-panel .panel-header,
+  .meeting-room-holiday-panel .panel-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #meetingRoomAddOpenBtn,
+  #meetingHolidayAddOpenBtn {
+    width: 100%;
+  }
+
+  .meeting-room-edit-actions {
+    flex-wrap: wrap;
+  }
+
+  .meeting-room-edit-actions .meeting-room-delete-action {
+    width: 100%;
   }
 }

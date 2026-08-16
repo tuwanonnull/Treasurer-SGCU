@@ -751,7 +751,8 @@ function initMeetingRoomMobileActionBar() {
       return;
     }
 
-    bar.classList.toggle("is-visible", activePage === "meeting-room-staff");
+    const meetingSettingsActive = section.classList.contains("is-settings-view");
+    bar.classList.toggle("is-visible", activePage === "meeting-room-staff" && !meetingSettingsActive);
     actionBtns.forEach((btn) => {
       const action = btn.dataset.meetingMobileAction;
       btn.classList.toggle(

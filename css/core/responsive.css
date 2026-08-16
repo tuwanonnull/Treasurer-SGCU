@@ -277,6 +277,18 @@
 }
 
 @media (max-width: 640px) {
+  .page-view[data-page="meeting-room-staff"] .page-header-flex .meeting-staff-main-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .page-view[data-page="meeting-room-staff"] .meeting-staff-main-tabs .tab-btn {
+    min-width: 0;
+    width: 100%;
+    white-space: nowrap;
+  }
+
   .filter-bar, .cards, .calendar-filter-bar {
     grid-template-columns: 1fr;
   }

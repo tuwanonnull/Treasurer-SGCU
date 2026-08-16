@@ -4,13 +4,22 @@
           <div class="page-header-flex section-appear">
             <div>
               <h2 class="page-title">อนุมัติห้องประชุม</h2>
-              <p class="page-subtitle">อนุมัติหรือปฏิเสธคำขอจองห้องประชุม พร้อมจัดการรายการทั้งหมด</p>
+              <p class="page-subtitle">จัดการคำขอจองและตั้งค่าห้องประชุมในที่เดียว</p>
               <div id="meetingStaffRequestReminder" class="section-text-sm" aria-live="polite" hidden></div>
+            </div>
+            <div class="tabs meeting-staff-main-tabs" aria-label="เลือกมุมมองจัดการห้องประชุม">
+              <button class="tab-btn view-toggle-btn is-active" data-meeting-staff-main-tab="requests" type="button">
+                จัดการคำขอ
+              </button>
+              <button class="tab-btn view-toggle-btn" data-meeting-staff-main-tab="settings" type="button">
+                ตั้งค่าห้องประชุม
+              </button>
             </div>
           </div>
 
           <div class="separator-gradient"></div>
 
+          <div id="meetingStaffRequestsView">
           <div id="staffMeetingAll" class="panel panel-hover section-appear section-delay-1" style="margin-top: 18px;">
             <div class="panel-header">
               <div>
@@ -125,30 +134,20 @@
               </div>
             </div>
           </div>
+          </div>
 
+          <div id="meetingStaffSettingsView" style="display: none;">
           <div class="panel panel-hover section-appear section-delay-3 meeting-room-manage-panel" style="margin-top: 18px;">
             <div class="panel-header">
               <div>
-                <div class="panel-title">จัดการห้องประชุม</div>
-                <div class="panel-caption">เพิ่มห้องใหม่ ลบห้องที่ไม่ใช้งาน และกำหนดสิทธิ์การจองของแต่ละห้อง</div>
+                <div class="panel-title">ห้องประชุม</div>
+                <div class="panel-caption">กำหนดชื่อและสิทธิ์การจองของแต่ละห้อง</div>
                 <div id="meetingRoomManageCount" class="panel-meta">พบ 0 ห้อง</div>
               </div>
+              <button id="meetingRoomAddOpenBtn" class="btn-primary" type="button">+ เพิ่มห้องประชุม</button>
             </div>
             <div class="panel-body">
-              <form id="meetingRoomManageForm" class="meeting-room-manage-form">
-                <div class="meeting-room-manage-row">
-                  <input
-                    id="meetingRoomManageInput"
-                    class="login-input"
-                    type="text"
-                    placeholder="เช่น ห้องประชุม 4 ชั้น 3"
-                    maxlength="100"
-                    required
-                  />
-                  <button class="btn-primary" type="submit">เพิ่มห้อง</button>
-                </div>
-                <div id="meetingRoomManageMessage" class="section-text-sm" aria-live="polite"></div>
-              </form>
+              <div id="meetingRoomManageMessage" class="section-text-sm" aria-live="polite"></div>
               <div id="meetingRoomManageList" class="meeting-room-manage-list"></div>
             </div>
           </div>
@@ -156,29 +155,121 @@
           <div class="panel panel-hover section-appear section-delay-4 meeting-room-holiday-panel" style="margin-top: 18px;">
             <div class="panel-header">
               <div>
-                <div class="panel-title">จัดการวันหยุด</div>
-                <div class="panel-caption">เพิ่ม/ลบวันหยุดราชการเพิ่มเติมสำหรับปฏิทินจองห้องประชุม</div>
+                <div class="panel-title">วันหยุดและวันปิดให้บริการ</div>
+                <div class="panel-caption">กำหนดวันที่ไม่เปิดรับจองเพิ่มเติมในปฏิทิน</div>
                 <div id="meetingHolidayManageCount" class="panel-meta">พบ 0 วัน</div>
               </div>
+              <button id="meetingHolidayAddOpenBtn" class="btn-primary" type="button">+ เพิ่มวันปิดให้บริการ</button>
             </div>
             <div class="panel-body">
-              <form id="meetingHolidayManageForm" class="meeting-room-manage-form">
-                <div class="meeting-room-manage-row">
-                  <input id="meetingHolidayManageDate" class="login-input" type="date" required />
-                  <input
-                    id="meetingHolidayManageName"
-                    class="login-input"
-                    type="text"
-                    placeholder="เช่น วันหยุดพิเศษ"
-                    maxlength="100"
-                    required
-                  />
-                  <button class="btn-primary" type="submit">เพิ่มวันหยุด</button>
+              <div id="meetingHolidayManageMessage" class="section-text-sm" aria-live="polite"></div>
+              <div class="meeting-holiday-calendar-toolbar">
+                <button id="meetingHolidayCalendarPrev" class="btn-ghost" type="button" aria-label="เดือนก่อน">‹</button>
+                <div id="meetingHolidayCalendarTitle" class="meeting-holiday-calendar-title"></div>
+                <button id="meetingHolidayCalendarNext" class="btn-ghost" type="button" aria-label="เดือนถัดไป">›</button>
+              </div>
+              <div class="meeting-holiday-calendar-scroll">
+                <div class="meeting-holiday-weekdays" aria-hidden="true">
+                  <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
                 </div>
-                <div id="meetingHolidayManageMessage" class="section-text-sm" aria-live="polite"></div>
-              </form>
-              <div id="meetingHolidayManageList" class="meeting-room-manage-list"></div>
+                <div id="meetingHolidayCalendar" class="meeting-holiday-calendar"></div>
+              </div>
+              <div class="meeting-holiday-list-head">
+                <strong>วันปิดให้บริการในเดือนนี้</strong>
+                <span>กดวันที่ในปฏิทินเพื่อเพิ่มรายการ</span>
+              </div>
+              <div id="meetingHolidayManageList" class="meeting-room-manage-list meeting-holiday-summary-list"></div>
             </div>
+          </div>
+
+          <dialog id="meetingRoomAddDialog" class="meeting-settings-dialog">
+            <form id="meetingRoomManageForm" method="dialog" class="meeting-settings-dialog-card">
+              <div class="meeting-settings-dialog-header">
+                <div>
+                  <div class="panel-title">เพิ่มห้องประชุม</div>
+                  <div class="panel-caption">กรอกข้อมูลและกำหนดสิทธิ์การจองของห้องใหม่</div>
+                </div>
+                <button class="modal-close meeting-settings-dialog-close" type="button" aria-label="ปิด">✕</button>
+              </div>
+              <label class="login-label" for="meetingRoomManageInput">ชื่อห้องประชุม</label>
+              <input id="meetingRoomManageInput" class="login-input" type="text" placeholder="เช่น ห้องประชุม 4 ชั้น 3" maxlength="100" required />
+              <fieldset id="meetingRoomManageAccess" class="meeting-access-fieldset">
+                <legend class="login-label">สิทธิ์การจอง</legend>
+                <div class="meeting-access-toggle">
+                  <label class="meeting-access-option">
+                    <input type="radio" name="meetingRoomManageAccess" value="public" checked />
+                    <span>ทุกคนจองได้</span>
+                  </label>
+                  <label class="meeting-access-option">
+                    <input type="radio" name="meetingRoomManageAccess" value="staff_only" />
+                    <span>เฉพาะ Staff</span>
+                  </label>
+                </div>
+                <div class="meeting-access-help" data-access-help>ผู้ใช้งานทั่วไปสามารถส่งคำขอจองห้องนี้ได้</div>
+              </fieldset>
+              <div id="meetingRoomManageDialogMessage" class="section-text-sm" aria-live="polite"></div>
+              <div class="meeting-settings-dialog-actions">
+                <button class="btn-ghost meeting-settings-dialog-cancel" type="button">ยกเลิก</button>
+                <button class="btn-primary" type="submit">เพิ่มห้องประชุม</button>
+              </div>
+            </form>
+          </dialog>
+
+          <dialog id="meetingRoomEditDialog" class="meeting-settings-dialog">
+            <form id="meetingRoomEditForm" method="dialog" class="meeting-settings-dialog-card">
+              <div class="meeting-settings-dialog-header">
+                <div>
+                  <div class="panel-title">รายละเอียดห้องประชุม</div>
+                  <div class="panel-caption">แก้ไขข้อมูลและสิทธิ์การจองของห้องนี้</div>
+                </div>
+                <button class="modal-close meeting-settings-dialog-close" type="button" aria-label="ปิด">✕</button>
+              </div>
+              <label class="login-label" for="meetingRoomEditName">ชื่อห้องประชุม</label>
+              <input id="meetingRoomEditName" class="login-input" type="text" maxlength="100" required />
+              <fieldset id="meetingRoomEditAccess" class="meeting-access-fieldset">
+                <legend class="login-label">สิทธิ์การจอง</legend>
+                <div class="meeting-access-toggle">
+                  <label class="meeting-access-option">
+                    <input type="radio" name="meetingRoomEditAccess" value="public" checked />
+                    <span>ทุกคนจองได้</span>
+                  </label>
+                  <label class="meeting-access-option">
+                    <input type="radio" name="meetingRoomEditAccess" value="staff_only" />
+                    <span>เฉพาะ Staff</span>
+                  </label>
+                </div>
+                <div class="meeting-access-help" data-access-help>ผู้ใช้งานทั่วไปสามารถส่งคำขอจองห้องนี้ได้</div>
+              </fieldset>
+              <div id="meetingRoomEditDialogMessage" class="section-text-sm" aria-live="polite"></div>
+              <div class="meeting-settings-dialog-actions meeting-room-edit-actions">
+                <button id="meetingRoomEditDeleteBtn" class="btn-ghost meeting-room-delete-action" type="button">ลบห้องประชุม</button>
+                <span class="meeting-settings-dialog-action-spacer"></span>
+                <button class="btn-ghost meeting-settings-dialog-cancel" type="button">ยกเลิก</button>
+                <button class="btn-primary" type="submit">บันทึก</button>
+              </div>
+            </form>
+          </dialog>
+
+          <dialog id="meetingHolidayAddDialog" class="meeting-settings-dialog">
+            <form id="meetingHolidayManageForm" method="dialog" class="meeting-settings-dialog-card">
+              <div class="meeting-settings-dialog-header">
+                <div>
+                  <div class="panel-title">เพิ่มวันปิดให้บริการ</div>
+                  <div class="panel-caption">วันนี้จะไม่เปิดให้ผู้ใช้งานส่งคำขอจอง</div>
+                </div>
+                <button class="modal-close meeting-settings-dialog-close" type="button" aria-label="ปิด">✕</button>
+              </div>
+              <label class="login-label" for="meetingHolidayManageDate">วันที่</label>
+              <input id="meetingHolidayManageDate" class="login-input" type="date" required />
+              <label class="login-label" for="meetingHolidayManageName">ชื่อรายการ</label>
+              <input id="meetingHolidayManageName" class="login-input" type="text" placeholder="เช่น วันหยุดพิเศษ" maxlength="100" required />
+              <div id="meetingHolidayManageDialogMessage" class="section-text-sm" aria-live="polite"></div>
+              <div class="meeting-settings-dialog-actions">
+                <button class="btn-ghost meeting-settings-dialog-cancel" type="button">ยกเลิก</button>
+                <button class="btn-primary" type="submit">เพิ่มวันปิดให้บริการ</button>
+              </div>
+            </form>
+          </dialog>
           </div>
         </div>
       </section>
