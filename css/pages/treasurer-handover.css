@@ -7,6 +7,231 @@
   --handover-soft: #f8fafc;
 }
 
+/* Shared opening card for every department guide. */
+.handover-department-hero,
+.handover-page .handover-department-hero,
+.budget-guide .budget-guide-hero.handover-department-hero,
+.physical-handbook .physical-hero.handover-department-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto 18px;
+  padding: 28px;
+  border: 1px solid var(--handover-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+}
+
+.handover-department-hero h2,
+.budget-guide .budget-guide-hero.handover-department-hero h2,
+.physical-handbook .physical-hero.handover-department-hero h2 {
+  margin: 0;
+  color: var(--handover-ink);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.18;
+}
+
+.handover-department-hero p,
+.budget-guide .budget-guide-hero.handover-department-hero p,
+.physical-handbook .physical-hero.handover-department-hero p {
+  max-width: 760px;
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.handover-department-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.handover-department-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid rgba(157, 23, 77, 0.14);
+  border-radius: 999px;
+  background: #fdf2f8;
+  color: var(--handover-pink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.fundraising-handbook {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.fundraising-intro-card,
+.fundraising-script-layout,
+.fundraising-event-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fundraising-preflight,
+.fundraising-resource-grid article,
+.fundraising-script-card,
+.fundraising-answer-card,
+.fundraising-event-grid article {
+  border: 1px solid var(--handover-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.fundraising-preflight,
+.fundraising-script-card,
+.fundraising-answer-card,
+.fundraising-event-grid article {
+  padding: 20px;
+}
+
+.fundraising-preflight {
+  margin-bottom: 16px;
+}
+
+.fundraising-preflight h3,
+.fundraising-script-card h3,
+.fundraising-answer-card h3,
+.fundraising-event-grid h3,
+.fundraising-resource-grid h3 {
+  margin: 0;
+  color: var(--handover-ink);
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.fundraising-preflight ul,
+.fundraising-answer-card ul,
+.fundraising-event-grid ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.fundraising-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fundraising-resource-grid article {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 18px;
+}
+
+.fundraising-resource-grid article > span:first-child {
+  margin-bottom: 10px;
+  color: var(--handover-pink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fundraising-resource-grid p,
+.fundraising-script-card p {
+  margin: 9px 0 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.fundraising-resource-grid a,
+.fundraising-inline-link {
+  margin-top: auto;
+  padding-top: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--handover-pink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fundraising-resource-grid a:hover,
+.fundraising-resource-grid a:focus-visible,
+.fundraising-inline-link:hover,
+.fundraising-inline-link:focus-visible {
+  text-decoration: underline;
+}
+
+#fundraising-contact-script {
+  scroll-margin-top: 164px;
+}
+
+.fundraising-resource-status {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 14px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fundraising-script-card .project-staff-ops-kicker:not(:first-child) {
+  margin-top: 18px;
+}
+
+.fundraising-script-note {
+  border-left: 3px solid var(--handover-pink);
+  padding-left: 12px;
+}
+
+.fundraising-followup-flow {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .handover-department-hero,
+  .handover-page .handover-department-hero,
+  .budget-guide .budget-guide-hero.handover-department-hero,
+  .physical-handbook .physical-hero.handover-department-hero {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .handover-department-hero h2,
+  .budget-guide .budget-guide-hero.handover-department-hero h2,
+  .physical-handbook .physical-hero.handover-department-hero h2 {
+    font-size: 26px;
+  }
+
+  .handover-department-tags {
+    justify-content: flex-start;
+  }
+
+  .fundraising-intro-card,
+  .fundraising-resource-grid,
+  .fundraising-script-layout,
+  .fundraising-event-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .handover-page {
   --handover-ink: #172033;
   --handover-muted: #64748b;
@@ -36,9 +261,210 @@
   margin: 0;
 }
 
+.handover-directory-header {
+  max-width: 1120px;
+  margin: 0 auto 18px;
+}
+
+.handover-directory-header .page-title {
+  font-size: 20px;
+  line-height: normal;
+}
+
+.handover-directory-header .page-subtitle {
+  max-width: 760px;
+}
+
+.handover-opening-note {
+  display: block;
+  max-width: 1120px;
+  margin: 0 auto 14px;
+  padding: 28px;
+  border: 1px solid rgba(157, 23, 77, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.handover-opening-note-heading {
+  margin-bottom: 6px;
+}
+
+.handover-opening-note-logo {
+  float: left;
+  width: 156px;
+  margin: 4px 26px 16px 0;
+}
+
+.handover-opening-note-logo img {
+  display: block;
+  width: min(190px, 100%);
+  height: auto;
+  object-fit: contain;
+}
+
+.handover-opening-note-body {
+  min-width: 0;
+}
+
+.handover-opening-note-heading h2 {
+  margin: 0;
+  color: var(--handover-ink);
+  font-size: 25px;
+  line-height: 1.35;
+}
+
+.handover-opening-note-body p {
+  max-width: none;
+  margin: 16px 0 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.handover-opening-note > .handover-signature {
+  clear: both;
+  gap: 2px;
+  margin-top: 20px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.handover-opening-note > .handover-signature strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .handover-opening-note {
+    padding: 20px;
+  }
+
+  .handover-opening-note-logo {
+    float: none;
+    width: auto;
+    margin: 16px 0 20px;
+  }
+
+  .handover-opening-note-logo img {
+    width: 96px;
+    height: auto;
+  }
+
+  .handover-opening-note-heading h2 {
+    font-size: 21px;
+  }
+
+  .handover-opening-note > .handover-signature {
+    margin-top: 24px;
+    text-align: left;
+  }
+}
+
+[data-handover-panel][hidden] {
+  display: none !important;
+}
+
+[data-handover-audience][hidden] {
+  display: none !important;
+}
+
+.handover-floating-nav {
+  --handover-pink: #9d174d;
+  position: fixed;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 58;
+}
+
+.handover-floating-nav[hidden] {
+  display: none;
+}
+
+.handover-floating-nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(157, 23, 77, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--handover-pink);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.handover-floating-nav-button:hover,
+.handover-floating-nav-button:focus-visible {
+  background: #fdf2f8;
+  outline: none;
+}
+
+.handover-floating-nav-button[hidden] {
+  display: none;
+}
+
+.handover-floating-nav-button::before {
+  content: ">";
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.handover-floating-nav-button[data-handover-skip-common]::before {
+  transform: rotate(90deg);
+}
+
+.handover-floating-nav-button[data-handover-back-top]::before {
+  transform: rotate(-90deg);
+}
+
+.handover-common-guide {
+  max-width: 1120px;
+  margin: 0 auto 28px;
+}
+
+.handover-common-guide-header {
+  margin-bottom: 16px;
+  padding: 24px 26px;
+  border: 1px solid var(--handover-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.handover-common-guide-header h2 {
+  margin: 0;
+  color: var(--handover-ink);
+  font-size: 27px;
+  line-height: 1.3;
+}
+
+.handover-common-guide-header p {
+  margin: 7px 0 0;
+  color: var(--handover-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.handover-treasurer-guide {
+  max-width: 1120px;
+}
+
 .handover-global-toc {
   position: sticky;
   top: 84px;
+  scroll-margin-top: 92px;
   z-index: 20;
   display: flex;
   gap: 8px;
@@ -54,7 +480,28 @@
   -webkit-backdrop-filter: blur(14px);
 }
 
-.handover-global-toc a {
+@media (max-width: 720px) {
+  .handover-floating-nav {
+    right: 12px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .handover-floating-nav-button {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+
+  .handover-common-guide-header {
+    padding: 20px;
+  }
+
+  .handover-common-guide-header h2 {
+    font-size: 22px;
+  }
+}
+
+.handover-global-toc button {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -68,13 +515,30 @@
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
 }
 
-.handover-global-toc a:hover,
-.handover-global-toc a:focus-visible {
+.handover-global-toc button:hover,
+.handover-global-toc button:focus-visible,
+.handover-global-toc button.is-active {
   background: #fdf2f8;
   color: var(--handover-pink);
   outline: none;
+}
+
+.handover-global-toc button.is-active {
+  box-shadow: inset 0 0 0 1px rgba(157, 23, 77, 0.16);
+}
+
+@media (min-width: 900px) {
+  .handover-global-toc button {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+  }
 }
 
 .handover-global-toc span {
@@ -531,6 +995,10 @@
   display: block;
   margin: 26px 0 22px;
   scroll-margin-top: 110px;
+}
+
+.budget-guide[data-handover-panel] {
+  margin-top: 0;
 }
 
 .budget-guide-content {
@@ -1533,6 +2001,9 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 .physical-handbook .physical-hero {

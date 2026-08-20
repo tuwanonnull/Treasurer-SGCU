@@ -1102,6 +1102,117 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===== 4) ระบบสลับหน้าแบบ SPA =====
   const navLinks = document.querySelectorAll("header nav a[data-page]");
   const pageViews = document.querySelectorAll(".page-view");
+  const staffBreadcrumbs = {
+    "dashboard-staff": ["ภาพรวม", "ภาพรวมโครงการ"],
+    "treasurer-handover-staff": ["เครื่องมือ", "คู่มือการทำงาน"],
+    "system-data-staff": ["ภาพรวม", "ตรวจระบบ"],
+    "budget-approval-staff": ["คำขอ", "คำของบประมาณ"],
+    "borrow-assets-staff": ["คำขอ", "ยืม-คืนพัสดุ"],
+    "meeting-room-staff": ["คำขอ", "ห้องประชุม"],
+    "staff-approval": ["ผู้ใช้งาน", "จัดการสตาฟ"],
+    "org-representative-approval-staff": ["ผู้ใช้งาน", "ตัวแทนองค์กร"],
+    "content-management-staff": ["เนื้อหา", "จัดการเนื้อหา"],
+    "content-news-staff": ["เนื้อหา", "ข่าวสาร"],
+    "content-documents-staff": ["เนื้อหา", "เอกสารการเงิน"]
+  };
+  const initStaffBreadcrumbs = () => {
+    Object.entries(staffBreadcrumbs).forEach(([pageName, labels]) => {
+      const pageEl = document.querySelector(`.page-view[data-page="${pageName}"] > .page`);
+      if (!pageEl || pageEl.querySelector(":scope > .staff-breadcrumb")) return;
+
+      const breadcrumb = document.createElement("nav");
+      breadcrumb.className = "staff-breadcrumb";
+      breadcrumb.setAttribute("aria-label", "เส้นทางนำทาง");
+
+      const list = document.createElement("ol");
+      labels.forEach((label, index) => {
+        const item = document.createElement("li");
+        item.textContent = label;
+        if (index === labels.length - 1) item.setAttribute("aria-current", "page");
+        list.appendChild(item);
+      });
+      breadcrumb.appendChild(list);
+      pageEl.prepend(breadcrumb);
+    });
+  };
+  initStaffBreadcrumbs();
+  const initHandoverDirectory = () => {
+    const pageEl = document.querySelector('.page-view[data-page="treasurer-handover-staff"]');
+    if (!pageEl || pageEl.dataset.handoverDirectoryReady === "true") return;
+
+    const floatingNav = pageEl.querySelector(".handover-floating-nav");
+    if (floatingNav) document.body.appendChild(floatingNav);
+    const commonGuide = pageEl.querySelector(".handover-common-guide");
+    const treasurerGuide = pageEl.querySelector('.handover-treasurer-guide[data-handover-panel="treasurer"]');
+    pageEl.querySelectorAll('[data-handover-audience="shared"]').forEach((section) => {
+      commonGuide?.appendChild(section);
+      section.hidden = false;
+    });
+    pageEl.querySelectorAll('[data-handover-audience="treasurer"]').forEach((section) => {
+      treasurerGuide?.appendChild(section);
+      section.hidden = false;
+    });
+
+    const buttons = Array.from(pageEl.querySelectorAll("[data-handover-view]"));
+    const panels = Array.from(pageEl.querySelectorAll("[data-handover-panel]"));
+    const departmentNav = pageEl.querySelector(".handover-global-toc");
+    const showView = (view) => {
+      const nextView = buttons.some((button) => button.dataset.handoverView === view) ? view : "treasurer";
+      buttons.forEach((button) => {
+        const isActive = button.dataset.handoverView === nextView;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-selected", String(isActive));
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.handoverPanel !== nextView;
+      });
+      pageEl.dataset.handoverActiveView = nextView;
+    };
+    const scrollDepartmentToTop = (view) => {
+      const targetPanel = panels.find((panel) => panel.dataset.handoverPanel === view);
+      if (!targetPanel || !departmentNav) return;
+      const stickyTop = Number.parseFloat(window.getComputedStyle(departmentNav).top) || 84;
+      const offset = stickyTop + departmentNav.getBoundingClientRect().height + 18;
+      const targetTop = window.scrollY + targetPanel.getBoundingClientRect().top - offset;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.handoverView || "treasurer";
+        showView(view);
+        requestAnimationFrame(() => scrollDepartmentToTop(view));
+      });
+    });
+    const skipCommonButton = floatingNav?.querySelector("[data-handover-skip-common]");
+    const backTopButton = floatingNav?.querySelector("[data-handover-back-top]");
+    const updateHandoverFloatingNav = () => {
+      if (!floatingNav || !departmentNav || !skipCommonButton || !backTopButton) return;
+      const isHandoverPageActive = pageEl.classList.contains("active");
+      floatingNav.hidden = !isHandoverPageActive;
+      if (!isHandoverPageActive) return;
+      const switchPoint = Math.min(window.innerHeight * 0.55, 520);
+      const hasReachedDepartmentGuides = departmentNav.getBoundingClientRect().top <= switchPoint;
+      skipCommonButton.hidden = hasReachedDepartmentGuides;
+      backTopButton.hidden = !hasReachedDepartmentGuides;
+    };
+    skipCommonButton?.addEventListener("click", () => {
+      departmentNav?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    backTopButton?.addEventListener("click", () => {
+      pageEl.querySelector(".handover-directory-header")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    pageEl.querySelector("[data-fundraising-script-link]")?.addEventListener("click", () => {
+      pageEl.querySelector("#fundraising-contact-script")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    window.addEventListener("scroll", updateHandoverFloatingNav, { passive: true });
+    window.addEventListener("resize", updateHandoverFloatingNav);
+    window.addEventListener("sgcu:page-active", updateHandoverFloatingNav);
+    pageEl.dataset.handoverDirectoryReady = "true";
+    showView("treasurer");
+    updateHandoverFloatingNav();
+  };
+  initHandoverDirectory();
   const mainContainerEl = document.querySelector("main.main");
   const mobileBottomNav = document.querySelector(".mobile-bottom-nav");
   let mobileBottomNavSyncFrame = 0;

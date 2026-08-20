@@ -55,6 +55,40 @@
 
 /* Desktop nav */
 
+.staff-breadcrumb {
+  margin: 0 0 10px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.staff-breadcrumb ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.staff-breadcrumb li + li::before {
+  content: "›";
+  margin: 0 7px;
+  color: #d1d5db;
+}
+
+.staff-breadcrumb [aria-current="page"] {
+  color: #9d174d;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .staff-breadcrumb {
+    display: none;
+  }
+}
+
 .desktop-nav {
   display: none;
   align-items: center;
