@@ -53,18 +53,27 @@
             <button class="handover-floating-nav-button" type="button" data-handover-skip-common aria-label="ข้ามไปคู่มือเฉพาะฝ่าย" title="ข้ามไปคู่มือเฉพาะฝ่าย"></button>
             <button class="handover-floating-nav-button" type="button" data-handover-back-top aria-label="กลับขึ้นด้านบน" title="กลับขึ้นด้านบน" hidden></button>
           </div>
-          <section class="handover-common-guide" aria-labelledby="handoverCommonGuideTitle">
-            <header class="handover-common-guide-header">
-              <span class="handover-section-kicker">Shared foundations</span>
-              <h2 id="handoverCommonGuideTitle">พื้นฐานที่ทุกฝ่ายควรรู้</h2>
-              <p>โครงสร้างทีม การวางกำลังคน และแนวทางคัดเลือกสมาชิกที่ทุกฝ่ายใช้ร่วมกัน</p>
-            </header>
-          </section>
-          <nav id="handoverDepartmentGuides" class="handover-global-toc" aria-label="เลือกคู่มือเฉพาะฝ่าย" role="tablist">
-            <button type="button" class="is-active" data-handover-view="treasurer" role="tab" aria-selected="true"><span>1</span> เหรัญญิก</button>
-            <button type="button" data-handover-view="budget" role="tab" aria-selected="false"><span>2</span> บริหารและพัฒนางบประมาณ</button>
-            <button type="button" data-handover-view="fundraising" role="tab" aria-selected="false"><span>3</span> หาทุนและสิทธิประโยชน์</button>
-            <button type="button" data-handover-view="physical" role="tab" aria-selected="false"><span>4</span> กายภาพและพัสดุ</button>
+          <details class="handover-common-guide" aria-labelledby="handoverCommonGuideTitle" open>
+            <summary class="handover-common-guide-header">
+              <span class="handover-section-kicker">Getting started</span>
+              <h2 id="handoverCommonGuideTitle">เริ่มต้นการทำงานร่วมกัน</h2>
+            </summary>
+            <p class="handover-common-guide-intro">โครงสร้างทีม การวางกำลังคน และแนวทางคัดเลือกสมาชิกที่ทุกฝ่ายใช้ร่วมกัน</p>
+          </details>
+          <nav id="handoverDepartmentGuides" class="handover-global-toc" aria-label="เลือกคู่มือเฉพาะฝ่าย">
+            <div class="handover-global-toc-group" data-handover-directory-menu role="tablist">
+              <button type="button" class="is-active handover-directory-treasurer" data-handover-view="treasurer" role="tab" aria-selected="true" aria-haspopup="true" title="กดอีกครั้งเพื่อเปิดเมนูย่อยฝ่ายเหรัญญิก"><span>1</span> เหรัญญิก</button>
+              <button type="button" data-handover-view="budget" role="tab" aria-selected="false"><span>2</span> บริหารและพัฒนางบประมาณ</button>
+              <button type="button" data-handover-view="fundraising" role="tab" aria-selected="false"><span>3</span> หาทุนและสิทธิประโยชน์</button>
+              <button type="button" data-handover-view="physical" role="tab" aria-selected="false"><span>4</span> กายภาพและพัสดุ</button>
+            </div>
+            <div class="handover-global-toc-group handover-treasurer-submenu" data-handover-treasurer-menu aria-label="หัวข้อฝ่ายเหรัญญิก" hidden>
+              <button type="button" class="handover-submenu-back" data-handover-directory-back>เหรัญญิก ‹</button>
+              <button type="button" data-handover-target="handover-financial-documents">เอกสารการเงิน</button>
+              <button type="button" data-handover-target="handover-part-3">Project Status</button>
+              <button type="button" data-handover-target="project-handover-closeout">ปิดโครงการ</button>
+              <button type="button" data-handover-target="project-handover-numbering">เลขรันเอกสาร</button>
+            </div>
           </nav>
           <div class="handover-treasurer-guide handover-page" data-handover-panel="treasurer"></div>
           <!-- ============ TREASURER HANDOVER PART 1 ============ -->
@@ -73,10 +82,10 @@
             <div>
               <span class="handover-section-kicker">คู่มือเฉพาะฝ่าย</span>
               <h2>เหรัญญิก</h2>
-              <p>แนวทางเริ่มต้น วิธีคิด และข้อควรระวังสำหรับกำกับงานการเงินให้ต่อเนื่อง เป็นระบบ และส่งต่องานได้ครบถ้วน</p>
+              <p>ดูแลระบบการเงินส่วนกลาง ตั้งแต่หลักฐานเบิกจ่าย บัญชีองค์กร การติดตามสถานะโครงการ เลขรันเอกสาร ไปจนถึงการปิดโครงการและส่งต่องาน</p>
             </div>
             <div class="handover-department-tags" aria-label="ขอบเขตงานเหรัญญิก">
-              <span>Project Status</span><span>ปิดโครงการ</span><span>เลขรันเอกสาร</span>
+              <span>เอกสารการเงิน</span><span>บัญชีองค์กร</span><span>Project Status</span><span>เลขรันเอกสาร</span><span>ปิดโครงการ</span>
             </div>
           </section>
 
@@ -121,7 +130,7 @@
             </div>
           </section>
 
-          <section class="handover-section section-appear section-delay-3" aria-labelledby="handoverElectionTitle" data-handover-audience="treasurer">
+          <section class="handover-section section-appear section-delay-3" aria-labelledby="handoverElectionTitle" data-handover-audience="shared">
             <div class="handover-section-head">
               <div>
                 <span class="handover-section-kicker">First steps</span>
@@ -160,7 +169,7 @@
             </ol>
           </section>
 
-          <section class="handover-section handover-split section-appear section-delay-4" aria-labelledby="handoverAppointmentTitle" data-handover-audience="treasurer">
+          <section class="handover-section handover-split section-appear section-delay-4" aria-labelledby="handoverAppointmentTitle" data-handover-audience="shared">
             <div>
               <span class="handover-section-kicker">Appointments</span>
               <h2 id="handoverAppointmentTitle">การแต่งตั้งประธานฝ่ายย่อย</h2>
@@ -453,20 +462,6 @@
               <details id="budget-request-flow" class="budget-collapsible" open>
                 <summary>ขั้นตอนการของบประมาณจากหน้า “ยื่นของบประมาณ”</summary>
                 <div class="budget-collapsible-body">
-                  <div class="budget-system-map">
-                    <article>
-                      <strong>ไฟล์ / หน้าอ้างอิง</strong>
-                      <span>partials/budget-approval-request.html</span>
-                    </article>
-                    <article>
-                      <strong>สคริปต์ที่ทำงาน</strong>
-                      <span>js/features/budget/app.budget-request.js</span>
-                    </article>
-                    <article>
-                      <strong>ฐานข้อมูลหลัก</strong>
-                      <span>budgetApprovalRequests และ budgetApprovalSettings</span>
-                    </article>
-                  </div>
                   <ol class="budget-flow">
                     <li><span>1</span><div><h3>ยืนยันสิทธิ์ตัวแทนองค์กร</h3><p>ผู้ยื่นต้องมีสิทธิ์ตัวแทนฝ่ายหรือชมรมที่ได้รับอนุมัติแล้ว ระบบจึงจะแสดงฝ่าย/ชมรม ประเภทองค์กร และอนุญาตให้เพิ่ม แก้ไข หรือลดรายการคำของบขององค์กรนั้นได้</p></div></li>
                     <li><span>2</span><div><h3>เลือก “รอบรับคำขอ”</h3><p>หน้าแบบฟอร์มดึงรอบจากการตั้งค่าของ staff เช่น รอบทั่วไปหรือรอบครุภัณฑ์ พร้อมแสดงกำหนดส่งคำของบและสถานะว่ารอบยังเปิดรับอยู่หรือปิดรับแล้ว</p></div></li>
@@ -483,20 +478,6 @@
               <details id="budget-staff-workflow" class="budget-collapsible" open>
                 <summary>กระบวนการจากหน้า “จัดการคำขออนุมัติงบประมาณ”</summary>
                 <div class="budget-collapsible-body">
-                  <div class="budget-system-map">
-                    <article>
-                      <strong>ไฟล์ / หน้าอ้างอิง</strong>
-                      <span>partials/budget-approval-staff.html</span>
-                    </article>
-                    <article>
-                      <strong>สคริปต์ที่ทำงาน</strong>
-                      <span>js/features/budget/app.budget-staff.js</span>
-                    </article>
-                    <article>
-                      <strong>หน้าที่หลัก</strong>
-                      <span>ตั้งรอบ กำหนดเพดาน รันรหัส ตรวจรายการ และ export</span>
-                    </article>
-                  </div>
                   <div class="budget-process-grid">
                     <article>
                       <span>Overview</span>
@@ -663,6 +644,179 @@
 
           </div>
 
+          <section id="handover-financial-documents" class="handover-project-status-part financial-documents-part section-appear" aria-labelledby="handoverFinancialDocumentsTitle" data-handover-audience="treasurer" hidden>
+            <div class="budget-guide-hero project-status-hero">
+              <div>
+                <span class="handover-section-kicker">Financial documents</span>
+                <h2 id="handoverFinancialDocumentsTitle">เอกสารการเงินและบัญชีองค์กร</h2>
+                <p>
+                  พื้นฐานที่ต้องรู้ก่อนเริ่มตามงานใน Project Status ตั้งแต่การขอหลักฐานจากร้านค้า
+                  การตรวจเอกสารเบิก ไปจนถึงการดูแลบัญชีและรายงานการเงินขององค์กร
+                </p>
+              </div>
+              <div class="project-status-metrics" aria-label="ขอบเขตเนื้อหาเอกสารการเงิน">
+                <span class="operation-status-badge is-critical">หลักฐานตัวจริง</span>
+                <span class="operation-status-badge is-daily">ตรวจทุกชุด</span>
+                <span class="operation-status-badge is-monthly">บันทึกต่อเนื่อง</span>
+              </div>
+            </div>
+
+            <details class="budget-collapsible project-status-collapsible" open>
+              <summary>หลักฐานที่ใช้เบิกเงิน</summary>
+              <div class="budget-collapsible-body">
+                <div class="budget-callout budget-callout-warning">
+                  <strong>ตรวจข้อมูลล่าสุดก่อนนำไปใช้จริง</strong>
+                  <span>ชื่อผู้ซื้อ ที่อยู่ เลขประจำตัวผู้เสียภาษี แบบฟอร์ม ผู้มีอำนาจสั่งจ่าย สาขาธนาคาร และกำหนดส่งรายงานอาจเปลี่ยนตามปีการศึกษา ให้ยืนยันกับสำนักบริหารกิจการนิสิตและระเบียบฉบับปัจจุบันเสมอ</span>
+                </div>
+                <div class="budget-intro-card">
+                  <article>
+                    <span class="project-staff-ops-kicker">หลักฐานหลัก</span>
+                    <h3>ขอใบกำกับภาษีและใบเสร็จรับเงินก่อนเสมอ</h3>
+                    <p>กรณีซื้อสินค้าหรือบริการจากบริษัท ห้างหุ้นส่วน ร้านค้า หรือผู้ประกอบการที่จดภาษีมูลค่าเพิ่ม ให้ขอเอกสารทั้งชุดและส่งใบกำกับภาษีคู่กับใบเสร็จรับเงิน</p>
+                  </article>
+                  <div class="budget-callout budget-callout-info">
+                    <strong>เอกสารต้องเป็นตัวจริง</strong>
+                    <span>เอกสารรับเงินต้องมีลายมือชื่อผู้รับเงินตามที่แบบเอกสารกำหนด และข้อมูลต้องอ่านได้ครบถ้วน</span>
+                  </div>
+                </div>
+
+                <div class="budget-step-card-grid project-status-field-grid">
+                  <article><span>1</span><h3>ร้านมีเอกสารภาษี</h3><p>ใช้ใบกำกับภาษีและใบเสร็จรับเงิน หากร้านออกเอกสารมาเป็นชุดให้ส่งมาทั้งชุด</p></article>
+                  <article><span>2</span><h3>บิลเงินสดหรือใบเสร็จ</h3><p>หากผู้ขายไม่มีเอกสารภาษี ให้ใช้บิลเงินสดหรือใบเสร็จรับเงินตามรูปแบบที่ร้านมี</p></article>
+                  <article><span>3</span><h3>ใบรับรองแทนใบเสร็จรับเงิน</h3><p>แนบกับบิลที่ไม่ระบุว่าเป็นใบเสร็จ เช่น ตั๋วหรือบิลการรถไฟและค่าทางด่วน หรือใช้รับรองการจ่ายจริงเมื่อไม่มีบิล เช่น ค่าแท็กซี่ หากเรียกผ่านแอปและมีรายละเอียดผู้ให้บริการให้พิมพ์รายการนั้นแนบได้</p></article>
+                  <article><span>4</span><h3>ใบสำคัญรับเงิน</h3><p>ใช้ใบสำคัญรับเงินพร้อมแนบสำเนาบัตรประชาชนของผู้รับเงินตามกรณี</p></article>
+                </div>
+
+                <div class="budget-callout budget-callout-info">
+                  <strong>ซื้อออนไลน์ ร้านค้าปลีก และค่าน้ำมัน</strong>
+                  <span>การสั่งซื้อออนไลน์ต้องขอบิลที่ถูกต้องและเป็นตัวจริง ส่วนค่าน้ำมัน ร้านค้าสหกรณ์ ศูนย์หนังสือ 7-Eleven, Big C, Lotus และร้านที่ออกเพียงสลิป ต้องแจ้งขอใบกำกับภาษีหรือใบเสร็จรับเงินแบบเต็มรูปแบบ</span>
+                  <span>ใบแจ้งหนี้พร้อมสลิปโอนเงินยังไม่ถือเป็นหลักฐานเบิกที่ครบถ้วน ต้องติดตามใบกำกับภาษี ใบเสร็จรับเงิน หรือบิลที่ผู้ขายออกให้อย่างถูกต้องมาแนบคู่กัน</span>
+                </div>
+
+                <div class="budget-callout budget-callout-warning">
+                  <strong>ข้อจำกัดก่อนชำระเงิน</strong>
+                  <span>ซื้อได้หลังโครงการอนุมัติและภายในช่วงเวลาดำเนินโครงการเท่านั้น</span>
+                  <span>ไม่ใช้เลขสมาชิก คูปอง หรือสิทธิส่วนลดส่วนตัว และไม่ชำระด้วยบัตรเครดิตหรือบัตรเดบิตส่วนตัว</span>
+                  <span>หากเปลี่ยนวัน สถานที่ หรือรายการงบประมาณ ให้ทำบันทึกขออนุมัติเปลี่ยนแปลงก่อนดำเนินการ</span>
+                </div>
+
+                <div class="budget-step-card-grid project-status-field-grid">
+                  <article>
+                    <span>ก</span>
+                    <h3>งบดำเนินการ</h3>
+                    <p>งบดำเนินการสโมสรนิสิต จุฬาฯ สำหรับจัดโครงการทั่วไป สามารถถัวเฉลี่ยได้ภายในรายการที่ขอไว้</p>
+                  </article>
+                  <article>
+                    <span>ข</span>
+                    <h3>งบเงินทุน</h3>
+                    <p>งบเงินทุนสโมสรนิสิต จุฬาฯ สำหรับจัดซื้อครุภัณฑ์ไม่สามารถถัวเฉลี่ยได้ หากต้องเปลี่ยนรายการ ต้องทำบันทึกเสนอขออนุมัติก่อนจัดซื้อรายการนั้น</p>
+                  </article>
+                </div>
+              </div>
+            </details>
+
+            <details class="budget-collapsible project-status-collapsible" open>
+              <summary>ชื่อและข้อมูลสำหรับออกบิล</summary>
+              <div class="budget-collapsible-body">
+                <div class="budget-callout budget-callout-info">
+                  <strong>เลือกชื่อให้ตรงกับหน่วยงานเจ้าของค่าใช้จ่าย</strong>
+                </div>
+                <div class="budget-process-grid project-status-process-grid financial-billing-grid">
+                  <article>
+                    <span class="operation-status-badge is-critical">แบบที่ 1</span>
+                    <h3>องค์การบริหารสโมสรนิสิต จุฬาฯ</h3>
+                    <p>ชั้น 2 อาคารจุลจักรพงษ์ ถนนพญาไท แขวงวังใหม่ เขตปทุมวัน กรุงเทพฯ 10330</p>
+                    <p><strong>เลขประจำตัวผู้เสียภาษี</strong> 099-400015907-2</p>
+                  </article>
+                  <article>
+                    <span class="operation-status-badge is-daily">แบบที่ 2</span>
+                    <h3>สภานิสิตจุฬาลงกรณ์มหาวิทยาลัย</h3>
+                    <p>ชั้น 2 อาคารจุลจักรพงษ์ ถนนพญาไท แขวงวังใหม่ เขตปทุมวัน กรุงเทพฯ 10330</p>
+                    <p><strong>เลขประจำตัวผู้เสียภาษี</strong> 099-400015907-2</p>
+                  </article>
+                  <article>
+                    <span class="operation-status-badge is-weekly">แบบที่ 3</span>
+                    <h3>ชมรม [ระบุชื่อชมรม] จุฬาฯ</h3>
+                    <p>ชั้น 2 อาคารจุลจักรพงษ์ ถนนพญาไท แขวงวังใหม่ เขตปทุมวัน กรุงเทพฯ 10330</p>
+                    <p><strong>เลขประจำตัวผู้เสียภาษี</strong> 099-400015907-2</p>
+                  </article>
+                </div>
+              </div>
+            </details>
+
+            <details class="budget-collapsible project-status-collapsible" open>
+              <summary>Checklist ตรวจเอกสารก่อนรับเบิก</summary>
+              <div class="budget-collapsible-body">
+                <div class="budget-process-grid project-status-process-grid">
+                  <article>
+                    <span class="operation-status-badge is-critical">วันที่และโครงการ</span>
+                    <h3>รายการต้องเกิดหลังอนุมัติ</h3>
+                    <ul>
+                      <li>วันที่ในบิลต้องไม่ก่อนวันที่โครงการได้รับอนุมัติ</li>
+                      <li>วันซื้อหรือรับบริการต้องอยู่ในช่วงดำเนินโครงการ</li>
+                      <li>ชื่อกิจกรรมและสถานที่ต้องสอดคล้องกับโครงการที่อนุมัติ</li>
+                    </ul>
+                  </article>
+                  <article>
+                    <span class="operation-status-badge is-daily">ข้อมูลบนบิล</span>
+                    <h3>ตรวจความครบและความถูกต้อง</h3>
+                    <ul>
+                      <li>ชื่อผู้ซื้อ ที่อยู่ และเลขประจำตัวผู้เสียภาษีถูกชุด</li>
+                      <li>วันเดือนปี รายการ จำนวน ราคา และยอดรวมอ่านได้ชัดเจน</li>
+                      <li>มีเอกสารประกอบและลายมือชื่อครบตามประเภทหลักฐาน</li>
+                    </ul>
+                  </article>
+                  <article>
+                    <span class="operation-status-badge is-weekly">รายละเอียดเฉพาะ</span>
+                    <h3>รายการบางประเภทต้องอธิบายเพิ่ม</h3>
+                    <ul>
+                      <li>รถโดยสาร: ระบุต้นทาง ปลายทาง และวันที่เดินทาง</li>
+                      <li>อาหาร: ระบุจำนวนมื้อ จำนวนคน และราคา</li>
+                      <li>ที่พัก: ระบุวันที่ จำนวนห้อง จำนวนคน และราคา</li>
+                      <li>กิจกรรมหลายครั้ง: แยกหลักฐานตามวันที่จ่ายจริงและแนบรายชื่อผู้เข้าร่วมแต่ละครั้ง</li>
+                    </ul>
+                  </article>
+                </div>
+              </div>
+            </details>
+
+            <details class="budget-collapsible project-status-collapsible" open>
+              <summary>บัญชีองค์กรและรายงานการเงิน</summary>
+              <div class="budget-collapsible-body">
+                <div class="budget-callout budget-callout-info">
+                  <strong>ผู้มีอำนาจสั่งจ่ายเงินบัญชีชมรม</strong>
+                  <span>ใช้รายชื่ออาจารย์ที่ปรึกษาชมรม ประธานชมรม และเหรัญญิกชมรม ตามเอกสารแต่งตั้งของปีการศึกษานั้น</span>
+                </div>
+                <ol class="budget-flow project-status-lifecycle">
+                  <li><span>1</span><div><h3>รอประกาศและนัดรับเอกสาร</h3><p>ตาม PDF อบจ.68 จะมีการแจ้งผ่านเหรัญญิก อบจ. ให้ชมรมรีบมารับเอกสารเพราะเอกสารกำหนดวันหมดวาระไว้ โดยให้นัดรับล่วงหน้ากับ “พี่เอ็ง” โทร. 081-448-5178 และรับที่สำนักบริหารกิจการนิสิต อาคารจุลจักรพงษ์ ชั้น 2 ทั้งนี้ต้องตรวจผู้ติดต่อปัจจุบันก่อนทุกครั้ง</p></div></li>
+                  <li><span>2</span><div><h3>เตรียมเอกสารประกอบ</h3><p>นำเอกสารเปลี่ยนผู้มีอำนาจสั่งจ่ายที่ได้รับ เอกสารแต่งตั้ง ใบสรุปรายรับ–รายจ่ายของปีการศึกษาก่อน และสมุดบัญชีเงินฝากไปให้ครบ</p></div></li>
+                  <li><span>3</span><div><h3>ดำเนินการกับธนาคาร</h3><p>นำเอกสารไปติดต่อธนาคารไทยพาณิชย์ตามสาขาที่หน่วยงานแจ้ง เอกสาร อบจ.68 ระบุสาขาสยามสแควร์ จามจุรีสแควร์ และสภากาชาดไทย จึงควรยืนยันสาขาที่รับดำเนินการก่อนเดินทาง</p></div></li>
+                  <li><span>4</span><div><h3>แจ้งผลหรือคืนเอกสาร</h3><p>เมื่อธนาคารดำเนินการเสร็จให้แจ้งกลับผู้ประสานงาน หากรับเอกสารไปแล้วแต่ไม่ได้ดำเนินการ ไม่ว่าด้วยเหตุใด ต้องคืนเอกสารทั้งหมดและทำบันทึกชี้แจงเหตุผลผ่านอาจารย์ที่ปรึกษาถึงสำนักบริหารกิจการนิสิต เพราะมีผลต่อการเปลี่ยนแปลงในปีถัดไป</p></div></li>
+                  <li><span>5</span><div><h3>บันทึกรายรับ–รายจ่ายต่อเนื่อง</h3><p>ชุดบันทึกประกอบด้วยแบบบันทึกรายรับ–รายจ่าย หน้าสมุดบัญชี และประวัติธุรกรรม โดยบันทึกรายการตามวันที่จริง เก็บยอดรับ จ่าย และคงเหลือให้ตรวจสอบย้อนหลังได้ เอกสารตัวอย่าง อบจ.68 ให้เริ่มประวัติธุรกรรมตั้งแต่ 1 มิถุนายน 2568</p></div></li>
+                </ol>
+
+                <div class="budget-step-card-grid project-status-field-grid financial-report-grid">
+                  <article>
+                    <span>1</span>
+                    <strong class="operation-status-badge is-weekly">รายงานครึ่งปี</strong>
+                    <h3>หลังภาคการศึกษาต้น</h3>
+                    <p>จัดทำงบการเงินครึ่งปี แสดงฐานะการเงินและการรับ–จ่ายของหน่วยงาน เสนอเหรัญญิกคณะกรรมการบริหารเพื่อรวบรวมและเสนอมหาวิทยาลัยตรวจสอบ ภายใน 30 วันนับแต่วันปิดเรียนภาคการศึกษาต้น</p>
+                  </article>
+                  <article>
+                    <span>2</span>
+                    <strong class="operation-status-badge is-monthly">รายงานประจำปี</strong>
+                    <h3>หลังภาคการศึกษาปลาย</h3>
+                    <p>จัดทำงบประจำปี แสดงฐานะการเงินและการรับ–จ่ายของหน่วยงาน เสนอเหรัญญิกคณะกรรมการบริหารเพื่อรวบรวมและเสนอมหาวิทยาลัยตรวจสอบ ภายใน 30 วันนับแต่วันปิดเรียนภาคการศึกษาปลาย</p>
+                  </article>
+                </div>
+                <div class="budget-callout budget-callout-warning">
+                  <strong>ฐานอ้างอิงใน PDF</strong>
+                  <span>ระเบียบจุฬาลงกรณ์มหาวิทยาลัย ว่าด้วยการเงิน การงบประมาณและการเบิกจ่ายเงินรายได้ของสโมสรนิสิต พ.ศ. 2547 หมวด 6 ข้อ 31 กำหนดให้รายงานผลการดำเนินงานและฐานะการเงินตามความเป็นจริงและหลักการบัญชี ทั้งนี้ให้ตรวจระเบียบแก้ไขเพิ่มเติมและปฏิทินการศึกษาปัจจุบันก่อนกำหนดวันส่งจริง</span>
+                </div>
+              </div>
+            </details>
+          </section>
+
           <section id="handover-part-3" class="handover-project-status-part section-appear" aria-labelledby="handoverProjectStatusTitle" data-handover-audience="treasurer" hidden>
             <div class="budget-guide-hero project-status-hero">
               <div>
@@ -776,7 +930,7 @@
             </details>
 
             <details id="project-handover-project-status" class="budget-collapsible project-status-collapsible" open>
-              <summary>Project Status Structure: โครงสร้างข้อมูลที่ต้องเข้าใจ</summary>
+              <summary>Project Status: อะไรต้องกรอก และอะไรห้ามแก้</summary>
               <div class="budget-collapsible-body">
                 <div class="budget-system-map project-status-system-map">
                   <article><strong>สารบัญ Project Status</strong><span>บอกเว็บว่าจะโหลดข้อมูลปีไหน และลิงก์ CSV ใดเป็นตัวจริง</span></article>
@@ -784,17 +938,12 @@
                   <article><strong>CSV ผู้ตรวจ</strong><span>เติมข้อมูลผู้รับผิดชอบและผู้ตรวจในรายละเอียดโครงการ</span></article>
                 </div>
 
-                <div class="project-status-field-legend" aria-label="คำอธิบายระดับความสำคัญ">
-                  <span class="operation-status-badge is-critical">จำเป็น</span>
-                  <span class="operation-status-badge is-daily">ควรกรอก</span>
-                  <span class="operation-status-badge is-warning">โครงสร้าง</span>
-                </div>
-
                 <div class="budget-step-card-grid project-status-field-grid" aria-label="ข้อมูลสำคัญใน Project Status">
                   <article>
                     <span>1</span>
+                    <strong class="operation-status-badge is-warning">โครงสร้าง — แก้เฉพาะตอนตั้งค่าระบบ</strong>
                     <h3>สารบัญ Project Status</h3>
-                    <p>เป็นไฟล์ชั้นนอกที่บอกเว็บว่าจะโหลดข้อมูลปีไหน</p>
+                    <p>ไม่ใช่ข้อมูลที่ต้องกรอกทุกโครงการ แก้เฉพาะเมื่อเปิดปีการศึกษา เปลี่ยนไฟล์ต้นทาง หรือกำหนดปีเริ่มต้นของเว็บ</p>
                     <dl class="project-status-mini-dl">
                       <div><dt>A</dt><dd>ปีการศึกษา เช่น 2568 ใช้สร้างตัวเลือกปีในเว็บ</dd></div>
                       <div><dt>B</dt><dd>CSV โครงการ ลิงก์ข้อมูล Project Status ของปีนั้น</dd></div>
@@ -804,6 +953,7 @@
                   </article>
                   <article>
                     <span>2</span>
+                    <strong class="operation-status-badge is-critical">จำเป็น — ต้องกรอกทุกโครงการ</strong>
                     <h3>ข้อมูลเปิดโครงการ</h3>
                     <p>กรอกตั้งแต่ตอนโครงการเริ่มเข้าระบบ เพื่อให้ dashboard และเอกสารตามงานได้ถูก</p>
                     <dl class="project-status-mini-dl">
@@ -815,8 +965,9 @@
                   </article>
                   <article>
                     <span>3</span>
+                    <strong class="operation-status-badge is-daily">กรอกตามกรณี — อัปเดตระหว่างทำงาน</strong>
                     <h3>ข้อมูลระหว่างดำเนินงาน</h3>
-                    <p>ใช้ตามงานงบประมาณและเงินยืมรองจ่ายระหว่างปี</p>
+                    <p>กรอกเมื่อมีการเปลี่ยนงบ ยืมรองจ่าย หรือมอบหมายผู้รับผิดชอบ ไม่จำเป็นต้องกรอกทุกช่องตั้งแต่เปิดโครงการ</p>
                     <dl class="project-status-mini-dl">
                       <div><dt>Q-W</dt><dd>ข้อมูลขอเปลี่ยนเพดานงบและงบประมาณสุทธิ</dd></div>
                       <div><dt>Y-AE</dt><dd>สถานะยืมรองจ่าย เลขเอกสาร วันครบกำหนด สัดส่วน และยอดยืม</dd></div>
@@ -826,13 +977,14 @@
                   </article>
                   <article>
                     <span>4</span>
+                    <strong class="operation-status-badge is-critical">จำเป็นเมื่อปิดงาน — บางช่องเป็นสูตร</strong>
                     <h3>ข้อมูลปิดโครงการ</h3>
-                    <p>ใช้สรุปว่าโครงการส่งเอกสารครบหรือยัง และต้องเบิกเพิ่มหรือคืนเงินหรือไม่</p>
+                    <p>กรอกงบใช้จริง วันที่ส่งเอกสาร และสถานะปิดโครงการ ส่วนผลคำนวณและเลขที่ดึงจากระบบอื่นไม่ต้องกรอกเอง</p>
                     <dl class="project-status-mini-dl">
                       <div><dt>AY</dt><dd>วันที่ส่งเอกสารปิดโครงการจริง</dd></div>
                       <div><dt>AZ-BA</dt><dd>สถานะปิดโครงการและสถานะย่อยที่ใช้ขึ้น dashboard</dd></div>
-                      <div><dt>BB-BG</dt><dd>ผลคำนวณจำนวนวัน ยอดเบิก/คืน งบคงเหลือ และเปอร์เซ็นต์ใช้งบ</dd></div>
-                      <div><dt>BI</dt><dd>เลขฎีกาที่ดึงจาก Template เลขรันเอกสาร</dd></div>
+                      <div><dt>BB-BG</dt><dd>ช่องสูตร: ผลคำนวณจำนวนวัน ยอดเบิก/คืน งบคงเหลือ และเปอร์เซ็นต์ใช้งบ — ห้ามกรอกทับ</dd></div>
+                      <div><dt>BI</dt><dd>ช่องเชื่อมระบบ: เลขฎีกาที่ดึงจาก Template เลขรันเอกสาร — ไม่ต้องกรอกเอง</dd></div>
                     </dl>
                   </article>
                 </div>
@@ -1236,19 +1388,16 @@
               </section>
 
             <section id="project-handover-closeout" class="panel project-staff-workflow-card project-staff-closeout-card handover-standalone-section project-closeout-handbook" data-handover-audience="treasurer" hidden>
-              <div class="budget-guide-hero project-closeout-hero">
+              <div class="budget-guide-hero">
                 <div>
-                  <div class="handover-part-titleline">
-                    <strong>ปิดโครงการ</strong>
-                  </div>
-                  <h3 class="panel-title">ปิดโครงการ</h3>
-                  <p class="panel-caption">คู่มือสรุปโครงการ ตรวจยอดเบิก/คืน ออกฎีกา Export CSV และทำ Mail Merge</p>
+                  <span class="handover-section-kicker">Project closeout</span>
+                  <h2>ปิดโครงการ</h2>
+                  <p>คู่มือสรุปโครงการ ตรวจยอดเบิก/คืน ออกฎีกา Export CSV และทำ Mail Merge</p>
                 </div>
-                <div class="project-closeout-hero-badges" aria-label="เงื่อนไขหลักก่อนปิดโครงการ">
-                  <span>1 แถว = 1 โครงการ</span>
-                  <span>ต้องตรวจเลขฎีกาก่อน export</span>
-                  <span>CSV ต้องแปลงเป็น XLSX ก่อน Mail Merge</span>
-                  <span>Project Status เป็น source of truth</span>
+                <div class="project-status-metrics" aria-label="เงื่อนไขหลักก่อนปิดโครงการ">
+                  <span class="operation-status-badge is-critical">Project Status เป็นข้อมูลหลัก</span>
+                  <span class="operation-status-badge is-daily">ตรวจเลขฎีกาก่อน Export</span>
+                  <span class="operation-status-badge is-weekly">CSV → XLSX → Mail Merge</span>
                 </div>
               </div>
 
@@ -1270,6 +1419,20 @@
                       <li>ต้องตรวจยอดเบิกเพิ่ม/คืนเงินก่อนออกเอกสาร</li>
                       <li>ต้องตรวจจำนวนแถวก่อนทำ Mail Merge ทุกครั้ง</li>
                     </ul>
+                  </div>
+                </div>
+              </details>
+
+              <details class="budget-collapsible project-closeout-block" open>
+                <summary>อ่านยอดเบิก/คืนให้ถูก</summary>
+                <div class="budget-collapsible-body">
+                  <div class="project-numbering-money-case" aria-label="ตัวอย่าง logic ยืมรองจ่ายและฎีกา">
+                    <strong>Financial logic</strong>
+                    <div class="project-numbering-money-grid">
+                      <span><b>ใช้จริง &gt; ยืม</b> ต้องเบิกเพิ่ม เช่น ใช้จริง 5,000 บาท และเคยยืม 4,000 บาท ต้องเบิกเพิ่ม 1,000 บาท</span>
+                      <span><b>ใช้จริง &lt; ยืม</b> ต้องคืนเงิน เช่น ใช้จริง 3,000 บาท และเคยยืม 4,000 บาท ต้องคืน 1,000 บาท</span>
+                    </div>
+                    <p>ให้ยึด Project Status เป็นฐานตรวจยอด เพราะสูตรคำนวณยอดเบิก/คืนอยู่ฝั่ง Project Status ไม่ใช่ทุกชีทในเลขรันจะมีช่องจำนวนเงินให้กรอกโดยตรง</p>
                   </div>
                 </div>
               </details>
@@ -1433,22 +1596,19 @@
             </section>
 
             <section id="project-handover-numbering" class="panel project-staff-workflow-card project-template-card handover-standalone-section project-numbering-handbook" data-handover-audience="treasurer" hidden>
-              <div class="budget-guide-hero project-numbering-hero">
+              <div class="budget-guide-hero">
                 <div>
-                  <div class="handover-part-titleline">
-                    <strong>เลขรันเอกสาร</strong>
-                  </div>
-                  <h3 class="panel-title">เลขรันเอกสาร</h3>
-                  <p class="panel-caption">
+                  <span class="handover-section-kicker">Document numbering</span>
+                  <h2>เลขรันเอกสาร</h2>
+                  <p>
                     ระบบเลขรันคือสมุดทะเบียนเอกสารของฝ่ายเหรัญญิก ใช้คุมว่าเอกสารใดออกเลขแล้ว อยู่สถานะไหน
                     และเชื่อมกลับไป Project Status อย่างไร
                   </p>
                 </div>
-                <div class="project-numbering-hero-badges" aria-label="หลักควบคุมเลขรันเอกสาร">
-                  <span>ห้ามลบเลขรัน</span>
-                  <span>1 แถว = 1 เอกสาร</span>
-                  <span>เชื่อมกับ Project Status</span>
-                  <span>IMPORTRANGE dependent</span>
+                <div class="project-status-metrics" aria-label="หลักควบคุมเลขรันเอกสาร">
+                  <span class="operation-status-badge is-critical">ห้ามลบเลขรัน</span>
+                  <span class="operation-status-badge is-daily">1 แถว = 1 เอกสาร</span>
+                  <span class="operation-status-badge is-weekly">เชื่อมกับ Project Status</span>
                 </div>
               </div>
 
@@ -1556,19 +1716,10 @@
                   </div>
                 </details>
 
-                <details class="budget-collapsible project-numbering-block" open>
-                  <summary>อ่านยอดเบิก/คืนให้ถูก</summary>
-                  <div class="budget-collapsible-body">
-                    <div class="project-numbering-money-case" aria-label="ตัวอย่าง logic ยืมรองจ่ายและฎีกา">
-                      <strong>Financial logic</strong>
-                      <div class="project-numbering-money-grid">
-                        <span><b>ใช้จริง &gt; ยืม</b> ต้องเบิกเพิ่ม เช่น ใช้จริง 5,000 บาท และเคยยืม 4,000 บาท ต้องเบิกเพิ่ม 1,000 บาท</span>
-                        <span><b>ใช้จริง &lt; ยืม</b> ต้องคืนเงิน เช่น ใช้จริง 3,000 บาท และเคยยืม 4,000 บาท ต้องคืน 1,000 บาท</span>
-                      </div>
-                      <p>ให้ยึด Project Status เป็นฐานตรวจยอด เพราะสูตรคำนวณยอดเบิก/คืนอยู่ฝั่ง Project Status ไม่ใช่ทุกชีทในเลขรันจะมีช่องจำนวนเงินให้กรอกโดยตรง</p>
-                    </div>
-                  </div>
-                </details>
+                <div class="budget-callout budget-callout-info">
+                  <strong>ก่อนออกเลขฎีกา</strong>
+                  <span>ตรวจยอดเบิกเพิ่มหรือคืนเงินจาก Project Status ก่อนเสมอ เพราะสูตรคำนวณยอดไม่ได้อยู่ในทุกชีทของ Template เลขรันเอกสาร</span>
+                </div>
 
                 <details class="budget-collapsible project-numbering-block" open>
                   <summary>Troubleshooting</summary>

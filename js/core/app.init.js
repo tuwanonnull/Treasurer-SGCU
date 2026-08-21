@@ -1156,12 +1156,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     const buttons = Array.from(pageEl.querySelectorAll("[data-handover-view]"));
     const panels = Array.from(pageEl.querySelectorAll("[data-handover-panel]"));
     const departmentNav = pageEl.querySelector(".handover-global-toc");
+    const directoryMenu = departmentNav?.querySelector("[data-handover-directory-menu]");
+    const treasurerMenu = departmentNav?.querySelector("[data-handover-treasurer-menu]");
+    const treasurerMenuButtons = Array.from(departmentNav?.querySelectorAll("[data-handover-target]") || []);
+    const showDirectoryMenu = () => {
+      if (directoryMenu) directoryMenu.hidden = false;
+      if (treasurerMenu) treasurerMenu.hidden = true;
+      departmentNav?.setAttribute("aria-label", "เลือกคู่มือเฉพาะฝ่าย");
+    };
+    const showTreasurerMenu = () => {
+      if (directoryMenu) directoryMenu.hidden = true;
+      if (treasurerMenu) treasurerMenu.hidden = false;
+      departmentNav?.setAttribute("aria-label", "เลือกหัวข้อฝ่ายเหรัญญิก");
+    };
     const showView = (view) => {
       const nextView = buttons.some((button) => button.dataset.handoverView === view) ? view : "treasurer";
       buttons.forEach((button) => {
         const isActive = button.dataset.handoverView === nextView;
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-selected", String(isActive));
+        if (button.dataset.handoverView === "treasurer") {
+          button.title = isActive
+            ? "กดอีกครั้งเพื่อเปิดเมนูย่อยฝ่ายเหรัญญิก"
+            : "เปิดคู่มือฝ่ายเหรัญญิก";
+        }
       });
       panels.forEach((panel) => {
         panel.hidden = panel.dataset.handoverPanel !== nextView;
@@ -1176,12 +1194,40 @@ document.addEventListener("DOMContentLoaded", async () => {
       const targetTop = window.scrollY + targetPanel.getBoundingClientRect().top - offset;
       window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     };
+    const scrollHandoverTargetToTop = (target) => {
+      if (!target || !departmentNav) return;
+      const stickyTop = Number.parseFloat(window.getComputedStyle(departmentNav).top) || 84;
+      const offset = stickyTop + departmentNav.getBoundingClientRect().height + 18;
+      const targetTop = window.scrollY + target.getBoundingClientRect().top - offset;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+    };
+
+    commonGuide?.addEventListener("toggle", () => {
+      if (commonGuide.open) return;
+      const activeView = pageEl.dataset.handoverActiveView || "treasurer";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollDepartmentToTop(activeView));
+      });
+    });
 
     buttons.forEach((button) => {
       button.addEventListener("click", () => {
         const view = button.dataset.handoverView || "treasurer";
+        const isCurrentView = pageEl.dataset.handoverActiveView === view;
+        if (view === "treasurer" && isCurrentView) {
+          showTreasurerMenu();
+          return;
+        }
         showView(view);
         requestAnimationFrame(() => scrollDepartmentToTop(view));
+      });
+    });
+    departmentNav?.querySelector("[data-handover-directory-back]")?.addEventListener("click", showDirectoryMenu);
+    treasurerMenuButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = pageEl.querySelector(`#${button.dataset.handoverTarget}`);
+        treasurerMenuButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+        requestAnimationFrame(() => scrollHandoverTargetToTop(target));
       });
     });
     const skipCommonButton = floatingNav?.querySelector("[data-handover-skip-common]");
@@ -1209,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.addEventListener("resize", updateHandoverFloatingNav);
     window.addEventListener("sgcu:page-active", updateHandoverFloatingNav);
     pageEl.dataset.handoverDirectoryReady = "true";
+    showDirectoryMenu();
     showView("treasurer");
     updateHandoverFloatingNav();
   };
