@@ -1159,6 +1159,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const directoryMenu = departmentNav?.querySelector("[data-handover-directory-menu]");
     const treasurerMenu = departmentNav?.querySelector("[data-handover-treasurer-menu]");
     const treasurerMenuButtons = Array.from(departmentNav?.querySelectorAll("[data-handover-target]") || []);
+    let treasurerMenuSyncFrame = 0;
+    let activeTreasurerTargetId = "";
     const showDirectoryMenu = () => {
       if (directoryMenu) directoryMenu.hidden = false;
       if (treasurerMenu) treasurerMenu.hidden = true;
@@ -1168,6 +1170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (directoryMenu) directoryMenu.hidden = true;
       if (treasurerMenu) treasurerMenu.hidden = false;
       departmentNav?.setAttribute("aria-label", "เลือกหัวข้อฝ่ายเหรัญญิก");
+      requestAnimationFrame(() => updateTreasurerMenuFromScroll());
     };
     const showView = (view) => {
       const nextView = buttons.some((button) => button.dataset.handoverView === view) ? view : "treasurer";
@@ -1201,6 +1204,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       const targetTop = window.scrollY + target.getBoundingClientRect().top - offset;
       window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     };
+    const setActiveTreasurerMenuItem = (targetId) => {
+      if (!targetId || targetId === activeTreasurerTargetId) return;
+      activeTreasurerTargetId = targetId;
+      treasurerMenuButtons.forEach((button) => {
+        const isActive = button.dataset.handoverTarget === targetId;
+        button.classList.toggle("is-active", isActive);
+        if (isActive) button.setAttribute("aria-current", "location");
+        else button.removeAttribute("aria-current");
+      });
+    };
+    const updateTreasurerMenuFromScroll = () => {
+      if (!departmentNav || treasurerMenu?.hidden || pageEl.dataset.handoverActiveView !== "treasurer") return;
+      const stickyTop = Number.parseFloat(window.getComputedStyle(departmentNav).top) || 84;
+      const threshold = stickyTop + departmentNav.getBoundingClientRect().height + 24;
+      let currentTargetId = treasurerMenuButtons[0]?.dataset.handoverTarget || "";
+      treasurerMenuButtons.forEach((button) => {
+        const target = pageEl.querySelector(`#${button.dataset.handoverTarget}`);
+        if (target && target.getBoundingClientRect().top <= threshold) {
+          currentTargetId = button.dataset.handoverTarget || currentTargetId;
+        }
+      });
+      setActiveTreasurerMenuItem(currentTargetId);
+    };
+    const requestTreasurerMenuSync = () => {
+      if (treasurerMenuSyncFrame) return;
+      treasurerMenuSyncFrame = requestAnimationFrame(() => {
+        treasurerMenuSyncFrame = 0;
+        updateTreasurerMenuFromScroll();
+      });
+    };
 
     commonGuide?.addEventListener("toggle", () => {
       if (commonGuide.open) return;
@@ -1226,7 +1259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     treasurerMenuButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const target = pageEl.querySelector(`#${button.dataset.handoverTarget}`);
-        treasurerMenuButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+        setActiveTreasurerMenuItem(button.dataset.handoverTarget || "");
         requestAnimationFrame(() => scrollHandoverTargetToTop(target));
       });
     });
@@ -1252,8 +1285,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       pageEl.querySelector("#fundraising-contact-script")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     window.addEventListener("scroll", updateHandoverFloatingNav, { passive: true });
+    window.addEventListener("scroll", requestTreasurerMenuSync, { passive: true });
     window.addEventListener("resize", updateHandoverFloatingNav);
+    window.addEventListener("resize", requestTreasurerMenuSync);
     window.addEventListener("sgcu:page-active", updateHandoverFloatingNav);
+    window.addEventListener("sgcu:page-active", requestTreasurerMenuSync);
     pageEl.dataset.handoverDirectoryReady = "true";
     showDirectoryMenu();
     showView("treasurer");
