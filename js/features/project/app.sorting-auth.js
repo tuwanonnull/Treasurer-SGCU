@@ -2551,6 +2551,7 @@ function initAuthUI() {
       staffViewMode = "normal";
     }
     const hasStaff = !!staffAuthUser;
+    window.sgcuCurrentUserHasStaffAccess = hasStaff;
     const isAuth = hasFirebase;
     isUserAuthenticated = isAuth;
     const staffLabel = hasStaff

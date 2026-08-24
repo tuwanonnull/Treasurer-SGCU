@@ -77,6 +77,7 @@ function initMeetingRoomBookingApp() {
   const appConfig = typeof SGCU_APP_CONFIG === "object" && SGCU_APP_CONFIG ? SGCU_APP_CONFIG : {};
   const firestoreCollections = appConfig.firestore?.collections || {};
   const USER_PROFILE_COLLECTION = firestoreCollections.userProfiles || "userProfiles";
+  const STAFF_PROFILE_COLLECTION = firestoreCollections.staffProfiles || "staffProfiles";
   const BOOKING_COLLECTION_NAME = firestoreCollections.meetingRoomBookings || "meetingRoomBookings";
   const ROOM_COLLECTION_NAME = firestoreCollections.meetingRooms || "meetingRooms";
   const HOLIDAY_COLLECTION_NAME = firestoreCollections.meetingRoomHolidays || "meetingRoomHolidays";
@@ -1069,6 +1070,7 @@ function initMeetingRoomBookingApp() {
   let unsubscribeHolidays = null;
   let hasMigrated = false;
   let currentUserEmail = "";
+  let hasVerifiedMeetingRoomStaffAccess = false;
   let activeDetailBookingId = "";
   let activeDetailOptions = {};
   let roomsLoaded = false;
@@ -1409,6 +1411,61 @@ function initMeetingRoomBookingApp() {
       return staffEmails.has(email);
     }
     return false;
+  };
+
+  const isVerifiedStaffProfileData = (data) => {
+    if (!data || typeof data !== "object") return false;
+    const stringPermissionFields = ["role", "positionCodeYY", "divisionCodeYY"];
+    const listPermissionFields = [
+      "positions",
+      "allowedPages",
+      "allowedPageIds",
+      "allowedStaffPages",
+      "staffPages",
+      "pages",
+      "pageAccess",
+      "pagePermissions"
+    ];
+    const hasPermissionData =
+      stringPermissionFields.some((field) => typeof data[field] === "string" && data[field].trim() !== "") ||
+      listPermissionFields.some((field) => Array.isArray(data[field]) && data[field].length > 0);
+    const positions = Array.isArray(data.positions) ? data.positions : [];
+    const hasApprovalEvidence =
+      !!data.approvedAt ||
+      (typeof data.sourceApplicationId === "string" && data.sourceApplicationId.trim() !== "") ||
+      positions.some((position) =>
+        position && typeof position === "object" &&
+        (!!position.approvedAt || (typeof position.sourceApplicationId === "string" && position.sourceApplicationId.trim() !== ""))
+      );
+    return hasPermissionData && hasApprovalEvidence;
+  };
+
+  const verifyMeetingRoomStaffAccess = async () => {
+    const email = readCurrentUserEmail();
+    hasVerifiedMeetingRoomStaffAccess = false;
+    setupRoomOptions();
+    if (!email) return false;
+    if (email === "tuwanon.kimchiang@gmail.com" || email === "treasurer.sgcu68@gmail.com") {
+      hasVerifiedMeetingRoomStaffAccess = true;
+      setupRoomOptions();
+      return true;
+    }
+    const firestoreBridge = window.sgcuFirestore || {};
+    if (!firestoreBridge.db || !firestoreBridge.doc || !firestoreBridge.getDoc) return false;
+    try {
+      const ref = firestoreBridge.doc(firestoreBridge.db, STAFF_PROFILE_COLLECTION, email);
+      const snap = await firestoreBridge.getDoc(ref);
+      if (email !== readCurrentUserEmail()) return false;
+      hasVerifiedMeetingRoomStaffAccess = snap?.exists() === true && isVerifiedStaffProfileData(snap.data());
+      setupRoomOptions();
+      return hasVerifiedMeetingRoomStaffAccess;
+    } catch (_) {
+      if (email === readCurrentUserEmail()) {
+        hasVerifiedMeetingRoomStaffAccess = false;
+        setupRoomOptions();
+      }
+      return false;
+    }
   };
 
   const ownCancelableBookings = () => {
@@ -2342,10 +2399,16 @@ function initMeetingRoomBookingApp() {
 
   const setupRoomOptions = () => {
     const selectedRoomId = roomSelect.value;
+    // Fail closed: staff-only rooms stay hidden until the auth layer explicitly
+    // confirms that the current account has staff access.
+    const canSeeStaffOnlyRooms = hasVerifiedMeetingRoomStaffAccess === true;
+    const selectableRooms = meetingRooms.filter((room) =>
+      normalizeRoomBookingAccess(room.bookingAccess) !== "staff_only" || canSeeStaffOnlyRooms
+    );
     roomSelect.innerHTML = `
       <option value="" disabled ${selectedRoomId ? "" : "selected"}>เลือกห้องประชุม</option>
     `;
-    meetingRooms.forEach((room) => {
+    selectableRooms.forEach((room) => {
       const bookingAccess = normalizeRoomBookingAccess(room.bookingAccess);
       const isStaffOnly = bookingAccess === "staff_only";
       const option = document.createElement("option");
@@ -2354,12 +2417,15 @@ function initMeetingRoomBookingApp() {
       option.selected = selectedRoomId === room.id;
       roomSelect.appendChild(option);
     });
+    if (selectedRoomId && !selectableRooms.some((room) => room.id === selectedRoomId)) {
+      roomSelect.value = "";
+    }
     if (rescheduleRoomSelect) {
       const selectedRescheduleRoomId = rescheduleRoomSelect.value;
       rescheduleRoomSelect.innerHTML = `
         <option value="" disabled ${selectedRescheduleRoomId ? "" : "selected"}>เลือกห้องประชุม</option>
       `;
-      meetingRooms.forEach((room) => {
+      selectableRooms.forEach((room) => {
         const bookingAccess = normalizeRoomBookingAccess(room.bookingAccess);
         const isStaffOnly = bookingAccess === "staff_only";
         const option = document.createElement("option");
@@ -2368,6 +2434,9 @@ function initMeetingRoomBookingApp() {
         option.selected = selectedRescheduleRoomId === room.id;
         rescheduleRoomSelect.appendChild(option);
       });
+      if (selectedRescheduleRoomId && !selectableRooms.some((room) => room.id === selectedRescheduleRoomId)) {
+        rescheduleRoomSelect.value = "";
+      }
     }
   };
 
@@ -2869,6 +2938,16 @@ function initMeetingRoomBookingApp() {
       return;
     }
     const requestedRoom = meetingRooms.find((room) => room.id === requestedRoomId) || null;
+    if (!requestedRoom) {
+      setRescheduleMessage("ไม่พบห้องประชุมที่เลือก กรุณาเลือกใหม่", "#b91c1c");
+      setupRoomOptions();
+      return;
+    }
+    if (normalizeRoomBookingAccess(requestedRoom.bookingAccess) === "staff_only" && !isStaffUser()) {
+      setRescheduleMessage("ห้องที่เลือกเปิดให้สตาฟจองเท่านั้น", "#b91c1c");
+      setupRoomOptions();
+      return;
+    }
     const requestedRoomName = requestedRoom?.name || normalizeRoomDisplay(requestedRoomId, "");
     if (
       booking.roomId === requestedRoomId &&
@@ -3017,6 +3096,7 @@ function initMeetingRoomBookingApp() {
         if (profile) applySharedProfileToMeetingForm(profile);
       });
       setupRoomOptions();
+      void verifyMeetingRoomStaffAccess();
       renderOwnBookingOptions();
       startReminderTimer();
       if (resolveFirestoreBridge() && (roomsLoadFailed || bookingsLoadFailed || !roomsLoaded || !bookingsLoaded)) {
@@ -3027,6 +3107,7 @@ function initMeetingRoomBookingApp() {
 
   setupRoomOptions();
   currentUserEmail = readCurrentUserEmail();
+  void verifyMeetingRoomStaffAccess();
   if (!currentUserEmail) setReminderBanner("");
   flushApprovalEventsForCurrentUser();
   restoreMeetingProfileForCurrentUser();
@@ -3071,6 +3152,11 @@ function initMeetingRoomBookingApp() {
     const email = (detail.email || "").toString().trim().toLowerCase();
     if (!email || email !== currentUserEmail) return;
     applySharedProfileToMeetingForm(detail.profile || {});
+  });
+
+  window.addEventListener("sgcu:staff-auth-updated", (event) => {
+    window.sgcuCurrentUserHasStaffAccess = event?.detail?.hasStaff === true;
+    void verifyMeetingRoomStaffAccess();
   });
 
   if (calendarPanel && dateInput) {

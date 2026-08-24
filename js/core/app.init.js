@@ -1,4 +1,34 @@
 /* App init + wiring (DOMContentLoaded) */
+(function installMeetingRoomAccessGuard() {
+  let hasConfirmedStaffAccess =
+    typeof staffAuthUser !== "undefined" && !!staffAuthUser;
+
+  const removeRestrictedRoomOptions = () => {
+    if (hasConfirmedStaffAccess) return;
+    ["meetingRoomName", "meetingRescheduleRoom"].forEach((selectId) => {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      Array.from(select.options).forEach((option) => {
+        if ((option.textContent || "").includes("สตาฟจองเท่านั้น")) {
+          option.remove();
+        }
+      });
+      if (!select.value) select.selectedIndex = 0;
+    });
+  };
+
+  window.addEventListener("sgcu:staff-auth-updated", (event) => {
+    hasConfirmedStaffAccess = event?.detail?.hasStaff === true;
+    removeRestrictedRoomOptions();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    removeRestrictedRoomOptions();
+    const observer = new MutationObserver(removeRestrictedRoomOptions);
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+})();
+
 function runHeroSubtitleTyping() {
   const subtitle = document.querySelector(".home-hero-subtitle");
   if (!subtitle || subtitle.dataset.typingReady === "true") return;
