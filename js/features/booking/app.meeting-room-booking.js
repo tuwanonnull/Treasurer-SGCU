@@ -47,6 +47,10 @@ function initMeetingRoomBookingApp() {
   let viewListBtn = document.getElementById("meetingViewListBtn");
   const calendarPrevBtn = document.getElementById("meetingCalendarPrevMonth");
   const calendarNextBtn = document.getElementById("meetingCalendarNextMonth");
+  const calendarTodayBtn = document.getElementById("meetingCalendarToday");
+  const calendarMonthViewBtn = document.getElementById("meetingCalendarMonthView");
+  const calendarWeekViewBtn = document.getElementById("meetingCalendarWeekView");
+  const calendarRoomFilter = document.getElementById("meetingCalendarRoomFilter");
   let bookingCountEl = document.getElementById("meetingRoomBookingCount");
   let pendingCountEl = document.getElementById("meetingRoomPendingCount");
   let latestDateEl = document.getElementById("meetingRoomLatestDate");
@@ -206,6 +210,8 @@ function initMeetingRoomBookingApp() {
     normalizeProjectCode(value).replace(/[^A-Z0-9]/g, "");
 
   let calendarCursor = new Date();
+  let calendarDisplayMode = "month";
+  let calendarRoomFilterValue = "all";
 
   const toDateKeyForQuery = (date) => {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
@@ -1611,7 +1617,7 @@ function initMeetingRoomBookingApp() {
 
   const formatCalendarTitle = (dateLike) => {
     const current = new Date(dateLike.getFullYear(), dateLike.getMonth(), 1);
-    return `ปฏิทินจองห้องประชุม — ${MONTH_NAMES_TH[current.getMonth()]} ${current.getFullYear()}`;
+    return `${MONTH_NAMES_TH[current.getMonth()]} ${current.getFullYear()}`;
   };
 
   const getMeetingCalendarMaxEvents = () => {
@@ -2206,7 +2212,7 @@ function initMeetingRoomBookingApp() {
     if (!dateText) return;
     const parsed = new Date(`${dateText}T00:00:00`);
     if (Number.isNaN(parsed.getTime())) return;
-    calendarCursor = getCalendarMonthState(parsed).firstDay;
+    calendarCursor = calendarDisplayMode === "week" ? parsed : getCalendarMonthState(parsed).firstDay;
   };
 
   const updateMeetingRoomView = (mode = "calendar") => {
@@ -2236,13 +2242,22 @@ function initMeetingRoomBookingApp() {
     if (!calendarPanel) return;
 
     const selectedMonthStart = getCalendarMonthState(calendarCursor);
-    const daysInMonth = new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0).getDate();
-    const monthBookings = bookings
+    const weekStart = new Date(calendarCursor);
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const periodStart = calendarDisplayMode === "week" ? weekStart : selectedMonthStart.firstDay;
+    const periodEnd = calendarDisplayMode === "week"
+      ? weekEnd
+      : new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0);
+    const periodBookings = bookings
       .filter((item) => {
         if (!item.date || item.status === "rejected") return false;
+        if (calendarRoomFilterValue !== "all" && item.roomId !== calendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;
-        return date.getFullYear() === selectedMonthStart.year && date.getMonth() === selectedMonthStart.month;
+        return date >= periodStart && date <= periodEnd;
       })
       .reduce((acc, item) => {
         if (!acc[item.date]) acc[item.date] = [];
@@ -2250,7 +2265,7 @@ function initMeetingRoomBookingApp() {
         return acc;
       }, {});
 
-    Object.values(monthBookings).forEach((items) => {
+    Object.values(periodBookings).forEach((items) => {
       items.sort((a, b) => {
         const at = a.startTime || "00:00";
         const bt = b.startTime || "00:00";
@@ -2259,21 +2274,38 @@ function initMeetingRoomBookingApp() {
     });
 
     if (calendarTitle) {
-      calendarTitle.textContent = formatCalendarTitle(selectedMonthStart.firstDay);
+      calendarTitle.textContent = calendarDisplayMode === "week"
+        ? `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}  –  ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`
+        : formatCalendarTitle(selectedMonthStart.firstDay);
     }
     const todayKey = toDateKey(new Date());
     const maxEvents = getMeetingCalendarMaxEvents();
     const cells = [];
 
-    // ช่องว่างก่อนวันที่ 1 ของเดือน (ให้ตรงวันในสัปดาห์)
-    for (let i = 0; i < selectedMonthStart.firstDay.getDay(); i++) {
-      cells.push(`<div class="calendar-day calendar-day-empty"></div>`);
+    if (calendarDisplayMode === "month") {
+      for (let i = 0; i < selectedMonthStart.firstDay.getDay(); i++) {
+        cells.push(`<div class="calendar-day calendar-day-empty"></div>`);
+      }
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(selectedMonthStart.year, selectedMonthStart.month, day);
+    const datesToRender = [];
+    if (calendarDisplayMode === "week") {
+      for (let offset = 0; offset < 7; offset++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + offset);
+        datesToRender.push(date);
+      }
+    } else {
+      const daysInMonth = new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        datesToRender.push(new Date(selectedMonthStart.year, selectedMonthStart.month, day));
+      }
+    }
+
+    datesToRender.forEach((date) => {
+      const day = date.getDate();
       const dateKey = toDateKey(date);
-      const items = monthBookings[dateKey] || [];
+      const items = periodBookings[dateKey] || [];
       const visibleItems = items.slice(0, maxEvents);
       const remainingCount = items.length - maxEvents;
       const isToday = dateKey === todayKey;
@@ -2315,8 +2347,9 @@ function initMeetingRoomBookingApp() {
           ${moreText}
         </div>
       `);
-    }
+    });
 
+    calendarPanel.classList.toggle("is-week-view", calendarDisplayMode === "week");
     calendarPanel.innerHTML = cells.join("");
   };
 
@@ -2437,6 +2470,20 @@ function initMeetingRoomBookingApp() {
       if (selectedRescheduleRoomId && !selectableRooms.some((room) => room.id === selectedRescheduleRoomId)) {
         rescheduleRoomSelect.value = "";
       }
+    }
+    if (calendarRoomFilter) {
+      const previousFilter = calendarRoomFilterValue;
+      calendarRoomFilter.innerHTML = '<option value="all">ห้องประชุม: ทุกห้อง</option>';
+      selectableRooms.forEach((room) => {
+        const option = document.createElement("option");
+        option.value = room.id;
+        option.textContent = room.name;
+        calendarRoomFilter.appendChild(option);
+      });
+      calendarRoomFilterValue = selectableRooms.some((room) => room.id === previousFilter)
+        ? previousFilter
+        : "all";
+      calendarRoomFilter.value = calendarRoomFilterValue;
     }
   };
 
@@ -3180,7 +3227,9 @@ function initMeetingRoomBookingApp() {
 
   if (calendarPrevBtn) {
     calendarPrevBtn.addEventListener("click", () => {
-      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+      calendarCursor = calendarDisplayMode === "week"
+        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - 7)
+        : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
       subscribeBookings();
       renderCalendarOverview();
     });
@@ -3188,11 +3237,42 @@ function initMeetingRoomBookingApp() {
 
   if (calendarNextBtn) {
     calendarNextBtn.addEventListener("click", () => {
-      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+      calendarCursor = calendarDisplayMode === "week"
+        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + 7)
+        : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
       subscribeBookings();
       renderCalendarOverview();
     });
   }
+
+  const setCalendarDisplayMode = (mode) => {
+    calendarDisplayMode = mode === "week" ? "week" : "month";
+    calendarMonthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
+    calendarWeekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
+    calendarMonthViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "month" ? "true" : "false");
+    calendarWeekViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "week" ? "true" : "false");
+    const previousLabel = calendarDisplayMode === "week" ? "สัปดาห์ก่อน" : "เดือนก่อน";
+    const nextLabel = calendarDisplayMode === "week" ? "สัปดาห์ถัดไป" : "เดือนถัดไป";
+    const previousText = calendarPrevBtn?.querySelector(".meeting-calendar-nav-text");
+    const nextText = calendarNextBtn?.querySelector(".meeting-calendar-nav-text");
+    if (previousText) previousText.textContent = previousLabel;
+    if (nextText) nextText.textContent = nextLabel;
+    calendarPrevBtn?.setAttribute("aria-label", previousLabel);
+    calendarNextBtn?.setAttribute("aria-label", nextLabel);
+    renderCalendarOverview();
+  };
+
+  calendarMonthViewBtn?.addEventListener("click", () => setCalendarDisplayMode("month"));
+  calendarWeekViewBtn?.addEventListener("click", () => setCalendarDisplayMode("week"));
+  calendarTodayBtn?.addEventListener("click", () => {
+    calendarCursor = new Date();
+    subscribeBookings();
+    renderCalendarOverview();
+  });
+  calendarRoomFilter?.addEventListener("change", () => {
+    calendarRoomFilterValue = calendarRoomFilter.value || "all";
+    renderCalendarOverview();
+  });
 
   if (resolveFirestoreBridge()) {
     subscribeRooms();

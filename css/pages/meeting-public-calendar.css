@@ -17,35 +17,64 @@
   white-space: nowrap;
 }
 
+.meeting-public-calendar-table-heading {
+  position: relative;
+  min-height: 36px;
+}
+
 .meeting-public-legend {
+  position: absolute;
+  top: 3px;
+  right: 0;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin: 0;
 }
 
 .meeting-public-legend-pill {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
+  gap: 5px;
+  padding: 3px 0;
   font-size: 11px;
   font-weight: 600;
+  color: #6b7280 !important;
+  background: transparent !important;
+}
+
+.meeting-public-legend-pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
 }
 
 .meeting-public-legend-pill.is-approved {
-  background: #ffe4f1;
   color: #be185d;
 }
 
+.meeting-public-legend-pill.is-approved::before {
+  background: #ec4899;
+}
+
 .meeting-public-legend-pill.is-pending {
-  background: #f3f4f6;
   color: #4b5563;
 }
 
+.meeting-public-legend-pill.is-pending::before {
+  background: #9ca3af;
+}
+
 .meeting-public-legend-pill.is-requested {
-  background: #fef3c7;
   color: #92400e;
+}
+
+.meeting-public-legend-pill.is-requested::before {
+  background: #f59e0b;
 }
 
 .meeting-calendar-title-link {
@@ -141,8 +170,10 @@
   }
 
   .meeting-public-calendar-page .meeting-public-legend {
+    position: static;
+    justify-content: center;
     gap: 6px;
-    margin-bottom: 8px;
+    margin: -2px 0 8px;
   }
 
   .meeting-public-calendar-page .meeting-public-legend-pill {

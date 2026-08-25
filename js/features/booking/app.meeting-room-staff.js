@@ -42,6 +42,10 @@ function initMeetingRoomStaffApproval() {
   const staffCalendarTitle = document.getElementById("meetingStaffCalendarTitle");
   const staffCalendarPrevBtn = document.getElementById("meetingStaffCalendarPrevMonth");
   const staffCalendarNextBtn = document.getElementById("meetingStaffCalendarNextMonth");
+  const staffCalendarTodayBtn = document.getElementById("meetingStaffCalendarToday");
+  const staffCalendarMonthViewBtn = document.getElementById("meetingStaffCalendarMonthView");
+  const staffCalendarWeekViewBtn = document.getElementById("meetingStaffCalendarWeekView");
+  const staffCalendarRoomFilterEl = document.getElementById("meetingStaffCalendarRoomFilter");
   const bookingDayModalEl = document.getElementById("meetingBookingDayModal");
   const bookingDayModalTitleEl = document.getElementById("meetingBookingDayTitle");
   const bookingDayModalBodyEl = document.getElementById("meetingBookingDayBody");
@@ -572,6 +576,8 @@ function initMeetingRoomStaffApproval() {
   let isSeedingDefaultRooms = false;
   let activeManageRoomId = "";
   let calendarCursor = new Date();
+  let staffCalendarDisplayMode = "month";
+  let staffCalendarRoomFilterValue = "all";
   let holidayCalendarCursor = new Date();
   let activeStaffDayModalDate = "";
   let historyStartDateFilter = "";
@@ -1883,14 +1889,34 @@ function initMeetingRoomStaffApproval() {
   const renderStaffCalendar = (sourceRows = []) => {
     if (!staffCalendarPanel) return;
 
+    const roomFilterSignature = rooms.map((room) => `${room.id}:${room.name}`).join("|");
+    if (staffCalendarRoomFilterEl && staffCalendarRoomFilterEl.dataset.roomSignature !== roomFilterSignature) {
+      staffCalendarRoomFilterEl.innerHTML = '<option value="all">ห้องประชุม: ทุกห้อง</option>';
+      rooms.forEach((room) => {
+        const option = document.createElement("option");
+        option.value = room.id;
+        option.textContent = room.name;
+        staffCalendarRoomFilterEl.appendChild(option);
+      });
+      if (!rooms.some((room) => room.id === staffCalendarRoomFilterValue)) staffCalendarRoomFilterValue = "all";
+      staffCalendarRoomFilterEl.value = staffCalendarRoomFilterValue;
+      staffCalendarRoomFilterEl.dataset.roomSignature = roomFilterSignature;
+    }
+
     const monthState = getCalendarMonthState(calendarCursor);
-    const daysInMonth = new Date(monthState.year, monthState.month + 1, 0).getDate();
-    const monthBookings = sourceRows
+    const weekStart = new Date(calendarCursor);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const periodStart = staffCalendarDisplayMode === "week" ? weekStart : monthState.firstDay;
+    const periodEnd = staffCalendarDisplayMode === "week" ? weekEnd : new Date(monthState.year, monthState.month + 1, 0);
+    const periodBookings = sourceRows
       .filter((item) => {
         if (!item.date) return false;
+        if (staffCalendarRoomFilterValue !== "all" && item.roomId !== staffCalendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;
-        return date.getFullYear() === monthState.year && date.getMonth() === monthState.month;
+        return date >= periodStart && date <= periodEnd;
       })
       .reduce((acc, item) => {
         if (!acc[item.date]) acc[item.date] = [];
@@ -1898,26 +1924,34 @@ function initMeetingRoomStaffApproval() {
         return acc;
       }, {});
 
-    Object.values(monthBookings).forEach((items) => {
+    Object.values(periodBookings).forEach((items) => {
       items.sort((a, b) => String(a.startTime || "").localeCompare(String(b.startTime || "")));
     });
 
     if (staffCalendarTitle) {
-      staffCalendarTitle.textContent = `ปฏิทินคำขอจองห้องประชุม (${MONTH_NAMES_TH[monthState.month]} ${monthState.year + 543})`;
+      staffCalendarTitle.textContent = staffCalendarDisplayMode === "week"
+        ? `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`
+        : `${MONTH_NAMES_TH[monthState.month]} ${monthState.year + 543}`;
     }
 
     const todayKey = toDateKey(new Date());
     const maxEvents = getMeetingCalendarMaxEvents();
     const cells = [];
 
-    for (let i = 0; i < monthState.firstDay.getDay(); i += 1) {
-      cells.push('<div class="calendar-day calendar-day-empty"></div>');
+    if (staffCalendarDisplayMode === "month") {
+      for (let i = 0; i < monthState.firstDay.getDay(); i += 1) cells.push('<div class="calendar-day calendar-day-empty"></div>');
     }
-
-    for (let day = 1; day <= daysInMonth; day += 1) {
-      const date = new Date(monthState.year, monthState.month, day);
+    const datesToRender = [];
+    if (staffCalendarDisplayMode === "week") {
+      for (let offset = 0; offset < 7; offset += 1) { const date = new Date(weekStart); date.setDate(weekStart.getDate() + offset); datesToRender.push(date); }
+    } else {
+      const daysInMonth = new Date(monthState.year, monthState.month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day += 1) datesToRender.push(new Date(monthState.year, monthState.month, day));
+    }
+    datesToRender.forEach((date) => {
+      const day = date.getDate();
       const dateKey = toDateKey(date);
-      const items = monthBookings[dateKey] || [];
+      const items = periodBookings[dateKey] || [];
       const visibleItems = items.slice(0, maxEvents);
       const remainingCount = items.length - maxEvents;
       const isToday = dateKey === todayKey;
@@ -1956,8 +1990,9 @@ function initMeetingRoomStaffApproval() {
           ${moreText}
         </div>
       `);
-    }
+    });
 
+    staffCalendarPanel.classList.toggle("is-week-view", staffCalendarDisplayMode === "week");
     staffCalendarPanel.innerHTML = cells.join("");
   };
 
@@ -2672,7 +2707,7 @@ function initMeetingRoomStaffApproval() {
 
   if (staffCalendarPrevBtn) {
     staffCalendarPrevBtn.addEventListener("click", () => {
-      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
       subscribeBookings();
       renderStaffCalendar(getCalendarRows(bookings));
     });
@@ -2680,11 +2715,30 @@ function initMeetingRoomStaffApproval() {
 
   if (staffCalendarNextBtn) {
     staffCalendarNextBtn.addEventListener("click", () => {
-      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
       subscribeBookings();
       renderStaffCalendar(getCalendarRows(bookings));
     });
   }
+
+  staffCalendarTodayBtn?.addEventListener("click", () => {
+    const now = new Date();
+    calendarCursor = staffCalendarDisplayMode === "week" ? now : new Date(now.getFullYear(), now.getMonth(), 1);
+    subscribeBookings();
+    renderStaffCalendar(getCalendarRows(bookings));
+  });
+  const setStaffCalendarDisplayMode = (mode) => {
+    staffCalendarDisplayMode = mode === "week" ? "week" : "month";
+    staffCalendarMonthViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "month");
+    staffCalendarWeekViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "week");
+    renderStaffCalendar(getCalendarRows(bookings));
+  };
+  staffCalendarMonthViewBtn?.addEventListener("click", () => setStaffCalendarDisplayMode("month"));
+  staffCalendarWeekViewBtn?.addEventListener("click", () => setStaffCalendarDisplayMode("week"));
+  staffCalendarRoomFilterEl?.addEventListener("change", () => {
+    staffCalendarRoomFilterValue = staffCalendarRoomFilterEl.value || "all";
+    renderStaffCalendar(getCalendarRows(bookings));
+  });
 
   if (historySearchInputEl) {
     historySearchInputEl.addEventListener("input", () => {

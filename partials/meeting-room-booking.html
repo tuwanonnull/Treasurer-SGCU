@@ -142,21 +142,44 @@
 
           <div id="meetingRoomCalendarPanel" class="panel panel-hover section-appear section-delay-2 meeting-calendar-panel">
             <div class="panel-header">
-              <div>
-                <a
-                  id="meetingCalendarTitle"
-                  class="panel-title meeting-calendar-title-link"
-                  href="meeting-room-calendar.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >ปฏิทินจองห้องประชุม</a>
-              </div>
-              <div class="meeting-calendar-toolbar">
-                <button id="meetingCalendarPrevMonth" class="btn-ghost" type="button">เดือนก่อน</button>
-                <button id="meetingCalendarNextMonth" class="btn-ghost" type="button">เดือนถัดไป</button>
+              <div class="meeting-calendar-heading">
+                <div class="panel-title">ปฏิทินการจอง</div>
+                <div class="section-text-sm">ดูช่วงเวลาที่มีการใช้งานและกรองตามห้องประชุม</div>
               </div>
             </div>
             <div class="panel-body">
+              <div class="meeting-calendar-toolbar">
+                <div class="meeting-calendar-navigation-controls">
+                  <div class="meeting-calendar-period-nav" role="group" aria-label="เลื่อนช่วงเวลาปฏิทิน">
+                    <button id="meetingCalendarPrevMonth" class="btn-ghost meeting-calendar-nav-btn" type="button"><span aria-hidden="true">‹</span><span class="meeting-calendar-nav-text">เดือนก่อน</span></button>
+                    <button id="meetingCalendarToday" class="btn-ghost meeting-calendar-today-btn" type="button">วันนี้</button>
+                    <button id="meetingCalendarNextMonth" class="btn-ghost meeting-calendar-nav-btn" type="button"><span class="meeting-calendar-nav-text">เดือนถัดไป</span><span aria-hidden="true">›</span></button>
+                  </div>
+                </div>
+                <div class="meeting-calendar-display-controls">
+                  <label class="meeting-calendar-room-filter" for="meetingCalendarRoomFilter">
+                    <span class="meeting-calendar-filter-icon" aria-hidden="true">
+                      <svg viewBox="0 0 20 20" focusable="false"><path d="M3 4h14l-5.3 6.1v4.5l-3.4 1.7v-6.2L3 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                    </span>
+                    <span class="sr-only">กรองตามห้องประชุม</span>
+                    <select id="meetingCalendarRoomFilter" class="login-input" aria-label="กรองตามห้องประชุม">
+                      <option value="all">ห้องประชุม: ทุกห้อง</option>
+                    </select>
+                  </label>
+                  <span class="meeting-calendar-control-divider" aria-hidden="true"></span>
+                  <div class="tabs meeting-calendar-view-toggle" role="group" aria-label="เลือกมุมมองปฏิทิน">
+                    <button id="meetingCalendarMonthView" class="tab-btn view-toggle-btn is-active" type="button" aria-pressed="true">รายเดือน</button>
+                    <button id="meetingCalendarWeekView" class="tab-btn view-toggle-btn" type="button" aria-pressed="false">รายสัปดาห์</button>
+                  </div>
+                </div>
+              </div>
+              <a
+                id="meetingCalendarTitle"
+                class="meeting-calendar-period-title"
+                href="meeting-room-calendar.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >เดือนปัจจุบัน</a>
               <div class="calendar-grid-scroll">
                 <div class="calendar-weekday-row" aria-hidden="true">
                   <div class="calendar-weekday">อา</div>
