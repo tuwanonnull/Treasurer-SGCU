@@ -529,6 +529,10 @@
   flex-wrap: wrap;
 }
 
+.borrow-request-detail-actions #borrowRequestDetailApplyStatus {
+  margin-left: auto;
+}
+
 .borrow-my-request-row {
   cursor: pointer;
 }

@@ -624,6 +624,29 @@ service cloud.firestore {
       allow delete: if canManageBorrowAssets();
     }
 
+    function validBorrowRequestCounterWrite(counterId) {
+      return signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "prefix", "termYY", "orgCode", "lastRunning", "updatedAt"
+        ]) &&
+        request.resource.data.prefix is string &&
+        request.resource.data.termYY is string &&
+        request.resource.data.orgCode is string &&
+        request.resource.data.lastRunning is int &&
+        request.resource.data.lastRunning >= 1 &&
+        (
+          !exists(/databases/$(database)/documents/borrowAssetRequestCounters/$(counterId)) ||
+          request.resource.data.lastRunning == resource.data.lastRunning + 1
+        );
+    }
+
+    match /borrowAssetRequestCounters/{counterId} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if canManageBorrowAssets() || validBorrowRequestCounterWrite(counterId);
+      allow delete: if false;
+    }
+
     match /borrowAssetStockReservations/{assetCode} {
       allow read: if canManageBorrowAssets();
       allow create, update: if canManageBorrowAssets();

@@ -1842,6 +1842,10 @@
     justify-content: center;
   }
 
+  .borrow-request-detail-actions #borrowRequestDetailApplyStatus {
+    margin-left: 0;
+  }
+
   .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody {
     gap: 12px !important;
   }

@@ -145,6 +145,8 @@ function initBorrowAssetsApp() {
       : !!borrowAssetConfig.enableAssetAvailabilityCheck;
   const BORROW_ASSETS_CSV_URL = appConfig.sheets?.borrowAssets || "";
   const BORROW_REQUEST_COLLECTION = firestoreCollections.borrowAssetRequests || "borrowAssetRequests";
+  const BORROW_REQUEST_COUNTER_COLLECTION =
+    firestoreCollections.borrowAssetRequestCounters || "borrowAssetRequestCounters";
   const BORROW_ASSET_STOCK_COLLECTION =
     firestoreCollections.borrowAssetStockReservations || "borrowAssetStockReservations";
   const BORROW_REQUEST_COLLECTIONS = [BORROW_REQUEST_COLLECTION];
@@ -762,13 +764,57 @@ function initBorrowAssetsApp() {
     return String(maxRunning + 1).padStart(3, "0");
   };
 
-  const generateBorrowRequestNo = () => {
+  const getBorrowRequestNoParts = () => {
     const termYY = getBorrowTermYearTwoDigits(new Date());
     const orgCode = resolveBorrowOrgCode();
-    if (!orgCode) return "";
+    if (!orgCode) return null;
     const prefix = `B${termYY}.${orgCode}`;
-    const running = getNextBorrowRequestRunning(prefix);
-    return `${prefix}.${running}`;
+    return { termYY, orgCode, prefix };
+  };
+
+  const createBorrowRequestWithNextNumber = async (payload) => {
+    const numberParts = getBorrowRequestNoParts();
+    if (!numberParts) return null;
+
+    const { termYY, orgCode, prefix } = numberParts;
+    const requestRef = firestore.doc(
+      firestore.collection(firestore.db, BORROW_REQUEST_COLLECTION)
+    );
+
+    if (typeof firestore.runTransaction !== "function") {
+      const running = getNextBorrowRequestRunning(prefix);
+      payload.requestNo = `${prefix}.${running}`;
+      await firestore.setDoc(requestRef, payload);
+      return requestRef;
+    }
+
+    const counterRef = firestore.doc(
+      firestore.db,
+      BORROW_REQUEST_COUNTER_COLLECTION,
+      prefix
+    );
+    await firestore.runTransaction(firestore.db, async (transaction) => {
+      const counterSnap = await transaction.get(counterRef);
+      const storedRunning = Number(counterSnap?.data?.()?.lastRunning || 0);
+      const visibleRunning = Number(getNextBorrowRequestRunning(prefix)) - 1;
+      const currentRunning = Math.max(
+        Number.isFinite(storedRunning) ? storedRunning : 0,
+        Number.isFinite(visibleRunning) ? visibleRunning : 0
+      );
+      const nextRunning = currentRunning + 1;
+      const requestNo = `${prefix}.${String(nextRunning).padStart(3, "0")}`;
+      payload.requestNo = requestNo;
+
+      transaction.set(counterRef, {
+        prefix,
+        termYY,
+        orgCode,
+        lastRunning: nextRunning,
+        updatedAt: firestore.serverTimestamp()
+      });
+      transaction.set(requestRef, payload);
+    });
+    return requestRef;
   };
 
   const readCurrentUserEmail = () =>
@@ -3465,6 +3511,11 @@ function initBorrowAssetsApp() {
                   placeholder="หมายเหตุสำหรับผู้ขอ (ถ้ามี)"
                   >${safeEscape(item.staffNote || "")}</textarea>
                 <div class="borrow-request-detail-actions">
+                  <span
+                    id="borrowRequestDetailStatusMessage"
+                    class="section-text-sm"
+                    style="color:${safeEscape(statusColor)};"
+                  >${safeMessage}</span>
                   <button
                     id="borrowRequestDetailApplyStatus"
                     class="btn-primary"
@@ -3474,11 +3525,6 @@ function initBorrowAssetsApp() {
                   >
 	                    บันทึก
                   </button>
-                  <span
-                    id="borrowRequestDetailStatusMessage"
-                    class="section-text-sm"
-                    style="color:${safeEscape(statusColor)};"
-                  >${safeMessage}</span>
                 </div>
               </div>
             </div>
@@ -3950,8 +3996,7 @@ function initBorrowAssetsApp() {
       return;
     }
     await ensureBorrowOrgCodeData();
-    const nextRequestNo = generateBorrowRequestNo();
-    if (!nextRequestNo) {
+    if (!getBorrowRequestNoParts()) {
       setBorrowMessage(
         `ไม่พบรหัสองค์กรจากข้อมูลกลาง (คอลัมน์ C) กรุณาตรวจสอบประเภทองค์กร/ฝ่ายหรือเลือก '${EXTERNAL_ORG_LABEL}'`,
         "#b91c1c"
@@ -3960,7 +4005,6 @@ function initBorrowAssetsApp() {
     }
 
     const payload = {
-      requestNo: nextRequestNo,
       academicYear: getBorrowAcademicYearBE(),
       firstName: requesterProfile.firstName,
       lastName: requesterProfile.lastName,
@@ -3991,10 +4035,7 @@ function initBorrowAssetsApp() {
     borrowSubmitBtn.disabled = true;
     setBorrowMessage("กำลังส่งคำขอ...", "#374151");
     try {
-      const docRef = await firestore.addDoc(
-        firestore.collection(firestore.db, BORROW_REQUEST_COLLECTION),
-        payload
-      );
+      const docRef = await createBorrowRequestWithNextNumber(payload);
       void window.sgcuAuditLog?.write?.({
         action: "borrow.request.create",
         entityType: "borrowAssetRequest",
