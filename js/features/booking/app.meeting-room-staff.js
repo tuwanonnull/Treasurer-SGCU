@@ -1699,6 +1699,7 @@ function initMeetingRoomStaffApproval() {
     }
     if (historySearchWrapEl) {
       historySearchWrapEl.style.display = "grid";
+      historySearchWrapEl.classList.toggle("is-request-mode", activeTab === "requests");
     }
     [historyStartDateInputEl, historyEndDateInputEl, historyLoadBtnEl, historyResetBtnEl].forEach((el) => {
       const group = el?.closest?.(".filter-group, .meeting-history-filter-actions");
@@ -1912,7 +1913,8 @@ function initMeetingRoomStaffApproval() {
     const periodEnd = staffCalendarDisplayMode === "week" ? weekEnd : new Date(monthState.year, monthState.month + 1, 0);
     const periodBookings = sourceRows
       .filter((item) => {
-        if (!item.date) return false;
+        if (!item.date || item.status === "rejected") return false;
+        if (item.date < toDateKey(new Date()) && normalizeStatus(item.status) !== "approved") return false;
         if (staffCalendarRoomFilterValue !== "all" && item.roomId !== staffCalendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;

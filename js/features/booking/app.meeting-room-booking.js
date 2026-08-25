@@ -2254,6 +2254,7 @@ function initMeetingRoomBookingApp() {
     const periodBookings = bookings
       .filter((item) => {
         if (!item.date || item.status === "rejected") return false;
+        if (item.date < toDateKey(new Date()) && normalizeStatus(item.status) !== "approved") return false;
         if (calendarRoomFilterValue !== "all" && item.roomId !== calendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;
