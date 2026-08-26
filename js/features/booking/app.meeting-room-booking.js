@@ -1326,7 +1326,7 @@ function initMeetingRoomBookingApp() {
               ? `<div class="meeting-row-meta">ติดต่อ: ${escapeText(item.contactPhone || "-")}${item.contactInfo ? ` / ${escapeText(item.contactInfo)}` : ""}</div>`
               : "";
             const rejectedLine = item.status === "rejected" && item.rejectionReason
-              ? `<div class="meeting-row-meta">เหตุผลไม่อนุมัติ: ${escapeText(item.rejectionReason)}</div>`
+              ? `<div class="meeting-row-meta">เหตุผล/หมายเหตุ: ${escapeText(item.rejectionReason)}</div>`
               : "";
             return `
               <tr>
@@ -1999,12 +1999,17 @@ function initMeetingRoomBookingApp() {
     if (includeContact) {
       rows.push(["ข้อมูลติดต่อ", contactText]);
     }
-    if (cancelReason !== "-") rows.push(["เหตุผลขอยกเลิก", cancelReason]);
-    if (rejectionReason !== "-") rows.push(["เหตุผลไม่อนุมัติ", rejectionReason]);
     if (requestedRoom !== "-") rows.push(["ห้องใหม่ที่ขอ", requestedRoom]);
     if (requestedDate !== "-") rows.push(["วันที่ใหม่ที่ขอ", formatDate(requestedDate)]);
     if (requestedTime !== "-") rows.push(["เวลาใหม่ที่ขอ", requestedTime]);
-    if (rescheduleReason !== "-") rows.push(["เหตุผลขอเปลี่ยนห้อง/เวลา", rescheduleReason]);
+    const reasonNote = booking.status === "cancel_requested"
+      ? cancelReason
+      : booking.status === "reschedule_requested"
+        ? rescheduleReason
+        : (booking.status === "rejected" || booking.status === "no_show")
+          ? rejectionReason
+          : [cancelReason, rescheduleReason, rejectionReason].find((value) => value !== "-") || "-";
+    if (reasonNote !== "-") rows.push(["เหตุผล/หมายเหตุ", reasonNote]);
     const selectOptions = [
       "pending",
       "approved",
@@ -2158,7 +2163,7 @@ function initMeetingRoomBookingApp() {
   const setBookingDayBody = (dateText = "") => {
     if (!bookingDayModalBodyEl || !bookingDayModalTitleEl) return;
     const items = getDayBookings(dateText);
-    bookingDayModalTitleEl.textContent = `รายการจองวันที่ ${formatLongDate(dateText)} (${items.length} รายการ)`;
+    bookingDayModalTitleEl.textContent = `รายการจอง${formatLongDate(dateText)} (${items.length} รายการ)`;
     if (!items.length) {
       bookingDayModalBodyEl.innerHTML = '<div class="section-text-sm">ไม่มีรายการจองในวันที่เลือก</div>';
       return;
@@ -2176,17 +2181,30 @@ function initMeetingRoomBookingApp() {
             </tr>
           </thead>
           <tbody>
-            ${items.map((item) => `
-              <tr data-booking-id="${escapeText(item.id || "")}">
-                <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
-                <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
-                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
-                <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}${item.status === "rejected" && item.rejectionReason ? `<div class="meeting-row-meta">เหตุผลไม่อนุมัติ: ${escapeText(item.rejectionReason)}</div>` : ""}</td>
-                <td data-label="สถานะ">
-                  <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
-                </td>
-              </tr>
-            `).join("")}
+            ${items.map((item) => {
+              const reasonNote = item.status === "cancel_requested"
+                ? item.cancelRequestReason
+                : item.status === "reschedule_requested"
+                  ? item.rescheduleRequestReason
+                  : (item.status === "rejected" || item.status === "no_show")
+                    ? item.rejectionReason
+                    : item.cancelRequestReason || item.rescheduleRequestReason || item.rejectionReason;
+              const desktopReason = reasonNote
+                ? `<div class="meeting-row-meta meeting-reason-meta"><strong>เหตุผล/หมายเหตุ:</strong> ${escapeText(reasonNote)}</div>`
+                : "";
+              return `
+                <tr data-booking-id="${escapeText(item.id || "")}">
+                  <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
+                  <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
+                  <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
+                  <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}${desktopReason}</td>
+                  ${reasonNote ? `<td class="meeting-day-reason-row" data-label="เหตุผล/หมายเหตุ"><span class="meeting-day-reason-value">${escapeText(reasonNote)}</span></td>` : ""}
+                  <td data-label="สถานะ">
+                    <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
           </tbody>
         </table>
       </div>

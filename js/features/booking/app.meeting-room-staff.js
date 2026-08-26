@@ -447,42 +447,75 @@ function initMeetingRoomStaffApproval() {
       .sort((a, b) => String(a.startTime || "").localeCompare(String(b.startTime || "")));
   };
 
+  const getBookingReasonNote = (booking = {}) => booking.status === "cancel_requested"
+    ? booking.cancelRequestReason
+    : booking.status === "reschedule_requested"
+      ? booking.rescheduleRequestReason
+      : (booking.status === "rejected" || booking.status === "no_show")
+        ? booking.rejectionReason
+        : booking.cancelRequestReason || booking.rescheduleRequestReason || booking.rejectionReason;
+
+  const renderBookingPurposeContent = (booking = {}) => {
+    const notes = [];
+    if (booking.status === "reschedule_requested") {
+      const requestedRoom = booking.rescheduleRequestedRoomId
+        ? `${normalizeRoomDisplay(booking.rescheduleRequestedRoomId, booking.rescheduleRequestedRoomName)} `
+        : "";
+      notes.push([
+        "ขอเปลี่ยนเป็น",
+        `${requestedRoom}${formatDate(booking.rescheduleRequestedDate)} ${booking.rescheduleRequestedStartTime || "-"} - ${booking.rescheduleRequestedEndTime || "-"}`
+      ]);
+    }
+    const reasonNote = getBookingReasonNote(booking);
+    if (reasonNote) notes.push(["เหตุผล/หมายเหตุ", reasonNote]);
+    const noteRows = notes
+      .map(([label, value]) => `<div class="meeting-row-meta${label === "เหตุผล/หมายเหตุ" ? " meeting-reason-meta" : ""}"><strong>${escapeText(label)}:</strong> ${escapeText(value)}</div>`)
+      .join("");
+    return `<div class="meeting-staff-purpose-cell">${escapeText(booking.purpose || "-")}${noteRows}</div>`;
+  };
+
   const setStaffBookingDayBody = (dateText = "", sourceRows = []) => {
     if (!bookingDayModalTitleEl || !bookingDayModalBodyEl) return;
     const items = getStaffDayBookings(dateText, sourceRows);
-    bookingDayModalTitleEl.textContent = `รายการคำขอวันที่ ${formatLongDate(dateText)} (${items.length} รายการ)`;
+    bookingDayModalTitleEl.textContent = `รายการคำขอ${formatLongDate(dateText)} (${items.length} รายการ)`;
     if (!items.length) {
       bookingDayModalBodyEl.innerHTML = '<div class="section-text-sm">ไม่มีรายการคำขอในวันที่เลือก</div>';
       return;
     }
     bookingDayModalBodyEl.innerHTML = `
       <div class="modal-table-wrap meeting-day-modal-table-wrap">
-        <table class="modal-table meeting-day-modal-table">
+        <table class="modal-table meeting-day-modal-table meeting-staff-day-table">
           <thead>
             <tr>
-              <th>เวลา</th>
               <th>ห้อง</th>
+              <th>วันที่</th>
+              <th>เวลา</th>
               <th>ผู้ขอ</th>
               <th>วัตถุประสงค์</th>
               <th>สถานะ</th>
             </tr>
           </thead>
           <tbody>
-            ${items.map((item) => `
-              <tr
-                data-booking-id="${escapeText(item.id || "")}"
-                data-include-contact="true"
-                data-allow-status-edit="true"
-              >
-                <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
-                <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
-                <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
-                <td data-label="วัตถุประสงค์">${escapeText(item.purpose || "-")}</td>
-                <td data-label="สถานะ">
-                  <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
-                </td>
-              </tr>
-            `).join("")}
+            ${items.map((item) => {
+              const reasonNote = getBookingReasonNote(item);
+              return `
+                <tr
+                  data-booking-id="${escapeText(item.id || "")}"
+                  data-include-contact="true"
+                  data-allow-status-edit="true"
+                >
+                  <td data-label="ห้อง">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</td>
+                  <td data-label="วันที่">${escapeText(formatDate(item.date))}</td>
+                  <td data-label="เวลา">${escapeText(`${item.startTime || "-"} - ${item.endTime || "-"}`)}</td>
+                  <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(item))}</td>
+                  <td data-label="วัตถุประสงค์">${renderBookingPurposeContent(item)}</td>
+                  ${reasonNote ? `<td class="meeting-day-reason-row" data-label="เหตุผล/หมายเหตุ"><span class="meeting-day-reason-value">${escapeText(reasonNote)}</span></td>` : ""}
+                  <td data-label="สถานะ">
+                    <span class="status-pill ${statusBadgeClass(item.status)}">${escapeText(statusText(item.status))}</span>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
           </tbody>
         </table>
       </div>
@@ -523,7 +556,6 @@ function initMeetingRoomStaffApproval() {
         ["วัตถุประสงค์", booking.purpose || "-"],
         ["สถานะ", statusText(booking.status)]
       ];
-      if (booking.cancelRequestReason) rows.push(["เหตุผลขอยกเลิก", booking.cancelRequestReason]);
       if (booking.rescheduleRequestedRoomId) {
         rows.push([
           "ห้องใหม่ที่ขอ",
@@ -537,8 +569,14 @@ function initMeetingRoomStaffApproval() {
           `${booking.rescheduleRequestedStartTime || "-"} - ${booking.rescheduleRequestedEndTime || "-"}`
         ]);
       }
-      if (booking.rescheduleRequestReason) rows.push(["เหตุผลขอเปลี่ยนห้อง/เวลา", booking.rescheduleRequestReason]);
-      if (booking.rejectionReason) rows.push(["เหตุผลไม่อนุมัติ", booking.rejectionReason]);
+      const reasonNote = booking.status === "cancel_requested"
+        ? booking.cancelRequestReason
+        : booking.status === "reschedule_requested"
+          ? booking.rescheduleRequestReason
+          : (booking.status === "rejected" || booking.status === "no_show")
+            ? booking.rejectionReason
+            : booking.cancelRequestReason || booking.rescheduleRequestReason || booking.rejectionReason;
+      if (reasonNote) rows.push(["เหตุผล/หมายเหตุ", reasonNote]);
       bookingDetailBodyEl.innerHTML = `
         <div class="meeting-booking-detail-shell">
           <div class="meeting-booking-detail-grid">
@@ -2038,24 +2076,13 @@ function initMeetingRoomStaffApproval() {
             const roomName = normalizeRoomDisplay(booking.roomId, booking.roomName);
             const dateText = formatDate(booking.date);
             const timeText = `${booking.startTime || "-"} - ${booking.endTime || "-"}`;
-            const requestedRoom = booking.rescheduleRequestedRoomId
-              ? `${normalizeRoomDisplay(booking.rescheduleRequestedRoomId, booking.rescheduleRequestedRoomName)} `
-              : "";
-            const rescheduleLine = booking.status === "reschedule_requested"
-              ? `<div class="meeting-row-meta">ขอเปลี่ยนเป็น: ${escapeText(requestedRoom)}${escapeText(formatDate(booking.rescheduleRequestedDate))} ${escapeText(booking.rescheduleRequestedStartTime || "-")} - ${escapeText(booking.rescheduleRequestedEndTime || "-")}</div><div class="meeting-row-meta">เหตุผล: ${escapeText(booking.rescheduleRequestReason || "-")}</div>`
-              : "";
-            const rejectedLine = booking.status === "rejected" && booking.rejectionReason
-              ? `<div class="meeting-row-meta">เหตุผลไม่อนุมัติ: ${escapeText(booking.rejectionReason)}</div>`
-              : "";
             return `
               <tr data-booking-id="${escapeText(booking.id)}">
                 <td data-label="ห้อง">${escapeText(roomName)}</td>
                 <td data-label="วันที่">${escapeText(dateText)}</td>
                 <td data-label="เวลา">${escapeText(timeText)}</td>
                 <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(booking))}</td>
-                <td data-label="วัตถุประสงค์">
-                  <div class="meeting-staff-purpose-cell">${escapeText(booking.purpose || "-")}${rescheduleLine}${rejectedLine}</div>
-                </td>
+                <td data-label="วัตถุประสงค์">${renderBookingPurposeContent(booking)}</td>
                 <td data-label="สถานะ">${statusLabel(booking.status)}</td>
                 <td data-label="จัดการ">
                   ${getStatusDropdown(booking, "คิวรออนุมัติ")}
@@ -2096,24 +2123,13 @@ function initMeetingRoomStaffApproval() {
             const roomName = normalizeRoomDisplay(booking.roomId, booking.roomName);
             const dateText = formatDate(booking.date);
             const timeText = `${booking.startTime || "-"} - ${booking.endTime || "-"}`;
-            const requestedRoom = booking.rescheduleRequestedRoomId
-              ? `${normalizeRoomDisplay(booking.rescheduleRequestedRoomId, booking.rescheduleRequestedRoomName)} `
-              : "";
-            const rescheduleLine = booking.status === "reschedule_requested"
-              ? `<div class="meeting-row-meta">ขอเปลี่ยนเป็น: ${escapeText(requestedRoom)}${escapeText(formatDate(booking.rescheduleRequestedDate))} ${escapeText(booking.rescheduleRequestedStartTime || "-")} - ${escapeText(booking.rescheduleRequestedEndTime || "-")}</div><div class="meeting-row-meta">เหตุผล: ${escapeText(booking.rescheduleRequestReason || "-")}</div>`
-              : "";
-            const rejectedLine = booking.status === "rejected" && booking.rejectionReason
-              ? `<div class="meeting-row-meta">เหตุผลไม่อนุมัติ: ${escapeText(booking.rejectionReason)}</div>`
-              : "";
             return `
               <tr data-booking-id="${escapeText(booking.id)}">
                 <td data-label="ห้อง">${escapeText(roomName)}</td>
                 <td data-label="วันที่">${escapeText(dateText)}</td>
                 <td data-label="เวลา">${escapeText(timeText)}</td>
                 <td data-label="ผู้ขอ">${escapeText(formatRequesterDisplay(booking))}</td>
-                <td data-label="วัตถุประสงค์">
-                  <div class="meeting-staff-purpose-cell">${escapeText(booking.purpose || "-")}${rescheduleLine}${rejectedLine}</div>
-                </td>
+                <td data-label="วัตถุประสงค์">${renderBookingPurposeContent(booking)}</td>
                 <td data-label="สถานะ">
                   ${getMobileStatusActions(booking)}
                   ${getStatusDropdown(booking, activeTab === "history" ? "ประวัติการขอ" : "รายการคำขอ")}

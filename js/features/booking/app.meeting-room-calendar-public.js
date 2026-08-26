@@ -296,7 +296,7 @@
   const setDayModalBody = (dateText = "") => {
     if (!dayModalBodyEl || !dayModalTitleEl) return;
     const items = sortBookings(bookings.filter((item) => item.date === dateText && item.status !== "rejected"));
-    dayModalTitleEl.textContent = `รายการจองวันที่ ${formatLongDate(dateText)} (${items.length} รายการ)`;
+    dayModalTitleEl.textContent = `รายการจอง${formatLongDate(dateText)} (${items.length} รายการ)`;
 
     if (!items.length) {
       dayModalBodyEl.innerHTML = '<div class="section-text-sm">ไม่มีรายการจองในวันที่เลือก</div>';

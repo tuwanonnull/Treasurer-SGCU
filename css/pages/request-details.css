@@ -6,21 +6,74 @@
   table-layout: fixed;
 }
 
+.meeting-booking-day-dialog {
+  max-width: 980px;
+}
+
+.meeting-day-modal-table th,
+.meeting-day-modal-table td {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.meeting-day-modal-table td > * {
+  max-width: 100%;
+}
+
+.meeting-day-modal-table tbody td.meeting-day-reason-row {
+  display: none;
+}
+
 .meeting-day-modal-table thead th:nth-child(1) {
-  width: 104px;
+  width: 11%;
 }
 
-.meeting-day-modal-table thead th:nth-child(2),
+.meeting-day-modal-table thead th:nth-child(2) {
+  width: 17%;
+}
+
 .meeting-day-modal-table thead th:nth-child(3) {
-  width: 148px;
+  width: 18%;
 }
 
-.meeting-day-modal-table thead th:nth-child(5) {
-  width: 112px;
+.meeting-day-modal-table thead th:nth-child(4) {
+  width: 42%;
 }
 
-.meeting-day-modal-table tbody td[data-label="ผู้ขอ"],
-.meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"],
+.meeting-day-modal-table thead th:nth-last-child(2) {
+  width: 42%;
+}
+
+.meeting-day-modal-table thead th:last-child {
+  width: 12%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:nth-child(1) {
+  width: 14%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:nth-child(2) {
+  width: 12%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:nth-child(3) {
+  width: 11%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:nth-child(4) {
+  width: 18%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:nth-last-child(2) {
+  width: 33%;
+}
+
+.meeting-day-modal-table.meeting-staff-day-table thead th:last-child {
+  width: 12%;
+}
+
 .meeting-day-modal-table tbody td[data-label="วัตถุประสงค์"] .meeting-row-meta {
   min-width: 0;
   white-space: normal;
@@ -1054,16 +1107,16 @@
 
   .meeting-day-modal-table tbody {
     display: grid;
-    gap: 10px;
+    gap: 14px;
   }
 
   .meeting-day-modal-table tbody tr {
-    display: grid;
-    gap: 0;
-    border: 1px solid #f1f5f9;
-    border-radius: 10px;
-    background: #ffffff;
-    box-shadow: 0 8px 18px rgba(148, 163, 184, 0.14);
+    display: block;
+    padding: 14px;
+    border: 1px solid rgba(236, 72, 153, 0.16);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #fffafb);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
     overflow: hidden;
   }
 
@@ -1073,14 +1126,30 @@
 
   .meeting-day-modal-table tbody td {
     display: grid;
-    grid-template-columns: 84px minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: minmax(74px, 0.28fr) minmax(0, 1fr);
+    gap: 10px;
     align-items: start;
-    padding: 8px 10px;
-    border-bottom: 1px solid #f1f5f9;
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
     color: #111827;
     line-height: 1.45;
     overflow-wrap: anywhere;
+  }
+
+  .meeting-day-modal-table tbody td.meeting-day-reason-row {
+    display: grid;
+  }
+
+  .meeting-day-modal-table .meeting-day-reason-value {
+    grid-column: 2;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .meeting-day-modal-table .meeting-reason-meta {
+    display: none;
   }
 
   .meeting-day-modal-table tbody td:last-child {
@@ -1089,14 +1158,22 @@
 
   .meeting-day-modal-table tbody td::before {
     content: attr(data-label);
-    color: #6b7280;
+    color: #64748b;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
   }
 
-  .meeting-day-modal-table tbody td[data-label="เวลา"] {
-    font-size: 14px;
-    font-weight: 700;
+  .meeting-day-modal-table tbody td:first-child {
+    padding-top: 0;
+    font-weight: 800;
+    color: #9d174d;
+  }
+
+  .meeting-day-modal-table tbody td:last-child {
+    margin-top: 4px;
+    padding-top: 12px;
+    padding-bottom: 0;
+    border-top: 1px solid rgba(226, 232, 240, 0.88);
   }
 
   .meeting-day-modal-table tbody td[data-label="สถานะ"] {
