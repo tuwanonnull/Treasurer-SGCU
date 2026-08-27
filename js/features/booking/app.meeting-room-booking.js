@@ -2650,7 +2650,7 @@ function initMeetingRoomBookingApp() {
   const setMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    dateInput.min = today.toISOString().slice(0, 10);
+    dateInput.min = toDateKey(today);
     if (!dateInput.value) {
       dateInput.value = dateInput.min;
     }

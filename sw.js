@@ -1,4 +1,4 @@
-const CACHE_VERSION = "20260827-decouple-calendar-list-1";
+const CACHE_VERSION = "20260827-local-date-default-1";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
@@ -15,7 +15,7 @@ const APP_SHELL_URLS = [
   "./js/core/app.helpers.js?v=20260626-pending-approval-status-1",
   "./js/features/project/app.sorting-auth.js?v=20260627-project-budget-comparison-chart-1",
   "./js/motion/app.motion.js",
-  "./js/core/app.feature-loader.js?v=20260827-decouple-calendar-list-1",
+  "./js/core/app.feature-loader.js?v=20260827-local-date-default-1",
   "./js/core/app.init.js?v=20260827-meeting-scroll-offset-1",
   "./manifest.webmanifest",
   "./img/icons/treasurer-icon-192.png",
