@@ -674,6 +674,10 @@
   background: rgba(148, 163, 184, 0.26);
 }
 
+.meeting-calendar-date-jump {
+  display: none;
+}
+
 .meeting-calendar-navigation-controls {
   display: flex;
   align-items: center;
@@ -761,6 +765,172 @@
 
 .meeting-room-page #meetingRoomCalendar.is-week-view {
   --calendar-row-height: 220px;
+}
+
+.calendar-grid-scroll.is-week-matrix .calendar-weekday-row {
+  display: none;
+}
+
+#meetingRoomCalendar.meeting-week-matrix,
+#meetingRoomStaffCalendar.meeting-week-matrix,
+#meetingPublicCalendar.meeting-week-matrix {
+  --calendar-row-height: auto;
+  grid-template-columns: minmax(150px, 1.25fr) repeat(7, minmax(116px, 1fr));
+  grid-auto-rows: auto;
+  gap: 1px;
+  min-width: 980px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #e5e7eb;
+}
+
+.meeting-week-corner,
+.meeting-week-date,
+.meeting-week-room,
+.meeting-week-slot {
+  background: #fff;
+  padding: 10px;
+}
+
+.meeting-week-corner,
+.meeting-week-date {
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.meeting-week-corner { font-weight: 800; color: #475569; }
+.meeting-week-date { align-items: center; color: #64748b; }
+.meeting-week-date strong { color: #1f2937; font-size: 13px; }
+.meeting-week-date small { color: #be185d; font-weight: 800; }
+.meeting-week-date.is-today { background: #fff1f7; }
+
+@media (min-width: 721px) {
+  .meeting-week-date.is-today {
+    position: relative;
+    z-index: 2;
+    background: #fff0f7;
+  }
+
+  #meetingRoomCalendar.meeting-week-matrix .meeting-week-slot.calendar-day-today,
+  #meetingRoomStaffCalendar.meeting-week-matrix .meeting-week-slot.calendar-day-today,
+  #meetingPublicCalendar.meeting-week-matrix .meeting-week-slot.calendar-day-today {
+    position: relative;
+    z-index: 2;
+    background: #fff8fb;
+  }
+}
+
+.meeting-week-room {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #1f2937;
+}
+
+.meeting-week-room span { margin-top: 3px; color: #94a3b8; font-size: 10px; }
+
+#meetingRoomCalendar .meeting-week-slot,
+#meetingRoomStaffCalendar .meeting-week-slot {
+  min-height: 96px;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.meeting-week-slot.is-available {
+  align-items: center;
+  justify-content: center;
+  background: #f4fbf7;
+}
+
+.meeting-week-available {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #15803d;
+  font-weight: 800;
+}
+
+.meeting-week-available i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, .12);
+}
+
+.meeting-week-slot-status { color: #64748b; font-size: 9px; font-weight: 700; }
+.meeting-week-slot .calendar-event { white-space: normal; line-height: 1.25; }
+.meeting-week-empty { grid-column: 1 / -1; padding: 28px; text-align: center; background: #fff; color: #64748b; }
+
+@media (max-width: 768px) {
+  .calendar-grid-scroll.is-week-matrix {
+    margin-inline: -14px;
+    padding: 0 14px 10px;
+    scroll-padding-left: 14px;
+    overscroll-behavior-inline: contain;
+  }
+
+  #meetingRoomCalendar.meeting-week-matrix,
+  #meetingRoomStaffCalendar.meeting-week-matrix,
+  #meetingPublicCalendar.meeting-week-matrix {
+    grid-template-columns: 116px repeat(7, 104px);
+    min-width: 844px;
+    border-radius: 10px;
+  }
+
+  .meeting-week-corner,
+  .meeting-week-room {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    box-shadow: 5px 0 10px rgba(15, 23, 42, .08);
+  }
+
+  .meeting-week-corner {
+    z-index: 4;
+    min-height: 58px;
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .meeting-week-date {
+    min-height: 58px;
+    padding: 7px 4px;
+    font-size: 10px;
+  }
+
+  .meeting-week-date strong { font-size: 11px; }
+
+  .meeting-week-room {
+    min-height: 84px;
+    padding: 8px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  #meetingRoomCalendar .meeting-week-slot,
+  #meetingRoomStaffCalendar .meeting-week-slot,
+  #meetingPublicCalendar .meeting-week-slot {
+    min-height: 84px;
+    padding: 7px 5px;
+  }
+
+  .meeting-week-slot .calendar-event {
+    padding: 4px;
+    font-size: 9px;
+  }
+
+  .meeting-week-slot-status,
+  .meeting-week-available {
+    font-size: 9px;
+  }
 }
 
 #meetingRoomStaffCalendar.is-week-view,

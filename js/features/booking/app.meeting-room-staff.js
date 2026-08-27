@@ -46,6 +46,8 @@ function initMeetingRoomStaffApproval() {
   const staffCalendarMonthViewBtn = document.getElementById("meetingStaffCalendarMonthView");
   const staffCalendarWeekViewBtn = document.getElementById("meetingStaffCalendarWeekView");
   const staffCalendarRoomFilterEl = document.getElementById("meetingStaffCalendarRoomFilter");
+  const staffCalendarDateJumpEl = document.getElementById("meetingStaffCalendarDateJump");
+  const staffCalendarDateJumpLabel = staffCalendarDateJumpEl?.closest(".meeting-calendar-date-jump");
   const bookingDayModalEl = document.getElementById("meetingBookingDayModal");
   const bookingDayModalTitleEl = document.getElementById("meetingBookingDayTitle");
   const bookingDayModalBodyEl = document.getElementById("meetingBookingDayBody");
@@ -614,7 +616,11 @@ function initMeetingRoomStaffApproval() {
   let isSeedingDefaultRooms = false;
   let activeManageRoomId = "";
   let calendarCursor = new Date();
-  let staffCalendarDisplayMode = "month";
+  let staffCalendarDisplayMode = "week";
+  const isMobileStaffCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
+  if (staffCalendarDateJumpLabel && staffCalendarNextBtn?.parentElement) {
+    staffCalendarNextBtn.parentElement.insertBefore(staffCalendarDateJumpLabel, staffCalendarNextBtn);
+  }
   let staffCalendarRoomFilterValue = "all";
   let holidayCalendarCursor = new Date();
   let activeStaffDayModalDate = "";
@@ -1685,42 +1691,7 @@ function initMeetingRoomStaffApproval() {
     </div>
   `;
 
-  const getMobileStatusActions = (booking) => {
-    const id = escapeText(booking.id || "");
-    if (!id) return "";
-    if (booking.status === "pending") {
-      return `
-        <div class="meeting-mobile-status-actions" aria-label="คำสั่งหลัก">
-          <button class="btn-primary meeting-mobile-status-btn" type="button" data-action="approve" data-id="${id}">อนุมัติ</button>
-          <button class="btn-ghost meeting-mobile-status-btn" type="button" data-action="reject" data-id="${id}">ปฏิเสธ</button>
-        </div>
-      `;
-    }
-    if (booking.status === "cancel_requested") {
-      return `
-        <div class="meeting-mobile-status-actions" aria-label="คำสั่งคำขอยกเลิก">
-          <button class="btn-primary meeting-mobile-status-btn" type="button" data-action="approve-cancel" data-id="${id}">อนุมัติยกเลิก</button>
-          <button class="btn-ghost meeting-mobile-status-btn" type="button" data-action="reject-cancel" data-id="${id}">ไม่อนุมัติ</button>
-        </div>
-      `;
-    }
-    if (booking.status === "reschedule_requested") {
-      return `
-        <div class="meeting-mobile-status-actions" aria-label="คำสั่งคำขอเปลี่ยนห้อง/เวลา">
-          <button class="btn-primary meeting-mobile-status-btn" type="button" data-action="approve" data-id="${id}">อนุมัติเปลี่ยนห้อง/เวลา</button>
-          <button class="btn-ghost meeting-mobile-status-btn" type="button" data-action="reject" data-id="${id}">ไม่อนุมัติ</button>
-        </div>
-      `;
-    }
-    if (booking.status === "approved") {
-      return `
-        <div class="meeting-mobile-status-actions" aria-label="คำสั่งรายการที่อนุมัติแล้ว">
-          <button class="btn-ghost meeting-mobile-status-btn" type="button" data-action="cancel" data-id="${id}">คืนเป็นรออนุมัติ</button>
-        </div>
-      `;
-    }
-    return "";
-  };
+  const getMobileStatusActions = () => "";
 
   const updateTabUI = (nextTab) => {
     activeTab = nextTab === "history" ? "history" : "requests";
@@ -1947,8 +1918,12 @@ function initMeetingRoomStaffApproval() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    const periodStart = staffCalendarDisplayMode === "week" ? weekStart : monthState.firstDay;
-    const periodEnd = staffCalendarDisplayMode === "week" ? weekEnd : new Date(monthState.year, monthState.month + 1, 0);
+    const isMobileDayView = staffCalendarDisplayMode === "week" && isMobileStaffCalendar();
+    const selectedDay = new Date(calendarCursor);
+    selectedDay.setHours(0, 0, 0, 0);
+    if (staffCalendarDateJumpEl) staffCalendarDateJumpEl.value = toDateKey(selectedDay);
+    const periodStart = staffCalendarDisplayMode === "week" ? (isMobileDayView ? selectedDay : weekStart) : monthState.firstDay;
+    const periodEnd = staffCalendarDisplayMode === "week" ? (isMobileDayView ? selectedDay : weekEnd) : new Date(monthState.year, monthState.month + 1, 0);
     const periodBookings = sourceRows
       .filter((item) => {
         if (!item.date || item.status === "rejected") return false;
@@ -1970,13 +1945,65 @@ function initMeetingRoomStaffApproval() {
 
     if (staffCalendarTitle) {
       staffCalendarTitle.textContent = staffCalendarDisplayMode === "week"
-        ? `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`
+        ? (isMobileDayView
+          ? selectedDay.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+          : `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`)
         : `${MONTH_NAMES_TH[monthState.month]} ${monthState.year + 543}`;
     }
 
     const todayKey = toDateKey(new Date());
     const maxEvents = getMeetingCalendarMaxEvents();
     const cells = [];
+
+    if (staffCalendarDisplayMode === "week") {
+      const comparisonDates = Array.from({ length: isMobileDayView ? 1 : 7 }, (_, offset) => {
+        const date = new Date(isMobileDayView ? selectedDay : weekStart);
+        date.setDate(date.getDate() + offset);
+        return date;
+      });
+      const visibleRooms = rooms.filter((room) =>
+        staffCalendarRoomFilterValue === "all" || room.id === staffCalendarRoomFilterValue
+      );
+
+      cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
+      comparisonDates.forEach((date) => {
+        const dateKey = toDateKey(date);
+        cells.push(`
+          <div class="meeting-week-date${dateKey === todayKey ? " is-today" : ""}">
+            <span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span>
+            <strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
+            ${dateKey === todayKey ? '<small>วันนี้</small>' : ""}
+          </div>
+        `);
+      });
+
+      visibleRooms.forEach((room) => {
+        cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
+        comparisonDates.forEach((date) => {
+          const dateKey = toDateKey(date);
+          const items = (periodBookings[dateKey] || []).filter((item) => item.roomId === room.id);
+          const events = items.map((item) => `
+            <div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
+              `${room.name} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
+            )}">${escapeText(`${item.startTime || "-"}–${item.endTime || "-"}`)}</div>
+          `).join("");
+          cells.push(`
+            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
+              ${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}
+            </div>
+          `);
+        });
+      });
+
+      if (!visibleRooms.length) cells.push('<div class="meeting-week-empty">ไม่พบห้องประชุมสำหรับเปรียบเทียบ</div>');
+      staffCalendarPanel.classList.add("is-week-view", "meeting-week-matrix");
+      staffCalendarPanel.closest(".calendar-grid-scroll")?.classList.add("is-week-matrix");
+      staffCalendarPanel.innerHTML = cells.join("");
+      return;
+    }
+
+    staffCalendarPanel.classList.remove("meeting-week-matrix");
+    staffCalendarPanel.closest(".calendar-grid-scroll")?.classList.remove("is-week-matrix");
 
     if (staffCalendarDisplayMode === "month") {
       for (let i = 0; i < monthState.firstDay.getDay(); i += 1) cells.push('<div class="calendar-day calendar-day-empty"></div>');
@@ -2725,7 +2752,7 @@ function initMeetingRoomStaffApproval() {
 
   if (staffCalendarPrevBtn) {
     staffCalendarPrevBtn.addEventListener("click", () => {
-      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - (isMobileStaffCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
       subscribeBookings();
       renderStaffCalendar(getCalendarRows(bookings));
     });
@@ -2733,7 +2760,7 @@ function initMeetingRoomStaffApproval() {
 
   if (staffCalendarNextBtn) {
     staffCalendarNextBtn.addEventListener("click", () => {
-      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+      calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + (isMobileStaffCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
       subscribeBookings();
       renderStaffCalendar(getCalendarRows(bookings));
     });
@@ -2746,15 +2773,34 @@ function initMeetingRoomStaffApproval() {
     renderStaffCalendar(getCalendarRows(bookings));
   });
   const setStaffCalendarDisplayMode = (mode) => {
-    staffCalendarDisplayMode = mode === "week" ? "week" : "month";
+    const nextMode = mode === "week" ? "week" : "month";
+    if (nextMode === "week" && staffCalendarDisplayMode !== "week") calendarCursor = new Date();
+    staffCalendarDisplayMode = nextMode;
     staffCalendarMonthViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "month");
     staffCalendarWeekViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "week");
     renderStaffCalendar(getCalendarRows(bookings));
   };
+  const syncStaffCalendarResponsiveMode = () => {
+    if (staffCalendarWeekViewBtn) staffCalendarWeekViewBtn.textContent = isMobileStaffCalendar() ? "รายวัน" : "เปรียบเทียบห้อง";
+    if (isMobileStaffCalendar() && staffCalendarDisplayMode !== "week") {
+      setStaffCalendarDisplayMode("week");
+      return;
+    }
+    if (staffCalendarDisplayMode === "week") renderStaffCalendar(getCalendarRows(bookings));
+  };
+  window.matchMedia?.("(max-width: 720px)").addEventListener?.("change", syncStaffCalendarResponsiveMode);
+  syncStaffCalendarResponsiveMode();
   staffCalendarMonthViewBtn?.addEventListener("click", () => setStaffCalendarDisplayMode("month"));
   staffCalendarWeekViewBtn?.addEventListener("click", () => setStaffCalendarDisplayMode("week"));
   staffCalendarRoomFilterEl?.addEventListener("change", () => {
     staffCalendarRoomFilterValue = staffCalendarRoomFilterEl.value || "all";
+    renderStaffCalendar(getCalendarRows(bookings));
+  });
+  staffCalendarDateJumpEl?.addEventListener("change", () => {
+    const nextDate = new Date(`${staffCalendarDateJumpEl.value}T00:00:00`);
+    if (Number.isNaN(nextDate.getTime())) return;
+    calendarCursor = nextDate;
+    staffCalendarDisplayMode = "week";
     renderStaffCalendar(getCalendarRows(bookings));
   });
 

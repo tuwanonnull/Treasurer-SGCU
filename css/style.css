@@ -2,7 +2,7 @@
 @import url("./core/base.css?v=20260611-thai-text-rendering-1");
 @import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
 @import url("./pages/operations.css?v=20260707-dashboard-mobile-nav-1");
-@import url("./pages/meeting-room.css?v=20260510-budget-spacing-fix-1");
+@import url("./pages/meeting-room.css?v=20260827-mobile-date-jump-1");
 @import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/layout.css?v=20260518-csv-refresh-5");
 @import url("./core/navigation.css?v=20260707-dashboard-mobile-nav-1");
@@ -17,7 +17,7 @@
 @import url("./pages/request-details.css?v=20260816-borrow-schedule-row-1");
 @import url("./pages/pdf.css?v=20260510-budget-spacing-fix-1");
 @import url("./components/app-loader.css?v=20260514-loader-logo-shadow-1");
-@import url("./pages/meeting-public-calendar.css?v=20260510-budget-spacing-fix-1");
+@import url("./pages/meeting-public-calendar.css?v=20260827-matrix-cell-border-1");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {
@@ -26,5 +26,169 @@
 
   .page-view[data-page="dashboard-staff"].active .dashboard-section-nav {
     display: none !important;
+  }
+
+  .page-view[data-page="meeting-room-staff"] .meeting-staff-main-tabs {
+    display: none !important;
+  }
+}
+
+/* Mobile room comparison: show all seven days without horizontal clipping. */
+@media (max-width: 720px) {
+  .page-view[data-page="meeting-room-staff"] .meeting-staff-main-tabs {
+    display: none !important;
+  }
+
+  .meeting-calendar-date-jump {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 40px;
+    min-width: 42px;
+    overflow: hidden;
+    border: 1px solid rgba(236, 72, 153, .28);
+    border-radius: 12px;
+    color: #be185d;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .meeting-calendar-date-jump > span {
+    width: 19px;
+    height: 19px;
+    overflow: hidden;
+    color: transparent;
+  }
+
+  .meeting-calendar-date-jump > span::before {
+    content: "";
+    display: block;
+    width: 19px;
+    height: 19px;
+    background: currentColor;
+    color: #be185d;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .meeting-calendar-date-jump .login-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .meeting-calendar-view-toggle {
+    display: none !important;
+  }
+
+  #meetingRoomStaffCalendarPanel .meeting-calendar-toolbar,
+  #meetingRoomCalendarPanel .meeting-calendar-toolbar,
+  .meeting-public-calendar-page .meeting-calendar-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  #meetingRoomStaffCalendarPanel .meeting-calendar-navigation-controls,
+  #meetingRoomCalendarPanel .meeting-calendar-navigation-controls,
+  .meeting-public-calendar-page .meeting-calendar-navigation-controls,
+  #meetingRoomStaffCalendarPanel .meeting-calendar-period-nav,
+  #meetingRoomCalendarPanel .meeting-calendar-period-nav,
+  .meeting-public-calendar-page .meeting-calendar-period-nav {
+    width: 100%;
+  }
+
+  #meetingRoomStaffCalendarPanel .meeting-calendar-period-nav,
+  #meetingRoomCalendarPanel .meeting-calendar-period-nav,
+  .meeting-public-calendar-page .meeting-calendar-period-nav {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px 42px;
+    gap: 7px;
+  }
+
+  #meetingRoomStaffCalendarPanel .meeting-calendar-display-controls,
+  #meetingRoomCalendarPanel .meeting-calendar-display-controls,
+  .meeting-public-calendar-page .meeting-calendar-display-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    gap: 8px;
+    margin: 0;
+  }
+
+  #meetingRoomStaffCalendarPanel .meeting-calendar-room-filter,
+  #meetingRoomCalendarPanel .meeting-calendar-room-filter,
+  .meeting-public-calendar-page .meeting-calendar-room-filter,
+  #meetingRoomStaffCalendarPanel .meeting-calendar-room-filter .login-input,
+  #meetingRoomCalendarPanel .meeting-calendar-room-filter .login-input,
+  .meeting-public-calendar-page .meeting-calendar-room-filter .login-input,
+  #meetingRoomStaffCalendarPanel .meeting-calendar-view-toggle,
+  #meetingRoomCalendarPanel .meeting-calendar-view-toggle,
+  .meeting-public-calendar-page .meeting-calendar-view-toggle {
+    width: 100%;
+    max-width: none;
+  }
+
+  #meetingRoomStaffCalendarPanel .calendar-grid-scroll.is-week-matrix,
+  #meetingRoomCalendarPanel .calendar-grid-scroll.is-week-matrix,
+  .meeting-public-calendar-page .calendar-grid-scroll.is-week-matrix {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 0 8px;
+    overflow-x: hidden;
+  }
+
+  #meetingRoomCalendar.meeting-week-matrix,
+  #meetingRoomStaffCalendar.meeting-week-matrix,
+  #meetingPublicCalendar.meeting-week-matrix {
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-auto-flow: row;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .meeting-week-corner,
+  .meeting-week-date {
+    display: none;
+  }
+
+  .meeting-week-room {
+    position: static;
+    grid-column: 1;
+    grid-row: span 1;
+    min-height: 0;
+    padding: 10px 8px;
+    justify-content: flex-start;
+    box-shadow: none;
+    background: #fff8fb;
+  }
+
+  #meetingRoomCalendar .meeting-week-slot,
+  #meetingRoomStaffCalendar .meeting-week-slot,
+  #meetingPublicCalendar .meeting-week-slot {
+    grid-column: 2;
+    min-height: 68px;
+    padding: 7px 8px;
+  }
+
+  .meeting-week-slot::before {
+    content: attr(data-day-label);
+    display: block;
+    margin-bottom: 4px;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .meeting-week-slot.is-available {
+    align-items: flex-start;
+    justify-content: center;
   }
 }

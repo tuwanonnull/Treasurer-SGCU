@@ -51,6 +51,8 @@ function initMeetingRoomBookingApp() {
   const calendarMonthViewBtn = document.getElementById("meetingCalendarMonthView");
   const calendarWeekViewBtn = document.getElementById("meetingCalendarWeekView");
   const calendarRoomFilter = document.getElementById("meetingCalendarRoomFilter");
+  const calendarDateJumpEl = document.getElementById("meetingCalendarDateJump");
+  const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
   let bookingCountEl = document.getElementById("meetingRoomBookingCount");
   let pendingCountEl = document.getElementById("meetingRoomPendingCount");
   let latestDateEl = document.getElementById("meetingRoomLatestDate");
@@ -210,8 +212,12 @@ function initMeetingRoomBookingApp() {
     normalizeProjectCode(value).replace(/[^A-Z0-9]/g, "");
 
   let calendarCursor = new Date();
-  let calendarDisplayMode = "month";
+  let calendarDisplayMode = "week";
   let calendarRoomFilterValue = "all";
+  const isMobileBookingCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
+  if (calendarDateJumpLabel && calendarNextBtn?.parentElement) {
+    calendarNextBtn.parentElement.insertBefore(calendarDateJumpLabel, calendarNextBtn);
+  }
 
   const toDateKeyForQuery = (date) => {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
@@ -1612,7 +1618,7 @@ function initMeetingRoomBookingApp() {
 
   const startCalendar = () => {
     const baseDate = dateInput?.value ? new Date(`${dateInput.value}T00:00:00`) : new Date();
-    calendarCursor = getCalendarMonthState(baseDate).firstDay;
+    calendarCursor = calendarDisplayMode === "week" ? baseDate : getCalendarMonthState(baseDate).firstDay;
   };
 
   const formatCalendarTitle = (dateLike) => {
@@ -2265,9 +2271,13 @@ function initMeetingRoomBookingApp() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    const periodStart = calendarDisplayMode === "week" ? weekStart : selectedMonthStart.firstDay;
+    const isMobileDayView = calendarDisplayMode === "week" && isMobileBookingCalendar();
+    const selectedDay = new Date(calendarCursor);
+    selectedDay.setHours(0, 0, 0, 0);
+    if (calendarDateJumpEl) calendarDateJumpEl.value = toDateKey(selectedDay);
+    const periodStart = calendarDisplayMode === "week" ? (isMobileDayView ? selectedDay : weekStart) : selectedMonthStart.firstDay;
     const periodEnd = calendarDisplayMode === "week"
-      ? weekEnd
+      ? (isMobileDayView ? selectedDay : weekEnd)
       : new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0);
     const periodBookings = bookings
       .filter((item) => {
@@ -2294,12 +2304,71 @@ function initMeetingRoomBookingApp() {
 
     if (calendarTitle) {
       calendarTitle.textContent = calendarDisplayMode === "week"
-        ? `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}  –  ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`
+        ? (isMobileDayView
+          ? selectedDay.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+          : `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}  –  ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`)
         : formatCalendarTitle(selectedMonthStart.firstDay);
     }
     const todayKey = toDateKey(new Date());
     const maxEvents = getMeetingCalendarMaxEvents();
     const cells = [];
+
+    if (calendarDisplayMode === "week") {
+      const weekDates = Array.from({ length: isMobileDayView ? 1 : 7 }, (_, offset) => {
+        const date = new Date(isMobileDayView ? selectedDay : weekStart);
+        date.setDate(date.getDate() + offset);
+        return date;
+      });
+      const selectableRoomIds = calendarRoomFilter
+        ? Array.from(calendarRoomFilter.options).map((option) => option.value).filter((value) => value !== "all")
+        : meetingRooms.map((room) => room.id);
+      const visibleRooms = meetingRooms.filter((room) =>
+        selectableRoomIds.includes(room.id) &&
+        (calendarRoomFilterValue === "all" || room.id === calendarRoomFilterValue)
+      );
+
+      cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
+      weekDates.forEach((date) => {
+        const dateKey = toDateKey(date);
+        const isToday = dateKey === todayKey;
+        cells.push(`
+          <div class="meeting-week-date${isToday ? " is-today" : ""}">
+            <span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span>
+            <strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
+            ${isToday ? '<small>วันนี้</small>' : ""}
+          </div>
+        `);
+      });
+
+      visibleRooms.forEach((room) => {
+        cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
+        weekDates.forEach((date) => {
+          const dateKey = toDateKey(date);
+          const items = (periodBookings[dateKey] || []).filter((item) => item.roomId === room.id);
+          const events = items.map((item) => `
+            <div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
+              `${room.name} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
+            )}">${escapeText(`${item.startTime || "-"}–${item.endTime || "-"}`)}</div>
+          `).join("");
+          cells.push(`
+            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
+              ${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}
+            </div>
+          `);
+        });
+      });
+
+      if (!visibleRooms.length) {
+        cells.push('<div class="meeting-week-empty">ไม่พบห้องประชุมสำหรับเปรียบเทียบ</div>');
+      }
+      calendarPanel.classList.add("is-week-view", "meeting-week-matrix");
+      calendarPanel.closest(".calendar-grid-scroll")?.classList.add("is-week-matrix");
+      calendarPanel.innerHTML = cells.join("");
+      return;
+    }
+
+    calendarPanel.classList.remove("meeting-week-matrix");
+    calendarPanel.closest(".calendar-grid-scroll")?.classList.remove("is-week-matrix");
 
     if (calendarDisplayMode === "month") {
       for (let i = 0; i < selectedMonthStart.firstDay.getDay(); i++) {
@@ -3238,6 +3307,9 @@ function initMeetingRoomBookingApp() {
       if (!target || !target.dataset?.date) return;
       const nextValue = target.dataset.date;
       dateInput.value = nextValue;
+      if (target.dataset.roomId && Array.from(roomSelect.options).some((option) => option.value === target.dataset.roomId)) {
+        roomSelect.value = target.dataset.roomId;
+      }
       setCalendarCursorFromDate(nextValue);
       renderCalendarOverview();
       openBookingDayModal(nextValue);
@@ -3247,7 +3319,7 @@ function initMeetingRoomBookingApp() {
   if (calendarPrevBtn) {
     calendarPrevBtn.addEventListener("click", () => {
       calendarCursor = calendarDisplayMode === "week"
-        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - 7)
+        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - (isMobileBookingCalendar() ? 1 : 7))
         : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
       subscribeBookings();
       renderCalendarOverview();
@@ -3257,7 +3329,7 @@ function initMeetingRoomBookingApp() {
   if (calendarNextBtn) {
     calendarNextBtn.addEventListener("click", () => {
       calendarCursor = calendarDisplayMode === "week"
-        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + 7)
+        ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + (isMobileBookingCalendar() ? 1 : 7))
         : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
       subscribeBookings();
       renderCalendarOverview();
@@ -3265,7 +3337,9 @@ function initMeetingRoomBookingApp() {
   }
 
   const setCalendarDisplayMode = (mode) => {
-    calendarDisplayMode = mode === "week" ? "week" : "month";
+    const nextMode = mode === "week" ? "week" : "month";
+    if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
+    calendarDisplayMode = nextMode;
     calendarMonthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
     calendarWeekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
     calendarMonthViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "month" ? "true" : "false");
@@ -3281,6 +3355,17 @@ function initMeetingRoomBookingApp() {
     renderCalendarOverview();
   };
 
+  const syncBookingCalendarResponsiveMode = () => {
+    if (calendarWeekViewBtn) calendarWeekViewBtn.textContent = isMobileBookingCalendar() ? "รายวัน" : "เปรียบเทียบห้อง";
+    if (isMobileBookingCalendar() && calendarDisplayMode !== "week") {
+      setCalendarDisplayMode("week");
+      return;
+    }
+    if (calendarDisplayMode === "week") renderCalendarOverview();
+  };
+  window.matchMedia?.("(max-width: 720px)").addEventListener?.("change", syncBookingCalendarResponsiveMode);
+  syncBookingCalendarResponsiveMode();
+
   calendarMonthViewBtn?.addEventListener("click", () => setCalendarDisplayMode("month"));
   calendarWeekViewBtn?.addEventListener("click", () => setCalendarDisplayMode("week"));
   calendarTodayBtn?.addEventListener("click", () => {
@@ -3290,6 +3375,13 @@ function initMeetingRoomBookingApp() {
   });
   calendarRoomFilter?.addEventListener("change", () => {
     calendarRoomFilterValue = calendarRoomFilter.value || "all";
+    renderCalendarOverview();
+  });
+  calendarDateJumpEl?.addEventListener("change", () => {
+    const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
+    if (Number.isNaN(nextDate.getTime())) return;
+    calendarCursor = nextDate;
+    calendarDisplayMode = "week";
     renderCalendarOverview();
   });
 

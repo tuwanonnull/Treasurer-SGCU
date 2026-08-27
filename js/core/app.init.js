@@ -711,6 +711,8 @@ function initMeetingRoomMobileActionBar() {
 
   const requestsTab = section.querySelector('[data-meeting-staff-tab="requests"]');
   const historyTab = section.querySelector('[data-meeting-staff-tab="history"]');
+  const mainRequestsTab = section.querySelector('[data-meeting-staff-main-tab="requests"]');
+  const mainSettingsTab = section.querySelector('[data-meeting-staff-main-tab="settings"]');
   const listPanel = document.getElementById("staffMeetingAll");
   const calendarPanel = document.getElementById("meetingRoomStaffCalendarPanel");
   const filterTarget = document.getElementById("meetingRoomHistorySearchWrap");
@@ -755,7 +757,14 @@ function initMeetingRoomMobileActionBar() {
   const isHistoryActive = () => historyTab?.classList.contains("is-active");
 
   const scrollToPanel = (target) => {
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!target) return;
+    const siteHeader = document.querySelector(".site-header");
+    const headerHeight = siteHeader?.getBoundingClientRect().height || 0;
+    const targetTop = target.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({
+      top: Math.max(0, targetTop - headerHeight - 14),
+      behavior: "smooth"
+    });
   };
 
   const getFilterCount = () => {
@@ -782,12 +791,14 @@ function initMeetingRoomMobileActionBar() {
     }
 
     const meetingSettingsActive = section.classList.contains("is-settings-view");
-    bar.classList.toggle("is-visible", activePage === "meeting-room-staff" && !meetingSettingsActive);
+    bar.classList.toggle("is-visible", activePage === "meeting-room-staff");
     actionBtns.forEach((btn) => {
       const action = btn.dataset.meetingMobileAction;
       btn.classList.toggle(
         "is-active",
-        (action === "requests" && !isHistoryActive()) || (action === "history" && isHistoryActive())
+        (action === "requests" && !meetingSettingsActive && !isHistoryActive()) ||
+          (action === "history" && !meetingSettingsActive && isHistoryActive()) ||
+          (action === "settings" && meetingSettingsActive)
       );
       btn.classList.remove("has-active-filters");
       btn.dataset.filterCount = "";
@@ -860,17 +871,25 @@ function initMeetingRoomMobileActionBar() {
       const action = btn.dataset.meetingMobileAction;
       if (action === "requests") {
         closeFilterSheet();
+        mainRequestsTab?.click();
         requestsTab?.click();
         scrollToPanel(listPanel);
       } else if (action === "history") {
         closeFilterSheet();
+        mainRequestsTab?.click();
         historyTab?.click();
         scrollToPanel(listPanel);
       } else if (action === "calendar") {
         closeFilterSheet();
+        mainRequestsTab?.click();
         scrollToPanel(calendarPanel);
       } else if (action === "filters") {
+        mainRequestsTab?.click();
         openFilterSheet();
+      } else if (action === "settings") {
+        closeFilterSheet();
+        mainSettingsTab?.click();
+        window.setTimeout(() => scrollToPanel(section), 0);
       }
       window.setTimeout(sync, 0);
     });

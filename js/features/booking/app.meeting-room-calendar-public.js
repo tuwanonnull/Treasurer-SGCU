@@ -12,6 +12,8 @@
   const monthViewBtn = document.getElementById("meetingPublicCalendarMonthView");
   const weekViewBtn = document.getElementById("meetingPublicCalendarWeekView");
   const roomFilterEl = document.getElementById("meetingPublicCalendarRoomFilter");
+  const calendarDateJumpEl = document.getElementById("meetingPublicCalendarDateJump");
+  const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
 
   const dayModalEl = document.getElementById("meetingPublicBookingDayModal");
   const dayModalTitleEl = document.getElementById("meetingPublicBookingDayTitle");
@@ -71,9 +73,13 @@
   let meetingRooms = [...DEFAULT_MEETING_ROOMS];
   let holidayLookup = new Map();
   let activeDayDate = "";
-  let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  let calendarDisplayMode = "month";
+  let calendarCursor = new Date();
+  let calendarDisplayMode = "week";
   let calendarRoomFilterValue = "all";
+  const isMobilePublicCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
+  if (calendarDateJumpLabel && nextBtn?.parentElement) {
+    nextBtn.parentElement.insertBefore(calendarDateJumpLabel, nextBtn);
+  }
   let unsubscribeBookings = null;
   let publicCalendarRefreshTimer = 0;
 
@@ -348,8 +354,12 @@
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    const periodStart = calendarDisplayMode === "week" ? weekStart : selectedMonthStart.firstDay;
-    const periodEnd = calendarDisplayMode === "week" ? weekEnd : new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0);
+    const isMobileDayView = calendarDisplayMode === "week" && isMobilePublicCalendar();
+    const selectedDay = new Date(calendarCursor);
+    selectedDay.setHours(0, 0, 0, 0);
+    if (calendarDateJumpEl) calendarDateJumpEl.value = toDateKey(selectedDay);
+    const periodStart = calendarDisplayMode === "week" ? (isMobileDayView ? selectedDay : weekStart) : selectedMonthStart.firstDay;
+    const periodEnd = calendarDisplayMode === "week" ? (isMobileDayView ? selectedDay : weekEnd) : new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0);
     const todayKey = toDateKey(new Date());
     const periodBookings = bookings
       .filter((item) => {
@@ -371,21 +381,41 @@
     });
 
     calendarTitle.textContent = calendarDisplayMode === "week"
-      ? `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`
+      ? (isMobileDayView
+        ? selectedDay.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+        : `สัปดาห์ ${weekStart.toLocaleDateString("th-TH", { day: "numeric", month: "short" })} – ${weekEnd.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}`)
       : `${MONTH_NAMES_TH[selectedMonthStart.month]} ${selectedMonthStart.year}`;
 
     const cells = [];
-    if (calendarDisplayMode === "month") {
-      for (let i = 0; i < selectedMonthStart.firstDay.getDay(); i += 1) cells.push('<div class="calendar-day calendar-day-empty"></div>');
-    }
-    const datesToRender = [];
     if (calendarDisplayMode === "week") {
-      for (let offset = 0; offset < 7; offset += 1) { const date = new Date(weekStart); date.setDate(weekStart.getDate() + offset); datesToRender.push(date); }
+      const comparisonDates = Array.from({ length: isMobileDayView ? 1 : 7 }, (_, offset) => {
+        const date = new Date(isMobileDayView ? selectedDay : weekStart);
+        date.setDate(date.getDate() + offset);
+        return date;
+      });
+      const visibleRooms = meetingRooms.filter((room) => calendarRoomFilterValue === "all" || room.id === calendarRoomFilterValue);
+      cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
+      comparisonDates.forEach((date) => {
+        const dateKey = toDateKey(date);
+        cells.push(`<div class="meeting-week-date${dateKey === todayKey ? " is-today" : ""}"><span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span><strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>${dateKey === todayKey ? '<small>วันนี้</small>' : ""}</div>`);
+      });
+      visibleRooms.forEach((room) => {
+        cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
+        comparisonDates.forEach((date) => {
+          const dateKey = toDateKey(date);
+          const items = (periodBookings[dateKey] || []).filter((item) => item.roomId === room.id);
+          const events = items.map((item) => `<div class="calendar-event ${calendarStatusClass(item.status)}" title="${escapeText(`${room.name} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`)}">${escapeText(`${item.startTime || "-"}–${item.endTime || "-"}`)}</div>`).join("");
+          cells.push(`<div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}</div>`);
+        });
+      });
+      calendarPanel.classList.add("is-week-view", "meeting-week-matrix");
+      calendarPanel.closest(".calendar-grid-scroll")?.classList.add("is-week-matrix");
     } else {
+      for (let i = 0; i < selectedMonthStart.firstDay.getDay(); i += 1) cells.push('<div class="calendar-day calendar-day-empty"></div>');
+      const datesToRender = [];
       const daysInMonth = new Date(selectedMonthStart.year, selectedMonthStart.month + 1, 0).getDate();
       for (let day = 1; day <= daysInMonth; day += 1) datesToRender.push(new Date(selectedMonthStart.year, selectedMonthStart.month, day));
-    }
-    datesToRender.forEach((date) => {
+      datesToRender.forEach((date) => {
       const day = date.getDate();
       const dateKey = toDateKey(date);
       const items = periodBookings[dateKey] || [];
@@ -419,7 +449,10 @@
           ${eventRows}
         </div>
       `);
-    });
+      });
+      calendarPanel.classList.remove("meeting-week-matrix");
+      calendarPanel.closest(".calendar-grid-scroll")?.classList.remove("is-week-matrix");
+    }
 
     calendarPanel.classList.toggle("is-week-view", calendarDisplayMode === "week");
     calendarPanel.innerHTML = cells.join("");
@@ -583,7 +616,7 @@
 
   if (prevBtn) {
     prevBtn.addEventListener("click", () => {
-      calendarCursor = calendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+      calendarCursor = calendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - (isMobilePublicCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
       subscribeBookings();
       renderCalendar();
     });
@@ -591,7 +624,7 @@
 
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
-      calendarCursor = calendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + 7) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+      calendarCursor = calendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + (isMobilePublicCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
       subscribeBookings();
       renderCalendar();
     });
@@ -607,14 +640,33 @@
   }
 
   const setCalendarDisplayMode = (mode) => {
-    calendarDisplayMode = mode === "week" ? "week" : "month";
+    const nextMode = mode === "week" ? "week" : "month";
+    if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
+    calendarDisplayMode = nextMode;
     monthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
     weekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
     renderCalendar();
   };
+  const syncPublicCalendarResponsiveMode = () => {
+    if (weekViewBtn) weekViewBtn.textContent = isMobilePublicCalendar() ? "รายวัน" : "เปรียบเทียบห้อง";
+    if (isMobilePublicCalendar() && calendarDisplayMode !== "week") {
+      setCalendarDisplayMode("week");
+      return;
+    }
+    if (calendarDisplayMode === "week") renderCalendar();
+  };
+  window.matchMedia?.("(max-width: 720px)").addEventListener?.("change", syncPublicCalendarResponsiveMode);
+  syncPublicCalendarResponsiveMode();
   monthViewBtn?.addEventListener("click", () => setCalendarDisplayMode("month"));
   weekViewBtn?.addEventListener("click", () => setCalendarDisplayMode("week"));
   roomFilterEl?.addEventListener("change", () => { calendarRoomFilterValue = roomFilterEl.value || "all"; renderCalendar(); });
+  calendarDateJumpEl?.addEventListener("change", () => {
+    const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
+    if (Number.isNaN(nextDate.getTime())) return;
+    calendarCursor = nextDate;
+    calendarDisplayMode = "week";
+    renderCalendar();
+  });
 
   calendarPanel.addEventListener("click", (event) => {
     const target = event.target;

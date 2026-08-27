@@ -875,6 +875,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .mobile-meeting-action-bar.is-visible {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .mobile-dashboard-action-bar.is-visible {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
