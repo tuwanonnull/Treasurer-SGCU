@@ -38,6 +38,28 @@ function initStaffAccessPages() {
   const approvalPendingPanelEl = document.getElementById("staffApprovalPendingPanel");
   const approvalShowPendingBtnEl = document.getElementById("staffApprovalShowPendingBtn");
   const approvalShowHistoryBtnEl = document.getElementById("staffApprovalShowHistoryBtn");
+  const staffManagementPeopleTabEl = document.getElementById("staffManagementPeopleTab");
+  const staffManagementPositionTabEl = document.getElementById("staffManagementPositionTab");
+  const staffPositionSettingsViewEl = document.getElementById("staffPositionSettingsView");
+  const staffApprovalSearchInputEl = document.getElementById("staffApprovalSearchInput");
+  const staffApprovalDivisionFilterEl = document.getElementById("staffApprovalDivisionFilter");
+  const staffApprovalPositionFilterEl = document.getElementById("staffApprovalPositionFilter");
+  const staffApprovalSortFilterEl = document.getElementById("staffApprovalSortFilter");
+  const staffApprovalFilterResetBtnEl = document.getElementById("staffApprovalFilterResetBtn");
+  const staffApprovalSelectAllEl = document.getElementById("staffApprovalSelectAll");
+  const staffApprovalSelectionToggleBtnEl = document.getElementById("staffApprovalSelectionToggleBtn");
+  const staffApprovalPendingContentEl = document.getElementById("staffApprovalPendingContent");
+  const staffApprovalBulkBarEl = document.getElementById("staffApprovalBulkBar");
+  const staffApprovalBulkCountEl = document.getElementById("staffApprovalBulkCount");
+  const staffApprovalBulkClearBtnEl = document.getElementById("staffApprovalBulkClearBtn");
+  const staffApprovalBulkDeleteBtnEl = document.getElementById("staffApprovalBulkDeleteBtn");
+  const staffCurrentSelectAllEl = document.getElementById("staffCurrentSelectAll");
+  const staffCurrentSelectionToggleBtnEl = document.getElementById("staffCurrentSelectionToggleBtn");
+  const staffCurrentBulkBarEl = document.getElementById("staffCurrentBulkBar");
+  const staffCurrentBulkCountEl = document.getElementById("staffCurrentBulkCount");
+  const staffCurrentBulkClearBtnEl = document.getElementById("staffCurrentBulkClearBtn");
+  const staffCurrentBulkRevokeBtnEl = document.getElementById("staffCurrentBulkRevokeBtn");
+  const staffBulkDeleteConfirmModalEl = document.getElementById("staffBulkDeleteConfirmModal");
   const staffApprovalPendingCountEl = document.getElementById("staffApprovalPendingCount");
   const staffApprovalApprovedCountEl = document.getElementById("staffApprovalApprovedCount");
   const staffApprovalPositionCountEl = document.getElementById("staffApprovalPositionCount");
@@ -135,6 +157,9 @@ function initStaffAccessPages() {
 
   if (approvalDetailModalEl && approvalDetailModalEl.parentElement !== document.body) {
     document.body.appendChild(approvalDetailModalEl);
+  }
+  if (staffBulkDeleteConfirmModalEl && staffBulkDeleteConfirmModalEl.parentElement !== document.body) {
+    document.body.appendChild(staffBulkDeleteConfirmModalEl);
   }
 
   const positionManageFormEl = document.getElementById("staffPositionManageForm");
@@ -320,6 +345,18 @@ function initStaffAccessPages() {
   let currentEditingPositionId = "";
   let appFormStatusLocked = false;
   let currentApprovalView = "pending";
+  let currentStaffManagementView = "people";
+  const staffApprovalFilters = {
+    query: "",
+    division: "all",
+    position: "all",
+    sort: "newest"
+  };
+  let staffApprovalPositionDivisionMap = new Map();
+  const selectedPendingApplicationIds = new Set();
+  let visiblePendingApplicationIds = [];
+  const selectedCurrentStaffKeys = new Set();
+  let visibleCurrentStaffKeys = [];
   let currentApprovalType = "staff";
   let currentStaffApprovalMainTab = "approval";
   let currentOrgRepresentativeView = "overview";
@@ -364,14 +401,30 @@ function initStaffAccessPages() {
       approvalShowHistoryBtnEl.classList.toggle("is-active", !showPending);
       approvalShowHistoryBtnEl.setAttribute("aria-selected", showPending ? "false" : "true");
     }
+    if (showPending) renderApprovalRows();
+    else renderApprovedHistory();
   };
 
   const syncStaffPositionPanelVisibility = () => {
-    const showOrg = currentApprovalType === "org";
-    const showApproval = currentStaffApprovalMainTab === "approval";
-    const shouldShow = !showOrg && showApproval;
+    const shouldShow = currentStaffManagementView === "positions";
     if (positionManagePanelEl) positionManagePanelEl.style.display = shouldShow ? "" : "none";
     if (positionListPanelEl) positionListPanelEl.style.display = shouldShow ? "" : "none";
+  };
+
+  const setStaffManagementView = (view = "people") => {
+    currentStaffManagementView = view === "positions" ? "positions" : "people";
+    const showPeople = currentStaffManagementView === "people";
+    if (staffApprovalMainPanelEl) staffApprovalMainPanelEl.hidden = !showPeople;
+    if (staffPositionSettingsViewEl) staffPositionSettingsViewEl.hidden = showPeople;
+    if (staffManagementPeopleTabEl) {
+      staffManagementPeopleTabEl.classList.toggle("is-active", showPeople);
+      staffManagementPeopleTabEl.setAttribute("aria-selected", showPeople ? "true" : "false");
+    }
+    if (staffManagementPositionTabEl) {
+      staffManagementPositionTabEl.classList.toggle("is-active", !showPeople);
+      staffManagementPositionTabEl.setAttribute("aria-selected", showPeople ? "false" : "true");
+    }
+    syncStaffPositionPanelVisibility();
   };
 
   const setStaffApprovalMainTab = (tab = "approval") => {
@@ -379,7 +432,9 @@ function initStaffAccessPages() {
     const showApproval = currentStaffApprovalMainTab === "approval";
     const showStructure = currentStaffApprovalMainTab === "structure";
     const showAuthAccess = currentStaffApprovalMainTab === "auth-access";
-    if (staffApprovalMainPanelEl) staffApprovalMainPanelEl.hidden = false;
+    if (staffApprovalMainPanelEl) {
+      staffApprovalMainPanelEl.hidden = showApproval && currentStaffManagementView !== "people";
+    }
     if (staffStructurePanelEl) staffStructurePanelEl.hidden = false;
     if (staffAuthAccessPanelEl) staffAuthAccessPanelEl.hidden = false;
     if (staffApprovalMainApprovalTabEl) {
@@ -2710,20 +2765,258 @@ function initStaffAccessPages() {
       .join("");
   };
 
+  const getStaffApprovalItemPositions = (item = {}, isHistory = false) => {
+    if (isHistory && Array.isArray(item.approvedItems)) {
+      return item.approvedItems
+        .map((entry) => normalizePositionText(entry?.position || ""))
+        .filter(Boolean);
+    }
+    return [normalizePositionText(item.requestedPosition || item.approvedPosition || "")].filter(Boolean);
+  };
+
+  const getStaffApprovalItemDivisions = (item = {}, isHistory = false) => {
+    const codes = new Set();
+    getStaffApprovalItemPositions(item, isHistory).forEach((position) => {
+      const meta = findPositionAccessMeta(position, "", "");
+      const yy = normalizeCode2(meta?.divisionCodeYY || meta?.yy || "");
+      if (yy) codes.add(yy);
+    });
+    if (isHistory && Array.isArray(item.approvedItems)) {
+      item.approvedItems.forEach((entry) => {
+        const match = (entry?.code || "").toString().match(/\.10\.(\d{2})\./);
+        if (match?.[1]) codes.add(normalizeCode2(match[1]));
+      });
+    }
+    return Array.from(codes);
+  };
+
+  const getStaffApprovalPositionDivision = (position = "", code = "") => {
+    const meta = findPositionAccessMeta(position, "", "");
+    const catalogYY = normalizeCode2(meta?.divisionCodeYY || meta?.yy || "");
+    if (catalogYY) return catalogYY;
+    const codeMatch = (code || "").toString().match(/\.10\.(\d{2})\./);
+    return codeMatch?.[1] ? normalizeCode2(codeMatch[1]) : "";
+  };
+
+  const getStaffApprovalItemTime = (item = {}) => {
+    const value = item.primaryUpdatedAt || item.updatedAt || item.createdAt || null;
+    if (typeof value?.toMillis === "function") return value.toMillis();
+    const time = new Date(value || 0).getTime();
+    return Number.isFinite(time) ? time : 0;
+  };
+
+  const renderStaffApprovalFilterOptions = (items = [], isHistory = false) => {
+    const allPositions = Array.from(
+      new Set(items.flatMap((item) => getStaffApprovalItemPositions(item, isHistory)))
+    ).sort((a, b) => a.localeCompare(b, "th"));
+    const divisions = Array.from(
+      new Set(items.flatMap((item) => getStaffApprovalItemDivisions(item, isHistory)))
+    ).sort();
+    const positionDivisionMap = new Map();
+    items.forEach((item) => {
+      if (isHistory && Array.isArray(item.approvedItems)) {
+        item.approvedItems.forEach((entry) => {
+          const position = normalizePositionText(entry?.position || "");
+          const division = getStaffApprovalPositionDivision(position, entry?.code || "");
+          if (position && division) positionDivisionMap.set(position, division);
+        });
+        return;
+      }
+      const position = normalizePositionText(item.requestedPosition || item.approvedPosition || "");
+      const division = getStaffApprovalPositionDivision(position, item.approvedPositionCode || "");
+      if (position && division) positionDivisionMap.set(position, division);
+    });
+    staffApprovalPositionDivisionMap = positionDivisionMap;
+    const positions = staffApprovalFilters.division === "all"
+      ? allPositions
+      : allPositions.filter((position) => positionDivisionMap.get(position) === staffApprovalFilters.division);
+    if (staffApprovalPositionFilterEl) {
+      const current = staffApprovalFilters.position;
+      staffApprovalPositionFilterEl.innerHTML = [
+        '<option value="all">ทุกตำแหน่ง</option>',
+        ...positions.map((position) => `<option value="${toSafeText(position)}">${toSafeText(position)}</option>`)
+      ].join("");
+      staffApprovalPositionFilterEl.value = positions.includes(current) ? current : "all";
+      staffApprovalFilters.position = staffApprovalPositionFilterEl.value;
+    }
+    if (staffApprovalDivisionFilterEl) {
+      const current = staffApprovalFilters.division;
+      staffApprovalDivisionFilterEl.innerHTML = [
+        '<option value="all">ทุกฝ่าย</option>',
+        ...divisions.map((code) => `<option value="${toSafeText(code)}">${toSafeText(`${code} · ${divisionCodeLabel(code)}`)}</option>`)
+      ].join("");
+      staffApprovalDivisionFilterEl.value = divisions.includes(current) ? current : "all";
+      staffApprovalFilters.division = staffApprovalDivisionFilterEl.value;
+    }
+  };
+
+  const filterAndSortStaffApprovalItems = (items = [], isHistory = false) => {
+    const isActiveView = isHistory
+      ? currentApprovalView === "history"
+      : currentApprovalView === "pending";
+    if (isActiveView) renderStaffApprovalFilterOptions(items, isHistory);
+    const query = staffApprovalFilters.query.toLocaleLowerCase("th");
+    const filtered = items.filter((item) => {
+      const positions = getStaffApprovalItemPositions(item, isHistory);
+      const divisions = getStaffApprovalItemDivisions(item, isHistory);
+      const codes = isHistory && Array.isArray(item.approvedItems)
+        ? item.approvedItems.map((entry) => (entry?.code || "").toString())
+        : [];
+      const haystack = [
+        item.applicantName,
+        item.applicantNick,
+        item.applicantEmail,
+        item.applicantUid,
+        ...positions,
+        ...codes
+      ].join(" ").toLocaleLowerCase("th");
+      return (!query || haystack.includes(query)) &&
+        (staffApprovalFilters.division === "all" || divisions.includes(staffApprovalFilters.division)) &&
+        (staffApprovalFilters.position === "all" || positions.includes(staffApprovalFilters.position));
+    });
+    return filtered.sort((a, b) => {
+      if (staffApprovalFilters.sort === "name") {
+        return (a.applicantName || "").toString().localeCompare((b.applicantName || "").toString(), "th");
+      }
+      const delta = getStaffApprovalItemTime(a) - getStaffApprovalItemTime(b);
+      return staffApprovalFilters.sort === "oldest" ? delta : -delta;
+    });
+  };
+
+  const syncPendingBulkSelectionUi = () => {
+    const selectedCount = selectedPendingApplicationIds.size;
+    if (staffApprovalBulkBarEl) staffApprovalBulkBarEl.hidden = selectedCount === 0;
+    if (staffApprovalBulkCountEl) staffApprovalBulkCountEl.textContent = `เลือกแล้ว ${selectedCount} รายการ`;
+    if (staffApprovalSelectAllEl) {
+      const selectedVisibleCount = visiblePendingApplicationIds.filter((id) => selectedPendingApplicationIds.has(id)).length;
+      staffApprovalSelectAllEl.checked = visiblePendingApplicationIds.length > 0 && selectedVisibleCount === visiblePendingApplicationIds.length;
+      staffApprovalSelectAllEl.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visiblePendingApplicationIds.length;
+      staffApprovalSelectAllEl.disabled = visiblePendingApplicationIds.length === 0;
+    }
+    approvalBodyEl?.querySelectorAll(".staff-approval-row-select").forEach((checkbox) => {
+      if (!(checkbox instanceof HTMLInputElement)) return;
+      checkbox.checked = selectedPendingApplicationIds.has((checkbox.dataset.applicationId || "").toString());
+    });
+  };
+
+  const clearPendingBulkSelection = () => {
+    selectedPendingApplicationIds.clear();
+    syncPendingBulkSelectionUi();
+  };
+
+  const syncCurrentStaffBulkSelectionUi = () => {
+    const selectedCount = selectedCurrentStaffKeys.size;
+    if (staffCurrentBulkBarEl) staffCurrentBulkBarEl.hidden = selectedCount === 0;
+    if (staffCurrentBulkCountEl) staffCurrentBulkCountEl.textContent = `เลือกแล้ว ${selectedCount} คน`;
+    if (staffCurrentSelectAllEl) {
+      const selectedVisibleCount = visibleCurrentStaffKeys.filter((key) => selectedCurrentStaffKeys.has(key)).length;
+      staffCurrentSelectAllEl.checked = visibleCurrentStaffKeys.length > 0 && selectedVisibleCount === visibleCurrentStaffKeys.length;
+      staffCurrentSelectAllEl.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleCurrentStaffKeys.length;
+      staffCurrentSelectAllEl.disabled = visibleCurrentStaffKeys.length === 0;
+    }
+    approvalHistoryBodyEl?.querySelectorAll(".staff-current-row-select").forEach((checkbox) => {
+      if (!(checkbox instanceof HTMLInputElement)) return;
+      checkbox.checked = selectedCurrentStaffKeys.has((checkbox.dataset.staffKey || "").toString());
+    });
+  };
+
+  const clearCurrentStaffBulkSelection = () => {
+    selectedCurrentStaffKeys.clear();
+    syncCurrentStaffBulkSelectionUi();
+  };
+
+  const setBulkSelectionMode = (mode, enabled) => {
+    const isCurrent = mode === "current";
+    const contentEl = isCurrent ? approvalHistoryContentEl : staffApprovalPendingContentEl;
+    const toggleBtnEl = isCurrent ? staffCurrentSelectionToggleBtnEl : staffApprovalSelectionToggleBtnEl;
+    contentEl?.classList.toggle("is-selection-mode", enabled);
+    if (toggleBtnEl) {
+      toggleBtnEl.setAttribute("aria-pressed", enabled ? "true" : "false");
+      toggleBtnEl.textContent = enabled ? "เสร็จสิ้น" : "เลือกหลายรายการ";
+    }
+    if (!enabled) {
+      if (isCurrent) clearCurrentStaffBulkSelection();
+      else clearPendingBulkSelection();
+    }
+  };
+
+  const askPendingBulkDeleteConfirm = (count, mode = "pending") => {
+    const modalEl = staffBulkDeleteConfirmModalEl;
+    const textEl = document.getElementById("staffBulkDeleteConfirmText");
+    const submitEl = document.getElementById("staffBulkDeleteConfirmSubmit");
+    const cancelEl = document.getElementById("staffBulkDeleteConfirmCancel");
+    const closeEl = document.getElementById("staffBulkDeleteConfirmClose");
+    const titleEl = document.getElementById("staffBulkDeleteConfirmTitle");
+    const noteEl = document.getElementById("staffBulkDeleteConfirmNote");
+    const isRevoke = mode === "revoke";
+    if (titleEl) titleEl.textContent = isRevoke ? "ยืนยันเพิกถอนสิทธิ์สตาฟ" : "ยืนยันลบคำขอ";
+    if (textEl) textEl.textContent = isRevoke
+      ? `ต้องการเพิกถอนสิทธิ์สตาฟของผู้ที่เลือก ${count} คนใช่หรือไม่`
+      : `ต้องการลบคำขอที่เลือก ${count} รายการใช่หรือไม่`;
+    if (noteEl) noteEl.textContent = isRevoke
+      ? "ตำแหน่งและสิทธิ์เข้าใช้ Staff ทั้งหมดของผู้ที่เลือกจะถูกลบ แต่ Activity Log จะยังคงอยู่"
+      : "การดำเนินการนี้ลบเฉพาะใบสมัครที่รออนุมัติ และไม่กระทบบัญชีสตาฟที่อนุมัติแล้ว";
+    if (submitEl) submitEl.textContent = isRevoke ? "ยืนยันเพิกถอนสิทธิ์" : "ยืนยันลบคำขอ";
+    if (!modalEl || !(submitEl instanceof HTMLButtonElement) || !(cancelEl instanceof HTMLButtonElement) || !(closeEl instanceof HTMLButtonElement)) {
+      return Promise.resolve(window.confirm(isRevoke
+        ? `ยืนยันเพิกถอนสิทธิ์สตาฟที่เลือก ${count} คน?`
+        : `ยืนยันลบคำขอที่เลือก ${count} รายการ?`));
+    }
+    return new Promise((resolve) => {
+      const cleanup = () => {
+        submitEl.removeEventListener("click", onSubmit);
+        cancelEl.removeEventListener("click", onCancel);
+        closeEl.removeEventListener("click", onCancel);
+        modalEl.removeEventListener("click", onBackdrop);
+        modalEl.removeEventListener("keydown", onKeydown);
+      };
+      const finish = (value) => {
+        cleanup();
+        if (typeof closeDialog === "function") closeDialog(modalEl);
+        else {
+          modalEl.classList.remove("show");
+          modalEl.setAttribute("aria-hidden", "true");
+        }
+        resolve(value);
+      };
+      const onSubmit = () => finish(true);
+      const onCancel = () => finish(false);
+      const onBackdrop = (event) => { if (event.target === modalEl) onCancel(); };
+      const onKeydown = (event) => { if (event.key === "Escape") onCancel(); };
+      submitEl.addEventListener("click", onSubmit);
+      cancelEl.addEventListener("click", onCancel);
+      closeEl.addEventListener("click", onCancel);
+      modalEl.addEventListener("click", onBackdrop);
+      modalEl.addEventListener("keydown", onKeydown);
+      if (typeof openDialog === "function") openDialog(modalEl, { focusSelector: "#staffBulkDeleteConfirmCancel" });
+      else {
+        modalEl.classList.add("show");
+        modalEl.setAttribute("aria-hidden", "false");
+      }
+    });
+  };
+
   const renderApprovalRows = () => {
     if (!approvalBodyEl || !approvalCaptionEl) return;
 
     try {
-      approvalCaptionEl.textContent = `แสดงผล ${currentPendingApplications.length} รายการ`;
+      const filteredApplications = filterAndSortStaffApprovalItems(currentPendingApplications, false);
+      const validPendingIds = new Set(currentPendingApplications.map((item) => (item.id || "").toString()).filter(Boolean));
+      Array.from(selectedPendingApplicationIds).forEach((id) => {
+        if (!validPendingIds.has(id)) selectedPendingApplicationIds.delete(id);
+      });
+      visiblePendingApplicationIds = filteredApplications.map((item) => (item.id || "").toString()).filter(Boolean);
+      approvalCaptionEl.textContent = `แสดงผล ${filteredApplications.length} จาก ${currentPendingApplications.length} รายการ`;
       setMessage(approvalMessageEl, "", "#6b7280");
-      if (!currentPendingApplications.length) {
-        approvalBodyEl.innerHTML = '<tr><td colspan="4">ไม่มีคำขอที่รออนุมัติ</td></tr>';
+      if (!filteredApplications.length) {
+        approvalBodyEl.innerHTML = `<tr><td colspan="5">${currentPendingApplications.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ไม่มีคำขอที่รออนุมัติ"}</td></tr>`;
+        syncPendingBulkSelectionUi();
         refreshSummaryCounts();
         syncApprovalPanelCaption();
         return;
       }
 
-      approvalBodyEl.innerHTML = currentPendingApplications
+      approvalBodyEl.innerHTML = filteredApplications
         .map((item) => {
           const id = (item.id || "").toString();
           const applicantEmail = (item.applicantEmail || "").toString().trim().toLowerCase();
@@ -2740,6 +3033,9 @@ function initStaffAccessPages() {
               data-applicant-name="${toSafeText(applicantName)}"
               data-applicant-nick="${toSafeText(applicantNick)}"
             >
+              <td class="staff-bulk-select-cell" data-label="เลือก">
+                <input class="staff-approval-row-select" type="checkbox" data-application-id="${toSafeText(id)}" aria-label="เลือกคำขอของ ${toSafeText(applicantName)}" ${selectedPendingApplicationIds.has(id) ? "checked" : ""} />
+              </td>
               <td data-label="ผู้สมัคร">
                 <div>${toSafeText(applicantName)}</div>
                 <div class="section-text-sm">${toSafeText(applicantEmail || "-")}</div>
@@ -2772,11 +3068,12 @@ function initStaffAccessPages() {
           `;
         })
         .join("");
+      syncPendingBulkSelectionUi();
       refreshSummaryCounts();
       syncApprovalPanelCaption();
     } catch (error) {
       console.error("renderApprovalRows failed - app.staff-access.js:2421", error);
-      approvalBodyEl.innerHTML = `<tr><td colspan="4">แสดงผลคำขอไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
+      approvalBodyEl.innerHTML = `<tr><td colspan="5">แสดงผลคำขอไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
       setMessage(approvalMessageEl, "แสดงผลคำขอไม่สำเร็จ กรุณาลองใหม่", "#b91c1c");
     }
   };
@@ -2856,18 +3153,25 @@ function initStaffAccessPages() {
         return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
       });
 
-      approvalHistoryCaptionEl.textContent = `แสดงผล ${currentApprovedHistoryGrouped.length} รายการ`;
+      const filteredHistory = filterAndSortStaffApprovalItems(currentApprovedHistoryGrouped, true);
+      const validStaffKeys = new Set(currentApprovedHistoryGrouped.map((item) => (item.key || "").toString()).filter(Boolean));
+      Array.from(selectedCurrentStaffKeys).forEach((key) => {
+        if (!validStaffKeys.has(key)) selectedCurrentStaffKeys.delete(key);
+      });
+      visibleCurrentStaffKeys = filteredHistory.map((item) => (item.key || "").toString()).filter(Boolean);
+      approvalHistoryCaptionEl.textContent = `แสดงผล ${filteredHistory.length} จาก ${currentApprovedHistoryGrouped.length} รายการ`;
       if (!currentPendingApplications.length) {
         setMessage(approvalMessageEl, "", "#6b7280");
       }
-      if (!currentApprovedHistoryGrouped.length) {
-        approvalHistoryBodyEl.innerHTML = '<tr><td colspan="3">ยังไม่มีรายการที่อนุมัติ</td></tr>';
+      if (!filteredHistory.length) {
+        approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">${currentApprovedHistoryGrouped.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ยังไม่มีรายการที่อนุมัติ"}</td></tr>`;
+        syncCurrentStaffBulkSelectionUi();
         refreshSummaryCounts();
         syncApprovalPanelCaption();
         return;
       }
 
-      approvalHistoryBodyEl.innerHTML = currentApprovedHistoryGrouped
+      approvalHistoryBodyEl.innerHTML = filteredHistory
         .map((item) => {
           const id = (item.primaryApplicationId || "").toString();
           const approvedPosition = (item.approvedPosition || "-").toString();
@@ -2885,6 +3189,9 @@ function initStaffAccessPages() {
             : `<span class="staff-approval-history-code">-</span>`;
           return `
             <tr class="staff-approval-history-row" data-application-id="${toSafeText(id)}" data-staff-key="${toSafeText(item.key || "")}">
+              <td class="staff-bulk-select-cell" data-label="เลือก">
+                <input class="staff-current-row-select" type="checkbox" data-staff-key="${toSafeText(item.key || "")}" aria-label="เลือกสตาฟ ${toSafeText(applicantName)}" ${selectedCurrentStaffKeys.has((item.key || "").toString()) ? "checked" : ""} />
+              </td>
               <td data-label="ผู้ที่ถูกอนุมัติ">
                 <div>${toSafeText(applicantName)}</div>
                 <div class="section-text-sm">${toSafeText(applicantEmail)}</div>
@@ -2895,12 +3202,13 @@ function initStaffAccessPages() {
           `;
         })
         .join("");
+      syncCurrentStaffBulkSelectionUi();
 
       refreshSummaryCounts();
       syncApprovalPanelCaption();
     } catch (error) {
       console.error("renderApprovedHistory failed - app.staff-access.js:2545", error);
-      approvalHistoryBodyEl.innerHTML = `<tr><td colspan="3">แสดงผลรายชื่อไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
+      approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">แสดงผลรายชื่อไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
     }
   };
 
@@ -6507,6 +6815,8 @@ function initStaffAccessPages() {
         renderPositionDatalist();
         renderApplicationPositionSelect();
         renderPositionCatalog();
+        if (currentApprovalView === "history") renderApprovedHistory();
+        else renderApprovalRows();
         if (positionAllowedPagesEl && !positionAllowedPagesEl.children.length) {
           renderPositionAllowedPageOptions([], "");
         }
@@ -6642,7 +6952,7 @@ function initStaffAccessPages() {
     }
     if (!getCurrentAuthEmail()) {
       currentApprovedHistory = [];
-      approvalHistoryBodyEl.innerHTML = `<tr><td colspan="3">กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้</td></tr>`;
+      approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้</td></tr>`;
       return;
     }
 
@@ -6682,7 +6992,7 @@ function initStaffAccessPages() {
         const msg = code === "unauthenticated"
           ? "กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้"
           : buildListenerErrorText("ไม่สามารถโหลดรายชื่อผู้ปฏิบัติงานตอนนี้ได้ในขณะนี้", error);
-        approvalHistoryBodyEl.innerHTML = `<tr><td colspan="3">${toSafeText(msg)}</td></tr>`;
+        approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">${toSafeText(msg)}</td></tr>`;
       }
     );
   };
@@ -7820,6 +8130,152 @@ function initStaffAccessPages() {
     }
   };
 
+  const deleteSelectedPendingApplications = async () => {
+    if (!resolveStore()) {
+      setMessage(approvalMessageEl, "ระบบฐานข้อมูลยังไม่พร้อมใช้งาน", "#b91c1c");
+      return false;
+    }
+    if (!isSuperStaff()) {
+      setMessage(approvalMessageEl, "หน้านี้สำหรับหัวหน้าสตาฟเท่านั้น", "#b91c1c");
+      return false;
+    }
+    const targets = currentPendingApplications.filter((item) =>
+      selectedPendingApplicationIds.has((item.id || "").toString())
+    );
+    if (!targets.length) {
+      clearPendingBulkSelection();
+      return false;
+    }
+    const confirmed = await askPendingBulkDeleteConfirm(targets.length);
+    if (!confirmed) return false;
+
+    if (staffApprovalBulkDeleteBtnEl) staffApprovalBulkDeleteBtnEl.disabled = true;
+    try {
+      for (let index = 0; index < targets.length; index += 400) {
+        const chunk = targets.slice(index, index + 400);
+        if (firestore.writeBatch) {
+          const batch = firestore.writeBatch(firestore.db);
+          chunk.forEach((item) => {
+            batch.delete(firestore.doc(firestore.db, COLLECTION_APPLICATIONS, (item.id || "").toString()));
+          });
+          await batch.commit();
+        } else {
+          await Promise.all(chunk.map((item) =>
+            firestore.deleteDoc(firestore.doc(firestore.db, COLLECTION_APPLICATIONS, (item.id || "").toString()))
+          ));
+        }
+      }
+      targets.forEach((item) => {
+        void window.sgcuAuditLog?.write?.({
+          action: "staff.application.delete",
+          entityType: "staffApplication",
+          entityId: (item.id || "").toString(),
+          before: item,
+          metadata: { bulkDelete: true, bulkCount: targets.length },
+          source: "web_app_staff"
+        });
+      });
+      const deletedIds = new Set(targets.map((item) => (item.id || "").toString()));
+      currentPendingApplications = currentPendingApplications.filter((item) => !deletedIds.has((item.id || "").toString()));
+      clearPendingBulkSelection();
+      renderApprovalRows();
+      setMessage(approvalMessageEl, `ลบคำขอ ${targets.length} รายการเรียบร้อยแล้ว`, "#047857");
+      return true;
+    } catch (error) {
+      console.error("bulk delete pending staff applications failed", error);
+      const code = (error?.code || "unknown").toString();
+      const message = code === "permission-denied"
+        ? "ไม่มีสิทธิ์ลบคำขอที่เลือก (permission-denied)"
+        : code === "unauthenticated"
+          ? "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
+          : "ลบคำขอที่เลือกไม่สำเร็จ กรุณาลองใหม่";
+      setMessage(approvalMessageEl, message, "#b91c1c");
+      return false;
+    } finally {
+      if (staffApprovalBulkDeleteBtnEl) staffApprovalBulkDeleteBtnEl.disabled = false;
+    }
+  };
+
+  const revokeSelectedCurrentStaff = async () => {
+    if (!resolveStore()) {
+      setMessage(approvalMessageEl, "ระบบฐานข้อมูลยังไม่พร้อมใช้งาน", "#b91c1c");
+      return false;
+    }
+    if (!isSuperStaff()) {
+      setMessage(approvalMessageEl, "หน้านี้สำหรับหัวหน้าสตาฟเท่านั้น", "#b91c1c");
+      return false;
+    }
+    const targets = currentApprovedHistoryGrouped.filter((item) =>
+      selectedCurrentStaffKeys.has((item.key || "").toString())
+    );
+    if (!targets.length) {
+      clearCurrentStaffBulkSelection();
+      return false;
+    }
+    const confirmed = await askPendingBulkDeleteConfirm(targets.length, "revoke");
+    if (!confirmed) return false;
+
+    if (staffCurrentBulkRevokeBtnEl) staffCurrentBulkRevokeBtnEl.disabled = true;
+    try {
+      const applicationIds = new Set();
+      const profileEmails = new Set();
+      targets.forEach((target) => {
+        const email = (target.applicantEmail || "").toString().trim().toLowerCase();
+        if (email) profileEmails.add(email);
+        (Array.isArray(target.approvedItems) ? target.approvedItems : []).forEach((item) => {
+          const id = (item?.id || "").toString();
+          if (id) applicationIds.add(id);
+        });
+      });
+      const refs = [
+        ...Array.from(applicationIds, (id) => firestore.doc(firestore.db, COLLECTION_APPLICATIONS, id)),
+        ...Array.from(profileEmails, (email) => firestore.doc(firestore.db, COLLECTION_PROFILES, email))
+      ];
+      for (let index = 0; index < refs.length; index += 400) {
+        const chunk = refs.slice(index, index + 400);
+        if (firestore.writeBatch) {
+          const batch = firestore.writeBatch(firestore.db);
+          chunk.forEach((ref) => batch.delete(ref));
+          await batch.commit();
+        } else {
+          await Promise.all(chunk.map((ref) => firestore.deleteDoc(ref)));
+        }
+      }
+      targets.forEach((target) => {
+        (Array.isArray(target.approvedItems) ? target.approvedItems : []).forEach((item) => {
+          void window.sgcuAuditLog?.write?.({
+            action: "staff.application.delete",
+            entityType: "staffApplication",
+            entityId: (item?.id || "").toString(),
+            before: { ...target, approvedItems: undefined },
+            metadata: { bulkRevoke: true, bulkStaffCount: targets.length },
+            source: "web_app_staff"
+          });
+        });
+      });
+      profileEmails.forEach(clearLocalStaffCache);
+      currentApprovedHistory = currentApprovedHistory.filter((item) =>
+        !applicationIds.has((item.id || "").toString())
+      );
+      clearCurrentStaffBulkSelection();
+      renderApprovedHistory();
+      setMessage(approvalMessageEl, `เพิกถอนสิทธิ์สตาฟ ${targets.length} คนเรียบร้อยแล้ว`, "#047857");
+      return true;
+    } catch (error) {
+      console.error("bulk revoke current staff failed", error);
+      const code = (error?.code || "unknown").toString();
+      const message = code === "permission-denied"
+        ? "ไม่มีสิทธิ์เพิกถอนสตาฟที่เลือก (permission-denied)"
+        : code === "unauthenticated"
+          ? "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
+          : "เพิกถอนสิทธิ์สตาฟที่เลือกไม่สำเร็จ กรุณาลองใหม่";
+      setMessage(approvalMessageEl, message, "#b91c1c");
+      return false;
+    } finally {
+      if (staffCurrentBulkRevokeBtnEl) staffCurrentBulkRevokeBtnEl.disabled = false;
+    }
+  };
+
   const handleAuthOrProfileUpdate = (event) => {
     const detail = event?.detail && typeof event.detail === "object" ? event.detail : null;
     if (detail) {
@@ -7847,6 +8303,14 @@ function initStaffAccessPages() {
     startPendingApplicationsListener();
     startApprovedHistoryListener();
     startOrgRepresentativeApplicationsListener();
+    const activeStaffAdminPage =
+      document.querySelector(".page-view.active")?.getAttribute("data-page") ||
+      (window.location.hash || "").replace("#", "");
+    if (activeStaffAdminPage === "staff-directory-staff") {
+      setStaffApprovalMainTab("structure");
+    } else if (activeStaffAdminPage === "staff-temporary-access-staff") {
+      setStaffApprovalMainTab("auth-access");
+    }
     scheduleApprovalUiSync();
   };
 
@@ -7902,7 +8366,17 @@ function initStaffAccessPages() {
     });
 
     approvalBodyEl.addEventListener("change", (event) => {
-      const select = event.target;
+      const target = event.target;
+      if (target instanceof HTMLInputElement && target.classList.contains("staff-approval-row-select")) {
+        const id = (target.dataset.applicationId || "").toString();
+        if (id) {
+          if (target.checked) selectedPendingApplicationIds.add(id);
+          else selectedPendingApplicationIds.delete(id);
+          syncPendingBulkSelectionUi();
+        }
+        return;
+      }
+      const select = target;
       if (!(select instanceof HTMLSelectElement)) return;
       if (select.dataset.role !== "status-select") return;
 
@@ -7944,12 +8418,76 @@ function initStaffAccessPages() {
     });
   }
 
+  staffApprovalSelectAllEl?.addEventListener("change", () => {
+    visiblePendingApplicationIds.forEach((id) => {
+      if (staffApprovalSelectAllEl.checked) selectedPendingApplicationIds.add(id);
+      else selectedPendingApplicationIds.delete(id);
+    });
+    syncPendingBulkSelectionUi();
+  });
+  staffApprovalBulkClearBtnEl?.addEventListener("click", clearPendingBulkSelection);
+  staffApprovalBulkDeleteBtnEl?.addEventListener("click", () => {
+    void deleteSelectedPendingApplications();
+  });
+  staffApprovalSelectionToggleBtnEl?.addEventListener("click", () => {
+    setBulkSelectionMode("pending", !staffApprovalPendingContentEl?.classList.contains("is-selection-mode"));
+  });
+  staffCurrentSelectAllEl?.addEventListener("change", () => {
+    visibleCurrentStaffKeys.forEach((key) => {
+      if (staffCurrentSelectAllEl.checked) selectedCurrentStaffKeys.add(key);
+      else selectedCurrentStaffKeys.delete(key);
+    });
+    syncCurrentStaffBulkSelectionUi();
+  });
+  staffCurrentBulkClearBtnEl?.addEventListener("click", clearCurrentStaffBulkSelection);
+  staffCurrentBulkRevokeBtnEl?.addEventListener("click", () => {
+    void revokeSelectedCurrentStaff();
+  });
+  staffCurrentSelectionToggleBtnEl?.addEventListener("click", () => {
+    setBulkSelectionMode("current", !approvalHistoryContentEl?.classList.contains("is-selection-mode"));
+  });
+
   if (approvalShowPendingBtnEl) {
     approvalShowPendingBtnEl.addEventListener("click", () => setApprovalView("pending"));
   }
   if (approvalShowHistoryBtnEl) {
     approvalShowHistoryBtnEl.addEventListener("click", () => setApprovalView("history"));
   }
+  const rerenderActiveStaffApprovalList = () => {
+    if (currentApprovalView === "history") renderApprovedHistory();
+    else renderApprovalRows();
+  };
+  staffApprovalSearchInputEl?.addEventListener("input", () => {
+    staffApprovalFilters.query = (staffApprovalSearchInputEl.value || "").toString().trim();
+    rerenderActiveStaffApprovalList();
+  });
+  staffApprovalDivisionFilterEl?.addEventListener("change", () => {
+    staffApprovalFilters.division = staffApprovalDivisionFilterEl.value || "all";
+    rerenderActiveStaffApprovalList();
+  });
+  staffApprovalPositionFilterEl?.addEventListener("change", () => {
+    staffApprovalFilters.position = staffApprovalPositionFilterEl.value || "all";
+    const matchingDivision = staffApprovalPositionDivisionMap.get(staffApprovalFilters.position) || "";
+    if (staffApprovalFilters.position !== "all" && matchingDivision) {
+      staffApprovalFilters.division = matchingDivision;
+    }
+    rerenderActiveStaffApprovalList();
+  });
+  staffApprovalSortFilterEl?.addEventListener("change", () => {
+    staffApprovalFilters.sort = staffApprovalSortFilterEl.value || "newest";
+    rerenderActiveStaffApprovalList();
+  });
+  staffApprovalFilterResetBtnEl?.addEventListener("click", () => {
+    staffApprovalFilters.query = "";
+    staffApprovalFilters.division = "all";
+    staffApprovalFilters.position = "all";
+    staffApprovalFilters.sort = "newest";
+    if (staffApprovalSearchInputEl) staffApprovalSearchInputEl.value = "";
+    if (staffApprovalSortFilterEl) staffApprovalSortFilterEl.value = "newest";
+    rerenderActiveStaffApprovalList();
+  });
+  staffManagementPeopleTabEl?.addEventListener("click", () => setStaffManagementView("people"));
+  staffManagementPositionTabEl?.addEventListener("click", () => setStaffManagementView("positions"));
 
   if (staffApprovalMainApprovalTabEl) {
     staffApprovalMainApprovalTabEl.addEventListener("click", () => setStaffApprovalMainTab("approval"));
@@ -8368,6 +8906,7 @@ function initStaffAccessPages() {
     approvalHistoryBodyEl.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
+      if (target.closest("input[type=\"checkbox\"]")) return;
       const rowEl = target.closest("tr.staff-approval-history-row");
       if (!rowEl) return;
       const groupKey = (rowEl.getAttribute("data-staff-key") || "").toString();
@@ -8376,6 +8915,15 @@ function initStaffAccessPages() {
         ? currentApprovedHistoryGrouped.find((entry) => (entry.key || "").toString() === groupKey)
         : currentApprovedHistory.find((entry) => (entry.id || "").toString() === id);
       if (item) openApprovalDetailModal(item);
+    });
+    approvalHistoryBodyEl.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.classList.contains("staff-current-row-select")) return;
+      const key = (target.dataset.staffKey || "").toString();
+      if (!key) return;
+      if (target.checked) selectedCurrentStaffKeys.add(key);
+      else selectedCurrentStaffKeys.delete(key);
+      syncCurrentStaffBulkSelectionUi();
     });
   }
 
@@ -8632,13 +9180,27 @@ function initStaffAccessPages() {
     });
   }
 
+  const activateStaffAdminPage = (page = "") => {
+    if (page === "staff-directory-staff") {
+      setStaffApprovalMainTab("structure");
+    } else if (page === "staff-temporary-access-staff") {
+      setStaffApprovalMainTab("auth-access");
+    } else if (page === "staff-approval") {
+      setStaffApprovalMainTab("approval");
+    } else {
+      return;
+    }
+    scheduleApprovalUiSync();
+  };
+
   window.addEventListener("sgcu:auth-state", handleAuthOrProfileUpdate);
   window.addEventListener("sgcu:user-profile-updated", prefillApplicationForm);
+  window.addEventListener("sgcu:page-active", (event) => {
+    activateStaffAdminPage((event?.detail?.page || "").toString());
+  });
   window.addEventListener("hashchange", () => {
     const page = (window.location.hash || "").replace("#", "");
-    if (page === "staff-directory-staff") setStaffApprovalMainTab("structure");
-    if (page === "staff-temporary-access-staff") setStaffApprovalMainTab("auth-access");
-    if (page === "staff-approval") setStaffApprovalMainTab("approval");
+    activateStaffAdminPage(page);
     if (["staff-approval", "staff-directory-staff", "staff-temporary-access-staff", "org-representative-approval-staff"].includes(page)) {
       scheduleApprovalUiSync();
     }
@@ -8667,6 +9229,7 @@ function initStaffAccessPages() {
   resetAuthAccessForm();
   startOrgRepresentativeApplicationsListener();
   setApprovalView("pending");
+  setStaffManagementView("people");
   const initialStaffPage = (window.location.hash || "").replace("#", "");
   setStaffApprovalMainTab(
     initialStaffPage === "staff-directory-staff"

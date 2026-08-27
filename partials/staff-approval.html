@@ -266,6 +266,14 @@
               <h1 class="page-title">สตาฟและคำขอ</h1>
               <p class="page-subtitle">ตรวจคำขอเข้าร่วม ดูรายชื่อสตาฟปัจจุบัน และจัดการตำแหน่งกับสิทธิ์ประจำ</p>
             </div>
+            <div class="tabs staff-approval-view-toggle staff-approval-page-toggle" role="tablist" aria-label="เลือกส่วนจัดการสตาฟ">
+              <button id="staffManagementPeopleTab" type="button" class="tab-btn view-toggle-btn is-active" role="tab" aria-selected="true">
+                สมาชิกและคำขอ
+              </button>
+              <button id="staffManagementPositionTab" type="button" class="tab-btn view-toggle-btn" role="tab" aria-selected="false">
+                ตั้งค่าตำแหน่ง
+              </button>
+            </div>
           </div>
           <div id="staffApprovalStaffSection">
           <div id="staffApprovalMainPanel" class="staff-approval-main-panel">
@@ -275,21 +283,63 @@
                 <h3 id="staffApprovalPanelTitle" class="panel-title">คำขอที่รออนุมัติ</h3>
                 <p id="staffApprovalPanelCaption" class="panel-caption">แสดงผล 0 รายการ</p>
               </div>
-              <div class="tabs staff-approval-view-toggle" role="tablist" aria-label="เลือกมุมมองคำขอสตาฟ">
+              <div class="tabs staff-approval-view-toggle" role="tablist" aria-label="เลือกมุมมองสมาชิกสตาฟ">
                 <button id="staffApprovalShowPendingBtn" type="button" class="tab-btn view-toggle-btn is-active" role="tab" aria-selected="true">
-                  คำขอที่รออนุมัติ
+                  คำขอเข้าร่วม
                 </button>
                 <button id="staffApprovalShowHistoryBtn" type="button" class="tab-btn view-toggle-btn" role="tab" aria-selected="false">
-                  รายชื่อผู้ปฏิบัติงานตอนนี้
+                  สตาฟปัจจุบัน
                 </button>
               </div>
             </div>
+            <div id="staffApprovalFilters" class="filter-bar staff-member-filter-bar" aria-label="ตัวกรองสมาชิกและคำขอ">
+                <div class="filter-group filter-year">
+                  <label for="staffApprovalDivisionFilter">ฝ่าย</label>
+                  <select id="staffApprovalDivisionFilter">
+                    <option value="all">ทุกฝ่าย</option>
+                  </select>
+                </div>
+                <div class="filter-group filter-orgtype">
+                  <label for="staffApprovalPositionFilter">ตำแหน่ง</label>
+                  <select id="staffApprovalPositionFilter">
+                    <option value="all">ทุกตำแหน่ง</option>
+                  </select>
+                </div>
+                <div class="filter-group filter-org">
+                  <label for="staffApprovalSortFilter">เรียงลำดับ</label>
+                  <select id="staffApprovalSortFilter">
+                    <option value="newest">ใหม่สุดก่อน</option>
+                    <option value="oldest">เก่าสุดก่อน</option>
+                    <option value="name">ชื่อตามตัวอักษร</option>
+                  </select>
+                </div>
+                <div class="filter-group filter-search">
+                  <label for="staffApprovalSearchInput">ค้นหาข้อความ (ชื่อ / อีเมล / ตำแหน่ง / รหัส)</label>
+                  <div class="search-box">
+                    <input id="staffApprovalSearchInput" type="search" placeholder="พิมพ์ชื่อ อีเมล ตำแหน่ง หรือรหัสตำแหน่ง" />
+                    <button id="staffApprovalFilterResetBtn" class="search-clear" type="button" aria-label="ล้างตัวกรองทั้งหมด">✕</button>
+                  </div>
+                </div>
+            </div>
             <div id="staffApprovalPendingContent">
+              <div class="staff-selection-mode-toolbar">
+                <button id="staffApprovalSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false">เลือกหลายรายการ</button>
+              </div>
               <div id="staffApprovalMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
+              <div id="staffApprovalBulkBar" class="staff-bulk-action-bar" hidden>
+                <div><strong id="staffApprovalBulkCount">เลือกแล้ว 0 รายการ</strong><span>ลบเฉพาะคำขอที่ยังรออนุมัติ</span></div>
+                <div class="staff-bulk-action-buttons">
+                  <button id="staffApprovalBulkClearBtn" class="btn-ghost" type="button">ยกเลิกการเลือก</button>
+                  <button id="staffApprovalBulkDeleteBtn" class="btn-primary staff-bulk-delete-btn" type="button">ลบคำขอ</button>
+                </div>
+              </div>
               <div class="project-table-wrapper">
                 <table id="staffApprovalPendingTable">
                   <thead>
                     <tr>
+                      <th class="staff-bulk-select-cell">
+                        <input id="staffApprovalSelectAll" type="checkbox" aria-label="เลือกคำขอทั้งหมดในผลลัพธ์ที่กรอง" />
+                      </th>
                       <th>ผู้สมัคร</th>
                       <th>เวลายื่นคำขอ</th>
                       <th>ตำแหน่งที่ขอ</th>
@@ -297,24 +347,35 @@
                     </tr>
                   </thead>
                   <tbody id="staffApprovalPendingBody">
-                    <tr><td colspan="4">กำลังโหลดข้อมูล...</td></tr>
+                    <tr><td colspan="5">กำลังโหลดข้อมูล...</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
             <div id="staffApprovalHistoryContent" style="display:none;">
+              <div class="staff-selection-mode-toolbar">
+                <button id="staffCurrentSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false">เลือกหลายรายการ</button>
+              </div>
               <p id="staffApprovalHistoryCaption" class="panel-caption" style="display:none;">แสดงผล 0 รายการ</p>
+              <div id="staffCurrentBulkBar" class="staff-bulk-action-bar" hidden>
+                <div><strong id="staffCurrentBulkCount">เลือกแล้ว 0 คน</strong><span>เพิกถอนตำแหน่งและสิทธิ์สตาฟทั้งหมด</span></div>
+                <div class="staff-bulk-action-buttons">
+                  <button id="staffCurrentBulkClearBtn" class="btn-ghost" type="button">ยกเลิกการเลือก</button>
+                  <button id="staffCurrentBulkRevokeBtn" class="btn-primary staff-bulk-delete-btn" type="button">เพิกถอนสิทธิ์</button>
+                </div>
+              </div>
               <div class="project-table-wrapper">
                 <table id="staffApprovalHistoryTable">
                   <thead>
                     <tr>
+                      <th class="staff-bulk-select-cell"><input id="staffCurrentSelectAll" type="checkbox" aria-label="เลือกสตาฟปัจจุบันทั้งหมดในผลลัพธ์ที่กรอง" /></th>
                       <th>ผู้ที่ถูกอนุมัติ</th>
                       <th>ตำแหน่ง</th>
                       <th>รหัสตำแหน่ง</th>
                     </tr>
                   </thead>
                   <tbody id="staffApprovalHistoryBody">
-                    <tr><td colspan="3">กำลังโหลดข้อมูล...</td></tr>
+                    <tr><td colspan="4">กำลังโหลดข้อมูล...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -342,6 +403,29 @@
             </div>
           </div>
 
+          <div id="staffBulkDeleteConfirmModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="staffBulkDeleteConfirmTitle">
+            <div class="modal-dialog">
+              <div class="modal-header">
+                <div>
+                  <div id="staffBulkDeleteConfirmTitle" class="modal-title">ยืนยันลบคำขอ</div>
+                  <div class="modal-subtitle">ตรวจสอบจำนวนรายการก่อนดำเนินการ</div>
+                </div>
+                <button id="staffBulkDeleteConfirmClose" type="button" class="modal-close" aria-label="ปิด">✕</button>
+              </div>
+              <div class="modal-body">
+                <div class="modal-section">
+                  <p id="staffBulkDeleteConfirmText">กำลังเตรียมรายการ...</p>
+                  <p id="staffBulkDeleteConfirmNote" class="section-text-sm">การดำเนินการนี้ลบเฉพาะใบสมัครที่รออนุมัติ และไม่กระทบบัญชีสตาฟที่อนุมัติแล้ว</p>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button id="staffBulkDeleteConfirmCancel" class="btn-ghost" type="button">ยกเลิก</button>
+                <button id="staffBulkDeleteConfirmSubmit" class="btn-primary staff-bulk-delete-btn" type="button">ยืนยันลบคำขอ</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="staffPositionSettingsView" hidden>
           <div id="staffPositionManagePanel" class="panel panel-hover staff-access-panel">
             <div class="panel-header">
               <div>
@@ -421,6 +505,7 @@
             <div class="panel-body">
               <div id="staffPositionList" class="staff-position-list"></div>
             </div>
+          </div>
           </div>
           </div>
         </div>

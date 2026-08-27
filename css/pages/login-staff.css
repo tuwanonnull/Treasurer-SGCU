@@ -497,6 +497,118 @@
   margin: 2px 0 14px;
 }
 
+.staff-approval-page-toggle {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 0 auto;
+  justify-content: flex-end;
+}
+
+@media (max-width: 840px) {
+  .staff-approval-page-toggle {
+    width: 100%;
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+.staff-approval-page-toggle .tab-btn {
+    width: 100%;
+  }
+}
+
+.staff-member-filter-bar {
+  margin-top: 2px;
+}
+
+.staff-member-filter-bar .search-box,
+.staff-member-filter-bar .search-box input {
+  width: 100%;
+}
+
+.staff-bulk-select-cell {
+  width: 42px;
+  text-align: center;
+}
+
+.staff-bulk-select-cell input {
+  width: 17px;
+  height: 17px;
+  accent-color: #ec4899;
+  cursor: pointer;
+}
+
+.staff-selection-mode-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+}
+
+.staff-selection-mode-btn[aria-pressed="true"] {
+  border-color: rgba(236, 72, 153, 0.42);
+  background: rgba(253, 242, 248, 0.96);
+  color: #be185d;
+}
+
+#staffApprovalPendingContent:not(.is-selection-mode) .staff-bulk-select-cell,
+#staffApprovalHistoryContent:not(.is-selection-mode) .staff-bulk-select-cell {
+  display: none;
+}
+
+.staff-bulk-action-bar {
+  position: sticky;
+  top: 82px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(225, 29, 72, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 24px rgba(190, 24, 93, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.staff-bulk-action-bar[hidden] {
+  display: none !important;
+}
+
+.staff-bulk-action-bar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.staff-bulk-action-bar span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.staff-bulk-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.staff-bulk-delete-btn {
+  background: #be123c;
+  border-color: #be123c;
+}
+
+@media (max-width: 640px) {
+  .staff-bulk-action-bar {
+    top: 68px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-bulk-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .staff-access-form {
   display: grid;
   gap: 12px;
