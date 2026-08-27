@@ -2331,11 +2331,13 @@ function initMeetingRoomBookingApp() {
       weekDates.forEach((date) => {
         const dateKey = toDateKey(date);
         const isToday = dateKey === todayKey;
+        const holidayName = getHolidayName(date, dateKey);
         cells.push(`
-          <div class="meeting-week-date${isToday ? " is-today" : ""}">
+          <div class="meeting-week-date${isToday ? " is-today" : ""}${holidayName ? " is-holiday" : ""}">
             <span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span>
             <strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
             ${isToday ? '<small>วันนี้</small>' : ""}
+            ${holidayName ? `<small class="meeting-week-holiday" title="${escapeText(holidayName)}">วันหยุด</small>` : ""}
           </div>
         `);
       });
@@ -2344,6 +2346,7 @@ function initMeetingRoomBookingApp() {
         cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
         weekDates.forEach((date) => {
           const dateKey = toDateKey(date);
+          const holidayName = getHolidayName(date, dateKey);
           const items = (periodBookings[dateKey] || []).filter((item) => item.roomId === room.id);
           const events = items.map((item) => `
             <div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
@@ -2351,7 +2354,8 @@ function initMeetingRoomBookingApp() {
             )}">${escapeText(`${item.startTime || "-"}–${item.endTime || "-"}`)}</div>
           `).join("");
           cells.push(`
-            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
+            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${holidayName ? " calendar-day-holiday" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
+              ${holidayName ? `<span class="meeting-week-holiday-label">${escapeText(holidayName)}</span>` : ""}
               ${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}
             </div>
           `);
@@ -2436,6 +2440,10 @@ function initMeetingRoomBookingApp() {
         </div>
       `);
     });
+
+    while (calendarDisplayMode === "month" && cells.length < 42) {
+      cells.push('<div class="calendar-day calendar-day-empty"></div>');
+    }
 
     calendarPanel.classList.toggle("is-week-view", calendarDisplayMode === "week");
     calendarPanel.innerHTML = cells.join("");

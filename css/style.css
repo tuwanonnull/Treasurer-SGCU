@@ -2,10 +2,10 @@
 @import url("./core/base.css?v=20260611-thai-text-rendering-1");
 @import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
 @import url("./pages/operations.css?v=20260707-dashboard-mobile-nav-1");
-@import url("./pages/meeting-room.css?v=20260827-mobile-date-jump-1");
+@import url("./pages/meeting-room.css?v=20260827-stable-staff-calendar-1");
 @import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/layout.css?v=20260518-csv-refresh-5");
-@import url("./core/navigation.css?v=20260707-dashboard-mobile-nav-1");
+@import url("./core/navigation.css?v=20260827-meeting-menu-five-columns-1");
 @import url("./components/ui.css?v=20260707-dashboard-skeleton-1");
 @import url("./pages/home.css?v=20260611-thai-text-rendering-1");
 @import url("./pages/about-org.css?v=20260510-budget-spacing-fix-1");
@@ -17,7 +17,7 @@
 @import url("./pages/request-details.css?v=20260816-borrow-schedule-row-1");
 @import url("./pages/pdf.css?v=20260510-budget-spacing-fix-1");
 @import url("./components/app-loader.css?v=20260514-loader-logo-shadow-1");
-@import url("./pages/meeting-public-calendar.css?v=20260827-matrix-cell-border-1");
+@import url("./pages/meeting-public-calendar.css?v=20260827-matrix-row-height-2");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {
@@ -149,6 +149,8 @@
   #meetingRoomStaffCalendar.meeting-week-matrix,
   #meetingPublicCalendar.meeting-week-matrix {
     grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
     grid-auto-flow: row;
     width: 100%;
     min-width: 0;
@@ -185,6 +187,15 @@
     color: #475569;
     font-size: 10px;
     font-weight: 800;
+  }
+
+  .meeting-week-holiday-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #be185d;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.25;
   }
 
   .meeting-week-slot.is-available {

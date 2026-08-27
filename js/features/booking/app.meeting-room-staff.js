@@ -599,10 +599,12 @@ function initMeetingRoomStaffApproval() {
 
   let bookings = [];
   let requestBookings = [];
+  let calendarWindowBookings = [];
   let historyBookings = [];
   let rooms = [...DEFAULT_ROOMS];
   let customHolidays = [];
   let unsubscribe = null;
+  let unsubscribeCalendar = null;
   let unsubscribeHistory = null;
   let unsubscribeRooms = null;
   let unsubscribeHolidays = null;
@@ -682,7 +684,7 @@ function initMeetingRoomStaffApproval() {
 
   const syncLoadedBookings = () => {
     const byId = new Map();
-    [...requestBookings, ...historyBookings].forEach((booking) => {
+    [...requestBookings, ...calendarWindowBookings, ...historyBookings].forEach((booking) => {
       if (!booking?.id) return;
       byId.set(booking.id, booking);
     });
@@ -1968,11 +1970,13 @@ function initMeetingRoomStaffApproval() {
       cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
       comparisonDates.forEach((date) => {
         const dateKey = toDateKey(date);
+        const holidayName = getHolidayName(date, dateKey);
         cells.push(`
-          <div class="meeting-week-date${dateKey === todayKey ? " is-today" : ""}">
+          <div class="meeting-week-date${dateKey === todayKey ? " is-today" : ""}${holidayName ? " is-holiday" : ""}">
             <span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span>
             <strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
             ${dateKey === todayKey ? '<small>วันนี้</small>' : ""}
+            ${holidayName ? `<small class="meeting-week-holiday" title="${escapeText(holidayName)}">วันหยุด</small>` : ""}
           </div>
         `);
       });
@@ -1981,15 +1985,22 @@ function initMeetingRoomStaffApproval() {
         cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
         comparisonDates.forEach((date) => {
           const dateKey = toDateKey(date);
+          const holidayName = getHolidayName(date, dateKey);
           const items = (periodBookings[dateKey] || []).filter((item) => item.roomId === room.id);
-          const events = items.map((item) => `
+          const visibleItems = isMobileDayView ? items : items.slice(0, 3);
+          const remainingCount = items.length - visibleItems.length;
+          const events = visibleItems.map((item) => `
             <div class="calendar-event ${calendarStatusClass(item.status)}" data-booking-id="${escapeText(item.id || "")}" title="${escapeText(
               `${room.name} · ${item.startTime || "-"}-${item.endTime || "-"} · ${formatRequesterDisplay(item)}`
             )}">${escapeText(`${item.startTime || "-"}–${item.endTime || "-"}`)}</div>
           `).join("");
+          const moreText = remainingCount > 0
+            ? `<div class="calendar-event calendar-more">และอีก ${remainingCount} คำขอ</div>`
+            : "";
           cells.push(`
-            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
-              ${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}
+            <div class="meeting-week-slot calendar-day${dateKey === todayKey ? " calendar-day-today" : ""}${holidayName ? " calendar-day-holiday" : ""}${items.length ? " calendar-day-has-events" : " is-available"}" data-date="${dateKey}" data-day-label="${escapeText(date.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short" }))}" data-room-id="${escapeText(room.id)}">
+              ${holidayName ? `<span class="meeting-week-holiday-label">${escapeText(holidayName)}</span>` : ""}
+              ${items.length ? `<span class="meeting-week-slot-status">จองแล้ว ${items.length} ช่วง</span>${events}${moreText}` : '<span class="meeting-week-available"><i aria-hidden="true"></i>ว่าง</span>'}
             </div>
           `);
         });
@@ -2058,6 +2069,10 @@ function initMeetingRoomStaffApproval() {
         </div>
       `);
     });
+
+    while (staffCalendarDisplayMode === "month" && cells.length < 42) {
+      cells.push('<div class="calendar-day calendar-day-empty"></div>');
+    }
 
     staffCalendarPanel.classList.toggle("is-week-view", staffCalendarDisplayMode === "week");
     staffCalendarPanel.innerHTML = cells.join("");
@@ -2346,15 +2361,17 @@ function initMeetingRoomStaffApproval() {
     }
   };
 
-  const subscribeBookings = () => {
+  const subscribeBookings = ({ calendarOnly = false } = {}) => {
     if (!hasFirestore) return;
-    if (typeof unsubscribe === "function") {
+    const activeUnsubscribe = calendarOnly ? unsubscribeCalendar : unsubscribe;
+    if (typeof activeUnsubscribe === "function") {
       try {
-        unsubscribe();
+        activeUnsubscribe();
       } catch (_) {
         // ignore unsubscribe errors
       }
-      unsubscribe = null;
+      if (calendarOnly) unsubscribeCalendar = null;
+      else unsubscribe = null;
     }
     try {
       const colRef = firestore.collection(firestore.db, COLLECTION_NAME);
@@ -2377,10 +2394,17 @@ function initMeetingRoomStaffApproval() {
           </tr>
         `;
       }, 8000);
-      unsubscribe = firestore.onSnapshot(
+      const nextUnsubscribe = firestore.onSnapshot(
         bookingsQuery,
         (snapshot) => {
-          requestBookings = snapshot.docs.map(mapSnapshotDoc);
+          const nextBookings = snapshot.docs.map(mapSnapshotDoc);
+          if (calendarOnly) {
+            calendarWindowBookings = nextBookings;
+            const updatedById = new Map(nextBookings.map((booking) => [booking.id, booking]));
+            requestBookings = requestBookings.map((booking) => updatedById.get(booking.id) || booking);
+          } else {
+            requestBookings = nextBookings;
+          }
           syncLoadedBookings();
           syncStaffRequestNotifications(requestBookings);
           bookingsLoadFailed = false;
@@ -2426,6 +2450,8 @@ function initMeetingRoomStaffApproval() {
           scheduleStaffAutoRetry();
         }
       );
+      if (calendarOnly) unsubscribeCalendar = nextUnsubscribe;
+      else unsubscribe = nextUnsubscribe;
     } catch (err) {
       bookingsLoadFailed = true;
       const detail = err?.code ? ` (${err.code})` : "";
@@ -2753,7 +2779,7 @@ function initMeetingRoomStaffApproval() {
   if (staffCalendarPrevBtn) {
     staffCalendarPrevBtn.addEventListener("click", () => {
       calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() - (isMobileStaffCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
-      subscribeBookings();
+      subscribeBookings({ calendarOnly: true });
       renderStaffCalendar(getCalendarRows(bookings));
     });
   }
@@ -2761,7 +2787,7 @@ function initMeetingRoomStaffApproval() {
   if (staffCalendarNextBtn) {
     staffCalendarNextBtn.addEventListener("click", () => {
       calendarCursor = staffCalendarDisplayMode === "week" ? new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate() + (isMobileStaffCalendar() ? 1 : 7)) : new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
-      subscribeBookings();
+      subscribeBookings({ calendarOnly: true });
       renderStaffCalendar(getCalendarRows(bookings));
     });
   }
@@ -2769,7 +2795,7 @@ function initMeetingRoomStaffApproval() {
   staffCalendarTodayBtn?.addEventListener("click", () => {
     const now = new Date();
     calendarCursor = staffCalendarDisplayMode === "week" ? now : new Date(now.getFullYear(), now.getMonth(), 1);
-    subscribeBookings();
+    subscribeBookings({ calendarOnly: true });
     renderStaffCalendar(getCalendarRows(bookings));
   });
   const setStaffCalendarDisplayMode = (mode) => {
@@ -2801,6 +2827,7 @@ function initMeetingRoomStaffApproval() {
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
     staffCalendarDisplayMode = "week";
+    subscribeBookings({ calendarOnly: true });
     renderStaffCalendar(getCalendarRows(bookings));
   });
 
