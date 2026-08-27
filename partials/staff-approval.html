@@ -1,47 +1,13 @@
-      <!-- STAFF APPROVAL PAGE -->
-      <section class="page-view" data-page="staff-approval">
+      <!-- STAFF DIRECTORY PAGE -->
+      <section class="page-view" data-page="staff-directory-staff">
         <div class="page">
           <div class="page-header-flex">
             <div>
-              <h1 class="page-title">ศูนย์จัดการสตาฟ</h1>
-              <p class="page-subtitle">ดูรายชื่อสตาฟ ทำเนียบรุ่น ตรวจคำขอเข้าร่วม และกำหนดสิทธิ์เข้าใช้</p>
-            </div>
-            <div class="tabs staff-approval-main-tabs" role="tablist" aria-label="เลือกส่วนงานจัดการสตาฟ">
-              <button
-                id="staffApprovalMainApprovalTab"
-                class="tab-btn view-toggle-btn is-active"
-                type="button"
-                role="tab"
-                aria-selected="true"
-                aria-controls="staffApprovalMainPanel"
-              >
-                รายชื่อสตาฟ
-              </button>
-              <button
-                id="staffApprovalMainStructureTab"
-                class="tab-btn view-toggle-btn"
-                type="button"
-                role="tab"
-                aria-selected="false"
-                aria-controls="staffStructurePanel"
-              >
-                ทำเนียบรุ่น
-              </button>
-              <button
-                id="staffApprovalMainAuthAccessTab"
-                class="tab-btn view-toggle-btn"
-                type="button"
-                role="tab"
-                aria-selected="false"
-                aria-controls="staffAuthAccessPanel"
-              >
-                สิทธิ์เข้าใช้
-              </button>
+              <h1 class="page-title">ทำเนียบรุ่น</h1>
+              <p class="page-subtitle">จัดการรายชื่อและข้อมูลที่ใช้แสดงในแผนผังทีมเหรัญญิก</p>
             </div>
           </div>
-
-          <div id="staffApprovalStaffSection">
-          <div id="staffStructurePanel" class="staff-approval-main-panel" role="tabpanel" aria-labelledby="staffApprovalMainStructureTab" hidden>
+          <div id="staffStructurePanel" class="staff-approval-main-panel">
           <section class="panel panel-hover staff-access-panel org-structure-admin-panel section-appear section-delay-1">
             <div class="panel-header">
               <div>
@@ -205,7 +171,19 @@
           </section>
           </div>
 
-          <div id="staffAuthAccessPanel" class="staff-approval-main-panel" role="tabpanel" aria-labelledby="staffApprovalMainAuthAccessTab" hidden>
+        </div>
+      </section>
+
+      <!-- TEMPORARY STAFF ACCESS PAGE -->
+      <section class="page-view" data-page="staff-temporary-access-staff">
+        <div class="page">
+          <div class="page-header-flex">
+            <div>
+              <h1 class="page-title">สิทธิ์เข้าใช้ชั่วคราว</h1>
+              <p class="page-subtitle">กำหนดช่วงเวลาเข้าใช้สำหรับบัญชีภายนอกหรือบัญชีที่ยังไม่มีอีเมลจุฬา</p>
+            </div>
+          </div>
+          <div id="staffAuthAccessPanel" class="staff-approval-main-panel">
             <section class="panel panel-hover staff-access-panel section-appear section-delay-1">
               <div class="panel-header">
                 <div>
@@ -277,7 +255,20 @@
             </section>
           </div>
 
-          <div id="staffApprovalMainPanel" class="staff-approval-main-panel" role="tabpanel" aria-labelledby="staffApprovalMainApprovalTab">
+        </div>
+      </section>
+
+      <!-- STAFF APPROVAL PAGE -->
+      <section class="page-view" data-page="staff-approval">
+        <div class="page">
+          <div class="page-header-flex">
+            <div>
+              <h1 class="page-title">สตาฟและคำขอ</h1>
+              <p class="page-subtitle">ตรวจคำขอเข้าร่วม ดูรายชื่อสตาฟปัจจุบัน และจัดการตำแหน่งกับสิทธิ์ประจำ</p>
+            </div>
+          </div>
+          <div id="staffApprovalStaffSection">
+          <div id="staffApprovalMainPanel" class="staff-approval-main-panel">
           <div id="staffApprovalPendingPanel" class="panel panel-hover staff-access-panel">
             <div class="panel-header">
               <div>
@@ -328,7 +319,6 @@
                 </table>
               </div>
             </div>
-          </div>
           </div>
           </div>
 
@@ -431,6 +421,7 @@
             <div class="panel-body">
               <div id="staffPositionList" class="staff-position-list"></div>
             </div>
+          </div>
           </div>
         </div>
       </section>

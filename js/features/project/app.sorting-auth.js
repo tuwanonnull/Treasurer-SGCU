@@ -982,6 +982,8 @@ const STAFF_PAGE_OPTIONS = [
   "content-news-staff",
   "content-documents-staff",
   "staff-approval",
+  "staff-directory-staff",
+  "staff-temporary-access-staff",
   "org-representative-approval-staff",
   "login"
 ];
@@ -1145,7 +1147,7 @@ function normalizeAllowedStaffPages(pages, fallbackYY = "") {
 function getDefaultAllowedStaffPagesByYY(yy, roleValue = "") {
   const normalizedYY = normalizeDivisionCodeYY(yy);
   if (normalizedYY === "00") {
-    return new Set(["treasurer-handover-staff", "dashboard-staff", "system-data-staff", "borrow-assets-staff", "meeting-room-staff", "budget-approval-staff", "content-management-staff", "content-news-staff", "content-documents-staff", "staff-approval", "org-representative-approval-staff", "login"]);
+    return new Set(["treasurer-handover-staff", "dashboard-staff", "system-data-staff", "borrow-assets-staff", "meeting-room-staff", "budget-approval-staff", "content-management-staff", "content-news-staff", "content-documents-staff", "staff-approval", "staff-directory-staff", "staff-temporary-access-staff", "org-representative-approval-staff", "login"]);
   }
   return new Set(["login"]);
 }
@@ -1235,6 +1237,8 @@ function getAllowedPagesForCurrentState() {
     const yyAllowed = getAllowedStaffPagesByProfile(staffAuthUser);
     if (isHeadStaffProfile(staffAuthUser)) {
       yyAllowed.add("staff-approval");
+      yyAllowed.add("staff-directory-staff");
+      yyAllowed.add("staff-temporary-access-staff");
       yyAllowed.add("org-representative-approval-staff");
       yyAllowed.add("content-management-staff");
       yyAllowed.add("content-news-staff");
@@ -1244,6 +1248,8 @@ function getAllowedPagesForCurrentState() {
     }
     if (!isHeadStaffProfile(staffAuthUser)) {
       yyAllowed.delete("staff-approval");
+      yyAllowed.delete("staff-directory-staff");
+      yyAllowed.delete("staff-temporary-access-staff");
       yyAllowed.delete("org-representative-approval-staff");
     }
     if (isAffairsProfile) {
@@ -1261,6 +1267,8 @@ function getAllowedPagesForCurrentState() {
     allowed.delete("meeting-room-staff");
     if (!isHeadStaffProfile(staffAuthUser)) {
       allowed.delete("staff-approval");
+      allowed.delete("staff-directory-staff");
+      allowed.delete("staff-temporary-access-staff");
       allowed.delete("org-representative-approval-staff");
     }
   }

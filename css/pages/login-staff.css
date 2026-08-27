@@ -402,7 +402,9 @@
   gap: 12px;
 }
 
-.page-view[data-page="staff-approval"] .page {
+.page-view[data-page="staff-approval"] .page,
+.page-view[data-page="staff-directory-staff"] .page,
+.page-view[data-page="staff-temporary-access-staff"] .page {
   max-width: none;
   margin: 0;
   padding-left: 0;

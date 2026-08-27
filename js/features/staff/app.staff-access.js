@@ -6,7 +6,7 @@ function initStaffAccessPages() {
   const applicationModalEl = document.getElementById("staffApplicationModal");
   const applicationModalCloseEl = document.getElementById("staffApplicationModalClose");
   const applicationModalOpenEl = document.getElementById("loginHelpApplyBtn");
-  const approvalPageEl = document.querySelector('.page-view[data-page="staff-approval"], .page-view[data-page="org-representative-approval-staff"]');
+  const approvalPageEl = document.querySelector('.page-view[data-page="staff-approval"], .page-view[data-page="staff-directory-staff"], .page-view[data-page="staff-temporary-access-staff"], .page-view[data-page="org-representative-approval-staff"]');
   if (!applicationModalEl && !approvalPageEl) return;
 
   const appFormEl = document.getElementById("staffApplicationForm");
@@ -251,6 +251,8 @@ function initStaffAccessPages() {
     { id: "borrow-assets-staff", label: "ยืม-คืนพัสดุ" },
     { id: "meeting-room-staff", label: "ห้องประชุม" },
     { id: "staff-approval", label: "จัดการสตาฟ" },
+    { id: "staff-directory-staff", label: "ทำเนียบรุ่น" },
+    { id: "staff-temporary-access-staff", label: "สิทธิ์ชั่วคราว" },
     { id: "org-representative-approval-staff", label: "ตัวแทนองค์กร" },
     { id: "content-management-staff", label: "จัดการเนื้อหา" },
     { id: "content-news-staff", label: "ข่าวสาร" },
@@ -312,6 +314,8 @@ function initStaffAccessPages() {
   let orgRepresentativeOrgFiltersLoadPromise = null;
   let orgRepresentativeOrgFiltersLoadedForPage = false;
   let currentPositionCatalog = [];
+  let lastPositionAccessSyncSignature = "";
+  let positionAccessSyncInFlight = false;
   let positionCatalogLoadState = "idle";
   let currentEditingPositionId = "";
   let appFormStatusLocked = false;
@@ -375,9 +379,9 @@ function initStaffAccessPages() {
     const showApproval = currentStaffApprovalMainTab === "approval";
     const showStructure = currentStaffApprovalMainTab === "structure";
     const showAuthAccess = currentStaffApprovalMainTab === "auth-access";
-    if (staffApprovalMainPanelEl) staffApprovalMainPanelEl.hidden = !showApproval;
-    if (staffStructurePanelEl) staffStructurePanelEl.hidden = !showStructure;
-    if (staffAuthAccessPanelEl) staffAuthAccessPanelEl.hidden = !showAuthAccess;
+    if (staffApprovalMainPanelEl) staffApprovalMainPanelEl.hidden = false;
+    if (staffStructurePanelEl) staffStructurePanelEl.hidden = false;
+    if (staffAuthAccessPanelEl) staffAuthAccessPanelEl.hidden = false;
     if (staffApprovalMainApprovalTabEl) {
       staffApprovalMainApprovalTabEl.classList.toggle("is-active", showApproval);
       staffApprovalMainApprovalTabEl.setAttribute("aria-selected", showApproval ? "true" : "false");
@@ -1687,6 +1691,64 @@ function initStaffAccessPages() {
       divisionCodesYY: Array.from(new Set(normalized.map((item) => normalizeCode2(item.yy)).filter(Boolean))),
       allowedPages
     };
+  };
+
+  const sameStringList = (left = [], right = []) => {
+    const normalize = (value) => Array.from(new Set((Array.isArray(value) ? value : []).map((item) => (item || "").toString().trim()).filter(Boolean))).sort();
+    const a = normalize(left);
+    const b = normalize(right);
+    return a.length === b.length && a.every((item, index) => item === b[index]);
+  };
+
+  const syncStaffProfilesWithPositionCatalog = async () => {
+    if (positionAccessSyncInFlight || !isSuperStaff() || !firestore.getDocs) return 0;
+    const signature = JSON.stringify(
+      currentPositionCatalog.map((item) => [
+        normalizePositionText(item.name).toLowerCase(),
+        normalizeCode2(item.divisionCodeYY),
+        normalizeCode2(item.levelCodeZZ),
+        normalizeConfiguredAllowedPages(item.allowedPages).sort()
+      ])
+    );
+    if (!signature || signature === "[]" || signature === lastPositionAccessSyncSignature) return 0;
+
+    positionAccessSyncInFlight = true;
+    try {
+      const snapshot = await firestore.getDocs(firestore.collection(firestore.db, COLLECTION_PROFILES));
+      const writes = [];
+      (snapshot?.docs || []).forEach((docSnap) => {
+        const profile = docSnap.data() || {};
+        const positions = Array.isArray(profile.positions) ? profile.positions : [];
+        let changed = false;
+        const nextPositions = positions.map((entry) => {
+          const normalizedEntry = toPositionEntry(entry);
+          const catalogMeta = findPositionAccessMeta(normalizedEntry.name, normalizedEntry.yy, normalizedEntry.zz);
+          if (!catalogMeta) return normalizedEntry;
+          const catalogPages = normalizeConfiguredAllowedPages(catalogMeta.allowedPages);
+          if (sameStringList(normalizedEntry.allowedPages, catalogPages)) return normalizedEntry;
+          changed = true;
+          return { ...normalizedEntry, allowedPages: catalogPages };
+        });
+        if (!changed) return;
+        const nextProfile = buildProfileFieldsFromPositions(nextPositions);
+        writes.push({ ref: docSnap.ref, data: { ...nextProfile, updatedAt: firestore.serverTimestamp() } });
+      });
+
+      for (let index = 0; index < writes.length; index += 400) {
+        const chunk = writes.slice(index, index + 400);
+        if (firestore.writeBatch) {
+          const batch = firestore.writeBatch(firestore.db);
+          chunk.forEach((write) => batch.set(write.ref, write.data, { merge: true }));
+          await batch.commit();
+        } else {
+          await Promise.all(chunk.map((write) => firestore.setDoc(write.ref, write.data, { merge: true })));
+        }
+      }
+      lastPositionAccessSyncSignature = signature;
+      return writes.length;
+    } finally {
+      positionAccessSyncInFlight = false;
+    }
   };
 
   const getConfiguredAllowedPagesForCatalogPosition = (item = {}) => {
@@ -6448,6 +6510,9 @@ function initStaffAccessPages() {
         if (positionAllowedPagesEl && !positionAllowedPagesEl.children.length) {
           renderPositionAllowedPageOptions([], "");
         }
+        void syncStaffProfilesWithPositionCatalog().catch((error) => {
+          console.warn("sync staff profile position access failed - app.staff-access.js", error);
+        });
       },
       (error) => {
         console.error("staff position catalog listener failed - app.staff-access.js:4857", error);
@@ -7489,11 +7554,20 @@ function initStaffAccessPages() {
         const applicantNick = (rowEl.getAttribute("data-applicant-nick") || "").toString().trim();
         const approvedPositionCodeMeta = await buildApprovedPositionCode(approvedPosition);
         approvedPositionCode = approvedPositionCodeMeta.code;
+        const positionMeta = findPositionAccessMeta(
+          approvedPosition,
+          approvedPositionCodeMeta.yy,
+          approvedPositionCodeMeta.zz
+        );
         const nextPositionEntry = {
           name: approvedPosition,
           code: approvedPositionCode,
           yy: approvedPositionCodeMeta.yy,
           zz: approvedPositionCodeMeta.zz,
+          allowedPages: normalizeAllowedPages(
+            readAllowedPagesInput(positionMeta || {}),
+            approvedPositionCodeMeta.yy
+          ),
           sourceApplicationId: id,
           approvedAt: new Date().toISOString()
         };
@@ -8562,7 +8636,10 @@ function initStaffAccessPages() {
   window.addEventListener("sgcu:user-profile-updated", prefillApplicationForm);
   window.addEventListener("hashchange", () => {
     const page = (window.location.hash || "").replace("#", "");
-    if (page === "staff-approval" || page === "org-representative-approval-staff") {
+    if (page === "staff-directory-staff") setStaffApprovalMainTab("structure");
+    if (page === "staff-temporary-access-staff") setStaffApprovalMainTab("auth-access");
+    if (page === "staff-approval") setStaffApprovalMainTab("approval");
+    if (["staff-approval", "staff-directory-staff", "staff-temporary-access-staff", "org-representative-approval-staff"].includes(page)) {
       scheduleApprovalUiSync();
     }
   });
@@ -8590,7 +8667,14 @@ function initStaffAccessPages() {
   resetAuthAccessForm();
   startOrgRepresentativeApplicationsListener();
   setApprovalView("pending");
-  setStaffApprovalMainTab("approval");
+  const initialStaffPage = (window.location.hash || "").replace("#", "");
+  setStaffApprovalMainTab(
+    initialStaffPage === "staff-directory-staff"
+      ? "structure"
+      : initialStaffPage === "staff-temporary-access-staff"
+        ? "auth-access"
+        : "approval"
+  );
   setOrgRepresentativeView("overview");
   setApprovalType("staff");
   updateOrgStructurePhotoPreview();
