@@ -1956,6 +1956,7 @@ function initMeetingRoomBookingApp() {
         pickBookingAuditFields({ ...booking, ...payload }),
         { context: "booking_detail_modal" }
       );
+      await window.sgcuWebPush?.dispatchMeetingNotification(bookingId, booking.status).catch(() => null);
       setBookingDetailStatusMessage("อัปเดตสถานะคำขอเรียบร้อยแล้ว", "#047857");
     } catch (err) {
       const code = (err?.code || "").toString().trim();
@@ -2908,6 +2909,7 @@ function initMeetingRoomBookingApp() {
         }),
         { context: "booking_form" }
       );
+      await window.sgcuWebPush?.dispatchMeetingNotification(createdDoc?.id || "", "").catch(() => null);
       form.reset();
       clearProjectFeedback();
       setMessage("บันทึกการจองเรียบร้อยแล้ว", "#047857");
@@ -3005,6 +3007,7 @@ function initMeetingRoomBookingApp() {
         }),
         { context: "cancel_form" }
       );
+      await window.sgcuWebPush?.dispatchMeetingNotification(bookingId, booking.status).catch(() => null);
       setCancelMessage("ส่งคำขอยกเลิกเรียบร้อยแล้ว (รอ Staff อนุมัติ)", "#047857");
       if (cancelBookingSelect) cancelBookingSelect.value = "";
       if (cancelReasonInput) cancelReasonInput.value = "";
@@ -3177,6 +3180,7 @@ function initMeetingRoomBookingApp() {
         }),
         { context: "reschedule_form" }
       );
+      await window.sgcuWebPush?.dispatchMeetingNotification(bookingId, booking.status).catch(() => null);
       setRescheduleMessage("ส่งคำขอเปลี่ยนห้อง/เวลาเรียบร้อยแล้ว (รอ Staff อนุมัติ)", "#047857");
       if (rescheduleBookingSelect) rescheduleBookingSelect.value = "";
       if (cancelBookingSelect) cancelBookingSelect.value = "";

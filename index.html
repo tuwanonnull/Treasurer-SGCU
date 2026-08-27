@@ -1273,8 +1273,11 @@
       window.sgcuServiceWorkerUrl = "./sw.js?v=20260628-dashboard-debt-active-only-1";
       window.sgcuPushConfig = window.sgcuPushConfig || {
         applicationServerKey: "",
-        subscribeEndpoint: "",
-        unsubscribeEndpoint: ""
+        configEndpoint: "/api/push/config",
+        subscribeEndpoint: "/api/push/subscribe",
+        unsubscribeEndpoint: "/api/push/unsubscribe",
+        testEndpoint: "/api/push/test",
+        meetingEventEndpoint: "/api/push/meeting-event"
       };
     </script>
     <script src="js/integrations/app.web-push.js" defer></script>

@@ -3,3 +3,5 @@ node_modules/
 dist/
 .firebase/
 firebase-debug.log
+functions/.env*
+functions/.secret.local

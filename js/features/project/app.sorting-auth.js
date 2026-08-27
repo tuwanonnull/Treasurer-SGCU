@@ -2873,23 +2873,27 @@ function initAuthUI() {
     const summaryEl = document.getElementById("loginNotificationSummary");
     if (!enableBtn || !summaryEl) return;
 
-    const renderNotificationState = () => {
+    const renderNotificationState = async () => {
       const isSupported = typeof window !== "undefined" && typeof window.Notification !== "undefined";
       const permission = isSupported ? Notification.permission : "unsupported";
+      const state = window.sgcuWebPush?.getClientState
+        ? await window.sgcuWebPush.getClientState().catch(() => null)
+        : null;
       const permissionText = permission === "granted"
         ? "อนุญาตแล้ว"
         : permission === "denied"
           ? "ถูกบล็อก"
           : isSupported ? "ยังไม่อนุญาต" : "ไม่รองรับ";
-      summaryEl.textContent = `การแจ้งเตือน: ${permissionText}`;
+      const subscriptionText = state?.subscribed ? " • เชื่อมต่ออุปกรณ์แล้ว" : "";
+      summaryEl.textContent = `การแจ้งเตือน: ${permissionText}${subscriptionText}`;
       summaryEl.style.color = permission === "denied" ? "#b91c1c" : "#6b7280";
 
       if (!isSupported) {
         enableBtn.disabled = true;
         enableBtn.textContent = "อุปกรณ์ไม่รองรับแจ้งเตือน";
       } else if (permission === "granted") {
-        enableBtn.disabled = true;
-        enableBtn.textContent = "อนุญาตแจ้งเตือนแล้ว";
+        enableBtn.disabled = !!state?.subscribed;
+        enableBtn.textContent = state?.subscribed ? "เชื่อมต่อ Push แล้ว" : "เชื่อมต่ออุปกรณ์นี้";
       } else if (permission === "denied") {
         enableBtn.disabled = true;
         enableBtn.textContent = "แจ้งเตือนถูกบล็อก";
@@ -2899,24 +2903,33 @@ function initAuthUI() {
       }
     };
 
-    enableBtn.addEventListener("click", () => {
+    enableBtn.addEventListener("click", async () => {
       if (typeof window === "undefined" || typeof window.Notification === "undefined") {
         renderNotificationState();
         return;
       }
       enableBtn.disabled = true;
-      Notification.requestPermission()
-        .catch(() => {})
-        .finally(() => {
-          renderNotificationState();
+      try {
+        await window.sgcuWebPush?.subscribePush({
+          userAgent: navigator.userAgent,
+          platform: navigator.platform || "",
+          label: "login-settings"
         });
+        summaryEl.textContent = "เชื่อมต่อ Push Notification สำเร็จ";
+        summaryEl.style.color = "#047857";
+      } catch (error) {
+        summaryEl.textContent = `เชื่อมต่อไม่สำเร็จ: ${error?.message || "unknown-error"}`;
+        summaryEl.style.color = "#b91c1c";
+      } finally {
+        await renderNotificationState();
+      }
     });
 
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
-      renderNotificationState();
+      void renderNotificationState();
     });
-    renderNotificationState();
+    void renderNotificationState();
   }
 
   initLoginNotificationControls();

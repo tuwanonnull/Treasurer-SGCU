@@ -2320,6 +2320,7 @@ function initMeetingRoomStaffApproval() {
         pickBookingAuditFields({ ...booking, ...payload }),
         { context: "staff_approval" }
       );
+      await window.sgcuWebPush?.dispatchMeetingNotification(id, booking.status).catch(() => null);
       setStaffActionMessage("อัปเดตสถานะคำขอเรียบร้อยแล้ว", "#047857");
     } catch (err) {
       const code = (err?.code || "").toString().trim();

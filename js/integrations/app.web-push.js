@@ -7,8 +7,11 @@
   const DEFAULT_SW_URL = "./sw.js?v=20260503-1";
   const config = {
     applicationServerKey: "",
+    configEndpoint: "/api/push/config",
     subscribeEndpoint: "",
-    unsubscribeEndpoint: ""
+    unsubscribeEndpoint: "",
+    testEndpoint: "",
+    meetingEventEndpoint: ""
   };
   const bootstrapConfig = window.sgcuPushConfig || {};
   if (typeof bootstrapConfig.applicationServerKey === "string") {
@@ -19,6 +22,15 @@
   }
   if (typeof bootstrapConfig.unsubscribeEndpoint === "string") {
     config.unsubscribeEndpoint = bootstrapConfig.unsubscribeEndpoint.trim();
+  }
+  if (typeof bootstrapConfig.configEndpoint === "string") {
+    config.configEndpoint = bootstrapConfig.configEndpoint.trim();
+  }
+  if (typeof bootstrapConfig.testEndpoint === "string") {
+    config.testEndpoint = bootstrapConfig.testEndpoint.trim();
+  }
+  if (typeof bootstrapConfig.meetingEventEndpoint === "string") {
+    config.meetingEventEndpoint = bootstrapConfig.meetingEventEndpoint.trim();
   }
 
   const isLocalDevHost = () => {
@@ -53,6 +65,15 @@
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
+  };
+
+  const isSubscriptionForKey = (subscription, publicKey) => {
+    const currentKey = subscription?.options?.applicationServerKey;
+    if (!currentKey || !publicKey) return false;
+    const currentBytes = new Uint8Array(currentKey);
+    const expectedBytes = toUint8Array(publicKey);
+    if (currentBytes.length !== expectedBytes.length) return false;
+    return currentBytes.every((value, index) => value === expectedBytes[index]);
   };
 
   const isIOS = () => /iPad|iPhone|iPod/.test(window.navigator.userAgent || "");
@@ -107,17 +128,35 @@
     }
   };
 
+  const getAuthHeaders = async () => {
+    const user = window.sgcuAuth?.auth?.currentUser;
+    if (!user?.getIdToken) throw new Error("push-auth-required");
+    const token = await user.getIdToken();
+    return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+  };
+
+  const loadServerConfig = async () => {
+    if (config.applicationServerKey || !config.configEndpoint) return config.applicationServerKey;
+    const response = await fetch(config.configEndpoint, { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("push-config-unavailable");
+    const payload = await response.json();
+    config.applicationServerKey = (payload.applicationServerKey || "").toString().trim();
+    return config.applicationServerKey;
+  };
+
   const postSubscriptionToBackend = async (mode, payload) => {
     const endpoint =
       mode === "subscribe"
         ? config.subscribeEndpoint
         : config.unsubscribeEndpoint;
     if (!endpoint) return;
-    await fetch(endpoint, {
+    const response = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getAuthHeaders(),
       body: JSON.stringify(payload)
     });
+    if (!response.ok) throw new Error(`push-backend-${response.status}`);
+    return response.json();
   };
 
   const requestPermission = async () => {
@@ -159,7 +198,7 @@
       const permission = await requestPermission();
       if (permission !== "granted") throw new Error("notification-permission-not-granted");
     }
-    const vapidPublicKey = (config.applicationServerKey || "").toString().trim();
+    const vapidPublicKey = (await loadServerConfig() || "").toString().trim();
     if (!vapidPublicKey) {
       throw new Error("missing-vapid-public-key");
     }
@@ -168,6 +207,10 @@
     if (!registration?.pushManager) throw new Error("push-manager-unavailable");
 
     let subscription = await registration.pushManager.getSubscription();
+    if (subscription && !isSubscriptionForKey(subscription, vapidPublicKey)) {
+      await subscription.unsubscribe();
+      subscription = null;
+    }
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -200,14 +243,44 @@
     const permission = getPermission();
     const pushSupported = isPushSupported();
     const subscription = pushSupported ? await getSubscription() : null;
+    let currentKey = "";
+    if (subscription) {
+      currentKey = await loadServerConfig().catch(() => "");
+    }
+    const staleSubscription = !!subscription && !!currentKey && !isSubscriptionForKey(subscription, currentKey);
     return {
       supported: isNotificationSupported(),
       pushSupported,
       permission,
-      subscribed: !!subscription,
+      subscribed: !!subscription && !staleSubscription,
+      staleSubscription,
       standalone: isStandalone(),
       isIOS: isIOS()
     };
+  };
+
+  const sendTestPush = async () => {
+    if (!config.testEndpoint) throw new Error("missing-push-test-endpoint");
+    const response = await fetch(config.testEndpoint, {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({})
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `push-test-${response.status}`);
+    return payload;
+  };
+
+  const dispatchMeetingNotification = async (bookingId, previousStatus = "") => {
+    if (!config.meetingEventEndpoint) throw new Error("missing-meeting-push-endpoint");
+    const response = await fetch(config.meetingEventEndpoint, {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ bookingId, previousStatus })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `meeting-push-${response.status}`);
+    return payload;
   };
 
   const setConfig = (nextConfig = {}) => {
@@ -220,6 +293,15 @@
     if (typeof nextConfig.unsubscribeEndpoint === "string") {
       config.unsubscribeEndpoint = nextConfig.unsubscribeEndpoint.trim();
     }
+    if (typeof nextConfig.configEndpoint === "string") {
+      config.configEndpoint = nextConfig.configEndpoint.trim();
+    }
+    if (typeof nextConfig.testEndpoint === "string") {
+      config.testEndpoint = nextConfig.testEndpoint.trim();
+    }
+    if (typeof nextConfig.meetingEventEndpoint === "string") {
+      config.meetingEventEndpoint = nextConfig.meetingEventEndpoint.trim();
+    }
     emitStateChanged();
   };
 
@@ -230,7 +312,9 @@
     requestPermission,
     showNotification,
     subscribePush,
-    unsubscribePush
+    unsubscribePush,
+    sendTestPush,
+    dispatchMeetingNotification
   };
 
   if (isLocalDevHost()) {
