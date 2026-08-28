@@ -598,7 +598,7 @@ function setupPdfSignatures(rootEl, project) {
   }
 }
 
-async function downloadProjectPdf(project, signatureData) {
+async function downloadProjectPdf(project, signatureData, printWin = null) {
   if (!pdfRootEl) return;
 
   // Account data improves the generated document, but a slow Firestore request
@@ -608,15 +608,14 @@ async function downloadProjectPdf(project, signatureData) {
     new Promise((resolve) => window.setTimeout(resolve, 2500))
   ]);
 
-  if (downloadPdfInSameTab(project, signatureData)) return;
-
-  const printWin = window.open("", "_blank");
-  if (!printWin) {
-    alert("ไม่สามารถเปิดหน้าพิมพ์ PDF ได้ กรุณาอนุญาตป๊อปอัปสำหรับหน้านี้");
+  if (printWin && !printWin.closed) {
+    openPdfPrintWindow(project, printWin, signatureData);
     return;
   }
 
-  openPdfPrintWindow(project, printWin, signatureData);
+  if (!downloadPdfInSameTab(project, signatureData)) {
+    throw new Error("PDF print view is unavailable");
+  }
 }
 
 function openPdfSignModal(project) {
@@ -695,10 +694,19 @@ function openPdfSignModal(project) {
       submitButton.textContent = "กำลังสร้าง PDF...";
     }
 
+    // Open synchronously while the submit still has user activation. Mobile
+    // browsers commonly ignore print requests created after asynchronous work.
+    const printWin = window.open("", "_blank");
+    if (printWin) {
+      printWin.document.write(`<!doctype html><html lang="th"><head><meta charset="UTF-8"><title>กำลังสร้าง PDF...</title></head><body style="font-family:sans-serif;padding:24px">กำลังสร้างเอกสาร...</body></html>`);
+      printWin.document.close();
+    }
+
     try {
-      await downloadProjectPdf(project, signatureData);
+      await downloadProjectPdf(project, signatureData, printWin);
       closeHandler();
     } catch (error) {
+      if (printWin && !printWin.closed) printWin.close();
       console.error("Unable to create advance-loan PDF", error);
       alert("ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -875,6 +883,23 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   const cssHref = "css/style.css";
   const baseHref = new URL(".", window.location.href).href;
 
+  let hasPrepared = false;
+  let fallbackTimer = 0;
+  const prepareAndPrint = async () => {
+    if (hasPrepared || printWin.closed) return;
+    hasPrepared = true;
+    if (fallbackTimer) window.clearTimeout(fallbackTimer);
+    printWin.document.body.appendChild(tempRoot);
+    await waitForPdfAssets(printWin.document, tempRoot);
+    printWin.focus();
+    printWin.print();
+  };
+
+  // Bind before closing the document to avoid missing a synchronous load event.
+  printWin.onload = () => {
+    void prepareAndPrint();
+  };
+
   printWin.document.open();
   printWin.document.write(`
     <!doctype html>
@@ -888,19 +913,18 @@ function openPdfPrintWindow(project, printWin, signatureData) {
         <style>
           body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
+          .pdf-print-toolbar { position: sticky; top: 0; z-index: 10; display: flex; justify-content: center; padding: 12px; background: #fff4f8; border-bottom: 1px solid #f8bdd4; }
+          .pdf-print-toolbar button { border: 0; border-radius: 999px; padding: 10px 22px; color: #fff; background: #e72983; font: 700 16px sans-serif; cursor: pointer; }
+          @media print { .pdf-print-toolbar { display: none !important; } }
         </style>
       </head>
-      <body></body>
+      <body><div class="pdf-print-toolbar"><button type="button" onclick="window.print()">พิมพ์ / บันทึก PDF</button></div></body>
     </html>
   `);
   printWin.document.close();
-
-  printWin.onload = async () => {
-    printWin.document.body.appendChild(tempRoot);
-    await waitForPdfAssets(printWin.document, tempRoot);
-    printWin.focus();
-    printWin.print();
-  };
+  fallbackTimer = window.setTimeout(() => {
+    void prepareAndPrint();
+  }, 250);
 
   return true;
 }

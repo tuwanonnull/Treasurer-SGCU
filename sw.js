@@ -1,4 +1,4 @@
-const CACHE_VERSION = "20260828-pdf-print-fix-1";
+const CACHE_VERSION = "20260828-pdf-print-window-1";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
