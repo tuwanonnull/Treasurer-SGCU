@@ -935,7 +935,11 @@ function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDeskt
   exportCtx.scale(pixelRatio, pixelRatio);
   exportCtx.fillStyle = "#6b7280";
   exportCtx.font = `600 ${useDesktopLabels ? 16 : 11}px Kanit, sans-serif`;
-  exportCtx.textAlign = "right";
+  // Calculate the left edge ourselves instead of relying on textAlign="right".
+  // Safari's canvas implementation can position Thai text from the anchor toward
+  // the plot area when exporting from an installed Web App.
+  exportCtx.direction = "ltr";
+  exportCtx.textAlign = "left";
   exportCtx.textBaseline = "middle";
 
   labels.forEach((label, index) => {
@@ -947,7 +951,9 @@ function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDeskt
     const y = scale.getPixelForValue(index);
     const startY = y - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, lineIndex) => {
-      exportCtx.fillText(line, x, startY + lineIndex * lineHeight);
+      const lineWidth = exportCtx.measureText(line).width;
+      const lineX = Math.max(8, x - lineWidth);
+      exportCtx.fillText(line, lineX, startY + lineIndex * lineHeight);
     });
   });
 
