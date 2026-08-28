@@ -801,7 +801,7 @@ function updateClosureStatusChart(filtered) {
   applyClosureChartData(labels, groups);
 }
 
-function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext) {
+async function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext) {
   setActiveProjectStatusContext(ctxKey);
   const chart = budgetByMonthChart;
   const sourceCanvas = chart?.canvas;
@@ -830,17 +830,47 @@ function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext) {
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "") || "all";
 
-  const link = document.createElement("a");
-  link.href = exportCanvas.toDataURL("image/png");
-  link.download = [
+  const fileName = [
     "sgcu-project-status-overview",
     fileSafe(yearValue),
     fileSafe(orgGroupValue),
     fileSafe(orgValue)
   ].join("-") + ".png";
+
+  const blob = await new Promise((resolve) => exportCanvas.toBlob(resolve, "image/png"));
+  if (!blob) return;
+
+  const isStandaloneWebApp =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+
+  // Installed PWAs, especially on iOS/iPadOS, may ignore an anchor's download
+  // attribute. The native share sheet exposes Save Image / Save to Files there.
+  if (isStandaloneWebApp && typeof navigator.share === "function" && typeof File === "function") {
+    const file = new File([blob], fileName, { type: "image/png" });
+    const canShareFile = typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] });
+    if (canShareFile) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: "ภาพรวมสถานะโครงการ"
+        });
+        return;
+      } catch (error) {
+        // Cancelling the native sheet is intentional; do not start a second download.
+        if (error?.name === "AbortError") return;
+      }
+    }
+  }
+
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
 }
 
 function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas) {

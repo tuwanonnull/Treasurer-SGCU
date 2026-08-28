@@ -128,10 +128,13 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   const summary = updateSummaryCards(filtered);
   updateDashboardInsights(filtered, summary);
   updateTable(filtered);
-  updateClosureStatusChart(filtered);
-  updateProjectBudgetComparisonChart(filtered);
-  updateApprovedBudgetPie(filtered);
-  updateTrendLineChart(filtered);
+  // Chart features are loaded on demand. Project data can finish loading before
+  // those scripts (for example while the home scoreboard is initializing), so
+  // keep the table/summary refresh usable until the chart bundle is available.
+  if (typeof updateClosureStatusChart === "function") updateClosureStatusChart(filtered);
+  if (typeof updateProjectBudgetComparisonChart === "function") updateProjectBudgetComparisonChart(filtered);
+  if (typeof updateApprovedBudgetPie === "function") updateApprovedBudgetPie(filtered);
+  if (typeof updateTrendLineChart === "function") updateTrendLineChart(filtered);
   if (ctxKey === "staff") {
     renderHomeKpis(filtered);
     updateStaffProjectOperationsPanel(filtered);
