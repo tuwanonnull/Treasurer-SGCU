@@ -40,6 +40,7 @@
       "dashboard-staff": [
         "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
         "js/features/project/app.project-modal.js",
+        "js/features/project/app.document-signers.js",
         "js/features/project/app.charts.js",
         "js/features/project/app.pie.js",
         "js/features/project/app.calendar.js",

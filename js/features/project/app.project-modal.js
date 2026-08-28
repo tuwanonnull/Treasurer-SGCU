@@ -384,8 +384,20 @@ function closeProjectModal() {
 /* ===== PDF Auto-fill ===== */
 const PDF_SIGNERS = {
   treasurerName: "นายธุวานนท์ กิ้มเฉี้ยง",
+  treasurerPhone: "094-969-6495",
   presidentName: "นางสาวเกวลี เอกโยคยะ"
 };
+
+function getPdfSigners(project) {
+  const year = getPdfDocumentYear(project);
+  const configured = globalThis.SGCU_APP_CONFIG?.documents?.signersByAcademicYear?.[year] || {};
+  return {
+    treasurerName: (configured.treasurerName || PDF_SIGNERS.treasurerName).toString().trim(),
+    treasurerPhone: (configured.treasurerPhone || PDF_SIGNERS.treasurerPhone).toString().trim(),
+    presidentName: (configured.presidentName || PDF_SIGNERS.presidentName).toString().trim(),
+    approvalMeetingBody: (configured.approvalMeetingBody || "สภานิสิต").toString().trim()
+  };
+}
 
 let orgAccountMap = null;
 
@@ -423,9 +435,23 @@ function formatPercentForPdf(value) {
 }
 
 function buildPdfTitle(project) {
-  const rawName = (project && project.name ? project.name : "").toString().trim();
-  const base = rawName || "SGCU PDF";
+  const projectCode = (project?.code || "").toString().trim();
+  const base = `${projectCode || "โครงการ"}_เอกสารยืมรองจ่าย`;
   return base.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getPdfDocumentYear(project) {
+  const candidates = [project?.year, project?.approveDate, project?.lastWorkDate];
+  for (const candidate of candidates) {
+    const text = (candidate ?? "").toString().trim();
+    if (!text) continue;
+    const years = text.match(/\d{4}/g);
+    if (!years?.length) continue;
+    const year = Number(years[years.length - 1]);
+    if (!Number.isFinite(year)) continue;
+    return String(year < 2400 ? year + 543 : year);
+  }
+  return String(new Date().getFullYear() + 543);
 }
 
 function escapeHtml(text) {
@@ -448,11 +474,17 @@ function escapeHtml(text) {
 function buildPdfData(project, signatureData) {
   const budget100 =
     project.approvedBudget100 != null ? project.approvedBudget100 : project.budget || 0;
-  const budget80 = Math.round(budget100 * 0.8 * 100) / 100;
+  const advancePercent = Number.isFinite(Number(project.advancePercent))
+    ? Number(project.advancePercent)
+    : 80;
+  const configuredAdvanceAmount = parseAmountNumber(project.advanceAmount);
+  const advanceAmount = configuredAdvanceAmount != null
+    ? configuredAdvanceAmount
+    : Math.round(Number(budget100 || 0) * (advancePercent / 100) * 100) / 100;
   const dateRange = formatThaiDateRange(project.approveDate, project.lastWorkDate);
   const evidenceDueDateText = formatThaiDateNoPrefix(project.evidenceDueDate);
-  const advancePercentText = formatPercentForPdf(project.advancePercent);
-  
+  const signers = getPdfSigners(project);
+
   const orgAccountNo = (orgAccountMap && project.orgName && orgAccountMap[project.orgName])
     ? orgAccountMap[project.orgName]
     : "407-313892-5";
@@ -472,16 +504,19 @@ function buildPdfData(project, signatureData) {
     orgName: project.orgName || "",
     orgGroup: pdfOrgGroup,
     councilSessionText: project.councilSessionText || "",
+    approvalMeetingBody: signers.approvalMeetingBody,
     projectDateRange: dateRange,
     approvedBudget100Text: formatPdfNumber(budget100),
-    approvedBudget80Text: formatPdfNumber(budget80),
+    approvedBudget80Text: formatPdfNumber(advanceAmount),
     approvedBudget100Words: thaiBahtText(budget100),
-    approvedBudget80Words: thaiBahtText(budget80),
+    approvedBudget80Words: thaiBahtText(advanceAmount),
     evidenceDueDateText,
-    advancePercentText,
+    advancePercentText: formatPercentForPdf(advancePercent),
+    documentYear: getPdfDocumentYear(project),
     transferDocNo: project.transferDocNo || "",
-    signerTreasurerName: PDF_SIGNERS.treasurerName,
-    signerPresidentName: PDF_SIGNERS.presidentName,
+    signerTreasurerName: signers.treasurerName,
+    signerTreasurerPhone: signers.treasurerPhone,
+    signerPresidentName: signers.presidentName,
     projectLeadName: signatureData.name,
     projectLeadPhone: signatureData.phone,
     orgAccountNo: orgAccountNo,
@@ -511,7 +546,11 @@ function applyThaiSegmentation(rootEl) {
   const textNodes = [];
 
   while (walker.nextNode()) {
-    textNodes.push(walker.currentNode);
+    const node = walker.currentNode;
+    const parent = node.parentElement;
+    if (!parent || parent.closest("style, script, .pdf-no-segment")) continue;
+    if (!parent.closest(".pdf-paragraph, .pdf-sign-name, .pdf-sign-role, .pdf-sign-org, [data-pdf-field]")) continue;
+    textNodes.push(node);
   }
 
   textNodes.forEach((node) => {
@@ -519,12 +558,20 @@ function applyThaiSegmentation(rootEl) {
     if (!text.trim() || !/[\u0E00-\u0E7F]/.test(text)) return;
 
     const frag = doc.createDocumentFragment();
-    for (const seg of segmenter.segment(text)) {
+    const segments = Array.from(segmenter.segment(text));
+    segments.forEach((seg, index) => {
       frag.appendChild(doc.createTextNode(seg.segment));
-      if (seg.isWordLike) {
-        frag.appendChild(doc.createElement("wbr"));
-      }
-    }
+      const next = segments[index + 1];
+      const mayBreak =
+        seg.isWordLike &&
+        next?.isWordLike &&
+        !/\s$/.test(seg.segment) &&
+        !/^\s/.test(next.segment);
+      if (!mayBreak) return;
+      const breakEl = doc.createElement("wbr");
+      breakEl.className = "pdf-thai-break";
+      frag.appendChild(breakEl);
+    });
     node.parentNode.replaceChild(frag, node);
   });
 }
@@ -764,6 +811,27 @@ function formatThaiDateNoPrefix(raw) {
   return `${dayMonth} พ.ศ. ${year}`;
 }
 
+async function waitForPdfAssets(doc, rootEl) {
+  if (doc.fonts) {
+    try {
+      await doc.fonts.load('14pt "THSarabunNew"');
+      await doc.fonts.load('700 14pt "THSarabunNew"');
+      await doc.fonts.ready;
+    } catch (_error) {
+      // Continue to print with the CSS fallback if the Font Loading API fails.
+    }
+  }
+
+  const images = Array.from(rootEl.querySelectorAll("img"));
+  await Promise.all(images.map((img) => {
+    if (img.complete) return Promise.resolve();
+    return new Promise((resolve) => {
+      img.addEventListener("load", resolve, { once: true });
+      img.addEventListener("error", resolve, { once: true });
+    });
+  }));
+}
+
 function openPdfPrintWindow(project, printWin, signatureData) {
   if (!pdfRootEl) return false;
 
@@ -783,8 +851,7 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   setupPdfSignatures(tempRoot, project);
 
   const cssHref = "css/style.css";
-  const fontHref =
-    "https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap";
+  const baseHref = new URL(".", window.location.href).href;
 
   printWin.document.open();
   printWin.document.write(`
@@ -792,12 +859,12 @@ function openPdfPrintWindow(project, printWin, signatureData) {
     <html lang="th">
       <head>
         <meta charset="UTF-8" />
+        <base href="${baseHref}" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${docTitle} เอกสารยืมรองจ่าย</title>
-        <link rel="stylesheet" href="${fontHref}" />
+        <title>${docTitle}</title>
         <link rel="stylesheet" href="${cssHref}" />
         <style>
-          body { margin: 0; background: #fff; }
+          body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
         </style>
       </head>
@@ -806,8 +873,9 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   `);
   printWin.document.close();
 
-  printWin.onload = () => {
+  printWin.onload = async () => {
     printWin.document.body.appendChild(tempRoot);
+    await waitForPdfAssets(printWin.document, tempRoot);
     printWin.focus();
     printWin.print();
   };
@@ -819,7 +887,8 @@ function downloadPdfInSameTab(project, signatureData) {
   if (!pdfRootEl) return false;
 
   const data = buildPdfData(project, signatureData);
-  const docTitle = escapeHtml(buildPdfTitle(project));
+  const pdfFileTitle = buildPdfTitle(project);
+  const docTitle = escapeHtml(pdfFileTitle);
   const tempRoot = pdfRootEl.cloneNode(true);
   tempRoot.id = "pdfRootInline";
   tempRoot.removeAttribute("aria-hidden");
@@ -849,10 +918,9 @@ function downloadPdfInSameTab(project, signatureData) {
         <base href="${baseHref}" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${docTitle}</title>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" />
         <link rel="stylesheet" href="css/style.css" />
         <style>
-          body { margin: 0; background: #fff; }
+          body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
         </style>
       </head>
@@ -862,22 +930,32 @@ function downloadPdfInSameTab(project, signatureData) {
   doc.close();
 
   let hasPrinted = false;
-  const doPrint = () => {
+  const doPrint = async () => {
     if (hasPrinted) return;
     hasPrinted = true;
     doc.body.appendChild(tempRoot);
+    await waitForPdfAssets(doc, tempRoot);
+    const originalPageTitle = document.title;
+    let hasRestoredTitle = false;
+    const restorePageTitle = () => {
+      if (hasRestoredTitle) return;
+      hasRestoredTitle = true;
+      document.title = originalPageTitle;
+      window.removeEventListener("afterprint", restorePageTitle);
+    };
+    document.title = pdfFileTitle;
+    window.addEventListener("afterprint", restorePageTitle, { once: true });
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
-    setTimeout(() => iframe.remove(), 1000);
+    setTimeout(() => {
+      restorePageTitle();
+      iframe.remove();
+    }, 1500);
   };
 
   iframe.onload = () => {
-    setTimeout(doPrint, 200);
+    void doPrint();
   };
-
-  if (iframe.contentWindow.document.readyState === "complete") {
-    setTimeout(doPrint, 200);
-  }
 
   return true;
 }

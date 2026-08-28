@@ -47,6 +47,9 @@ const SGCU_APP_CONFIG = {
       allowedPickupDays: [1, 4]
     }
   },
+  documents: {
+    signersByAcademicYear: {}
+  },
   org: {
     defaultBaseGroups: [
       "ชมรมฝ่ายศิลปะและวัฒนธรรม",

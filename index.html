@@ -429,6 +429,10 @@
           <span class="mobile-dashboard-action-icon" aria-hidden="true">✓</span>
           <span>พร้อมข้อมูล</span>
         </button>
+        <button class="mobile-dashboard-action" type="button" data-dashboard-mobile-action="documents">
+          <span class="mobile-dashboard-action-icon" aria-hidden="true">▤</span>
+          <span>เอกสาร</span>
+        </button>
         <button class="mobile-dashboard-action" type="button" data-dashboard-mobile-action="metrics">
           <span class="mobile-dashboard-action-icon" aria-hidden="true">▦</span>
           <span>ตัวเลข</span>
@@ -703,7 +707,7 @@
 
         <div class="pdf-center-title">แบบบันทึกยืมรองจ่าย</div>
         <div class="pdf-row-between">
-          <div>ที่ อบจ. 10.01.01-....../2568</div>
+          <div>ที่ อบจ. 10.01.01-……/<span data-pdf-field="documentYear"></span></div>
           <div>เหรัญญิก <br> องค์การบริหารสโมสรนิสิต <br> จุฬาลงกรณ์มหาวิทยาลัย</div>
         </div>
 
@@ -729,7 +733,7 @@
           ขออนุมัติยืมเงินรองจ่ายร้อยละ <span class="pdf-fill pdf-fill-sm" data-pdf-field="advancePercentText"></span> 
           เป็นเงิน <span class="pdf-fill pdf-fill-md" data-pdf-field="approvedBudget80Text"></span> บาท 
           ( <span class="pdf-fill pdf-fill-lg" data-pdf-field="approvedBudget80Words"></span> )
-          โดยกิจกรรมดังกล่าวผ่านที่ประชุมสภานิสิต
+          โดยกิจกรรมดังกล่าวผ่านที่ประชุม<span class="pdf-fill" data-pdf-field="approvalMeetingBody"></span>
           <span class="pdf-fill pdf-fill-lg" data-pdf-field="councilSessionText"></span>
         </div>
         <div class="pdf-paragraph pdf-thai-distributed">
@@ -835,7 +839,7 @@
 
         <div class="pdf-center-title">ขอยืมเงินรองจ่าย</div>
         <div class="pdf-row-between">
-          <div>ที่ อบจ. 10.01.01-……/2568</div>
+          <div>ที่ อบจ. 10.01.01-……/<span data-pdf-field="documentYear"></span></div>
           <div>องค์การบริหารสโมสรนิสิต <br> จุฬาลงกรณ์มหาวิทยาลัย</div>
         </div>
 
@@ -843,7 +847,7 @@
 
         <div class="pdf-paragraph pdf-thai-distributed">
           &emsp;&emsp;<span class="pdf-fill pdf-fill-xl" data-pdf-field="projectName"></span> 
-          ได้รับการอนุมัติงบจากที่ประชุมสภานิสิต <span class="pdf-fill pdf-fill-lg" data-pdf-field="councilSessionText"></span> 
+          ได้รับการอนุมัติงบจากที่ประชุม<span class="pdf-fill" data-pdf-field="approvalMeetingBody"></span> <span class="pdf-fill pdf-fill-lg" data-pdf-field="councilSessionText"></span>
           จัดกิจกรรมใน <span class="pdf-fill pdf-fill-md" data-pdf-field="projectDateRange"></span>
         </div>
 
@@ -886,7 +890,7 @@
         <div class="pdf-right-block">
           <div>โอนเงินเข้าบัญชี<span data-pdf-field="orgAccountName"></span></div>
           <div>เลขที่บัญชี <span data-pdf-field="orgAccountNo"></span></div>
-          <div>โทรศัพท์ <span data-pdf-field="projectLeadPhone"></span>, 094-969-6495</div>
+          <div>โทรศัพท์ <span data-pdf-field="projectLeadPhone"></span>, <span data-pdf-field="signerTreasurerPhone"></span></div>
         </div>
       </section>
 

@@ -3,7 +3,7 @@
   src: url("../../THSarabunNew/THSarabunNew.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
@@ -11,7 +11,7 @@
   src: url("../../THSarabunNew/THSarabunNew Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
@@ -19,7 +19,7 @@
   src: url("../../THSarabunNew/THSarabunNew Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
@@ -27,7 +27,7 @@
   src: url("../../THSarabunNew/THSarabunNew BoldItalic.ttf") format("truetype");
   font-weight: 700;
   font-style: italic;
-  font-display: swap;
+  font-display: block;
 }
 
 /* ===== PDF Template ===== */
@@ -40,9 +40,15 @@
   color: #111;
   background: #fff;
   pointer-events: none;
-  line-break: auto;
+  line-break: loose;
   word-break: normal;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.pdf-root,
+.pdf-root * {
+  font-family: "THSarabunNew", "TH Sarabun New", serif !important;
 }
 
 .pdf-page {
@@ -154,6 +160,14 @@
   border-bottom: none;
   padding: 0;
   min-width: 0;
+}
+
+/* Values inside prose must participate in the same Thai line-breaking context. */
+.pdf-paragraph .pdf-fill[data-pdf-field] {
+  display: inline;
+  line-height: inherit;
+  white-space: normal;
+  overflow-wrap: normal;
 }
 
 .pdf-fill-parentheses::before,
@@ -285,23 +299,31 @@
   margin-bottom: 1mm;
   line-height: 1.5;
   text-align: justify;
-  text-justify: inter-word;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
+  text-justify: inter-character;
+  line-break: loose;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  orphans: 2;
+  widows: 2;
 }
 
 .pdf-thai-distributed {
   text-align: justify;
   text-align-last: left;
-  text-justify: inter-word;
+  text-justify: inter-character;
   word-spacing: normal;
   letter-spacing: 0;
 }
 
-@supports (text-justify: distribute) {
+@supports not (text-justify: inter-character) {
   .pdf-thai-distributed {
-    text-justify: inter-word;
+    text-justify: auto;
   }
+}
+
+.pdf-thai-break {
+  display: inline;
 }
 
 .pdf-dots-right {

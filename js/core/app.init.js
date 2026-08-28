@@ -543,6 +543,7 @@ function initDashboardMobileActionBar() {
 
   const targetByAction = {
     checks: "projectStaffOpsPanelStaff",
+    documents: "dashboardDocumentSettingsSectionStaff",
     metrics: "dashboardMetricsSectionStaff",
     followup: "dashboardFollowupSectionStaff",
     analysis: "dashboardAnalysisSectionStaff"

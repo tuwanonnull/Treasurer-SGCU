@@ -61,6 +61,22 @@
       };
     }
 
+    const signerRows = input.documents?.signersByAcademicYear;
+    if (isPlainObject(signerRows)) {
+      const normalizedSigners = {};
+      Object.entries(signerRows).forEach(([rawYear, rawSigner]) => {
+        const year = rawYear.toString().trim();
+        if (!/^\d{4}$/.test(year) || !isPlainObject(rawSigner)) return;
+        const treasurerName = (rawSigner.treasurerName || "").toString().trim();
+        const treasurerPhone = (rawSigner.treasurerPhone || "").toString().trim();
+        const presidentName = (rawSigner.presidentName || "").toString().trim();
+        const approvalMeetingBody = (rawSigner.approvalMeetingBody || "").toString().trim();
+        if (!treasurerName && !treasurerPhone && !presidentName && !approvalMeetingBody) return;
+        normalizedSigners[year] = { treasurerName, treasurerPhone, presidentName, approvalMeetingBody };
+      });
+      normalized.documents = { signersByAcademicYear: normalizedSigners };
+    }
+
     return normalized;
   };
 

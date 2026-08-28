@@ -880,7 +880,7 @@
   }
 
   .mobile-dashboard-action-bar.is-visible {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   body.mobile-menu-open .mobile-project-action-bar.is-visible,

@@ -1,12 +1,12 @@
 /* Split stylesheet entrypoint. Keep imports ordered to preserve the original cascade. */
 @import url("./core/base.css?v=20260611-thai-text-rendering-1");
 @import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/operations.css?v=20260707-dashboard-mobile-nav-1");
+@import url("./pages/operations.css?v=20260828-document-signer-layout-5");
 @import url("./pages/meeting-room.css?v=20260827-stable-staff-calendar-1");
 @import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/layout.css?v=20260518-csv-refresh-5");
-@import url("./core/navigation.css?v=20260827-meeting-menu-five-columns-1");
-@import url("./components/ui.css?v=20260707-dashboard-skeleton-1");
+@import url("./core/navigation.css?v=20260828-dashboard-doc-settings-1");
+@import url("./components/ui.css?v=20260828-dashboard-document-skeleton-2");
 @import url("./pages/home.css?v=20260611-thai-text-rendering-1");
 @import url("./pages/about-org.css?v=20260510-budget-spacing-fix-1");
 @import url("./pages/treasurer-handover.css?v=20260511-handover-part1-1");
@@ -14,8 +14,8 @@
 @import url("./components/modals-motion.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/responsive.css?v=20260616-system-data-filter-1");
 @import url("./pages/home-scoreboard.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/request-details.css?v=20260816-borrow-schedule-row-1");
-@import url("./pages/pdf.css?v=20260510-budget-spacing-fix-1");
+@import url("./pages/request-details.css?v=20260828-staff-meeting-toggle-5");
+@import url("./pages/pdf.css?v=20260828-thai-typesetting-1");
 @import url("./components/app-loader.css?v=20260514-loader-logo-shadow-1");
 @import url("./pages/meeting-public-calendar.css?v=20260827-matrix-row-height-2");
 

@@ -490,6 +490,7 @@ function buildProjectStatusContext(suffix = "", key = "public") {
     projectTableSkeletonEl: get("projectTableSkeleton"),
     dashboardOverviewSkeletonEl: get("dashboardOverviewSkeleton"),
     dashboardOverviewContentEl: get("dashboardOverviewContent"),
+    dashboardDocumentSettingsEl: get("dashboardDocumentSettingsSection"),
     closureStatusChartDownloadBtn: get("downloadClosureStatusChartPng"),
     projectDataLoadStateEl: get("projectDataLoadState"),
     calendarSkeletonEl: get("calendarSkeleton"),

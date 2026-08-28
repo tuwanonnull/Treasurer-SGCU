@@ -66,6 +66,9 @@
             <button type="button" class="tab-btn view-toggle-btn is-active" data-project-workflow-toc="checks" data-project-workflow-target="projectStaffOpsPanelStaff">
               ความพร้อมข้อมูล
             </button>
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="documents" data-project-workflow-target="dashboardDocumentSettingsSectionStaff">
+              ตั้งค่าเอกสาร
+            </button>
             <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="metrics" data-project-workflow-target="dashboardMetricsSectionStaff">
               ภาพรวมตัวเลข
             </button>
@@ -92,6 +95,32 @@
                 <span></span><span></span><span></span>
                 <span></span><span></span><span></span>
                 <span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="dashboard-skeleton-card dashboard-skeleton-settings-card">
+              <span class="dashboard-skeleton-line dashboard-skeleton-title"></span>
+              <span class="dashboard-skeleton-line dashboard-skeleton-caption"></span>
+              <div class="dashboard-skeleton-settings-fields">
+                <div class="dashboard-skeleton-field">
+                  <span class="dashboard-skeleton-line dashboard-skeleton-label"></span>
+                  <span class="dashboard-skeleton-control"></span>
+                </div>
+                <div class="dashboard-skeleton-field">
+                  <span class="dashboard-skeleton-line dashboard-skeleton-label"></span>
+                  <span class="dashboard-skeleton-control"></span>
+                </div>
+                <div class="dashboard-skeleton-field">
+                  <span class="dashboard-skeleton-line dashboard-skeleton-label"></span>
+                  <span class="dashboard-skeleton-control"></span>
+                </div>
+                <div class="dashboard-skeleton-field">
+                  <span class="dashboard-skeleton-line dashboard-skeleton-label"></span>
+                  <span class="dashboard-skeleton-control"></span>
+                </div>
+              </div>
+              <div class="dashboard-skeleton-settings-actions">
+                <span class="dashboard-skeleton-toggle"></span>
+                <span class="dashboard-skeleton-action"></span>
               </div>
             </div>
             <div class="dashboard-skeleton-header">
@@ -207,6 +236,55 @@
                   </table>
                 </div>
               </div>
+            </section>
+          </section>
+
+          <section id="dashboardDocumentSettingsSectionStaff" class="dashboard-section document-settings-section section-appear section-delay-1">
+            <section class="panel project-staff-workflow-card document-signer-settings-panel">
+              <div class="project-staff-ops-section-head">
+                <div>
+                  <h3 class="panel-title">ตั้งค่าเอกสารยืมรองจ่าย</h3>
+                  <p>กำหนดผู้ลงนาม เบอร์โทร และที่ประชุมอนุมัติแยกตามปีการศึกษา</p>
+                </div>
+              </div>
+              <form id="documentSignerSettingsForm" class="budget-staff-controls document-signer-settings-form">
+                <div class="document-signer-settings-grid">
+                  <div class="borrow-form-field document-signer-year-field">
+                    <label class="login-label" for="documentSignerAcademicYear">ปีการศึกษา</label>
+                    <input id="documentSignerAcademicYear" class="login-input" type="number" min="2500" max="2999" step="1" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerPresidentName">ชื่อนายกสโมสร</label>
+                    <input id="documentSignerPresidentName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerTreasurerName">ชื่อเหรัญญิก</label>
+                    <input id="documentSignerTreasurerName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerTreasurerPhone">เบอร์โทรเหรัญญิก</label>
+                    <input id="documentSignerTreasurerPhone" class="login-input" type="tel" maxlength="30" placeholder="เช่น 094-969-6495" required />
+                  </div>
+                  <fieldset class="pdf-meeting-body-fieldset document-signer-meeting-field">
+                    <legend class="login-label">กิจกรรมผ่านที่ประชุม</legend>
+                    <div class="tabs document-meeting-body-toggle" role="radiogroup" aria-label="เลือกที่ประชุมอนุมัติกิจกรรม">
+                      <label class="tab-btn view-toggle-btn is-active">
+                        <input type="radio" name="documentApprovalMeetingBody" value="สภานิสิต" checked hidden />
+                        สภานิสิต
+                      </label>
+                      <label class="tab-btn view-toggle-btn">
+                        <input type="radio" name="documentApprovalMeetingBody" value="คณะกรรมการบริหารสโมสรนิสิตจุฬาลงกรณ์มหาวิทยาลัย" hidden />
+                        <span class="document-meeting-label-long">คณะกรรมการบริหารสโมสรนิสิตฯ</span>
+                        <span class="document-meeting-label-short">อบจ.</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <div class="document-signer-actions">
+                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกผู้ลงนาม</button>
+                  </div>
+                </div>
+                <div id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite"></div>
+              </form>
             </section>
           </section>
           <section id="dashboardOverviewContentStaff" class="dashboard-overview section-appear section-delay-1">
