@@ -600,8 +600,13 @@ function setupPdfSignatures(rootEl, project) {
 
 async function downloadProjectPdf(project, signatureData) {
   if (!pdfRootEl) return;
-  
-  await ensureOrgAccountMap();
+
+  // Account data improves the generated document, but a slow Firestore request
+  // must never leave the Create PDF button waiting indefinitely.
+  await Promise.race([
+    ensureOrgAccountMap(),
+    new Promise((resolve) => window.setTimeout(resolve, 2500))
+  ]);
 
   if (downloadPdfInSameTab(project, signatureData)) return;
 
@@ -672,7 +677,7 @@ function openPdfSignModal(project) {
   cancelBtn.onclick = closeHandler;
 
   // Handle Submit
-  form.onsubmit = (e) => {
+  form.onsubmit = async (e) => {
     e.preventDefault();
     
     const signatureData = {
@@ -683,8 +688,25 @@ function openPdfSignModal(project) {
       advisor: document.getElementById("pdfSignAdvisor").value.trim()
     };
 
-    closeHandler();
-    downloadProjectPdf(project, signatureData);
+    const submitButton = form.querySelector('[type="submit"]');
+    const originalButtonText = submitButton?.textContent || "สร้าง PDF";
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "กำลังสร้าง PDF...";
+    }
+
+    try {
+      await downloadProjectPdf(project, signatureData);
+      closeHandler();
+    } catch (error) {
+      console.error("Unable to create advance-loan PDF", error);
+      alert("ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+    }
   };
 }
 
@@ -909,30 +931,12 @@ function downloadPdfInSameTab(project, signatureData) {
 
   const doc = iframe.contentDocument || iframe.contentWindow.document;
   const baseHref = new URL(".", window.location.href).href;
-  doc.open();
-  doc.write(`
-    <!doctype html>
-    <html lang="th">
-      <head>
-        <meta charset="UTF-8" />
-        <base href="${baseHref}" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${docTitle}</title>
-        <link rel="stylesheet" href="css/style.css" />
-        <style>
-          body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
-          .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
-        </style>
-      </head>
-      <body></body>
-    </html>
-  `);
-  doc.close();
-
   let hasPrinted = false;
+  let fallbackTimer = 0;
   const doPrint = async () => {
     if (hasPrinted) return;
     hasPrinted = true;
+    if (fallbackTimer) window.clearTimeout(fallbackTimer);
     doc.body.appendChild(tempRoot);
     await waitForPdfAssets(doc, tempRoot);
     const originalPageTitle = document.title;
@@ -953,9 +957,34 @@ function downloadPdfInSameTab(project, signatureData) {
     }, 1500);
   };
 
+  // Bind before writing the iframe document. Some browsers complete the load
+  // synchronously after doc.close(), which previously left the button doing nothing.
   iframe.onload = () => {
     void doPrint();
   };
+
+  doc.open();
+  doc.write(`
+    <!doctype html>
+    <html lang="th">
+      <head>
+        <meta charset="UTF-8" />
+        <base href="${baseHref}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>${docTitle}</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <style>
+          body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
+          .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
+        </style>
+      </head>
+      <body></body>
+    </html>
+  `);
+  doc.close();
+  fallbackTimer = window.setTimeout(() => {
+    void doPrint();
+  }, 250);
 
   return true;
 }
