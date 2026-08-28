@@ -3,7 +3,7 @@
   const DEFAULT_CONFIG = JSON.parse(JSON.stringify(globalThis.SGCU_APP_CONFIG || {}));
   const SETTINGS_COLLECTION = "appSettings";
   const SETTINGS_DOC = "global";
-  const WAIT_TIMEOUT_MS = 2500;
+  const WAIT_TIMEOUT_MS = 10000;
   const WAIT_INTERVAL_MS = 50;
 
   const isPlainObject = (value) =>

@@ -48,6 +48,21 @@
     showMessage(row.treasurerName || row.presidentName ? `กำลังแสดงข้อมูลปีการศึกษา ${year}` : `ยังไม่มีข้อมูลปี ${year} ระบบแสดงค่าตั้งต้น`);
   };
 
+  const loadSettings = async () => {
+    showMessage("กำลังโหลดการตั้งค่า...", "#1d4ed8");
+    try {
+      await Promise.resolve(window.sgcuRuntimeConfigReady);
+      if (typeof window.sgcuRuntimeConfig?.loadRemoteConfig === "function") {
+        await window.sgcuRuntimeConfig.loadRemoteConfig();
+      }
+      fillYear();
+    } catch (error) {
+      console.error("document signer settings load failed", error);
+      fillYear();
+      showMessage("โหลดข้อมูลที่บันทึกไว้ไม่สำเร็จ ระบบแสดงค่าตั้งต้น", "#b45309");
+    }
+  };
+
   const save = async (event) => {
     event.preventDefault();
     const year = yearInput.value.trim();
@@ -82,6 +97,9 @@
         },
         { merge: true }
       );
+      window.sgcuRuntimeConfig?.applyConfig?.({
+        documents: { signersByAcademicYear: nextRows }
+      });
       if (!globalThis.SGCU_APP_CONFIG.documents) globalThis.SGCU_APP_CONFIG.documents = {};
       globalThis.SGCU_APP_CONFIG.documents.signersByAcademicYear = nextRows;
       showMessage(`บันทึกผู้ลงนามปีการศึกษา ${year} เรียบร้อย`, "#047857");
@@ -99,5 +117,5 @@
     input.addEventListener("change", syncMeetingToggle);
   });
   form.addEventListener("submit", save);
-  Promise.resolve(window.sgcuRuntimeConfigReady).finally(fillYear);
+  void loadSettings();
 })();
