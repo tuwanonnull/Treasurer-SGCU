@@ -807,19 +807,6 @@ async function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext
   const sourceCanvas = chart?.canvas;
   if (!chart || !sourceCanvas) return;
 
-  chart.update("none");
-
-  const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = sourceCanvas.width;
-  exportCanvas.height = sourceCanvas.height;
-  const exportCtx = exportCanvas.getContext("2d");
-  if (!exportCtx) return;
-
-  exportCtx.fillStyle = "#ffffff";
-  exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-  exportCtx.drawImage(sourceCanvas, 0, 0);
-  drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas);
-
   const yearValue = (yearSelect?.value || selectedProjectSourceYear || "all").toString().trim() || "all";
   const orgGroupValue = (orgTypeSelect?.value || "all").toString().trim() || "all";
   const orgValue = (orgSelect?.value || "all").toString().trim() || "all";
@@ -837,7 +824,67 @@ async function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext
     fileSafe(orgValue)
   ].join("-") + ".png";
 
-  const blob = await new Promise((resolve) => exportCanvas.toBlob(resolve, "image/png"));
+  // Render exports at a stable landscape size. Reusing the responsive mobile
+  // canvas directly makes installed Web Apps produce a tall, cramped image.
+  const originalWidth = chart.width;
+  const originalHeight = chart.height;
+  const originalCanvasStyle = sourceCanvas.getAttribute("style");
+  const originalResponsive = chart.options.responsive;
+  const originalPixelRatio = chart.options.devicePixelRatio;
+  const originalYAxisAfterFit = chart.options.scales.y.afterFit;
+  const originalExternalAxisWidth = chart.options.plugins.externalAxisLabels?.y?.width;
+  const originalXAxisFont = chart.options.scales.x.ticks.font;
+  const originalLegendFont = chart.options.plugins.legend.labels.font;
+  const exportWidth = 1200;
+  const exportHeight = Math.max(520, (chart.data.labels?.length || 1) * 56 + 180);
+  let blob = null;
+
+  try {
+    sourceCanvas.style.setProperty("width", `${exportWidth}px`, "important");
+    sourceCanvas.style.setProperty("height", `${exportHeight}px`, "important");
+    sourceCanvas.style.setProperty("max-width", "none", "important");
+    chart.options.responsive = false;
+    chart.options.devicePixelRatio = 1;
+    chart.options.scales.y.afterFit = (scale) => {
+      scale.width = 250;
+    };
+    chart.options.scales.x.ticks.font = { ...(originalXAxisFont || {}), size: 16 };
+    chart.options.plugins.legend.labels.font = { ...(originalLegendFont || {}), size: 16 };
+    if (chart.options.plugins.externalAxisLabels?.y) {
+      chart.options.plugins.externalAxisLabels.y.width = 250;
+    }
+    chart.resize(exportWidth, exportHeight);
+    chart.update("none");
+
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = sourceCanvas.width;
+    exportCanvas.height = sourceCanvas.height;
+    const exportCtx = exportCanvas.getContext("2d");
+    if (!exportCtx) return;
+
+    exportCtx.fillStyle = "#ffffff";
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.drawImage(sourceCanvas, 0, 0);
+    drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDesktopLabels: true });
+    blob = await new Promise((resolve) => exportCanvas.toBlob(resolve, "image/png"));
+  } finally {
+    if (originalCanvasStyle === null) {
+      sourceCanvas.removeAttribute("style");
+    } else {
+      sourceCanvas.setAttribute("style", originalCanvasStyle);
+    }
+    chart.options.responsive = originalResponsive;
+    chart.options.devicePixelRatio = originalPixelRatio;
+    chart.options.scales.y.afterFit = originalYAxisAfterFit;
+    chart.options.scales.x.ticks.font = originalXAxisFont;
+    chart.options.plugins.legend.labels.font = originalLegendFont;
+    if (chart.options.plugins.externalAxisLabels?.y) {
+      chart.options.plugins.externalAxisLabels.y.width = originalExternalAxisWidth;
+    }
+    chart.resize(originalWidth, originalHeight);
+    chart.update("none");
+  }
+
   if (!blob) return;
 
   const isStandaloneWebApp =
@@ -873,7 +920,7 @@ async function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
 }
 
-function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas) {
+function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDesktopLabels = false } = {}) {
   const labels = chart?.data?.labels || [];
   const scale = chart?.scales?.y;
   const chartArea = chart?.chartArea;
@@ -882,17 +929,20 @@ function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas) {
   const pixelRatio = sourceCanvas.width / Math.max(chart.width || sourceCanvas.clientWidth || 1, 1);
   const gap = Number(chart.options?.plugins?.externalAxisLabels?.y?.gap) || 8;
   const x = Math.max(0, chartArea.left - gap);
-  const lineHeight = 14;
+  const lineHeight = useDesktopLabels ? 21 : 14;
 
   exportCtx.save();
   exportCtx.scale(pixelRatio, pixelRatio);
   exportCtx.fillStyle = "#6b7280";
-  exportCtx.font = "600 11px Kanit, sans-serif";
+  exportCtx.font = `600 ${useDesktopLabels ? 16 : 11}px Kanit, sans-serif`;
   exportCtx.textAlign = "right";
   exportCtx.textBaseline = "middle";
 
   labels.forEach((label, index) => {
-    const lines = normalizeExternalAxisLines(getClosureAxisWrappedLabel(label));
+    const wrappedLabel = useDesktopLabels
+      ? wrapChartAxisLabel(label, 30, 2)
+      : getClosureAxisWrappedLabel(label);
+    const lines = normalizeExternalAxisLines(wrappedLabel);
     if (!lines.length) return;
     const y = scale.getPixelForValue(index);
     const startY = y - ((lines.length - 1) * lineHeight) / 2;
