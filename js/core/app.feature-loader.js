@@ -55,17 +55,43 @@
       ],
       "budget-approval-request": "js/features/budget/app.budget-request.js?v=20260623-audit-hardening-1",
       login: [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
         "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
         "js/features/budget/app.budget-request.js?v=20260623-audit-hardening-1"
       ],
-      "staff-application": "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
+      "staff-application": [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
+        "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1"
+      ],
       "staff-approval": [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
         "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
         "js/features/budget/app.budget-staff.js?v=20260614-budget-chart-mobile-1"
       ],
-      "staff-directory-staff": "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
-      "staff-temporary-access-staff": "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
-      "org-representative-approval-staff": "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1",
+      "staff-directory-staff": [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
+        "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1"
+      ],
+      "staff-temporary-access-staff": [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
+        "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1"
+      ],
+      "org-representative-approval-staff": [
+        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
+        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
+        "js/features/staff/app.staff-access.js?v=20260827-position-access-sync-1"
+      ],
       "content-management-staff": [
         "js/features/docs/app.file-links.js?v=20260417-1",
         "js/features/content/app.content-management.js?v=20260506-1"

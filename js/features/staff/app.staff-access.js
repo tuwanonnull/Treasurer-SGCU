@@ -3,6 +3,15 @@ function initStaffAccessPages() {
   if (window.__sgcuStaffAccessInitDone) return;
   window.__sgcuStaffAccessInitDone = true;
 
+  const shared = window.sgcuStaffAccessShared;
+  const catalog = window.sgcuStaffAccessCatalog;
+  const catalogViewFactory = window.sgcuStaffAccessCatalogView;
+  if (!shared || !catalog || !catalogViewFactory) {
+    console.error("staff access dependencies are not loaded - app.staff-access.js:10");
+    window.__sgcuStaffAccessInitDone = false;
+    return;
+  }
+
   const applicationModalEl = document.getElementById("staffApplicationModal");
   const applicationModalCloseEl = document.getElementById("staffApplicationModalClose");
   const applicationModalOpenEl = document.getElementById("loginHelpApplyBtn");
@@ -1246,20 +1255,9 @@ function initStaffAccessPages() {
     return yyList.has("00") || positionText === "เหรัญญิก" || positionText === "เลขานุการฝ่ายเหรัญญิก";
   };
 
-  const toSafeText = (value) =>
-    String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-
-  const normalizePositionText = (value) => (value || "").toString().trim().replace(/\s+/g, " ");
-  const normalizeCode2 = (value) => {
-    const digits = String(value || "").trim().replace(/\D/g, "");
-    if (!digits) return "";
-    return digits.padStart(2, "0").slice(-2);
-  };
+  const toSafeText = shared.escapeHtml;
+  const normalizePositionText = shared.normalizePositionText;
+  const normalizeCode2 = shared.normalizeCode2;
   const isValidDivisionCodeYY = (value) => /^\d{2}$/.test(normalizeCode2(value));
   const isValidLevelCodeZZ = (value) => ["01", "02", "03", "04"].includes(normalizeCode2(value));
   const isKnownStaffPage = (page) => {
@@ -1570,53 +1568,13 @@ function initStaffAccessPages() {
     return { code, xx, yy, zz, aaa };
   };
 
-  const slugifyPosition = (value) => {
-    const normalized = normalizePositionText(value).toLowerCase();
-    const slug = normalized
-      .replace(/[^\p{L}\p{N}]+/gu, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 80);
-    return slug || `position-${Date.now()}`;
-  };
-
-  const formatDateTime = (value) => {
-    if (!value) return "-";
-    const date = typeof value?.toDate === "function" ? value.toDate() : new Date(value);
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString("th-TH", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
-
-  const parseAcademicReferenceDate = (value) => {
-    if (!value) return new Date();
-    const source = value && typeof value === "object" && value.date !== undefined ? value.date : value;
-    const date = typeof source?.toDate === "function" ? source.toDate() : new Date(source);
-    return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
-  };
-
-  const getCurrentAcademicYearBE = (referenceValue = new Date()) => {
-    const referenceDate = parseAcademicReferenceDate(referenceValue) || new Date();
-    const yearCE = referenceDate.getFullYear();
-    const month = referenceDate.getMonth() + 1;
-    const academicYearCE = month >= 6 ? yearCE : yearCE - 1;
-    return academicYearCE + 543;
-  };
+  const slugifyPosition = shared.slugifyPosition;
+  const formatDateTime = shared.formatDateTime;
+  const getCurrentAcademicYearBE = shared.getCurrentAcademicYearBE;
 
   currentOrgRepresentativeAcademicYear = String(getCurrentAcademicYearBE());
 
-  const getAcademicYearFromTimestamp = (value) => {
-    if (!value) return "";
-    const date = parseAcademicReferenceDate(value);
-    if (!date) return "";
-    const yearCE = date.getFullYear();
-    const month = date.getMonth() + 1;
-    return String((month >= 6 ? yearCE : yearCE - 1) + 543);
-  };
+  const getAcademicYearFromTimestamp = shared.getAcademicYearFromTimestamp;
 
   const getOrgRepresentativeAcademicYear = (item = {}) => {
     const explicit = (item.academicYear || item.representativeAcademicYear || item.schoolYear || "").toString().trim();
@@ -1624,55 +1582,13 @@ function initStaffAccessPages() {
     return getAcademicYearFromTimestamp(item.createdAt || item.reviewedAt || item.updatedAt) || String(getCurrentAcademicYearBE());
   };
 
-  const isMeaningfulProfileValue = (value) => {
-    const normalized = (value || "").toString().trim().toLowerCase();
-    return !["", "-", "—", "unknown", "n/a", "na", "null", "undefined", "ไม่ระบุ"].includes(normalized);
-  };
-
-  const getMeaningfulProfileValue = (...values) => {
-    for (const value of values) {
-      if (!isMeaningfulProfileValue(value)) continue;
-      return (value || "").toString().trim();
-    }
-    return "";
-  };
-
-  const deriveAcademicProfileFromStudentId = (rawStudentId, referenceValue = new Date()) => {
-    const studentId = (rawStudentId || "").toString().trim();
-    if (!/^\d{10}$/.test(studentId)) return { studentId: "", faculty: "", year: "" };
-    const facultyCode = studentId.slice(-2);
-    const faculty = STUDENT_FACULTY_MAP[facultyCode] || "";
-    const entryPrefix = Number(studentId.slice(0, 2));
-    const currentAcademicBE = getCurrentAcademicYearBE(referenceValue);
-    const entryAcademicBE = Number.isFinite(entryPrefix) ? 2500 + entryPrefix : NaN;
-    const yearLevel = Number.isFinite(entryAcademicBE)
-      ? currentAcademicBE - entryAcademicBE + 1
-      : NaN;
-    const year = isAlumniChulaEmail(referenceValue?.email || referenceValue?.authEmail)
-      ? "นิสิตเก่า"
-      : Number.isFinite(yearLevel) && yearLevel >= 1 && yearLevel <= 8 ? String(yearLevel) : "";
-    return { studentId, faculty, year };
-  };
-
-  const deriveAcademicProfileFromEmail = (email, referenceValue = new Date()) => {
-    const normalizedEmail = (email || "").toString().trim().toLowerCase();
-    const localPart = normalizedEmail.split("@")[0] || "";
-    return deriveAcademicProfileFromStudentId(localPart, referenceValue);
-  };
-
-  const deriveAcademicProfile = (profile = {}, email = "", referenceValue = new Date()) => {
-    const explicitStudentId = getMeaningfulProfileValue(profile?.studentId);
-    const referenceContext = referenceValue && typeof referenceValue === "object" && !Array.isArray(referenceValue)
-      ? { ...referenceValue, email }
-      : { date: referenceValue, email };
-    const fromStudentId = deriveAcademicProfileFromStudentId(explicitStudentId, referenceContext);
-    const fromEmail = deriveAcademicProfileFromEmail(email, referenceContext);
-    return {
-      studentId: getMeaningfulProfileValue(explicitStudentId, fromEmail.studentId),
-      faculty: getMeaningfulProfileValue(profile?.faculty, fromStudentId.faculty, fromEmail.faculty),
-      year: getMeaningfulProfileValue(fromStudentId.year, fromEmail.year, profile?.year)
-    };
-  };
+  const isMeaningfulProfileValue = shared.isMeaningfulProfileValue;
+  const getMeaningfulProfileValue = shared.getMeaningfulProfileValue;
+  const deriveAcademicProfile = (profile = {}, email = "", referenceValue = new Date()) =>
+    shared.deriveAcademicProfile(profile, email, referenceValue, {
+      facultyMap: STUDENT_FACULTY_MAP,
+      isAlumniEmail: isAlumniChulaEmail
+    });
 
   const mapStatusBadge = (status) => {
     const normalized = (status || "pending").toString().trim().toLowerCase();
@@ -1885,7 +1801,7 @@ function initStaffAccessPages() {
       setApprovalAvailabilityByRole();
       return currentAccessProfile;
     } catch (error) {
-      console.warn("load current staff access profile failed - app.staff-access.js:1529", error);
+      console.warn("load current staff access profile failed - app.staff-access.js:1804", error);
       return currentAccessProfile;
     } finally {
       if (currentAccessProfileLoadingEmail === email) {
@@ -2248,7 +2164,7 @@ function initStaffAccessPages() {
       resetOrgStructureForm();
       setMessage(orgStructureFormMessageEl, "บันทึกรายชื่อทำเนียบรุ่นแล้ว และอัปเดต public cache แล้ว", "#047857");
     } catch (error) {
-      console.error("save org structure member failed - app.staff-access.js:1850", error);
+      console.error("save org structure member failed - app.staff-access.js:2167", error);
       setMessage(orgStructureFormMessageEl, error.message || "บันทึกทำเนียบรุ่นไม่สำเร็จ", "#b91c1c");
     } finally {
       controls.forEach((control) => {
@@ -2279,7 +2195,7 @@ function initStaffAccessPages() {
         renderOrgStructureMembers();
       },
       (error) => {
-        console.error("load org structure members failed - app.staff-access.js:1881", error);
+        console.error("load org structure members failed - app.staff-access.js:2198", error);
         orgStructureListCaptionEl.textContent = "โหลดทำเนียบรุ่นไม่สำเร็จ";
         orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4">ไม่สามารถโหลดรายชื่อจาก Firestore ได้</td></tr>`;
       }
@@ -3072,7 +2988,7 @@ function initStaffAccessPages() {
       refreshSummaryCounts();
       syncApprovalPanelCaption();
     } catch (error) {
-      console.error("renderApprovalRows failed - app.staff-access.js:2421", error);
+      console.error("renderApprovalRows failed - app.staff-access.js:2991", error);
       approvalBodyEl.innerHTML = `<tr><td colspan="5">แสดงผลคำขอไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
       setMessage(approvalMessageEl, "แสดงผลคำขอไม่สำเร็จ กรุณาลองใหม่", "#b91c1c");
     }
@@ -3207,7 +3123,7 @@ function initStaffAccessPages() {
       refreshSummaryCounts();
       syncApprovalPanelCaption();
     } catch (error) {
-      console.error("renderApprovedHistory failed - app.staff-access.js:2545", error);
+      console.error("renderApprovedHistory failed - app.staff-access.js:3126", error);
       approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">แสดงผลรายชื่อไม่สำเร็จ: ${toSafeText(error?.message || "unknown")}</td></tr>`;
     }
   };
@@ -3470,7 +3386,7 @@ function initStaffAccessPages() {
         return !!loaded || getKnownOrganizationFilters().length > 0;
       })
       .catch((error) => {
-        console.warn("load organization filters for representative overview failed - app.staff-access.js:2673", error);
+        console.warn("load organization filters for representative overview failed - app.staff-access.js:3389", error);
         orgRepresentativeOrgFiltersLoadedForPage = true;
         return false;
       })
@@ -3480,20 +3396,8 @@ function initStaffAccessPages() {
     return orgRepresentativeOrgFiltersLoadPromise;
   };
 
-  const normalizeOrganizationCatalogText = (value) =>
-    (value ?? "")
-      .toString()
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
-      .trim();
-
-  const slugifyOrganizationCatalogId = (value) => {
-    const slug = normalizeOrganizationCatalogText(value)
-      .toLowerCase()
-      .replace(/[^a-z0-9ก-๙]+/gi, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 120);
-    return slug || `organization-${Date.now()}`;
-  };
+  const normalizeOrganizationCatalogText = catalog.normalizeText;
+  const slugifyOrganizationCatalogId = catalog.slugifyId;
 
   const getOrganizationCatalogDisplayAcademicYear = () => {
     const selected = normalizeOrganizationCatalogText(currentOrgRepresentativeAcademicYear);
@@ -3501,12 +3405,7 @@ function initStaffAccessPages() {
     return String(getCurrentAcademicYearBE());
   };
 
-  const normalizeOrganizationCatalogAcademicYearText = (value) => {
-    const text = normalizeOrganizationCatalogText(value);
-    const num = Number(text);
-    if (!Number.isInteger(num) || num <= 0) return "";
-    return num < 100 ? String(2500 + num) : String(num);
-  };
+  const normalizeOrganizationCatalogAcademicYearText = catalog.normalizeAcademicYear;
 
   const getOrganizationCatalogItemAcademicYear = (item = {}) =>
     normalizeOrganizationCatalogAcademicYearText(item?.academicYear || item?.year || item?.catalogAcademicYear);
@@ -3577,38 +3476,12 @@ function initStaffAccessPages() {
     ].filter(Boolean);
   };
 
-  const ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR = "2568";
-
-  const ORGANIZATION_CATALOG_DOCUMENT_PREFIX_BY_GROUP = new Map([
-    ["องค์การบริหารสโมสรนิสิต", "อบจ."],
-    ["สภานิสิต", "สภจ."],
-    ["ชมรมฝ่ายกีฬา", "อบจ.กฬ."],
-    ["ชมรมฝ่ายพัฒนาสังคมและบำเพ็ญประโยชน์", "อบจ.พฒ."],
-    ["ชมรมฝ่ายวิชาการ", "อบจ.วชก."],
-    ["ชมรมฝ่ายศิลปะและวัฒนธรรม", "อบจ.ศป."]
-  ]);
-
-  const getOrganizationCatalogDocumentPrefix = (group) =>
-    ORGANIZATION_CATALOG_DOCUMENT_PREFIX_BY_GROUP.get(normalizeOrganizationCatalogText(group)) || "";
-
-  const isOrganizationCatalogManualDocumentRunGroup = (group) =>
-    normalizeOrganizationCatalogText(group) === "องค์การบริหารสโมสรนิสิต";
-
-  const isOrganizationCatalogCouncilGroup = (group) =>
-    normalizeOrganizationCatalogText(group) === "สภานิสิต";
-
-  const ORGANIZATION_CATALOG_RESPONSIBILITY_DIVISIONS = [
-    { code: "01", label: "ฝ่ายนายกสโมสร" },
-    { code: "02", label: "ฝ่ายอุปนายกคนที่หนึ่ง" },
-    { code: "03", label: "ฝ่ายอุปนายกคนที่สอง" },
-    { code: "04", label: "ฝ่ายเลขานุการ" },
-    { code: "05", label: "ฝ่ายนิสิตสัมพันธ์" },
-    { code: "06", label: "ฝ่ายศิลปะและวัฒนธรรม" },
-    { code: "07", label: "ฝ่ายวิชาการ" },
-    { code: "08", label: "ฝ่ายกีฬา" },
-    { code: "09", label: "ฝ่ายพัฒนาสังคมและบำเพ็ญประโยชน์" },
-    { code: "10", label: "ฝ่ายเหรัญญิก" }
-  ];
+  const ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR = catalog.LEGACY_ACADEMIC_YEAR;
+  const ORGANIZATION_CATALOG_DOCUMENT_PREFIX_BY_GROUP = catalog.DOCUMENT_PREFIX_BY_GROUP;
+  const getOrganizationCatalogDocumentPrefix = catalog.documentPrefix;
+  const isOrganizationCatalogManualDocumentRunGroup = catalog.isManualRunGroup;
+  const isOrganizationCatalogCouncilGroup = catalog.isCouncilGroup;
+  const ORGANIZATION_CATALOG_RESPONSIBILITY_DIVISIONS = catalog.RESPONSIBILITY_DIVISIONS;
 
   const populateOrganizationCatalogResponsibilityDivisions = () => {
     if (!organizationCatalogResponsibilityDivisionEl) return;
@@ -3622,66 +3495,13 @@ function initStaffAccessPages() {
     ].join("");
   };
 
-  const stripOrganizationCatalogDocumentRunYear = (value) =>
-    normalizeOrganizationCatalogText(value)
-      .replace(/^(?:อบจ(?:\.(?:กฬ|พฒ|วชก|ศป))?\.?)\s*/u, "")
-      .replace(/\s*\/\s*\d{4}\s*$/u, "");
+  const stripOrganizationCatalogDocumentRunYear = catalog.stripRunYear;
 
-  const getOrganizationCatalogYearValue = (map = {}, academicYear = getOrganizationCatalogDisplayAcademicYear()) => {
-    if (!map || typeof map !== "object" || Array.isArray(map)) return "";
-    const year = Number(normalizeOrganizationCatalogText(academicYear));
-    if (!Number.isFinite(year)) return "";
-    const normalized = Object.entries(map).reduce((acc, [key, value]) => {
-      const itemYear = Number(normalizeOrganizationCatalogText(key));
-      if (Number.isFinite(itemYear) && /^\d{4}$/.test(normalizeOrganizationCatalogText(key)) && normalizeOrganizationCatalogText(value)) {
-        acc[String(itemYear)] = value;
-      }
-      return acc;
-    }, {});
-    if (normalized[String(year)]) return normalized[String(year)];
-    const previousYear = Object.keys(normalized)
-      .map((key) => Number(key))
-      .filter((itemYear) => Number.isFinite(itemYear) && itemYear < year)
-      .sort((a, b) => b - a)[0];
-    return previousYear ? normalized[String(previousYear)] || "" : "";
-  };
-
-  const getOrganizationCatalogExactYearValue = (map = {}, academicYear = "") => {
-    if (!map || typeof map !== "object" || Array.isArray(map)) return "";
-    const year = normalizeOrganizationCatalogText(academicYear);
-    if (!/^\d{4}$/.test(year)) return "";
-    return normalizeOrganizationCatalogText(map[year]);
-  };
-
-  const getOrganizationCatalogLatestPreviousYearValue = (map = {}, academicYear = "") => {
-    if (!map || typeof map !== "object" || Array.isArray(map)) return "";
-    const year = Number(normalizeOrganizationCatalogText(academicYear));
-    if (!Number.isFinite(year)) return "";
-    const normalized = Object.entries(map).reduce((acc, [key, value]) => {
-      const itemYearText = normalizeOrganizationCatalogText(key);
-      const itemYear = Number(itemYearText);
-      const itemValue = normalizeOrganizationCatalogText(value);
-      if (/^\d{4}$/.test(itemYearText) && Number.isFinite(itemYear) && itemValue) {
-        acc[String(itemYear)] = itemValue;
-      }
-      return acc;
-    }, {});
-    const previousYear = Object.keys(normalized)
-      .map((key) => Number(key))
-      .filter((itemYear) => Number.isFinite(itemYear) && itemYear < year)
-      .sort((a, b) => b - a)[0];
-    return previousYear ? normalized[String(previousYear)] || "" : "";
-  };
-
-  const parseOrganizationCatalogManualDocumentRunBase = (value) => {
-    const base = stripOrganizationCatalogDocumentRunYear(value);
-    const match = base.match(/^(\d{1,2})(?:[.-](\d{1,3}))?$/);
-    if (!match) return { divisionCode: "", subCode: "" };
-    return {
-      divisionCode: match[1].padStart(2, "0").slice(-2),
-      subCode: match[2] ? match[2].padStart(2, "0") : ""
-    };
-  };
+  const getOrganizationCatalogYearValue = (map = {}, academicYear = getOrganizationCatalogDisplayAcademicYear()) =>
+    catalog.yearValue(map, academicYear);
+  const getOrganizationCatalogExactYearValue = catalog.exactYearValue;
+  const getOrganizationCatalogLatestPreviousYearValue = catalog.latestPreviousYearValue;
+  const parseOrganizationCatalogManualDocumentRunBase = catalog.parseManualRunBase;
 
   const getOrganizationCatalogManualRunForYear = (item = {}, academicYear = getOrganizationCatalogDisplayAcademicYear()) => {
     const source = item && typeof item === "object" ? item : {};
@@ -3694,14 +3514,8 @@ function initStaffAccessPages() {
     return stripOrganizationCatalogDocumentRunYear(getOrganizationCatalogYearValue(runMap, year));
   };
 
-  const getOrganizationCatalogManualRunSubNumber = (value) => {
-    const parsed = parseOrganizationCatalogManualDocumentRunBase(value);
-    const number = Number(parsed.subCode);
-    return Number.isFinite(number) && number > 0 ? number : 0;
-  };
-
-  const formatOrganizationCatalogManualRunSubCode = (value) =>
-    String(Math.max(1, Number(value) || 1)).padStart(2, "0");
+  const getOrganizationCatalogManualRunSubNumber = catalog.manualRunSubNumber;
+  const formatOrganizationCatalogManualRunSubCode = catalog.formatManualRunSubCode;
 
   const getOrganizationCatalogSelectedDivisionCode = () => {
     const selectedDivision = normalizeOrganizationCatalogText(organizationCatalogResponsibilityDivisionEl?.value);
@@ -3790,29 +3604,8 @@ function initStaffAccessPages() {
   const resolveOrganizationCatalogDocumentRunBase = ({ code = "", documentRunCode = "" } = {}) =>
     getOrganizationCatalogDocumentRunBaseFromCode(code) || stripOrganizationCatalogDocumentRunYear(documentRunCode);
 
-  const normalizeOrganizationCatalogDocumentRunMap = (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return Object.entries(value).reduce((acc, [year, runCode]) => {
-      const normalizedYear = normalizeOrganizationCatalogText(year);
-      const normalizedRunCode = stripOrganizationCatalogDocumentRunYear(runCode);
-      if (/^\d{4}$/.test(normalizedYear) && normalizedRunCode) {
-        acc[normalizedYear] = normalizedRunCode;
-      }
-      return acc;
-    }, {});
-  };
-
-  const buildOrganizationCatalogDocumentRunMap = ({ documentRunCode = "", documentRunCodeByAcademicYear = {}, runCodeByAcademicYear = {} } = {}) => {
-    const map = {
-      ...normalizeOrganizationCatalogDocumentRunMap(runCodeByAcademicYear),
-      ...normalizeOrganizationCatalogDocumentRunMap(documentRunCodeByAcademicYear)
-    };
-    const legacyRunCode = stripOrganizationCatalogDocumentRunYear(documentRunCode);
-    if (legacyRunCode && !map[ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR]) {
-      map[ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR] = legacyRunCode;
-    }
-    return map;
-  };
+  const normalizeOrganizationCatalogDocumentRunMap = catalog.normalizeDocumentRunMap;
+  const buildOrganizationCatalogDocumentRunMap = catalog.buildDocumentRunMap;
 
   const resolveOrganizationCatalogDocumentRunBaseForGroup = ({
     group = "",
@@ -3847,56 +3640,12 @@ function initStaffAccessPages() {
           documentRunCode: organizationCatalogFields.documentRunCode?.value
         });
 
-  const ORGANIZATION_CATALOG_CODE_PREFIX_BY_GROUP = new Map([
-    ["องค์การบริหารสโมสรนิสิต", "SGCU"],
-    ["สภานิสิต", "SCCU"],
-    ["ชมรมฝ่ายศิลปะและวัฒนธรรม", "ART"],
-    ["ชมรมฝ่ายวิชาการ", "VCK"],
-    ["ชมรมฝ่ายพัฒนาสังคมและบำเพ็ญประโยชน์", "PHT"],
-    ["ชมรมฝ่ายกีฬา", "SPT"]
-  ]);
-
-  const getOrganizationCatalogCodePrefix = (group) =>
-    ORGANIZATION_CATALOG_CODE_PREFIX_BY_GROUP.get(normalizeOrganizationCatalogText(group)) || "";
-
-  const buildOrganizationCatalogManualCodeFromRunBase = (group = "", runBase = "") => {
-    const prefix = getOrganizationCatalogCodePrefix(group);
-    const base = stripOrganizationCatalogDocumentRunYear(runBase);
-    return prefix && base ? `${prefix}-${base}`.toUpperCase() : "";
-  };
-
-  const normalizeOrganizationCatalogCodeMap = (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return Object.entries(value).reduce((acc, [year, code]) => {
-      const normalizedYear = normalizeOrganizationCatalogText(year);
-      const normalizedCode = normalizeOrganizationCatalogText(code).toUpperCase();
-      if (/^\d{4}$/.test(normalizedYear) && normalizedCode) {
-        acc[normalizedYear] = normalizedCode;
-      }
-      return acc;
-    }, {});
-  };
-
-  const normalizeOrganizationCatalogYearTextMap = (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return Object.entries(value).reduce((acc, [year, text]) => {
-      const normalizedYear = normalizeOrganizationCatalogText(year);
-      const normalizedText = normalizeOrganizationCatalogText(text);
-      if (/^\d{4}$/.test(normalizedYear) && normalizedText) {
-        acc[normalizedYear] = normalizedText;
-      }
-      return acc;
-    }, {});
-  };
-
-  const buildOrganizationCatalogYearTextMap = ({ text = "", textByAcademicYear = {} } = {}) => {
-    const map = normalizeOrganizationCatalogYearTextMap(textByAcademicYear);
-    const legacyText = normalizeOrganizationCatalogText(text);
-    if (legacyText && !Object.keys(map).length) {
-      map[ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR] = legacyText;
-    }
-    return map;
-  };
+  const ORGANIZATION_CATALOG_CODE_PREFIX_BY_GROUP = catalog.CODE_PREFIX_BY_GROUP;
+  const getOrganizationCatalogCodePrefix = catalog.codePrefix;
+  const buildOrganizationCatalogManualCodeFromRunBase = catalog.buildManualCode;
+  const normalizeOrganizationCatalogCodeMap = catalog.normalizeCodeMap;
+  const normalizeOrganizationCatalogYearTextMap = catalog.normalizeTextMap;
+  const buildOrganizationCatalogYearTextMap = catalog.buildTextMap;
 
   const getOrganizationCatalogYearText = ({ text = "", textByAcademicYear = {}, academicYear = getOrganizationCatalogDisplayAcademicYear() } = {}) => {
     const year = normalizeOrganizationCatalogText(academicYear);
@@ -3904,23 +3653,7 @@ function initStaffAccessPages() {
     return Object.keys(map).length ? normalizeOrganizationCatalogText(getOrganizationCatalogYearValue(map, year)) : normalizeOrganizationCatalogText(text);
   };
 
-  const buildOrganizationCatalogCodeMap = ({ group = "", code = "", codeByAcademicYear = {}, orgCodeByAcademicYear = {}, documentRunCodeByAcademicYear = {} } = {}) => {
-    const map = {
-      ...normalizeOrganizationCatalogCodeMap(orgCodeByAcademicYear),
-      ...normalizeOrganizationCatalogCodeMap(codeByAcademicYear)
-    };
-    if (isOrganizationCatalogManualDocumentRunGroup(group)) {
-      Object.entries(normalizeOrganizationCatalogDocumentRunMap(documentRunCodeByAcademicYear)).forEach(([year, runCode]) => {
-        const generatedCode = buildOrganizationCatalogManualCodeFromRunBase(group, runCode);
-        if (generatedCode) map[year] = generatedCode;
-      });
-    }
-    const legacyCode = normalizeOrganizationCatalogText(code).toUpperCase();
-    if (legacyCode && !map[ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR]) {
-      map[ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR] = legacyCode;
-    }
-    return map;
-  };
+  const buildOrganizationCatalogCodeMap = catalog.buildCodeMap;
 
   const generateOrganizationCatalogCode = ({ id = "", group = "", code = "" } = {}, extraCodeValues = []) => {
     const explicitCode = normalizeOrganizationCatalogText(code).toUpperCase();
@@ -3946,106 +3679,15 @@ function initStaffAccessPages() {
     return `${prefix}-${String(maxNumber + 1).padStart(2, "0")}`;
   };
 
-  const isOrganizationCatalogHeaderRow = (row = []) => {
-    const first = normalizeOrganizationCatalogText(row[0]);
-    const second = normalizeOrganizationCatalogText(row[1]);
-    return /ประเภท|group|type/i.test(first) || /ชื่อ|ชมรม|องค์กร|name|organization/i.test(second);
-  };
+  const parseOrganizationCatalogCsvRows = (rows = []) => catalog.parseCsvRows(rows, {
+    generateCode: generateOrganizationCatalogCode,
+    resolveRunBase: resolveOrganizationCatalogDocumentRunBaseForGroup
+  });
 
-  const parseOrganizationCatalogCsvRows = (rows = []) => {
-    const dataRows = Array.isArray(rows) && rows.length && isOrganizationCatalogHeaderRow(rows[0])
-      ? rows.slice(1)
-      : rows;
-    const byId = new Map();
-    const generatedCodeValues = [];
-
-    dataRows.forEach((row, index) => {
-      if (!Array.isArray(row)) return;
-      const group = normalizeOrganizationCatalogText(row[0]);
-      const name = normalizeOrganizationCatalogText(row[1]);
-      const inputCode = normalizeOrganizationCatalogText(row[2]).toUpperCase();
-      const accountNo = normalizeOrganizationCatalogText(row[4]);
-      if (!group || !name) return;
-
-      const id = slugifyOrganizationCatalogId(`${group}-${inputCode || name}`);
-      const code = generateOrganizationCatalogCode({ id, group, code: inputCode }, generatedCodeValues);
-      const documentRunCode = resolveOrganizationCatalogDocumentRunBaseForGroup({
-        group,
-        code,
-        documentRunCode: row[3],
-        academicYear: ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR
-      });
-      const documentRunCodeByAcademicYear = buildOrganizationCatalogDocumentRunMap({ documentRunCode });
-      const codeByAcademicYear = buildOrganizationCatalogCodeMap({
-        group,
-        code,
-        documentRunCodeByAcademicYear
-      });
-      if (code) generatedCodeValues.push(code);
-      byId.set(id, {
-        id,
-        group,
-        name,
-        nameByAcademicYear: buildOrganizationCatalogYearTextMap({ text: name }),
-        code,
-        codeByAcademicYear,
-        documentRunCode,
-        documentRunCodeByAcademicYear,
-        accountNo,
-        bankAccount: accountNo,
-        status: "active",
-        sortOrder: index + 1,
-        source: "legacy-csv"
-      });
-    });
-
-    return Array.from(byId.values());
-  };
-
-  const writeOrganizationCatalogItems = async (items, importedBy) => {
-    if (!items.length) return 0;
-    const timestampValue = firestore.serverTimestamp ? firestore.serverTimestamp() : new Date().toISOString();
-
-    if (firestore.writeBatch) {
-      let written = 0;
-      for (let start = 0; start < items.length; start += 450) {
-        const batch = firestore.writeBatch(firestore.db);
-        items.slice(start, start + 450).forEach((item) => {
-          const { id, ...fields } = item;
-          batch.set(
-            firestore.doc(firestore.db, COLLECTION_ORGANIZATION_CATALOG, id),
-            {
-              ...fields,
-              importedAt: timestampValue,
-              importedBy,
-              updatedAt: timestampValue
-            },
-            { merge: true }
-          );
-        });
-        await batch.commit();
-        written += Math.min(450, items.length - start);
-      }
-      return written;
-    }
-
-    let written = 0;
-    for (const item of items) {
-      const { id, ...fields } = item;
-      await firestore.setDoc(
-        firestore.doc(firestore.db, COLLECTION_ORGANIZATION_CATALOG, id),
-        {
-          ...fields,
-          importedAt: timestampValue,
-          importedBy,
-          updatedAt: timestampValue
-        },
-        { merge: true }
-      );
-      written += 1;
-    }
-    return written;
-  };
+  const writeOrganizationCatalogItems = (items, importedBy) => catalog.writeItems(items, importedBy, {
+    firestore,
+    collectionName: COLLECTION_ORGANIZATION_CATALOG
+  });
 
   const refreshOrganizationCatalogAfterImport = (items) => {
     setLocalOrganizationCatalogRows(items.map((item) => ({
@@ -4089,101 +3731,15 @@ function initStaffAccessPages() {
     return normalizeOrganizationCatalogText(match?.accountNo || match?.bankAccount || match?.bankAccountNo);
   };
 
-  const getRawOrganizationCatalogItemById = (id = "") => {
-    const targetId = normalizeOrganizationCatalogText(id);
-    if (!targetId) return null;
-    return getKnownOrganizationFilters().find((item) => normalizeOrganizationCatalogText(item?.id) === targetId) || null;
-  };
-
-  const getRawOrganizationCatalogRows = () =>
-    getKnownOrganizationFilters()
-      .map((item) => ({
-        ...item,
-        id: normalizeOrganizationCatalogText(item?.id)
-      }))
-      .filter((item) => {
-        const status = normalizeOrganizationCatalogText(item?.status || "active").toLowerCase();
-        return item.id && (!status || status === "active");
-      });
-
-  const getOrganizationCatalogRows = () =>
-    getKnownOrganizationFilters()
-      .map((item) => {
-        if (!shouldUseOrganizationCatalogItemForYear(item)) return null;
-        const itemAcademicYear = getOrganizationCatalogItemAcademicYear(item);
-        const group = normalizeOrganizationCatalogText(item?.group || item?.organizationType || item?.orgGroup);
-        const isManualGroup = isOrganizationCatalogManualDocumentRunGroup(group);
-        const rawCode = normalizeOrganizationCatalogText(item?.code || item?.orgCode).toUpperCase();
-        const rawName = normalizeOrganizationCatalogText(item?.name || item?.organizationName || item?.orgName);
-        const rawAccountNo = isManualGroup
-          ? getOrganizationCatalogSharedAccountNoForGroup(group) || normalizeOrganizationCatalogText(item?.accountNo || item?.bankAccount || item?.bankAccountNo)
-          : normalizeOrganizationCatalogText(item?.accountNo || item?.bankAccount || item?.bankAccountNo);
-        const nameByAcademicYear = buildOrganizationCatalogYearTextMap({
-          text: rawName,
-          textByAcademicYear: item?.nameByAcademicYear || item?.organizationNameByAcademicYear || item?.orgNameByAcademicYear
-        });
-        const documentRunCode = resolveOrganizationCatalogDocumentRunBaseForGroup({
-          group,
-          code: rawCode,
-          documentRunCode: item?.documentRunCode || item?.runCode,
-          documentRunCodeByAcademicYear: item?.documentRunCodeByAcademicYear,
-          runCodeByAcademicYear: item?.runCodeByAcademicYear
-        });
-        const codeByAcademicYear = buildOrganizationCatalogCodeMap({
-          group,
-          code: rawCode,
-          codeByAcademicYear: item?.codeByAcademicYear,
-          orgCodeByAcademicYear: item?.orgCodeByAcademicYear,
-          documentRunCodeByAcademicYear: item?.documentRunCodeByAcademicYear || item?.runCodeByAcademicYear
-        });
-        const code = itemAcademicYear
-          ? rawCode
-          : isOrganizationCatalogManualDocumentRunGroup(group)
-          ? normalizeOrganizationCatalogText(getOrganizationCatalogYearValue(codeByAcademicYear, getOrganizationCatalogDisplayAcademicYear())).toUpperCase() ||
-            buildOrganizationCatalogManualCodeFromRunBase(group, documentRunCode) ||
-            rawCode
-          : rawCode;
-        return {
-          id: normalizeOrganizationCatalogText(item?.id),
-          academicYear: itemAcademicYear,
-          baseOrganizationId: getOrganizationCatalogBaseId(item),
-          group,
-          name: itemAcademicYear
-            ? rawName
-            : isManualGroup
-            ? getOrganizationCatalogYearText({ text: rawName, textByAcademicYear: nameByAcademicYear })
-            : rawName,
-          nameByAcademicYear,
-          code,
-          codeByAcademicYear,
-          documentRunCode,
-          documentRunCodeByAcademicYear: buildOrganizationCatalogDocumentRunMap({
-            documentRunCode: item?.documentRunCode || item?.runCode,
-            documentRunCodeByAcademicYear: item?.documentRunCodeByAcademicYear,
-            runCodeByAcademicYear: item?.runCodeByAcademicYear
-          }),
-          accountNo: rawAccountNo
-        };
-      })
-      .filter(Boolean)
-      .filter((item) => item.group && item.name)
-      .reduce((acc, item) => {
-        const key = getOrganizationCatalogBaseId(item) || `${item.group}||${item.name}`.toLowerCase();
-        const existingIndex = acc.findIndex((existing) =>
-          (getOrganizationCatalogBaseId(existing) || `${existing.group}||${existing.name}`.toLowerCase()) === key
-        );
-        if (existingIndex < 0) {
-          acc.push(item);
-        } else if (item.academicYear && !acc[existingIndex].academicYear) {
-          acc[existingIndex] = item;
-        }
-        return acc;
-      }, [])
-      .sort((a, b) =>
-        b.group.localeCompare(a.group, "th") ||
-        (a.code || "").localeCompare(b.code || "", "th", { numeric: true }) ||
-        a.name.localeCompare(b.name, "th")
-      );
+  const organizationCatalogView = catalogViewFactory.create({
+    getSource: getKnownOrganizationFilters,
+    getDisplayAcademicYear: getOrganizationCatalogDisplayAcademicYear,
+    getSharedAccountNo: getOrganizationCatalogSharedAccountNoForGroup,
+    resolveRunBase: resolveOrganizationCatalogDocumentRunBaseForGroup
+  });
+  const getRawOrganizationCatalogItemById = organizationCatalogView.getRawItemById;
+  const getRawOrganizationCatalogRows = organizationCatalogView.getRawRows;
+  const getOrganizationCatalogRows = organizationCatalogView.getRows;
 
   const syncOrganizationCatalogGroupOptions = (rows = getOrganizationCatalogRows()) => {
     const groups = Array.from(new Set([
@@ -4801,7 +4357,7 @@ function initStaffAccessPages() {
       renderOrgRepresentativeApplications();
       setMessage(messageEl, `เชื่อมข้อมูลปี ${academicYear} แล้ว ${updates.length.toLocaleString("th-TH")} รายการ`, "#047857");
     } catch (error) {
-      console.error("link organization catalog year failed - app.staff-access.js", error);
+      console.error("link organization catalog year failed - app.staff-access.js:4360", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์เชื่อมข้อมูลทะเบียนองค์กร"
         : (error?.message || "เชื่อมข้อมูลทะเบียนองค์กรไม่สำเร็จ");
@@ -4907,7 +4463,7 @@ function initStaffAccessPages() {
       renderOrgRepresentativeApplications();
       setMessage(messageEl, `สร้างข้อมูลปี ${academicYear} เป็นเอกสารรายปีแล้ว ${updates.length.toLocaleString("th-TH")} รายการ`, "#047857");
     } catch (error) {
-      console.error("normalize organization catalog year failed - app.staff-access.js", error);
+      console.error("normalize organization catalog year failed - app.staff-access.js:4466", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์สร้างข้อมูลทะเบียนองค์กรรายปี"
         : (error?.message || "สร้างข้อมูลทะเบียนองค์กรรายปีไม่สำเร็จ");
@@ -5070,7 +4626,7 @@ function initStaffAccessPages() {
         "#047857"
       );
     } catch (error) {
-      console.error("backfill organization catalog year failed - app.staff-access.js:3828", error);
+      console.error("backfill organization catalog year failed - app.staff-access.js:4629", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์เติมข้อมูลปีการศึกษาในทะเบียนองค์กร"
         : (error?.message || "เติมข้อมูลปีการศึกษาไม่สำเร็จ");
@@ -5139,7 +4695,7 @@ function initStaffAccessPages() {
         "#047857"
       );
     } catch (error) {
-      console.error("copy organization catalog year failed - app.staff-access.js", error);
+      console.error("copy organization catalog year failed - app.staff-access.js:4698", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์ทำสำเนาทะเบียนองค์กร"
         : (error?.message || "ทำสำเนาทะเบียนองค์กรไม่สำเร็จ");
@@ -5358,7 +4914,7 @@ function initStaffAccessPages() {
       });
       renderOrgRepresentativeApplications();
     } catch (error) {
-      console.error("save organization catalog failed - app.staff-access.js:3789", error);
+      console.error("save organization catalog failed - app.staff-access.js:4917", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์บันทึกทะเบียนองค์กร"
         : (error?.message || "บันทึกทะเบียนองค์กรไม่สำเร็จ");
@@ -5406,7 +4962,7 @@ function initStaffAccessPages() {
       });
       renderOrgRepresentativeApplications();
     } catch (error) {
-      console.error("archive organization catalog failed - app.staff-access.js:3827", error);
+      console.error("archive organization catalog failed - app.staff-access.js:4965", error);
       const message = (error?.code || "") === "permission-denied"
         ? "ไม่มีสิทธิ์ลบทะเบียนองค์กร"
         : (error?.message || "ลบทะเบียนองค์กรไม่สำเร็จ");
@@ -5445,7 +5001,7 @@ function initStaffAccessPages() {
         skipEmptyLines: true
       });
       if (parsed.errors && parsed.errors.length) {
-        console.warn("organization catalog csv parse warnings - app.staff-access.js:3866", parsed.errors);
+        console.warn("organization catalog csv parse warnings - app.staff-access.js:5004", parsed.errors);
       }
 
       const items = parseOrganizationCatalogCsvRows(parsed.data || []);
@@ -5471,7 +5027,7 @@ function initStaffAccessPages() {
         source: "web_app_staff"
       });
     } catch (error) {
-      console.error("import organization catalog csv failed - app.staff-access.js:3880", error);
+      console.error("import organization catalog csv failed - app.staff-access.js:5030", error);
       const code = (error?.code || "").toString();
       const message = code === "permission-denied"
         ? "ไม่มีสิทธิ์อัปโหลดทะเบียนองค์กรเข้า Firebase"
@@ -6140,7 +5696,7 @@ function initStaffAccessPages() {
       setMessage(orgRepresentativeMessageEl, `ลบรายชื่อตัวแทนทั้งหมดของปี ${selectedAcademicYear} เรียบร้อยแล้ว`, "#047857");
       return true;
     } catch (error) {
-      console.error("delete organization representative year roster failed - app.staff-access.js:4458", error);
+      console.error("delete organization representative year roster failed - app.staff-access.js:5699", error);
       const code = (error?.code || "unknown").toString();
       if (code === "permission-denied") {
         setMessage(orgRepresentativeMessageEl, "ไม่มีสิทธิ์ลบรายชื่อตัวแทนองค์กร (permission-denied)", "#b91c1c");
@@ -6553,7 +6109,7 @@ function initStaffAccessPages() {
         : "ยังไม่พบโปรไฟล์ ผู้ใช้จะสร้าง/บันทึกโปรไฟล์ได้หลังได้รับสิทธิ์และเข้าสู่ระบบ";
       staffAuthAccessProfilePreviewEl.style.color = profile ? "#047857" : "#b45309";
     } catch (error) {
-      console.warn("auth access profile preview failed", error);
+      console.warn("auth access profile preview failed - app.staff-access.js:6112", error);
       staffAuthAccessProfilePreviewEl.textContent = "ค้นหาโปรไฟล์ไม่สำเร็จ";
       staffAuthAccessProfilePreviewEl.style.color = "#b91c1c";
     }
@@ -6599,7 +6155,7 @@ function initStaffAccessPages() {
       try {
         profile = await findUserProfileByEmail(email);
       } catch (error) {
-        console.warn("auth access row profile lookup failed", error);
+        console.warn("auth access row profile lookup failed - app.staff-access.js:6158", error);
       }
       return `
         <tr data-auth-access-email="${escapeStaffHtml(email)}" tabindex="0" role="button" aria-label="แก้ไขสิทธิ์เข้าใช้ของ ${escapeStaffHtml(email)}">
@@ -6646,7 +6202,7 @@ function initStaffAccessPages() {
         void renderAuthEmailAccessRows();
       },
       (error) => {
-        console.error("auth email access listener failed", error);
+        console.error("auth email access listener failed - app.staff-access.js:6205", error);
         const msg = buildListenerErrorText("โหลดสิทธิ์เข้าใช้ชั่วคราวไม่สำเร็จ", error);
         staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3">${toSafeText(msg)}</td></tr>`;
         setMessage(staffAuthAccessMessageEl, msg, "#b91c1c");
@@ -6716,7 +6272,7 @@ function initStaffAccessPages() {
       });
       resetAuthAccessForm();
     } catch (error) {
-      console.error("save auth email access failed", error);
+      console.error("save auth email access failed - app.staff-access.js:6275", error);
       const msg = buildActionErrorText("บันทึกสิทธิ์เข้าใช้ไม่สำเร็จ", error, email);
       setMessage(staffAuthAccessMessageEl, msg, "#b91c1c");
     }
@@ -6744,7 +6300,7 @@ function initStaffAccessPages() {
         resetAuthAccessForm();
       }
     } catch (error) {
-      console.error("delete auth email access failed", error);
+      console.error("delete auth email access failed - app.staff-access.js:6303", error);
       setMessage(staffAuthAccessMessageEl, "ลบสิทธิ์ไม่สำเร็จ", "#b91c1c");
     }
   };
@@ -6821,11 +6377,11 @@ function initStaffAccessPages() {
           renderPositionAllowedPageOptions([], "");
         }
         void syncStaffProfilesWithPositionCatalog().catch((error) => {
-          console.warn("sync staff profile position access failed - app.staff-access.js", error);
+          console.warn("sync staff profile position access failed - app.staff-access.js:6380", error);
         });
       },
       (error) => {
-        console.error("staff position catalog listener failed - app.staff-access.js:4857", error);
+        console.error("staff position catalog listener failed - app.staff-access.js:6384", error);
         positionCatalogLoadState = "error";
         currentPositionCatalog = [];
         renderPositionDatalist();
@@ -6881,7 +6437,7 @@ function initStaffAccessPages() {
         scheduleApprovalUiSync();
       },
       (error) => {
-        console.error("staff applications listener failed - app.staff-access.js:4913", error);
+        console.error("staff applications listener failed - app.staff-access.js:6440", error);
         const msg = buildListenerErrorText("ไม่สามารถโหลดคำขอสมัครได้ในขณะนี้", error);
         myTableBodyEl.innerHTML = `<tr><td colspan="4">${toSafeText(msg)}</td></tr>`;
         setMessage(appMessageEl, msg, "#b91c1c");
@@ -6933,7 +6489,7 @@ function initStaffAccessPages() {
         scheduleApprovalUiSync();
       },
       (error) => {
-        console.error("staff pending listener failed - app.staff-access.js:4965", error);
+        console.error("staff pending listener failed - app.staff-access.js:6492", error);
         const code = (error?.code || "").toString();
         const msg = code === "unauthenticated"
           ? "กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้"
@@ -6987,7 +6543,7 @@ function initStaffAccessPages() {
         scheduleApprovalUiSync();
       },
       (error) => {
-        console.error("staff approved history listener failed - app.staff-access.js:5019", error);
+        console.error("staff approved history listener failed - app.staff-access.js:6546", error);
         const code = (error?.code || "").toString();
         const msg = code === "unauthenticated"
           ? "กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้"
@@ -7053,7 +6609,7 @@ function initStaffAccessPages() {
         renderLoadedApplications();
       },
       (error) => {
-        console.error("organization representative listener failed - app.staff-access.js:5085", error);
+        console.error("organization representative listener failed - app.staff-access.js:6612", error);
         if (!getCurrentAuthEmail()) {
           if (orgRepresentativePendingBodyEl) {
             orgRepresentativePendingBodyEl.innerHTML = '<tr><td colspan="5">กำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูล...</td></tr>';
@@ -7161,7 +6717,7 @@ function initStaffAccessPages() {
         source: "web_app_staff"
       });
     } catch (error) {
-      console.error("revoke approved application failed - app.staff-access.js:5175", error);
+      console.error("revoke approved application failed - app.staff-access.js:6720", error);
       const code = (error?.code || "unknown").toString();
       if (code === "permission-denied") {
         setMessage(approvalMessageEl, "ไม่มีสิทธิ์ยกเลิกอนุมัติ (permission-denied)", "#b91c1c");
@@ -7290,7 +6846,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("update approved position failed - app.staff-access.js:5289", error);
+      console.error("update approved position failed - app.staff-access.js:6849", error);
       const code = (error?.code || "unknown").toString();
       if (error?.message === "position-code-segment-unresolved") {
         setMessage(approvalMessageEl, "ไม่สามารถสร้างรหัสตำแหน่งได้: ตรวจชื่อตำแหน่งให้ตรงหมวดที่กำหนด", "#b91c1c");
@@ -7416,7 +6972,7 @@ function initStaffAccessPages() {
       try {
         await ensurePositionExists(requestedPosition, user);
       } catch (catalogError) {
-        console.warn("sync staff position catalog after application failed - app.staff-access.js:5412", catalogError);
+        console.warn("sync staff position catalog after application failed - app.staff-access.js:6975", catalogError);
       }
       setMessage(appMessageEl, "ส่งคำขอสมัครสตาฟเรียบร้อยแล้ว", "#047857");
       void window.sgcuAuditLog?.write?.({
@@ -7431,7 +6987,7 @@ function initStaffAccessPages() {
         setApplicationAvailabilityByAuth();
       }, 1800);
     } catch (error) {
-      console.error("submit staff application failed - app.staff-access.js:5420", error);
+      console.error("submit staff application failed - app.staff-access.js:6990", error);
       const debugInfo = `email=${applicantEmail || "-"} project=${firestore?.db?.app?.options?.projectId || "-"}`;
       const msg = buildActionErrorText("ส่งคำขอไม่สำเร็จ", error, debugInfo);
       setMessage(appMessageEl, msg, "#b91c1c");
@@ -7508,7 +7064,7 @@ function initStaffAccessPages() {
         source: "web_app_staff"
       });
     } catch (error) {
-      console.error("add position failed - app.staff-access.js:5490", error);
+      console.error("add position failed - app.staff-access.js:7067", error);
       setMessage(positionManageMessageEl, "ปรับตำแหน่งไม่สำเร็จ", "#b91c1c");
     }
   };
@@ -7544,7 +7100,7 @@ function initStaffAccessPages() {
         source: "web_app_staff"
       });
     } catch (error) {
-      console.error("remove position failed - app.staff-access.js:5519", error);
+      console.error("remove position failed - app.staff-access.js:7103", error);
       setMessage(positionManageMessageEl, "ลบตำแหน่งไม่สำเร็จ", "#b91c1c");
     }
   };
@@ -7626,7 +7182,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("update position failed - app.staff-access.js:5593", error);
+      console.error("update position failed - app.staff-access.js:7185", error);
       setMessage(positionManageMessageEl, "อัปเดตตำแหน่งไม่สำเร็จ", "#b91c1c");
       return false;
     }
@@ -7723,7 +7279,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("update organization representative status failed - app.staff-access.js:5671", error);
+      console.error("update organization representative status failed - app.staff-access.js:7282", error);
       const code = (error?.code || "unknown").toString();
       if (code === "permission-denied") {
         setMessage(orgRepresentativeMessageEl, "ไม่มีสิทธิ์อัปเดตคำขอตัวแทนองค์กร (permission-denied)", "#b91c1c");
@@ -7793,7 +7349,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("delete organization representative application failed - app.staff-access.js", error);
+      console.error("delete organization representative application failed - app.staff-access.js:7352", error);
       const code = (error?.code || "unknown").toString();
       if (code === "permission-denied") {
         setMessage(orgRepresentativeMessageEl, "ไม่มีสิทธิ์ลบรายชื่อตัวแทนองค์กร (permission-denied)", "#b91c1c");
@@ -8010,7 +7566,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("update staff application status failed - app.staff-access.js:5860", error);
+      console.error("update staff application status failed - app.staff-access.js:7569", error);
       const code = (error?.code || "unknown").toString();
       if (error?.message === "position-code-segment-unresolved") {
         setMessage(approvalMessageEl, "ไม่สามารถสร้างรหัสตำแหน่งได้: ตรวจชื่อตำแหน่งให้ตรงหมวดที่กำหนด", "#b91c1c");
@@ -8114,7 +7670,7 @@ function initStaffAccessPages() {
       });
       return true;
     } catch (error) {
-      console.error("delete staff application failed - app.staff-access.js", error);
+      console.error("delete staff application failed - app.staff-access.js:7673", error);
       const code = (error?.code || "unknown").toString();
       if (code === "permission-denied") {
         setMessage(approvalMessageEl, "ไม่มีสิทธิ์ลบคำขอ (permission-denied)", "#b91c1c");
@@ -8182,7 +7738,7 @@ function initStaffAccessPages() {
       setMessage(approvalMessageEl, `ลบคำขอ ${targets.length} รายการเรียบร้อยแล้ว`, "#047857");
       return true;
     } catch (error) {
-      console.error("bulk delete pending staff applications failed", error);
+      console.error("bulk delete pending staff applications failed - app.staff-access.js:7741", error);
       const code = (error?.code || "unknown").toString();
       const message = code === "permission-denied"
         ? "ไม่มีสิทธิ์ลบคำขอที่เลือก (permission-denied)"
@@ -8262,7 +7818,7 @@ function initStaffAccessPages() {
       setMessage(approvalMessageEl, `เพิกถอนสิทธิ์สตาฟ ${targets.length} คนเรียบร้อยแล้ว`, "#047857");
       return true;
     } catch (error) {
-      console.error("bulk revoke current staff failed", error);
+      console.error("bulk revoke current staff failed - app.staff-access.js:7821", error);
       const code = (error?.code || "unknown").toString();
       const message = code === "permission-denied"
         ? "ไม่มีสิทธิ์เพิกถอนสตาฟที่เลือก (permission-denied)"
