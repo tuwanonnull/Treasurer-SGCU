@@ -1,10 +1,10 @@
-const CACHE_VERSION = "20260828-pdf-print-window-1";
+const CACHE_VERSION = "20260901-borrow-asset-item-dividers-2";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
   "./",
   "./index.html",
-  "./css/style.css?v=20260827-stable-staff-calendar-1",
+  "./css/style.css?v=20260901-borrow-asset-item-dividers-2",
   "./js/integrations/app.firebase-bootstrap.js?v=20260423-1",
   "./js/core/app.config.js?v=20260518-csv-refresh-2",
   "./js/integrations/app.runtime-config.js?v=20260504-1",
@@ -15,7 +15,7 @@ const APP_SHELL_URLS = [
   "./js/core/app.helpers.js?v=20260626-pending-approval-status-1",
   "./js/features/project/app.sorting-auth.js?v=20260627-project-budget-comparison-chart-1",
   "./js/motion/app.motion.js",
-  "./js/core/app.feature-loader.js?v=20260827-local-date-default-1",
+  "./js/core/app.feature-loader.js?v=20260901-expired-pending-history-2",
   "./js/core/app.init.js?v=20260827-meeting-scroll-offset-1",
   "./manifest.webmanifest",
   "./img/icons/treasurer-icon-192.png",

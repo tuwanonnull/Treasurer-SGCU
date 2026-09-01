@@ -816,9 +816,14 @@
     grid-template-columns: 1fr;
   }
   .borrow-staff-item-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: center;
+    gap: 10px;
+  }
+  .borrow-staff-item-qty {
+    justify-self: end;
+    text-align: right;
   }
   .borrow-staff-actions .borrow-staff-action-btn {
     width: 100%;

@@ -46,8 +46,8 @@
         "js/features/project/app.calendar.js",
         "js/features/project/app.data.js?v=20260518-csv-refresh-1"
       ],
-      "borrow-assets": "js/features/borrow/app.borrow-assets.js?v=20260825-request-number-counter-2",
-      "borrow-assets-staff": "js/features/borrow/app.borrow-assets.js?v=20260825-request-number-counter-2",
+      "borrow-assets": "js/features/borrow/app.borrow-assets.js?v=20260901-expired-pending-history-2",
+      "borrow-assets-staff": "js/features/borrow/app.borrow-assets.js?v=20260901-expired-pending-history-2",
       "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20260827-local-date-default-1",
       "meeting-room-staff": [
         "js/features/booking/app.meeting-room-booking.js?v=20260827-local-date-default-1",

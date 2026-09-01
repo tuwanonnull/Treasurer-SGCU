@@ -19,26 +19,26 @@
           <div id="staffBorrowQueue" class="section-appear section-delay-1">
             <div id="staffBorrowOverviewCards" class="cards borrow-overview-cards" aria-live="polite"></div>
             <div class="filter-bar borrow-staff-request-filters" aria-label="ตัวกรองคำขอยืมพัสดุ">
-              <div class="filter-group filter-search borrow-staff-request-filter-search">
-                <label for="staffBorrowRequestSearch">ค้นหาคำขอ</label>
-                <div class="search-box">
-                  <input
-                    id="staffBorrowRequestSearch"
-                    type="search"
-                    placeholder="เลขคำขอ ผู้ขอ รหัสนิสิต พัสดุ หรือกิจกรรม"
-                  />
-                  <button
-                    id="staffBorrowRequestSearchClear"
-                    class="search-clear"
-                    type="button"
-                    aria-label="ล้างตัวกรองทั้งหมด"
-                    title="ล้างตัวกรองทั้งหมด"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
               <div id="staffBorrowRequestFilterFields" class="borrow-staff-request-filter-fields">
+                <div class="filter-group filter-search borrow-staff-request-filter-search">
+                  <label for="staffBorrowRequestSearch">ค้นหาคำขอ</label>
+                  <div class="search-box">
+                    <input
+                      id="staffBorrowRequestSearch"
+                      type="search"
+                      placeholder="เลขคำขอ ผู้ขอ รหัสนิสิต พัสดุ หรือกิจกรรม"
+                    />
+                    <button
+                      id="staffBorrowRequestSearchClear"
+                      class="search-clear"
+                      type="button"
+                      aria-label="ล้างตัวกรองทั้งหมด"
+                      title="ล้างตัวกรองทั้งหมด"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
                 <div class="filter-group">
                   <label for="staffBorrowRequestStatusFilter">สถานะ</label>
                   <select id="staffBorrowRequestStatusFilter">
@@ -182,15 +182,8 @@
                 เปิดรายการพัสดุ
               </a>
             </section>
-            <div class="panel panel-hover section-appear section-delay-2" style="margin-top: 18px;">
-              <div class="panel-header">
-                <div>
-                  <div class="panel-title">รายการพัสดุทั้งหมด (Staff)</div>
-                  <div class="panel-caption">แสดงข้อมูลครบทุกคอลัมน์จากคลังพัสดุ</div>
-                  <div id="borrowAssetsCountStaff" class="panel-meta">พบ 0 รายการ</div>
-                </div>
-              </div>
-              <div class="filter-bar">
+            <section class="borrow-inventory-workspace section-appear section-delay-2">
+              <div class="filter-bar borrow-inventory-filter-bar">
                 <div class="filter-group filter-orgtype">
                   <label for="borrowAssetsTypeFilterStaff">ประเภท</label>
                   <select id="borrowAssetsTypeFilterStaff">
@@ -216,8 +209,16 @@
                   </div>
                 </div>
               </div>
-              <div class="table-wrapper borrow-staff-requests-wrapper borrow-assets-staff-wrapper">
-                <table class="borrow-staff-requests-table borrow-assets-staff-table">
+              <section class="panel panel-hover borrow-inventory-table-panel">
+                <header class="panel-header">
+                  <div>
+                    <h3 class="panel-title">รายการพัสดุทั้งหมด</h3>
+                    <div class="panel-caption">แสดงข้อมูลครบทุกคอลัมน์จากคลังพัสดุ</div>
+                    <div id="borrowAssetsCountStaff" class="panel-meta">พบ 0 รายการ</div>
+                  </div>
+                </header>
+                <div class="table-wrapper borrow-staff-requests-wrapper borrow-assets-staff-wrapper">
+                  <table class="borrow-staff-requests-table borrow-assets-staff-table">
                   <thead>
                     <tr>
                       <th>ประเภท</th>
@@ -238,9 +239,10 @@
                       <td colspan="11" data-label="รายการพัสดุ">กำลังโหลดรายการพัสดุ...</td>
                     </tr>
                   </tbody>
-                </table>
-              </div>
-            </div>
+                  </table>
+                </div>
+              </section>
+            </section>
             <div class="panel panel-hover borrow-staff-settings-panel">
               <div class="panel-header">
                 <div>

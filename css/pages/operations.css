@@ -8943,6 +8943,24 @@
   justify-content: flex-end;
 }
 
+.borrow-inventory-workspace {
+  margin-top: 18px;
+}
+
+.filter-bar.borrow-inventory-filter-bar {
+  grid-template-columns: minmax(180px, 0.35fr) minmax(280px, 1fr);
+  margin-bottom: 12px;
+}
+
+.borrow-inventory-filter-bar .filter-orgtype,
+.borrow-inventory-filter-bar .filter-search {
+  grid-column: auto;
+}
+
+.borrow-inventory-table-panel {
+  overflow: hidden;
+}
+
 .filter-bar.borrow-staff-request-filters {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
@@ -9017,6 +9035,51 @@
   border-color: rgba(236, 72, 153, 0.28);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
   transform: translateY(-1px);
+}
+
+@media (min-width: 841px) {
+  #staffBorrowQueue .borrow-staff-requests-wrapper {
+    background: #ffffff;
+  }
+
+  #staffBorrowQueue .borrow-staff-requests-table {
+    border-spacing: 0;
+    padding: 0 10px;
+  }
+
+  #staffBorrowQueue .borrow-staff-row td[colspan] {
+    padding: 0;
+  }
+
+  #staffBorrowQueue .borrow-staff-request-card {
+    padding: 18px 8px;
+    border: 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  #staffBorrowQueue .borrow-staff-row:last-child .borrow-staff-request-card {
+    border-bottom: 0;
+  }
+
+  #staffBorrowQueue .borrow-staff-row:hover .borrow-staff-request-card,
+  #staffBorrowQueue .borrow-staff-row:focus .borrow-staff-request-card {
+    border-color: rgba(226, 232, 240, 0.95);
+    background: #fdf2f8;
+    box-shadow: none;
+    transform: none;
+  }
+
+  #staffBorrowQueue .borrow-staff-item-row {
+    padding: 8px 4px;
+    border: 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 0;
+    background: transparent;
+  }
 }
 
 .borrow-staff-card-main,
@@ -9318,22 +9381,24 @@
 }
 
 @media (max-width: 840px) {
-  .borrow-staff-main-tabs {
-    width: 100%;
-    justify-content: stretch;
+  .page-view[data-page="borrow-assets-staff"] .borrow-staff-main-tabs {
+    display: none;
   }
 
-  .borrow-staff-main-tabs .view-toggle-btn {
-    flex: 1 1 0;
+  .page-view[data-page="borrow-assets-staff"] .filter-bar.borrow-staff-request-filters {
+    display: none;
   }
 
-  .filter-bar.borrow-staff-request-filters {
-    grid-template-columns: 1fr;
+  .borrow-inventory-workspace {
+    margin-top: 12px;
+  }
+
+  .filter-bar.borrow-inventory-filter-bar {
+    grid-template-columns: minmax(160px, 0.4fr) minmax(260px, 1fr);
     gap: 8px;
-    align-items: end;
     padding: 10px;
     border: 1px solid rgba(226, 232, 240, 0.92);
-    border-radius: 10px;
+    border-radius: 12px;
     background: #ffffff;
   }
 
@@ -9658,6 +9723,12 @@
 
   .borrow-assets-staff-table tbody td[colspan]::before {
     content: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .filter-bar.borrow-inventory-filter-bar {
+    grid-template-columns: 1fr;
   }
 }
 

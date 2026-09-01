@@ -1259,6 +1259,15 @@ function initBorrowAssetsApp() {
     return Math.round((date.getTime() - today.getTime()) / 86400000);
   };
 
+  const isExpiredPendingBorrowRequest = (item) =>
+    item?.status === STATUS_PENDING && getDayDiffFromToday(item.returnDate) < 0;
+
+  const isStaffBorrowQueueItem = (item) =>
+    STAFF_REQUEST_TAB_STATUSES.has(item?.status) && !isExpiredPendingBorrowRequest(item);
+
+  const isStaffBorrowHistoryItem = (item) =>
+    STAFF_HISTORY_TAB_STATUSES.has(item?.status) || isExpiredPendingBorrowRequest(item);
+
   const summarizeAssetsInline = (assets = []) => {
     const list = Array.isArray(assets) ? assets : [];
     if (!list.length) return "-";
@@ -1335,7 +1344,11 @@ function initBorrowAssetsApp() {
       { title: "ยืมค้างทั้งหมด", value: stats.borrowed || 0, caption: "อนุมัติแล้วและยังไม่คืน" },
       { title: "เกินกำหนดคืน", value: stats.overdue || 0, caption: "ควรเร่งติดตามทันที" },
       { title: "ใกล้ครบกำหนด", value: stats.dueSoon || 0, caption: `ภายใน ${BORROW_FOLLOWUP_SOON_DAYS} วัน` },
-      { title: "รออนุมัติ", value: stats.pending || 0, caption: "ยังอยู่ในคิวพิจารณา" }
+      {
+        title: stats.pendingTitle || "รออนุมัติ",
+        value: stats.pending || 0,
+        caption: stats.pendingCaption || "ยังอยู่ในคิวพิจารณา"
+      }
     ];
     container.innerHTML = cards.map((card) => `
       <article class="card card-hover">
@@ -1418,7 +1431,14 @@ function initBorrowAssetsApp() {
       const meta = buildBorrowFollowupMeta(item);
       return meta.dueSoon && !meta.overdue;
     }).length;
-    renderBorrowOverviewCards(staffBorrowOverviewCards, { pending, borrowed, overdue, dueSoon });
+    renderBorrowOverviewCards(staffBorrowOverviewCards, {
+      pending,
+      borrowed,
+      overdue,
+      dueSoon,
+      pendingTitle: staffRequestTabMode === "history" ? "เลยกำหนดก่อนอนุมัติ" : "รออนุมัติ",
+      pendingCaption: staffRequestTabMode === "history" ? "เลยวันคืนโดยยังไม่ได้อนุมัติ" : "ยังอยู่ในคิวพิจารณา"
+    });
 
     if (!staffBorrowFollowupTableBody) return;
     const followups = allItems
@@ -1936,8 +1956,8 @@ function initBorrowAssetsApp() {
     [...borrowRequests]
       .filter((item) => !item.isDeleted)
       .filter((item) => staffRequestTabMode === "history"
-        ? STAFF_HISTORY_TAB_STATUSES.has(item.status)
-        : STAFF_REQUEST_TAB_STATUSES.has(item.status))
+        ? isStaffBorrowHistoryItem(item)
+        : isStaffBorrowQueueItem(item))
       .filter(matchesStaffBorrowRequestFilters)
       .sort((a, b) => (staffRequestTabMode === "history"
         ? (b.updatedAtMs || 0) - (a.updatedAtMs || 0)
@@ -2862,7 +2882,7 @@ function initBorrowAssetsApp() {
     }
     if (staffRequestPanelCaptionEl) {
       staffRequestPanelCaptionEl.textContent = staffRequestTabMode === "history"
-        ? "แสดงคำขอที่ดำเนินการแล้ว"
+        ? "แสดงคำขอที่ดำเนินการแล้วหรือเลยวันคืนก่อนอนุมัติ"
         : "ตรวจสอบรายละเอียดก่อนกดอนุมัติ/ตีกลับ";
     }
   };
@@ -2872,7 +2892,7 @@ function initBorrowAssetsApp() {
     setStaffRequestPanelMeta();
     const totalList = [...borrowRequests]
       .filter((item) => !item.isDeleted)
-      .filter((item) => STAFF_REQUEST_TAB_STATUSES.has(item.status))
+      .filter(isStaffBorrowQueueItem)
       .sort((a, b) => (b.submittedAtMs || 0) - (a.submittedAtMs || 0));
     const list = totalList.filter(matchesStaffBorrowRequestFilters);
     if (staffRequestTabMode !== "queue") {
@@ -2927,7 +2947,7 @@ function initBorrowAssetsApp() {
     if (!staffQueueTableBody) return;
     const totalHistoryList = [...borrowRequests]
       .filter((item) => !item.isDeleted)
-      .filter((item) => STAFF_HISTORY_TAB_STATUSES.has(item.status))
+      .filter(isStaffBorrowHistoryItem)
       .sort((a, b) => (b.updatedAtMs || 0) - (a.updatedAtMs || 0));
     const historyList = totalHistoryList.filter(matchesStaffBorrowRequestFilters);
     if (staffRequestTabMode !== "history") {
@@ -4656,6 +4676,10 @@ function initBorrowAssetsApp() {
     Array.from(staffMainTabBtns).some(
       (btn) => (btn.dataset.assetsStaffMainTab || "requests") === "requests" && btn.classList.contains("is-active")
     );
+  const isStaffBorrowInventoryMainTabActive = () =>
+    Array.from(staffMainTabBtns).some(
+      (btn) => btn.dataset.assetsStaffMainTab === "inventory" && btn.classList.contains("is-active")
+    );
   const closeStaffBorrowFilterSheet = () => {
     if (staffBorrowFilterFieldsPlaceholder && staffBorrowRequestFilterFields) {
       staffBorrowFilterFieldsPlaceholder.parentNode?.insertBefore(
@@ -4699,7 +4723,7 @@ function initBorrowAssetsApp() {
     if (activePage !== "borrow-assets-staff" && staffBorrowFilterSheet.classList.contains("is-open")) {
       closeStaffBorrowFilterSheet();
     }
-    const shouldShow = activePage === "borrow-assets-staff" && isStaffBorrowRequestsMainTabActive();
+    const shouldShow = activePage === "borrow-assets-staff";
     staffBorrowMobileActionBar?.classList.toggle("is-visible", shouldShow);
     if (activePage === "borrow-assets-staff") {
       document.body.classList.toggle("has-mobile-context-actions", shouldShow);
@@ -4709,8 +4733,9 @@ function initBorrowAssetsApp() {
       const action = btn.dataset.borrowMobileAction;
       btn.classList.toggle(
         "is-active",
-        (action === "queue" && staffRequestTabMode !== "history" && !filterOpen) ||
-          (action === "history" && staffRequestTabMode === "history" && !filterOpen) ||
+        (action === "queue" && isStaffBorrowRequestsMainTabActive() && staffRequestTabMode !== "history" && !filterOpen) ||
+          (action === "history" && isStaffBorrowRequestsMainTabActive() && staffRequestTabMode === "history" && !filterOpen) ||
+          (action === "inventory" && isStaffBorrowInventoryMainTabActive() && !filterOpen) ||
           (action === "filters" && filterOpen)
       );
     });
@@ -4793,13 +4818,22 @@ function initBorrowAssetsApp() {
       const action = btn.dataset.borrowMobileAction;
       if (action === "queue") {
         setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-main-tab="requests"]')?.click();
         document.querySelector('[data-assets-staff-tab="queue"]')?.click();
         scrollToStaffBorrowRequests(staffBorrowQueue);
       } else if (action === "history") {
         setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-main-tab="requests"]')?.click();
         document.querySelector('[data-assets-staff-tab="history"]')?.click();
         scrollToStaffBorrowRequests(staffBorrowQueue);
+      } else if (action === "inventory") {
+        setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-main-tab="inventory"]')?.click();
+        scrollToStaffBorrowRequests(staffBorrowInventory);
       } else if (action === "filters") {
+        if (!isStaffBorrowRequestsMainTabActive()) {
+          document.querySelector('[data-assets-staff-main-tab="requests"]')?.click();
+        }
         const isOpen = !staffBorrowFilterSheet.classList.contains("is-open");
         setStaffBorrowMobileFilterOpen(isOpen);
       }
