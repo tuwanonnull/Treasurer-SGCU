@@ -18,7 +18,15 @@
             </div>
           </div>
 
-          <div id="filterBarHostDashboardStaff">
+          <button id="dashboardFilterBackdropStaff" class="dashboard-filter-backdrop" type="button" aria-label="ปิดตัวกรอง" hidden></button>
+          <div id="filterBarHostDashboardStaff" aria-label="ตัวกรองโครงการ">
+            <div class="dashboard-floating-filter-head">
+              <div>
+                <strong>ตัวกรองโครงการ</strong>
+                <span>ปรับตัวกรองได้โดยไม่ออกจากส่วนที่กำลังดู</span>
+              </div>
+              <button id="dashboardFilterCloseStaff" class="modal-close" type="button" aria-label="ปิดตัวกรอง" title="ปิดตัวกรอง">✕</button>
+            </div>
             <div id="filterBarStaff" class="filter-bar">
               <div class="filter-group filter-year">
                 <label for="yearSelectStaff">ปีการศึกษา</label>
@@ -60,14 +68,15 @@
             </div>
           </div>
           <div class="tabs dashboard-staff-main-tabs dashboard-section-nav" aria-label="ไปยังส่วนในหน้าภาพรวมโครงการ">
-            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff">
-              ตัวกรอง
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff" aria-controls="filterBarHostDashboardStaff" aria-expanded="false">
+              <svg class="dashboard-filter-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="m16 16 4.25 4.25"></path>
+              </svg>
+              <span>ตัวกรอง</span>
             </button>
             <button type="button" class="tab-btn view-toggle-btn is-active" data-project-workflow-toc="checks" data-project-workflow-target="projectStaffOpsPanelStaff">
-              ความพร้อมข้อมูล
-            </button>
-            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="documents" data-project-workflow-target="dashboardDocumentSettingsSectionStaff">
-              ตั้งค่าเอกสาร
+              ตรวจสอบชีทหลัก
             </button>
             <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="metrics" data-project-workflow-target="dashboardMetricsSectionStaff">
               ภาพรวมตัวเลข
@@ -207,8 +216,8 @@
             <section class="panel project-staff-workflow-card project-staff-check-card">
               <div class="project-staff-ops-section-head">
                 <div>
-                  <h3 class="panel-title">ความพร้อมของข้อมูล</h3>
-                  <p>แสดงโครงการที่ยังต้องติดตามในแต่ละกระบวนการ พร้อมระยะเวลาที่เหลือหรือเลยกำหนดแล้ว</p>
+                  <h3 class="panel-title">ตรวจสอบสถานะเพื่ออัปเดตชีทหลัก</h3>
+                  <p>ใช้ตรวจหาโครงการที่พ้นกำหนดแล้วแต่สถานะยังไม่อัปเดต เพื่อให้นำไปแก้ไขข้อมูลในชีทหลัก โดยแสดงรายการที่ใกล้ถึงกำหนดไว้สำหรับติดตามล่วงหน้าด้วย</p>
                 </div>
                 <div class="tabs project-staff-check-tabs" role="tablist" aria-label="เลือกกระบวนการที่ต้องตรวจ">
                   <button type="button" class="tab-btn view-toggle-btn project-staff-check-tab is-active" data-project-check-type="advance">
@@ -239,54 +248,6 @@
             </section>
           </section>
 
-          <section id="dashboardDocumentSettingsSectionStaff" class="dashboard-section document-settings-section section-appear section-delay-1">
-            <section class="panel project-staff-workflow-card document-signer-settings-panel">
-              <div class="project-staff-ops-section-head">
-                <div>
-                  <h3 class="panel-title">ตั้งค่าเอกสารยืมรองจ่าย</h3>
-                  <p>กำหนดผู้ลงนาม เบอร์โทร และที่ประชุมอนุมัติแยกตามปีการศึกษา</p>
-                </div>
-              </div>
-              <form id="documentSignerSettingsForm" class="budget-staff-controls document-signer-settings-form">
-                <div class="document-signer-settings-grid">
-                  <div class="borrow-form-field document-signer-year-field">
-                    <label class="login-label" for="documentSignerAcademicYear">ปีการศึกษา</label>
-                    <input id="documentSignerAcademicYear" class="login-input" type="number" min="2500" max="2999" step="1" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="documentSignerPresidentName">ชื่อนายกสโมสร</label>
-                    <input id="documentSignerPresidentName" class="login-input" type="text" maxlength="160" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="documentSignerTreasurerName">ชื่อเหรัญญิก</label>
-                    <input id="documentSignerTreasurerName" class="login-input" type="text" maxlength="160" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="documentSignerTreasurerPhone">เบอร์โทรเหรัญญิก</label>
-                    <input id="documentSignerTreasurerPhone" class="login-input" type="tel" maxlength="30" placeholder="เช่น 094-969-6495" required />
-                  </div>
-                  <fieldset class="pdf-meeting-body-fieldset document-signer-meeting-field">
-                    <legend class="login-label">กิจกรรมผ่านที่ประชุม</legend>
-                    <div class="tabs document-meeting-body-toggle" role="radiogroup" aria-label="เลือกที่ประชุมอนุมัติกิจกรรม">
-                      <label class="tab-btn view-toggle-btn is-active">
-                        <input type="radio" name="documentApprovalMeetingBody" value="สภานิสิต" checked hidden />
-                        สภานิสิต
-                      </label>
-                      <label class="tab-btn view-toggle-btn">
-                        <input type="radio" name="documentApprovalMeetingBody" value="คณะกรรมการบริหารสโมสรนิสิตจุฬาลงกรณ์มหาวิทยาลัย" hidden />
-                        <span class="document-meeting-label-long">คณะกรรมการบริหารสโมสรนิสิตฯ</span>
-                        <span class="document-meeting-label-short">อบจ.</span>
-                      </label>
-                    </div>
-                  </fieldset>
-                  <div class="document-signer-actions">
-                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกผู้ลงนาม</button>
-                  </div>
-                </div>
-                <div id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite"></div>
-              </form>
-            </section>
-          </section>
           <section id="dashboardOverviewContentStaff" class="dashboard-overview section-appear section-delay-1">
             <section id="dashboardMetricsSectionStaff" class="dashboard-section">
               <header class="dashboard-section-header">
@@ -517,18 +478,70 @@
         <div class="page">
           <div class="page-header-flex">
             <div>
-              <h1 class="page-title">ตรวจระบบ</h1>
-              <p class="page-meta">ตรวจสถานะ Firebase, สิทธิ์ staff, แหล่งข้อมูล และ cache ก่อนแก้ปัญหาเว็บ</p>
+              <h1 class="page-title">ข้อมูลระบบ</h1>
+              <p class="page-meta">จัดการเอกสารและผู้ลงนาม พร้อมตรวจสถานะระบบและประวัติการทำงาน</p>
             </div>
-            <div class="tabs system-data-main-tabs" role="tablist" aria-label="เลือกมุมมองตรวจระบบ">
+            <div class="tabs system-data-main-tabs" role="tablist" aria-label="เลือกหมวดข้อมูลระบบ">
               <button type="button" class="tab-btn view-toggle-btn is-active" data-system-data-tab="health" aria-selected="true">
                 Health Check
               </button>
               <button type="button" class="tab-btn view-toggle-btn" data-system-data-tab="activity" aria-selected="false">
                 Activity Log
               </button>
+              <button type="button" class="tab-btn view-toggle-btn" data-system-data-tab="documents" aria-selected="false">
+                เอกสารและผู้ลงนาม
+              </button>
             </div>
           </div>
+
+          <section id="dashboardDocumentSettingsSectionStaff" class="dashboard-section document-settings-section system-data-main-panel" data-system-data-panel="documents" hidden>
+            <section class="panel project-staff-workflow-card document-signer-settings-panel">
+              <div class="project-staff-ops-section-head">
+                <div>
+                  <h3 class="panel-title">ตั้งค่าเอกสารยืมรองจ่าย</h3>
+                  <p>กำหนดผู้ลงนาม เบอร์โทร และที่ประชุมอนุมัติแยกตามปีการศึกษา</p>
+                </div>
+              </div>
+              <form id="documentSignerSettingsForm" class="budget-staff-controls document-signer-settings-form">
+                <div class="document-signer-settings-grid">
+                  <div class="borrow-form-field document-signer-year-field">
+                    <label class="login-label" for="documentSignerAcademicYear">ปีการศึกษา</label>
+                    <input id="documentSignerAcademicYear" class="login-input" type="number" min="2500" max="2999" step="1" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerPresidentName">ชื่อนายกสโมสร</label>
+                    <input id="documentSignerPresidentName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerTreasurerName">ชื่อเหรัญญิก</label>
+                    <input id="documentSignerTreasurerName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="documentSignerTreasurerPhone">เบอร์โทรเหรัญญิก</label>
+                    <input id="documentSignerTreasurerPhone" class="login-input" type="tel" maxlength="30" placeholder="เช่น 094-969-6495" required />
+                  </div>
+                  <fieldset class="pdf-meeting-body-fieldset document-signer-meeting-field">
+                    <legend class="login-label">กิจกรรมผ่านที่ประชุม</legend>
+                    <div class="tabs document-meeting-body-toggle" role="radiogroup" aria-label="เลือกที่ประชุมอนุมัติกิจกรรม">
+                      <label class="tab-btn view-toggle-btn is-active">
+                        <input type="radio" name="documentApprovalMeetingBody" value="สภานิสิต" checked hidden />
+                        สภานิสิต
+                      </label>
+                      <label class="tab-btn view-toggle-btn">
+                        <input type="radio" name="documentApprovalMeetingBody" value="คณะกรรมการบริหารสโมสรนิสิตจุฬาลงกรณ์มหาวิทยาลัย" hidden />
+                        <span class="document-meeting-label-long">คณะกรรมการบริหารสโมสรนิสิตฯ</span>
+                        <span class="document-meeting-label-short">อบจ.</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <div class="document-signer-actions">
+                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกผู้ลงนาม</button>
+                  </div>
+                </div>
+                <div id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite"></div>
+              </form>
+            </section>
+          </section>
 
           <div id="systemHealthSummary" class="system-health-summary system-data-main-panel" data-system-data-panel="health" aria-live="polite">
             <div class="system-health-summary-card">

@@ -457,6 +457,70 @@ function setActiveStaffProjectWorkflowTab(tab = "checks") {
 }
 
 function syncStaffProjectWorkflowTabs() {
+  const filterHost = document.getElementById("filterBarHostDashboardStaff");
+  const filterBackdrop = document.getElementById("dashboardFilterBackdropStaff");
+  const filterCloseBtn = document.getElementById("dashboardFilterCloseStaff");
+  const filterTocBtn = document.querySelector('[data-project-workflow-toc="filters"]');
+  const filterNav = filterTocBtn?.closest(".dashboard-section-nav") || null;
+  let filterCloseTimer = null;
+  const finishClosingFloatingFilters = () => {
+    filterHost?.classList.remove("is-floating-open", "is-closing");
+    filterBackdrop?.classList.remove("is-closing");
+    filterBackdrop?.setAttribute("hidden", "");
+    document.body.classList.remove("has-dashboard-floating-filter");
+    if (filterNav?.parentNode && filterHost && filterBackdrop) {
+      filterNav.parentNode.insertBefore(filterBackdrop, filterNav);
+      filterNav.parentNode.insertBefore(filterHost, filterNav);
+    }
+    filterCloseTimer = null;
+  };
+  const closeFloatingFilters = () => {
+    filterTocBtn?.setAttribute("aria-expanded", "false");
+    if (!filterHost?.classList.contains("is-floating-open")) {
+      finishClosingFloatingFilters();
+      return;
+    }
+    filterHost.classList.add("is-closing");
+    filterBackdrop?.classList.add("is-closing");
+    if (filterCloseTimer) window.clearTimeout(filterCloseTimer);
+    filterCloseTimer = window.setTimeout(finishClosingFloatingFilters, 170);
+  };
+  const openFloatingFilters = () => {
+    if (filterCloseTimer) {
+      window.clearTimeout(filterCloseTimer);
+      filterCloseTimer = null;
+    }
+    if (filterBackdrop) document.body.appendChild(filterBackdrop);
+    if (filterHost) document.body.appendChild(filterHost);
+    filterHost?.classList.remove("is-closing");
+    filterBackdrop?.classList.remove("is-closing");
+    filterHost?.classList.add("is-floating-open");
+    filterBackdrop?.removeAttribute("hidden");
+    filterTocBtn?.setAttribute("aria-expanded", "true");
+    document.body.classList.add("has-dashboard-floating-filter");
+    window.setTimeout(() => {
+      document.getElementById("yearSelectStaff")?.focus?.({ preventScroll: true });
+    }, 80);
+  };
+
+  if (filterCloseBtn && filterCloseBtn.dataset.dashboardFilterBound !== "true") {
+    filterCloseBtn.dataset.dashboardFilterBound = "true";
+    filterCloseBtn.addEventListener("click", closeFloatingFilters);
+  }
+  if (filterBackdrop && filterBackdrop.dataset.dashboardFilterBound !== "true") {
+    filterBackdrop.dataset.dashboardFilterBound = "true";
+    filterBackdrop.addEventListener("click", closeFloatingFilters);
+  }
+  if (filterHost && filterHost.dataset.dashboardFilterEscapeBound !== "true") {
+    filterHost.dataset.dashboardFilterEscapeBound = "true";
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && filterHost.classList.contains("is-floating-open")) {
+        closeFloatingFilters();
+        filterTocBtn?.focus?.({ preventScroll: true });
+      }
+    });
+  }
+
   document.querySelectorAll("[data-project-workflow-tab]").forEach((btn) => {
     const tab = btn.dataset.projectWorkflowTab || "checks";
     if (btn.dataset.projectWorkflowBound === "true") return;
@@ -472,15 +536,14 @@ function syncStaffProjectWorkflowTabs() {
     if (btn.dataset.projectWorkflowTocBound === "true") return;
     btn.dataset.projectWorkflowTocBound = "true";
     btn.addEventListener("click", () => {
+      if (tab === "filters") {
+        openFloatingFilters();
+        return;
+      }
       setActiveStaffProjectWorkflowTab(tab);
       const targetId = btn.dataset.projectWorkflowTarget || "";
       const target = targetId ? document.getElementById(targetId) : null;
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      if (tab === "filters") {
-        window.setTimeout(() => {
-          document.getElementById("yearSelectStaff")?.focus?.({ preventScroll: true });
-        }, 320);
-      }
     });
   });
 

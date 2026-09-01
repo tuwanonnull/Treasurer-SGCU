@@ -543,7 +543,6 @@ function initDashboardMobileActionBar() {
 
   const targetByAction = {
     checks: "projectStaffOpsPanelStaff",
-    documents: "dashboardDocumentSettingsSectionStaff",
     metrics: "dashboardMetricsSectionStaff",
     followup: "dashboardFollowupSectionStaff",
     analysis: "dashboardAnalysisSectionStaff"
@@ -1155,7 +1154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const staffBreadcrumbs = {
     "dashboard-staff": ["ภาพรวม", "ภาพรวมโครงการ"],
     "treasurer-handover-staff": ["เครื่องมือ", "คู่มือการทำงาน"],
-    "system-data-staff": ["ภาพรวม", "ตรวจระบบ"],
+    "system-data-staff": ["ภาพรวม", "ข้อมูลระบบ"],
     "budget-approval-staff": ["คำขอ", "คำของบประมาณ"],
     "borrow-assets-staff": ["คำขอ", "ยืม-คืนพัสดุ"],
     "meeting-room-staff": ["คำขอ", "ห้องประชุม"],
