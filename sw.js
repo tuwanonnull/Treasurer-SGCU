@@ -1,10 +1,10 @@
-const CACHE_VERSION = "20260901-borrow-asset-item-dividers-2";
+const CACHE_VERSION = "20260902-borrow-asset-filters-row-1";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
   "./",
   "./index.html",
-  "./css/style.css?v=20260901-borrow-asset-item-dividers-2",
+  "./css/style.css?v=20260902-borrow-asset-filters-row-1",
   "./js/integrations/app.firebase-bootstrap.js?v=20260423-1",
   "./js/core/app.config.js?v=20260518-csv-refresh-2",
   "./js/integrations/app.runtime-config.js?v=20260504-1",

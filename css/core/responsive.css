@@ -428,10 +428,6 @@
   #calendarView .calendar-heat-5.calendar-day-has-events::after {
     color: #9d174d;
   }
-  #calendarView .calendar-day-selected {
-    border-color: #111827;
-    box-shadow: 0 0 0 2px #111827;
-  }
   #calendarView .calendar-day-today {
     box-shadow: inset 0 0 0 2px rgba(236, 72, 153, 0.42);
   }

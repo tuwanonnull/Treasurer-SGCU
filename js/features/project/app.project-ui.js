@@ -1235,7 +1235,12 @@ function renderHomeHeatmap(sourceProjects = projects, container = homeHeatmapEl,
 
   container.innerHTML = "";
   monthsRow.innerHTML = "";
-  if (!sourceProjects || !sourceProjects.length) return;
+  const heatmapYearEl = document.getElementById("homeHeatmapYear");
+  const heatmapEmptyEl = document.getElementById("homeHeatmapEmpty");
+  const hasProjects = Array.isArray(sourceProjects) && sourceProjects.length > 0;
+  if (heatmapYearEl) heatmapYearEl.hidden = !hasProjects;
+  if (heatmapEmptyEl) heatmapEmptyEl.hidden = hasProjects;
+  if (!hasProjects) return;
 
   const today = new Date();
   const selectedYearBE = Number(selectedProjectSourceYear);
@@ -1347,7 +1352,17 @@ function renderHomeHeatmap(sourceProjects = projects, container = homeHeatmapEl,
 function renderHomeKpis(sourceProjects = projects) {
   initDashboardBudgetComparisonToggle();
   const data = Array.isArray(sourceProjects) ? sourceProjects : projects;
-  if (!data || !data.length) return;
+  if (!data || !data.length) {
+    if (kpiMonthlyCaptionEl) {
+      kpiMonthlyCaptionEl.textContent = "ไม่มีข้อมูลตรงกับตัวกรอง";
+    }
+    renderHomeHeatmap([], homeHeatmapEl, homeHeatmapMonthsEl);
+    if (homeKpiChart) {
+      homeKpiChart.destroy();
+      homeKpiChart = null;
+    }
+    return;
+  }
 
   const closedProjects = data.filter(isProjectClosed);
 

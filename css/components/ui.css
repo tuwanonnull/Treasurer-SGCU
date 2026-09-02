@@ -2134,11 +2134,6 @@ th.sortable.sort-desc::after {
   cursor: pointer;
 }
 
-.calendar-day-selected {
-  border-color: #be185d;
-  box-shadow: 0 0 0 2px rgba(190, 24, 93, 0.18);
-}
-
 .calendar-selected-day-panel {
   display: none;
 }

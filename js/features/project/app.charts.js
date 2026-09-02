@@ -508,6 +508,18 @@ function updateProjectBudgetComparisonChart(filtered) {
   const captionEl = ctx.projectBudgetComparisonCaptionEl;
   if (!chart) return;
 
+  if (!Array.isArray(filtered) || filtered.length === 0) {
+    chart.$projectBudgetRows = [];
+    chart.data.labels = [];
+    chart.data.datasets.forEach((dataset) => {
+      dataset.data = [];
+    });
+    if (captionEl) captionEl.textContent = "ไม่มีข้อมูลตรงกับตัวกรอง";
+    resizeProjectBudgetComparisonChart(1);
+    chart.update("none");
+    return;
+  }
+
   const createBudgetSummaryRow = (name, orgGroup = "") => ({
     name,
     orgGroup,

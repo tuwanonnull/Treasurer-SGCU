@@ -151,6 +151,7 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   lastProjectStatusProjectsRefByContext[ctxKey] = projects;
   syncProjectSortIndicators(ctxKey);
   syncChartsToContext(ctxKey);
+  if (ctxKey === "staff") syncDashboardDesktopFilterState();
 }
 
 function resetProjectFilters(ctxKey = activeProjectStatusContext) {
@@ -456,12 +457,36 @@ function setActiveStaffProjectWorkflowTab(tab = "checks") {
   window.syncDashboardMobileActionBar?.();
 }
 
+function syncDashboardDesktopFilterState() {
+  const button = document.querySelector('[data-project-workflow-toc="filters"]');
+  const ctx = projectStatusContexts.staff;
+  if (!button || !ctx) return;
+
+  const currentYear = (ctx.yearSelect?.value || "all").toString();
+  if (!button.dataset.filterDefaultYear) {
+    button.dataset.filterDefaultYear = currentYear;
+  }
+  const activeCount = [
+    currentYear !== button.dataset.filterDefaultYear,
+    (ctx.orgTypeSelect?.value || "all") !== "all",
+    (ctx.orgSelect?.value || "all") !== "all",
+    Boolean((ctx.projectSearchInput?.value || "").trim())
+  ].filter(Boolean).length;
+
+  button.classList.toggle("has-active-filters", activeCount > 0);
+  button.dataset.filterCount = activeCount ? String(activeCount) : "";
+  button.setAttribute(
+    "aria-label",
+    activeCount ? `เปิดตัวกรอง (${activeCount} รายการใช้งานอยู่)` : "เปิดตัวกรอง"
+  );
+}
+
 function syncStaffProjectWorkflowTabs() {
   const filterHost = document.getElementById("filterBarHostDashboardStaff");
   const filterBackdrop = document.getElementById("dashboardFilterBackdropStaff");
   const filterCloseBtn = document.getElementById("dashboardFilterCloseStaff");
   const filterTocBtn = document.querySelector('[data-project-workflow-toc="filters"]');
-  const filterNav = filterTocBtn?.closest(".dashboard-section-nav") || null;
+  const filterNav = filterTocBtn?.closest(".dashboard-sticky-controls") || null;
   let filterCloseTimer = null;
   const finishClosingFloatingFilters = () => {
     filterHost?.classList.remove("is-floating-open", "is-closing");
@@ -548,6 +573,7 @@ function syncStaffProjectWorkflowTabs() {
   });
 
   setActiveStaffProjectWorkflowTab(activeStaffProjectWorkflowTab);
+  syncDashboardDesktopFilterState();
   document.querySelectorAll("[data-project-workflow-panel]").forEach((panel) => {
     const tab = panel.dataset.projectWorkflowPanel || "checks";
     panel.hidden = tab !== activeStaffProjectWorkflowTab;

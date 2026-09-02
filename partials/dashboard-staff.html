@@ -67,14 +67,8 @@
               </div>
             </div>
           </div>
-          <div class="tabs dashboard-staff-main-tabs dashboard-section-nav" aria-label="ไปยังส่วนในหน้าภาพรวมโครงการ">
-            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff" aria-controls="filterBarHostDashboardStaff" aria-expanded="false">
-              <svg class="dashboard-filter-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="11" cy="11" r="6.5"></circle>
-                <path d="m16 16 4.25 4.25"></path>
-              </svg>
-              <span>ตัวกรอง</span>
-            </button>
+          <div class="dashboard-sticky-controls">
+            <div class="tabs dashboard-staff-main-tabs dashboard-section-nav" aria-label="ไปยังส่วนในหน้าภาพรวมโครงการ">
             <button type="button" class="tab-btn view-toggle-btn is-active" data-project-workflow-toc="checks" data-project-workflow-target="projectStaffOpsPanelStaff">
               ตรวจสอบชีทหลัก
             </button>
@@ -86,6 +80,13 @@
             </button>
             <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="analysis" data-project-workflow-target="dashboardAnalysisSectionStaff">
               วิเคราะห์
+            </button>
+            </div>
+            <button type="button" class="tab-btn view-toggle-btn dashboard-filter-sticky-trigger" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff" aria-controls="filterBarHostDashboardStaff" aria-expanded="false" aria-label="เปิดตัวกรอง" title="ตัวกรอง">
+              <svg class="dashboard-filter-trigger-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="m16 16 4.25 4.25"></path>
+              </svg>
             </button>
           </div>
 
@@ -314,11 +315,11 @@
                 <h3 class="dashboard-section-title">งานที่ต้องติดตาม</h3>
               </header>
             <div class="dashboard-charts-grid section-appear section-delay-2" style="margin-top:12px;">
-              <article class="chart-card">
+              <article class="chart-card dashboard-overdue-close-chart-card">
                   <header class="chart-header">
                     <h3 class="chart-title">โครงการครบกำหนดสิ้นสุดงาน แต่ยังไม่ปิดโครงการ</h3>
                   </header>
-                <div class="chart-inner">
+                <div class="chart-inner dashboard-overdue-close-chart-inner">
                   <canvas id="trendLineChartStaff"></canvas>
                 </div>
               </article>
@@ -440,7 +441,8 @@
                 <div class="calendar-heatmap-header">
                   <h4 class="calendar-heatmap-title">Heat map วันปฏิบัติงานวันสุดท้าย</h4>
                 </div>
-                <div class="heatmap-year">
+                <p id="homeHeatmapEmpty" class="chart-caption" hidden>ไม่มีข้อมูลตรงกับตัวกรอง</p>
+                <div id="homeHeatmapYear" class="heatmap-year">
                   <div id="homeHeatmapMonths" class="heatmap-axis heatmap-axis-months"></div>
                   <div class="heatmap-body">
                     <div class="heatmap-axis heatmap-axis-days" aria-hidden="true">
