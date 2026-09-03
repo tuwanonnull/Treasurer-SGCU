@@ -56,29 +56,27 @@
   min-height: 297mm;
   box-sizing: border-box;
   padding: 23.4mm 24.3mm 29mm 25.4mm;
-  page-break-after: always;
-  break-after: page;
-}
-
-.pdf-page:last-child {
   page-break-after: auto;
   break-after: auto;
 }
 
-.pdf-page + .pdf-page {
-  page-break-before: always;
-  break-before: page;
+/* The first explicit boundary starts the request form on a new sheet. The
+   following fixed-height page flows naturally; forcing it again creates a
+   trailing blank sheet in Chromium and mobile print engines. */
+.pdf-root > section + section {
+  page-break-before: auto !important;
+  break-before: auto !important;
+}
+
+.pdf-root > .pdf-page-break {
+  page-break-before: always !important;
+  break-before: page !important;
 }
 
 .pdf-flow {
   width: 210mm;
   box-sizing: border-box;
   padding: 25.4mm 24.3mm 29mm 25.4mm;
-}
-
-.pdf-page-break {
-  page-break-before: always;
-  break-before: page;
 }
 
 .pdf-header {
@@ -339,4 +337,25 @@
   border: 0;
   opacity: 0;
   pointer-events: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Keep the fixed page box slightly below the physical A4 height. Chromium
+     rounds millimetres to fractional pixels and otherwise spills a tiny tail
+     onto an additional blank page. */
+  .pdf-page {
+    min-height: 296mm;
+  }
+
+  /* The final accounting section is intentionally shorter than a sheet. A
+     full A4 min-height here makes Chromium paginate its trailing box onto one
+     more empty sheet after the preceding fragmented letter page. */
+  .pdf-root > .pdf-page:last-child {
+    min-height: 0;
+  }
 }

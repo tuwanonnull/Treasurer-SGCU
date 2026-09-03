@@ -501,7 +501,7 @@
               <div class="project-staff-ops-section-head">
                 <div>
                   <h3 class="panel-title">ตั้งค่าเอกสารยืมรองจ่าย</h3>
-                  <p>กำหนดผู้ลงนาม เบอร์โทร และที่ประชุมอนุมัติแยกตามปีการศึกษา</p>
+                  <p id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite">กำลังโหลดการตั้งค่า...</p>
                 </div>
               </div>
               <form id="documentSignerSettingsForm" class="budget-staff-controls document-signer-settings-form">
@@ -510,15 +510,19 @@
                     <label class="login-label" for="documentSignerAcademicYear">ปีการศึกษา</label>
                     <input id="documentSignerAcademicYear" class="login-input" type="number" min="2500" max="2999" step="1" required />
                   </div>
-                  <div class="borrow-form-field">
+                  <div class="borrow-form-field document-signer-vice-rector-field">
+                    <label class="login-label" for="documentSignerViceRectorName">ชื่อรองอธิการบดี (ในวงเล็บ)</label>
+                    <input id="documentSignerViceRectorName" class="login-input" type="text" maxlength="200" required />
+                  </div>
+                  <div class="borrow-form-field document-signer-president-field">
                     <label class="login-label" for="documentSignerPresidentName">ชื่อนายกสโมสร</label>
                     <input id="documentSignerPresidentName" class="login-input" type="text" maxlength="160" required />
                   </div>
-                  <div class="borrow-form-field">
+                  <div class="borrow-form-field document-signer-treasurer-field">
                     <label class="login-label" for="documentSignerTreasurerName">ชื่อเหรัญญิก</label>
                     <input id="documentSignerTreasurerName" class="login-input" type="text" maxlength="160" required />
                   </div>
-                  <div class="borrow-form-field">
+                  <div class="borrow-form-field document-signer-phone-field">
                     <label class="login-label" for="documentSignerTreasurerPhone">เบอร์โทรเหรัญญิก</label>
                     <input id="documentSignerTreasurerPhone" class="login-input" type="tel" maxlength="30" placeholder="เช่น 094-969-6495" required />
                   </div>
@@ -537,10 +541,9 @@
                     </div>
                   </fieldset>
                   <div class="document-signer-actions">
-                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกผู้ลงนาม</button>
+                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกการตั้งค่า</button>
                   </div>
                 </div>
-                <div id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite"></div>
               </form>
             </section>
           </section>

@@ -2,17 +2,19 @@
 (function initDocumentSignerSettings() {
   const form = document.getElementById("documentSignerSettingsForm");
   const yearInput = document.getElementById("documentSignerAcademicYear");
+  const viceRectorInput = document.getElementById("documentSignerViceRectorName");
   const treasurerInput = document.getElementById("documentSignerTreasurerName");
   const treasurerPhoneInput = document.getElementById("documentSignerTreasurerPhone");
   const presidentInput = document.getElementById("documentSignerPresidentName");
   const saveButton = document.getElementById("documentSignerSaveBtn");
   const message = document.getElementById("documentSignerSettingsMessage");
-  if (!form || !yearInput || !treasurerInput || !treasurerPhoneInput || !presidentInput || !saveButton || !message) return;
+  if (!form || !yearInput || !viceRectorInput || !treasurerInput || !treasurerPhoneInput || !presidentInput || !saveButton || !message) return;
 
   const defaults = {
     treasurerName: "นายธุวานนท์ กิ้มเฉี้ยง",
     treasurerPhone: "094-969-6495",
     presidentName: "นางสาวเกวลี เอกโยคยะ",
+    viceRectorName: "รองศาสตราจารย์ ดร.สุกัญญา สมไพบูลย์",
     approvalMeetingBody: "สภานิสิต"
   };
 
@@ -38,6 +40,7 @@
   const fillYear = () => {
     const year = yearInput.value.trim();
     const row = getRows()[year] || {};
+    viceRectorInput.value = row.viceRectorName || defaults.viceRectorName;
     treasurerInput.value = row.treasurerName || defaults.treasurerName;
     treasurerPhoneInput.value = row.treasurerPhone || defaults.treasurerPhone;
     presidentInput.value = row.presidentName || defaults.presidentName;
@@ -66,12 +69,13 @@
   const save = async (event) => {
     event.preventDefault();
     const year = yearInput.value.trim();
+    const viceRectorName = viceRectorInput.value.trim();
     const treasurerName = treasurerInput.value.trim();
     const treasurerPhone = treasurerPhoneInput.value.trim();
     const presidentName = presidentInput.value.trim();
     const approvalMeetingBody = form.querySelector('input[name="documentApprovalMeetingBody"]:checked')?.value || defaults.approvalMeetingBody;
-    if (!/^\d{4}$/.test(year) || !treasurerName || !treasurerPhone || !presidentName) {
-      showMessage("กรุณากรอกปีการศึกษา ชื่อผู้ลงนาม และเบอร์โทรเหรัญญิกให้ครบ", "#b91c1c");
+    if (!/^\d{4}$/.test(year) || !viceRectorName || !treasurerName || !treasurerPhone || !presidentName) {
+      showMessage("กรุณากรอกปีการศึกษา ชื่อรองอธิการบดี ผู้ลงนาม และเบอร์โทรเหรัญญิกให้ครบ", "#b91c1c");
       return;
     }
 
@@ -86,7 +90,7 @@
     try {
       const nextRows = {
         ...getRows(),
-        [year]: { treasurerName, treasurerPhone, presidentName, approvalMeetingBody }
+        [year]: { viceRectorName, treasurerName, treasurerPhone, presidentName, approvalMeetingBody }
       };
       await store.setDoc(
         store.doc(store.db, "appSettings", "global"),
@@ -102,7 +106,7 @@
       });
       if (!globalThis.SGCU_APP_CONFIG.documents) globalThis.SGCU_APP_CONFIG.documents = {};
       globalThis.SGCU_APP_CONFIG.documents.signersByAcademicYear = nextRows;
-      showMessage(`บันทึกผู้ลงนามปีการศึกษา ${year} เรียบร้อย`, "#047857");
+      showMessage(`บันทึกการตั้งค่าเอกสารปีการศึกษา ${year} เรียบร้อย`, "#047857");
     } catch (error) {
       console.error("document signer settings save failed", error);
       showMessage("บันทึกไม่สำเร็จ กรุณาตรวจสอบสิทธิ์หัวหน้าสตาฟ", "#b91c1c");

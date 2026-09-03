@@ -70,9 +70,10 @@
         const treasurerName = (rawSigner.treasurerName || "").toString().trim();
         const treasurerPhone = (rawSigner.treasurerPhone || "").toString().trim();
         const presidentName = (rawSigner.presidentName || "").toString().trim();
+        const viceRectorName = (rawSigner.viceRectorName || "").toString().trim();
         const approvalMeetingBody = (rawSigner.approvalMeetingBody || "").toString().trim();
-        if (!treasurerName && !treasurerPhone && !presidentName && !approvalMeetingBody) return;
-        normalizedSigners[year] = { treasurerName, treasurerPhone, presidentName, approvalMeetingBody };
+        if (!treasurerName && !treasurerPhone && !presidentName && !viceRectorName && !approvalMeetingBody) return;
+        normalizedSigners[year] = { treasurerName, treasurerPhone, presidentName, viceRectorName, approvalMeetingBody };
       });
       normalized.documents = { signersByAcademicYear: normalizedSigners };
     }

@@ -1,0 +1,54 @@
+    <!-- PDF Sign Modal (New) -->
+    <div
+      id="pdfSignModal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      aria-labelledby="pdfSignModalTitle"
+    >
+      <div class="modal-dialog" style="max-width: 500px;">
+        <div class="modal-header">
+          <div>
+            <div id="pdfSignModalTitle" class="modal-title">ข้อมูลสำหรับออกเอกสาร</div>
+            <div class="modal-subtitle">กรุณากรอกข้อมูลผู้ลงนามเพื่อสร้างไฟล์ PDF</div>
+          </div>
+          <button id="pdfSignModalClose" class="modal-close" type="button" aria-label="ปิด">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="pdfSignForm" class="borrow-request-form" style="gap: 12px;">
+            <div class="borrow-form-field">
+              <label class="login-label" for="pdfSignLeadName">ชื่อประธานโครงการ <span style="color:red">*</span></label>
+              <input id="pdfSignLeadName" class="login-input" type="text" placeholder="ตัวอย่าง นายองค์การบริหาร สภานิสิต" required />
+            </div>
+            <div class="borrow-form-field">
+              <label class="login-label" for="pdfSignLeadPhone">เบอร์โทรศัพท์ (ประธานโครงการ) <span style="color:red">*</span></label>
+              <input id="pdfSignLeadPhone" class="login-input" type="tel" placeholder="ตัวอย่าง 081-234-5678" required />
+            </div>
+
+            <div id="pdfSignClubFields" style="display:none; flex-direction: column; gap: 12px;">
+               <div class="separator-gradient" style="margin: 8px 0; height: 1px; background: #e5e7eb;"></div>
+               <div class="borrow-form-field">
+                  <label class="login-label" for="pdfSignHeadName">ชื่อประธาน<span id="pdfSignOrgLabel">ชมรม</span> <span style="color:red">*</span></label>
+                  <input id="pdfSignHeadName" class="login-input" type="text" placeholder="ตัวอย่าง นายกีฬา รักวิชาการ" required/>
+               </div>
+               <div class="borrow-form-field">
+                  <label class="login-label" for="pdfSignClubTreasurer">ชื่อเหรัญญิก<span id="pdfSignOrgLabel2">ชมรม</span> <span style="color:red">*</span></label>
+                  <input id="pdfSignClubTreasurer" class="login-input" type="text" placeholder="ตัวอย่าง นางสาวศิลป์ รักพัฒนา" required/>
+               </div>
+               <div class="borrow-form-field">
+                  <label class="login-label" for="pdfSignAdvisor">ชื่ออาจารย์ที่ปรึกษา <span style="color:red">*</span></label>
+                  <input id="pdfSignAdvisor" class="login-input" type="text" placeholder="ตัวอย่าง รศ.ดร.กิจการนิสิต จุฬา" required/>
+               </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 16px;">
+              <button type="button" class="btn-ghost" id="pdfSignCancel">ยกเลิก</button>
+              <button type="submit" class="btn-primary">สร้าง PDF</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "20260902-borrow-asset-filters-row-1";
+const CACHE_VERSION = "20260903-pdf-preview-back-button-1";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
