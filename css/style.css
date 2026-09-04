@@ -2,7 +2,7 @@
 @import url("./core/base.css?v=20260611-thai-text-rendering-1");
 @import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
 @import url("./pages/operations.css?v=20260902-borrow-asset-filters-row-1");
-@import url("./pages/meeting-room.css?v=20260827-stable-staff-calendar-1");
+@import url("./pages/meeting-room.css?v=20260904-calendar-date-jump-10");
 @import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/layout.css?v=20260518-csv-refresh-5");
 @import url("./core/navigation.css?v=20260902-borrow-standalone-columns-1");
@@ -108,8 +108,9 @@
   #meetingRoomCalendarPanel .meeting-calendar-period-nav,
   .meeting-public-calendar-page .meeting-calendar-period-nav {
     display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) 42px 42px;
-    gap: 7px;
+    grid-template-columns: 38px 38px minmax(0, 1fr) 38px;
+    justify-content: stretch;
+    gap: 3px;
   }
 
   #meetingRoomStaffCalendarPanel .meeting-calendar-display-controls,

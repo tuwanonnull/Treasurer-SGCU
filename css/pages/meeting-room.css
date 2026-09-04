@@ -591,6 +591,36 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.18);
 }
 
+@media (min-width: 721px) {
+  .meeting-calendar-panel > .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .meeting-calendar-panel > .panel-header .meeting-calendar-view-toggle {
+    margin-left: auto;
+  }
+
+  .meeting-calendar-toolbar .meeting-calendar-display-controls {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    margin-left: 0;
+  }
+
+  .meeting-calendar-toolbar .meeting-calendar-navigation-controls {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .meeting-calendar-toolbar .meeting-calendar-control-divider {
+    display: none;
+  }
+}
+
 .meeting-calendar-display-controls {
   display: flex;
   flex-wrap: wrap;
@@ -622,7 +652,8 @@
   font-weight: 700;
 }
 
-.meeting-calendar-room-filter .sr-only {
+.meeting-calendar-room-filter .sr-only,
+.meeting-calendar-date-jump .sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -675,7 +706,60 @@
 }
 
 .meeting-calendar-date-jump {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(236, 72, 153, 0.28);
+  border-radius: 10px;
+  background: #fff;
+  color: #db2777;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.meeting-calendar-date-jump[hidden] {
   display: none;
+}
+
+.meeting-calendar-date-jump:hover {
+  border-color: rgba(219, 39, 119, 0.5);
+  background: #fff7fb;
+}
+
+.meeting-calendar-date-jump:focus-within {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+}
+
+.meeting-calendar-date-jump svg {
+  width: 19px;
+  height: 19px;
+  pointer-events: none;
+}
+
+.meeting-calendar-date-jump .login-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.meeting-calendar-date-jump .login-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  cursor: pointer;
 }
 
 .meeting-calendar-navigation-controls {
@@ -686,10 +770,14 @@
 
 .meeting-calendar-period-nav {
   display: grid;
-  grid-template-columns: 38px auto 38px;
+  grid-template-columns: 38px 38px auto 38px;
   align-items: center;
   justify-content: start;
   gap: 3px;
+}
+
+.meeting-calendar-period-nav.is-month-view {
+  grid-template-columns: 38px auto 38px;
 }
 
 .meeting-calendar-period-nav .btn-ghost {
@@ -1898,9 +1986,36 @@
 
   .meeting-calendar-period-nav {
     flex: 0 0 auto;
-    width: auto;
+    width: 100%;
     margin-left: 0;
-    grid-template-columns: 38px auto 38px;
+    grid-template-columns: 38px 38px minmax(0, 1fr) 38px;
+    justify-content: stretch;
+  }
+
+  .meeting-calendar-period-nav .meeting-calendar-date-jump {
+    position: relative;
+    z-index: auto;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    transform: none;
+  }
+
+  .meeting-calendar-period-nav .meeting-calendar-nav-btn:first-of-type {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .meeting-calendar-period-nav .meeting-calendar-today-btn {
+    grid-column: 3;
+    grid-row: 1;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .meeting-calendar-period-nav .meeting-calendar-nav-btn:last-of-type {
+    grid-column: 4;
+    justify-self: end;
   }
 
   .meeting-calendar-navigation-controls {

@@ -64,6 +64,24 @@ export function bookingStartTimeMs(data = {}) {
   return Date.parse(`${date}T${time}:00+07:00`);
 }
 
+function timestampMs(value) {
+  if (value && typeof value.toMillis === "function") return value.toMillis();
+  if (Number.isFinite(value?._seconds)) return value._seconds * 1000;
+  const parsed = Date.parse((value || "").toString());
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+export function getPersonnelAutoApprovalReason(data = {}, nowMs = Date.now()) {
+  if (normalizeBookingStatus(data) !== "pending") return null;
+  const profileType = (data.requesterProfileType || data.profileType || "").toString().trim().toLowerCase();
+  if (!["affairs", "staff", "personnel", "บุคลากร"].includes(profileType)) return null;
+  const startMs = bookingStartTimeMs(data);
+  if (Number.isFinite(startMs) && nowMs >= startMs) return "start_time_reached";
+  const createdMs = timestampMs(data.createdAt);
+  if (Number.isFinite(createdMs) && nowMs - createdMs >= 24 * 60 * 60 * 1000) return "pending_24_hours";
+  return null;
+}
+
 export function getDueMeetingReminder(data = {}, nowMs = Date.now()) {
   if (normalizeBookingStatus(data) !== "approved") return null;
   const startMs = bookingStartTimeMs(data);

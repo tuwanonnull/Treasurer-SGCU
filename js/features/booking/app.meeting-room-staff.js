@@ -48,6 +48,7 @@ function initMeetingRoomStaffApproval() {
   const staffCalendarRoomFilterEl = document.getElementById("meetingStaffCalendarRoomFilter");
   const staffCalendarDateJumpEl = document.getElementById("meetingStaffCalendarDateJump");
   const staffCalendarDateJumpLabel = staffCalendarDateJumpEl?.closest(".meeting-calendar-date-jump");
+  const staffCalendarViewToggle = staffCalendarWeekViewBtn?.closest(".meeting-calendar-view-toggle");
   const bookingDayModalEl = document.getElementById("meetingBookingDayModal");
   const bookingDayModalTitleEl = document.getElementById("meetingBookingDayTitle");
   const bookingDayModalBodyEl = document.getElementById("meetingBookingDayBody");
@@ -621,8 +622,15 @@ function initMeetingRoomStaffApproval() {
   let staffCalendarDisplayMode = "week";
   const isMobileStaffCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (staffCalendarDateJumpLabel && staffCalendarNextBtn?.parentElement) {
-    staffCalendarNextBtn.parentElement.insertBefore(staffCalendarDateJumpLabel, staffCalendarNextBtn);
+    staffCalendarNextBtn.parentElement.insertBefore(staffCalendarDateJumpLabel, staffCalendarPrevBtn);
+    staffCalendarDateJumpLabel.addEventListener("click", (event) => {
+      if (typeof staffCalendarDateJumpEl.showPicker !== "function") return;
+      event.preventDefault();
+      try { staffCalendarDateJumpEl.showPicker(); } catch (_error) { staffCalendarDateJumpEl.focus(); }
+    });
   }
+  const staffCalendarHeader = staffCalendarPanel?.closest(".meeting-calendar-panel")?.querySelector(":scope > .panel-header");
+  if (staffCalendarViewToggle && staffCalendarHeader) staffCalendarHeader.appendChild(staffCalendarViewToggle);
   let staffCalendarRoomFilterValue = "all";
   let holidayCalendarCursor = new Date();
   let activeStaffDayModalDate = "";
@@ -2803,6 +2811,8 @@ function initMeetingRoomStaffApproval() {
     const nextMode = mode === "week" ? "week" : "month";
     if (nextMode === "week" && staffCalendarDisplayMode !== "week") calendarCursor = new Date();
     staffCalendarDisplayMode = nextMode;
+    if (staffCalendarDateJumpLabel) staffCalendarDateJumpLabel.hidden = staffCalendarDisplayMode === "month";
+    staffCalendarDateJumpLabel?.parentElement?.classList.toggle("is-month-view", staffCalendarDisplayMode === "month");
     staffCalendarMonthViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "month");
     staffCalendarWeekViewBtn?.classList.toggle("is-active", staffCalendarDisplayMode === "week");
     renderStaffCalendar(getCalendarRows(bookings));
@@ -2827,7 +2837,7 @@ function initMeetingRoomStaffApproval() {
     const nextDate = new Date(`${staffCalendarDateJumpEl.value}T00:00:00`);
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
-    staffCalendarDisplayMode = "week";
+    if (isMobileStaffCalendar()) staffCalendarDisplayMode = "week";
     subscribeBookings({ calendarOnly: true });
     renderStaffCalendar(getCalendarRows(bookings));
   });

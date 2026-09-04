@@ -6,6 +6,7 @@ import {
   buildRequesterBookingNotification,
   buildStaffBookingNotification,
   canReceiveMeetingStaffPush,
+  getPersonnelAutoApprovalReason,
   getDueMeetingReminder,
   normalizeBookingStatus
 } from "../meeting-notifications.js";
@@ -63,4 +64,39 @@ test("builds requester reminder content", () => {
   const result = buildMeetingReminderNotification({ ...booking, status: "approved" }, 15);
   assert.match(result.title, /15 นาที/);
   assert.equal(result.email, "user@example.com");
+});
+
+test("auto-approves pending personnel bookings after 24 hours", () => {
+  const nowMs = Date.parse("2026-09-05T12:00:00+07:00");
+  const result = getPersonnelAutoApprovalReason({
+    ...booking,
+    requesterProfileType: "affairs",
+    createdAt: new Date(nowMs - 24 * 60 * 60 * 1000).toISOString(),
+    startAt: "2026-09-10T10:00:00+07:00"
+  }, nowMs);
+  assert.equal(result, "pending_24_hours");
+});
+
+test("auto-approves pending personnel bookings when their start time is reached", () => {
+  const nowMs = Date.parse("2026-09-05T12:00:00+07:00");
+  const result = getPersonnelAutoApprovalReason({
+    ...booking,
+    requesterProfileType: "บุคลากร",
+    createdAt: new Date(nowMs - 60 * 60 * 1000).toISOString(),
+    startAt: "2026-09-05T12:00:00+07:00"
+  }, nowMs);
+  assert.equal(result, "start_time_reached");
+});
+
+test("does not auto-approve students, non-pending requests, or early personnel requests", () => {
+  const nowMs = Date.parse("2026-09-05T12:00:00+07:00");
+  const early = {
+    ...booking,
+    requesterProfileType: "affairs",
+    createdAt: new Date(nowMs - 23 * 60 * 60 * 1000).toISOString(),
+    startAt: "2026-09-06T12:00:00+07:00"
+  };
+  assert.equal(getPersonnelAutoApprovalReason(early, nowMs), null);
+  assert.equal(getPersonnelAutoApprovalReason({ ...early, requesterProfileType: "student" }, nowMs), null);
+  assert.equal(getPersonnelAutoApprovalReason({ ...early, status: "approved" }, nowMs), null);
 });

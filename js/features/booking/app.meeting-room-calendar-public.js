@@ -14,6 +14,7 @@
   const roomFilterEl = document.getElementById("meetingPublicCalendarRoomFilter");
   const calendarDateJumpEl = document.getElementById("meetingPublicCalendarDateJump");
   const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
+  const calendarViewToggle = weekViewBtn?.closest(".meeting-calendar-view-toggle");
 
   const dayModalEl = document.getElementById("meetingPublicBookingDayModal");
   const dayModalTitleEl = document.getElementById("meetingPublicBookingDayTitle");
@@ -78,8 +79,15 @@
   let calendarRoomFilterValue = "all";
   const isMobilePublicCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (calendarDateJumpLabel && nextBtn?.parentElement) {
-    nextBtn.parentElement.insertBefore(calendarDateJumpLabel, nextBtn);
+    nextBtn.parentElement.insertBefore(calendarDateJumpLabel, prevBtn);
+    calendarDateJumpLabel.addEventListener("click", (event) => {
+      if (typeof calendarDateJumpEl.showPicker !== "function") return;
+      event.preventDefault();
+      try { calendarDateJumpEl.showPicker(); } catch (_error) { calendarDateJumpEl.focus(); }
+    });
   }
+  const publicCalendarHeader = calendarPanel.closest(".meeting-calendar-panel")?.querySelector(":scope > .panel-header");
+  if (calendarViewToggle && publicCalendarHeader) publicCalendarHeader.appendChild(calendarViewToggle);
   let unsubscribeBookings = null;
   let publicCalendarRefreshTimer = 0;
 
@@ -646,6 +654,8 @@
     const nextMode = mode === "week" ? "week" : "month";
     if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
     calendarDisplayMode = nextMode;
+    if (calendarDateJumpLabel) calendarDateJumpLabel.hidden = calendarDisplayMode === "month";
+    calendarDateJumpLabel?.parentElement?.classList.toggle("is-month-view", calendarDisplayMode === "month");
     monthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
     weekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
     renderCalendar();
@@ -667,7 +677,7 @@
     const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
-    calendarDisplayMode = "week";
+    if (isMobilePublicCalendar()) calendarDisplayMode = "week";
     renderCalendar();
   });
 

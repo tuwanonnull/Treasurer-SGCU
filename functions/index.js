@@ -18,6 +18,7 @@ import {
   buildMeetingReminderNotification,
   buildStaffBookingNotification,
   canReceiveMeetingStaffPush,
+  getPersonnelAutoApprovalReason,
   getDueMeetingReminder
 } from "./meeting-notifications.js";
 
@@ -245,6 +246,36 @@ export const sendMeetingReminders = onSchedule({
   retryCount: 1
 }, async () => {
   const nowMs = Date.now();
+  const pendingSnapshots = await db.collection(BOOKING_COLLECTION).where("status", "==", "pending").get();
+  let autoApproved = 0;
+  let autoApprovalNotifications = 0;
+  await Promise.all(pendingSnapshots.docs.map(async (pendingDoc) => {
+    const initialBooking = pendingDoc.data() || {};
+    if (!getPersonnelAutoApprovalReason(initialBooking, nowMs)) return;
+    const approvedBooking = await db.runTransaction(async (transaction) => {
+      const latestSnapshot = await transaction.get(pendingDoc.ref);
+      if (!latestSnapshot.exists) return null;
+      const latestBooking = latestSnapshot.data() || {};
+      const reason = getPersonnelAutoApprovalReason(latestBooking, nowMs);
+      if (!reason) return null;
+      transaction.update(pendingDoc.ref, {
+        status: "approved",
+        autoApprovedAt: FieldValue.serverTimestamp(),
+        autoApprovalReason: reason,
+        updatedAt: FieldValue.serverTimestamp()
+      });
+      return { ...latestBooking, status: "approved", autoApprovalReason: reason };
+    });
+    if (!approvedBooking) return;
+    autoApproved += 1;
+    const notification = buildRequesterBookingNotification(initialBooking, approvedBooking);
+    if (!notification?.email) return;
+    const eventKey = ["meeting-auto-approved", pendingDoc.id].join("|");
+    if (!(await claimPushEvent(eventKey))) return;
+    const result = await sendPushToEmails([notification.email], notification);
+    autoApprovalNotifications += result.sent;
+  }));
+
   const snapshots = await db.collection(BOOKING_COLLECTION).where("status", "==", "approved").get();
   let due = 0;
   let sent = 0;
@@ -264,5 +295,13 @@ export const sendMeetingReminders = onSchedule({
     const result = await sendPushToEmails([notification.email], notification);
     sent += result.sent;
   }));
-  console.log("meeting reminders processed", { scanned: snapshots.size, due, sent, duplicates });
+  console.log("meeting automation processed", {
+    pendingScanned: pendingSnapshots.size,
+    autoApproved,
+    autoApprovalNotifications,
+    reminderScanned: snapshots.size,
+    due,
+    sent,
+    duplicates
+  });
 });

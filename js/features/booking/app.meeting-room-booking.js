@@ -53,6 +53,7 @@ function initMeetingRoomBookingApp() {
   const calendarRoomFilter = document.getElementById("meetingCalendarRoomFilter");
   const calendarDateJumpEl = document.getElementById("meetingCalendarDateJump");
   const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
+  const calendarViewToggle = calendarWeekViewBtn?.closest(".meeting-calendar-view-toggle");
   let bookingCountEl = document.getElementById("meetingRoomBookingCount");
   let pendingCountEl = document.getElementById("meetingRoomPendingCount");
   let latestDateEl = document.getElementById("meetingRoomLatestDate");
@@ -216,7 +217,15 @@ function initMeetingRoomBookingApp() {
   let calendarRoomFilterValue = "all";
   const isMobileBookingCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (calendarDateJumpLabel && calendarNextBtn?.parentElement) {
-    calendarNextBtn.parentElement.insertBefore(calendarDateJumpLabel, calendarNextBtn);
+    calendarNextBtn.parentElement.insertBefore(calendarDateJumpLabel, calendarPrevBtn);
+    calendarDateJumpLabel.addEventListener("click", (event) => {
+      if (typeof calendarDateJumpEl.showPicker !== "function") return;
+      event.preventDefault();
+      try { calendarDateJumpEl.showPicker(); } catch (_error) { calendarDateJumpEl.focus(); }
+    });
+  }
+  if (calendarViewToggle && calendarPanelWrap?.querySelector(":scope > .panel-header")) {
+    calendarPanelWrap.querySelector(":scope > .panel-header").appendChild(calendarViewToggle);
   }
 
   const toDateKeyForQuery = (date) => {
@@ -1099,6 +1108,7 @@ function initMeetingRoomBookingApp() {
   let previousBookingStatusById = new Map();
   let pendingApprovalEvents = [];
   const pendingApprovalEventKeys = new Set();
+  const requesterProfileByEmail = new Map();
 
   const mapSnapshotDoc = (docItem) => {
     const data = docItem.data() || {};
@@ -1758,8 +1768,8 @@ function initMeetingRoomBookingApp() {
 
   const canEditBookingStatusInModal = (options = {}) => {
     if (!hasFirestore) return false;
-    if (options.allowStatusEdit === true) return true;
-    return isStaffUser();
+    if (hasVerifiedMeetingRoomStaffAccess !== true) return false;
+    return options.allowStatusEdit === true || isStaffUser();
   };
 
   const setBookingDetailStatusMessage = (text = "", color = "#374151") => {
@@ -1768,6 +1778,26 @@ function initMeetingRoomBookingApp() {
     if (!messageEl) return;
     messageEl.textContent = text;
     messageEl.style.color = color;
+  };
+
+  const loadRequesterProfileForStaff = async (booking = {}, options = {}) => {
+    const email = (booking.requesterEmail || "").toString().trim().toLowerCase();
+    if (!email || !canEditBookingStatusInModal(options)) return null;
+    if (requesterProfileByEmail.has(email)) return requesterProfileByEmail.get(email);
+    if (!firestore.db || !firestore.collection || !firestore.query || !firestore.where || !firestore.getDocs) return null;
+    try {
+      const profileQuery = firestore.query(
+        firestore.collection(firestore.db, USER_PROFILE_COLLECTION),
+        firestore.where("email", "==", email),
+        ...(firestore.limit ? [firestore.limit(1)] : [])
+      );
+      const snapshot = await firestore.getDocs(profileQuery);
+      const profile = snapshot?.docs?.[0]?.data?.() || null;
+      requesterProfileByEmail.set(email, profile);
+      return profile;
+    } catch (_) {
+      return null;
+    }
   };
 
   const askRejectionReason = async (initialValue = "") => {
@@ -1847,6 +1877,10 @@ function initMeetingRoomBookingApp() {
 
   const applyStatusByIdFromModal = async (bookingId, nextStatus) => {
     if (!hasFirestore || !bookingId) return;
+    if (!canEditBookingStatusInModal(activeDetailOptions)) {
+      setBookingDetailStatusMessage("ไม่มีสิทธิ์ปรับสถานะคำขอ", "#b91c1c");
+      return;
+    }
     const booking = bookings.find((item) => item.id === bookingId);
     if (!booking) {
       setBookingDetailStatusMessage("ไม่พบรายการจองนี้", "#b91c1c");
@@ -2003,6 +2037,14 @@ function initMeetingRoomBookingApp() {
       ["ประเภทคำขอ", projectText],
       ["วัตถุประสงค์", booking.purpose || "-"]
     ];
+    if (allowStatusEdit && deriveRequesterProfileType(booking) === "student") {
+      const profile = booking.requesterProfile || {};
+      rows.splice(1, 0,
+        ["คณะ", profile.faculty || "-"],
+        ["ชั้นปี", profile.year || "-"],
+        ["เลขนิสิต", profile.studentId || "-"]
+      );
+    }
     if (includeContact) {
       rows.push(["ข้อมูลติดต่อ", contactText]);
     }
@@ -2089,6 +2131,23 @@ function initMeetingRoomBookingApp() {
     activeDetailBookingId = booking?.id || "";
     activeDetailOptions = options || {};
     setBookingDetailBody(booking || null, options);
+    const hydrateStaffOnlyDetail = () => {
+      if (!booking || activeDetailBookingId !== (booking.id || "") || !canEditBookingStatusInModal(options)) return;
+      setBookingDetailBody(booking, options);
+      if (deriveRequesterProfileType(booking) !== "student") return;
+      void loadRequesterProfileForStaff(booking, options).then((profile) => {
+        if (!profile || activeDetailBookingId !== (booking.id || "")) return;
+        booking.requesterProfile = profile;
+        setBookingDetailBody(booking, options);
+      });
+    };
+    if (options.allowStatusEdit === true && hasVerifiedMeetingRoomStaffAccess !== true) {
+      void verifyMeetingRoomStaffAccess().then((isVerified) => {
+        if (isVerified) hydrateStaffOnlyDetail();
+      });
+    } else {
+      hydrateStaffOnlyDetail();
+    }
     if (bookingDetailModalEl && typeof openDialog === "function") {
       openDialog(bookingDetailModalEl, { focusSelector: "#meetingBookingDetailClose" });
     }
@@ -3352,6 +3411,8 @@ function initMeetingRoomBookingApp() {
     const nextMode = mode === "week" ? "week" : "month";
     if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
     calendarDisplayMode = nextMode;
+    if (calendarDateJumpLabel) calendarDateJumpLabel.hidden = calendarDisplayMode === "month";
+    calendarDateJumpLabel?.parentElement?.classList.toggle("is-month-view", calendarDisplayMode === "month");
     calendarMonthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
     calendarWeekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
     calendarMonthViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "month" ? "true" : "false");
@@ -3393,7 +3454,8 @@ function initMeetingRoomBookingApp() {
     const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
-    calendarDisplayMode = "week";
+    if (isMobileBookingCalendar()) calendarDisplayMode = "week";
+    subscribeBookings();
     renderCalendarOverview();
   });
 
