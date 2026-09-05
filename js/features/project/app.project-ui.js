@@ -1115,6 +1115,37 @@ function updateTrendLineChart(filtered) {
   trendLineChart.update("none");
 }
 
+function renderDonutExternalTooltip({ chart, tooltip }) {
+  const container = chart?.canvas?.parentElement;
+  if (!container) return;
+  let tooltipEl = container.querySelector(".donut-chart-tooltip");
+  if (!tooltipEl) {
+    tooltipEl = document.createElement("div");
+    tooltipEl.className = "donut-chart-tooltip";
+    tooltipEl.setAttribute("role", "tooltip");
+    container.appendChild(tooltipEl);
+  }
+  if (!tooltip || tooltip.opacity === 0) {
+    tooltipEl.hidden = true;
+    return;
+  }
+  const lines = (tooltip.body || []).flatMap((item) => item.lines || []).filter(Boolean);
+  if (!lines.length) {
+    tooltipEl.hidden = true;
+    return;
+  }
+  const heading = document.createElement("strong");
+  heading.textContent = "รายละเอียดทั้งหมด";
+  const list = document.createElement("ul");
+  lines.forEach((line) => {
+    const item = document.createElement("li");
+    item.textContent = String(line).replace(/^•\s*/, "");
+    list.appendChild(item);
+  });
+  tooltipEl.replaceChildren(heading, list);
+  tooltipEl.hidden = false;
+}
+
 function updateDonutChart(existingChart, canvasEl, percent, color, tooltipLines = null) {
   if (!canvasEl) return existingChart;
   const value = Math.max(0, Math.min(percent || 0, 100));
@@ -1136,17 +1167,9 @@ function updateDonutChart(existingChart, canvasEl, percent, color, tooltipLines 
     plugins: {
       legend: { display: false },
       tooltip: {
-        enabled: !!tooltipLines,
+        enabled: false,
+        external: renderDonutExternalTooltip,
         filter: (item) => item.dataIndex === 0,
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        titleColor: "#111827",
-        bodyColor: "#374151",
-        borderColor: "#e5e7eb",
-        borderWidth: 1,
-        padding: 10,
-        cornerRadius: 6,
-        displayColors: false,
-        bodyFont: { family: "'Kanit', sans-serif", size: 12 },
         callbacks: {
           label: () => tooltipLines || []
         }
@@ -1685,18 +1708,12 @@ function getDonutTooltipLines(projectsList, valueKey = null) {
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1]);
 
-  const top = sorted.slice(0, 5);
-  const lines = top.map(([n, v]) => {
-    const vStr = valueKey ? formatMoney(v) : v.toLocaleString();
+  return sorted.map(([name, value]) => {
+    const valueText = valueKey ? formatMoney(value) : value.toLocaleString("th-TH");
     const unit = valueKey ? " บาท" : " โครงการ";
-    const pct = total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
-    return `• ${n}: ${vStr}${unit} (${pct}%)`;
+    const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+    return `• ${name}: ${valueText}${unit} (${percent}%)`;
   });
-
-  if (sorted.length > 5) {
-    lines.push(`...และอีก ${sorted.length - 5} กลุ่ม`);
-  }
-  return lines;
 }
 
 /**
