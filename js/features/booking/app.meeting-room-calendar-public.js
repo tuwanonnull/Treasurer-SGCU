@@ -80,12 +80,18 @@
   const isMobilePublicCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (calendarDateJumpLabel && nextBtn?.parentElement) {
     nextBtn.parentElement.insertBefore(calendarDateJumpLabel, prevBtn);
-    calendarDateJumpLabel.addEventListener("click", (event) => {
-      if (typeof calendarDateJumpEl.showPicker !== "function") return;
-      event.preventDefault();
-      try { calendarDateJumpEl.showPicker(); } catch (_error) { calendarDateJumpEl.focus(); }
-    });
   }
+  calendarDateJumpLabel?.addEventListener("click", (event) => {
+    if (typeof calendarDateJumpEl.showPicker !== "function") return;
+    try {
+      calendarDateJumpEl.focus();
+      calendarDateJumpEl.showPicker();
+      // Cancel native activation only after opening the picker successfully.
+      event.preventDefault();
+    } catch (_error) {
+      // Preserve native activation when showPicker is unavailable in this context.
+    }
+  });
   const publicCalendarHeader = calendarPanel.closest(".meeting-calendar-panel")?.querySelector(":scope > .panel-header");
   if (calendarViewToggle && publicCalendarHeader) publicCalendarHeader.appendChild(calendarViewToggle);
   let unsubscribeBookings = null;

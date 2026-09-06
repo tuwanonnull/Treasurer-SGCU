@@ -623,12 +623,18 @@ function initMeetingRoomStaffApproval() {
   const isMobileStaffCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (staffCalendarDateJumpLabel && staffCalendarNextBtn?.parentElement) {
     staffCalendarNextBtn.parentElement.insertBefore(staffCalendarDateJumpLabel, staffCalendarPrevBtn);
-    staffCalendarDateJumpLabel.addEventListener("click", (event) => {
-      if (typeof staffCalendarDateJumpEl.showPicker !== "function") return;
-      event.preventDefault();
-      try { staffCalendarDateJumpEl.showPicker(); } catch (_error) { staffCalendarDateJumpEl.focus(); }
-    });
   }
+  staffCalendarDateJumpLabel?.addEventListener("click", (event) => {
+    if (typeof staffCalendarDateJumpEl.showPicker !== "function") return;
+    try {
+      staffCalendarDateJumpEl.focus();
+      staffCalendarDateJumpEl.showPicker();
+      // Cancel native activation only after opening the picker successfully.
+      event.preventDefault();
+    } catch (_error) {
+      // Preserve native activation when showPicker is unavailable in this context.
+    }
+  });
   const staffCalendarHeader = staffCalendarPanel?.closest(".meeting-calendar-panel")?.querySelector(":scope > .panel-header");
   if (staffCalendarViewToggle && staffCalendarHeader) staffCalendarHeader.appendChild(staffCalendarViewToggle);
   let staffCalendarRoomFilterValue = "all";

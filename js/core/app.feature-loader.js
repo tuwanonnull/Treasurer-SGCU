@@ -50,10 +50,10 @@
       ],
       "borrow-assets": "js/features/borrow/app.borrow-assets.js?v=20260901-expired-pending-history-2",
       "borrow-assets-staff": "js/features/borrow/app.borrow-assets.js?v=20260901-expired-pending-history-2",
-      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20260905-verified-modal-permission-13",
+      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20260906-calendar-native-picker-2",
       "meeting-room-staff": [
-        "js/features/booking/app.meeting-room-booking.js?v=20260905-verified-modal-permission-13",
-        "js/features/booking/app.meeting-room-staff.js?v=20260904-calendar-date-jump-8"
+        "js/features/booking/app.meeting-room-booking.js?v=20260906-calendar-native-picker-2",
+        "js/features/booking/app.meeting-room-staff.js?v=20260906-calendar-native-picker-2"
       ],
       "budget-approval-request": "js/features/budget/app.budget-request.js?v=20260623-audit-hardening-1",
       login: [

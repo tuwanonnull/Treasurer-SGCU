@@ -218,12 +218,18 @@ function initMeetingRoomBookingApp() {
   const isMobileBookingCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
   if (calendarDateJumpLabel && calendarNextBtn?.parentElement) {
     calendarNextBtn.parentElement.insertBefore(calendarDateJumpLabel, calendarPrevBtn);
-    calendarDateJumpLabel.addEventListener("click", (event) => {
-      if (typeof calendarDateJumpEl.showPicker !== "function") return;
-      event.preventDefault();
-      try { calendarDateJumpEl.showPicker(); } catch (_error) { calendarDateJumpEl.focus(); }
-    });
   }
+  calendarDateJumpLabel?.addEventListener("click", (event) => {
+    if (typeof calendarDateJumpEl.showPicker !== "function") return;
+    try {
+      calendarDateJumpEl.focus();
+      calendarDateJumpEl.showPicker();
+      // Cancel native activation only after opening the picker successfully.
+      event.preventDefault();
+    } catch (_error) {
+      // Preserve native activation when showPicker is unavailable in this context.
+    }
+  });
   if (calendarViewToggle && calendarPanelWrap?.querySelector(":scope > .panel-header")) {
     calendarPanelWrap.querySelector(":scope > .panel-header").appendChild(calendarViewToggle);
   }
