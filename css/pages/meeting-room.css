@@ -392,9 +392,23 @@
   gap: 10px 12px;
 }
 
-#staffMeetingAll #meetingRoomHistorySearchWrap {
-  grid-column: 1 / -1;
+.meeting-staff-list-controls {
+  margin-top: 18px;
+}
+
+.meeting-staff-list-controls > .tabs {
+  width: fit-content;
+  margin-left: auto;
+  margin-bottom: 14px;
+}
+
+.meeting-staff-list-controls #meetingRoomHistorySearchWrap {
   width: 100%;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .meeting-history-filter-bar {
@@ -1662,11 +1676,46 @@
   color: #b91c1c;
 }
 
+#staffMeetingAll .meeting-staff-period,
+#staffMeetingAll .meeting-staff-requester {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#staffMeetingAll .meeting-staff-period {
+  white-space: nowrap;
+}
+
+#staffMeetingAll .meeting-staff-requester {
+  overflow-wrap: anywhere;
+}
+
+#staffMeetingAll .meeting-staff-period-time {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9em;
+}
+
+#staffMeetingAll .meeting-staff-purpose-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-width: 28ch;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .meeting-mobile-status-actions {
   display: none;
 }
 
 @media (max-width: 840px) {
+  .meeting-staff-list-controls {
+    display: none;
+  }
+
   .page-view[data-page="meeting-room-staff"].active #staffMeetingAll .panel-header {
     align-items: flex-start;
     gap: 10px;
@@ -2076,5 +2125,110 @@
 
   .meeting-room-edit-actions .meeting-room-delete-action {
     width: 100%;
+  }
+}
+
+/* Match the project status filters while keeping the mobile filter sheet. */
+@media (min-width: 841px) {
+  .meeting-staff-list-controls #meetingRoomHistorySearchWrap {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: end;
+    margin: 8px 0 14px;
+  }
+
+  .meeting-staff-list-controls .meeting-history-filter-bar .filter-group:nth-child(1),
+  .meeting-staff-list-controls .meeting-history-filter-bar .filter-group:nth-child(2) {
+    grid-column: span 1;
+    grid-row: 1;
+  }
+
+  .meeting-staff-list-controls .meeting-history-filter-bar .filter-group:nth-child(3) {
+    grid-column: 3 / -1;
+    grid-row: 1;
+  }
+
+  .meeting-staff-list-controls .meeting-history-filter-bar .filter-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 0;
+  }
+
+  .meeting-staff-list-controls .meeting-history-filter-actions {
+    grid-column: 5;
+    grid-row: 2;
+    justify-content: flex-end;
+  }
+
+  .meeting-staff-list-controls .meeting-history-filter-bar.is-request-mode .filter-group:nth-child(3),
+  .meeting-staff-list-controls .meeting-history-filter-bar.is-request-mode .filter-search {
+    grid-column: 1 / -1;
+  }
+
+  .meeting-staff-list-controls .filter-group select,
+  .meeting-staff-list-controls .filter-group input[type="date"] {
+    height: auto;
+    min-height: 32px;
+    padding: 6px 9px;
+  }
+
+  .meeting-staff-list-controls .filter-group input[type="search"] {
+    height: auto;
+    min-height: 32px;
+  }
+
+  .meeting-staff-list-controls .meeting-history-icon-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+#meetingRoomHistorySearchInput {
+  padding-right: 40px;
+}
+
+#staffMeetingAll .meeting-staff-requester-type {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#staffMeetingAll .meeting-staff-requester-type.is-student {
+  color: var(--theme-pink-700);
+  background: var(--theme-pink-50);
+  border-color: var(--theme-pink-200);
+}
+
+#staffMeetingAll .meeting-staff-requester-type.is-affairs {
+  color: #ffffff;
+  background: var(--theme-pink-700);
+  border-color: var(--theme-pink-700);
+}
+
+@media (max-width: 840px) {
+  #staffMeetingAll .meeting-staff-period,
+  #staffMeetingAll .meeting-staff-requester {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  #staffMeetingAll .meeting-staff-requester > span:first-child {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #staffMeetingAll .meeting-staff-requester-type {
+    align-self: center;
   }
 }

@@ -20,6 +20,37 @@
           <div class="separator-gradient"></div>
 
           <div id="meetingStaffRequestsView">
+          <div class="meeting-staff-list-controls section-appear">
+          <div id="meetingRoomHistorySearchWrap" class="filter-bar meeting-history-filter-bar" style="display:none;">
+            <div class="filter-group">
+              <label for="meetingRoomHistoryStartDateInput">ตั้งแต่วันที่</label>
+              <input id="meetingRoomHistoryStartDateInput" type="date" />
+            </div>
+            <div class="filter-group">
+              <label for="meetingRoomHistoryEndDateInput">ถึงวันที่</label>
+              <input id="meetingRoomHistoryEndDateInput" type="date" />
+            </div>
+            <div class="filter-group">
+              <label for="meetingRoomHistoryRoomSelect">กรองตามห้อง</label>
+              <select id="meetingRoomHistoryRoomSelect">
+                <option value="all">ทุกห้องประชุม</option>
+              </select>
+            </div>
+            <div class="filter-group filter-search">
+              <label for="meetingRoomHistorySearchInput">ค้นหาคำขอ</label>
+              <div class="search-box">
+                <input
+                  id="meetingRoomHistorySearchInput"
+                  type="search"
+                  placeholder="พิมพ์คำค้น เช่น ห้องประชุม 1 ชื่อผู้ขอ หรือวัตถุประสงค์"
+                  autocomplete="off"
+                />
+                <button id="meetingRoomHistoryResetBtn" class="search-clear" type="button" aria-label="ล้างตัวกรองทั้งหมด" title="ล้างตัวกรองทั้งหมด">✕</button>
+              </div>
+            </div>
+
+          </div>
+          </div>
           <div id="staffMeetingAll" class="panel panel-hover section-appear section-delay-1" style="margin-top: 18px;">
             <div class="panel-header">
               <div>
@@ -28,73 +59,31 @@
                 <div id="meetingRoomStaffActionMessage" class="section-text-sm" aria-live="polite"></div>
               </div>
               <button id="meetingRoomExportCsvBtn" class="btn-ghost csv-export-btn" type="button">Export CSV</button>
-              <div class="tabs panel-header-tabs">
-                <button
-                  class="tab-btn view-toggle-btn is-active"
-                  type="button"
-                  data-meeting-staff-tab="requests"
-                >
-                  รายการคำขอ
-                </button>
-                <button
-                  class="tab-btn view-toggle-btn"
-                  type="button"
-                  data-meeting-staff-tab="history"
-                >
-                  ประวัติการขอ
-                </button>
-              </div>
-              <div id="meetingRoomHistorySearchWrap" class="meeting-history-filter-bar" style="display:none;">
-                <div class="filter-group">
-                  <label for="meetingRoomHistoryStartDateInput">ตั้งแต่วันที่</label>
-                  <input id="meetingRoomHistoryStartDateInput" type="date" />
-                </div>
-                <div class="filter-group">
-                  <label for="meetingRoomHistoryEndDateInput">ถึงวันที่</label>
-                  <input id="meetingRoomHistoryEndDateInput" type="date" />
-                </div>
-                <div class="filter-group">
-                  <label for="meetingRoomHistoryRoomSelect">กรองตามห้อง</label>
-                  <select id="meetingRoomHistoryRoomSelect">
-                    <option value="all">ทุกห้องประชุม</option>
-                  </select>
-                </div>
-                <div class="filter-group filter-search">
-                  <label for="meetingRoomHistorySearchInput">ค้นหาคำขอ</label>
-                  <div class="search-box">
-                    <input
-                      id="meetingRoomHistorySearchInput"
-                      type="search"
-                      placeholder="พิมพ์คำค้น เช่น ห้องประชุม 1 ชื่อผู้ขอ หรือวัตถุประสงค์"
-                      autocomplete="off"
-                    />
-                  </div>
-                </div>
-                <div class="meeting-history-filter-actions">
-                  <button
-                    id="meetingRoomHistoryLoadBtn"
-                    class="btn-primary meeting-history-icon-btn"
-                    type="button"
-                    aria-label="แสดงผล"
-                    title="แสดงผล"
-                  >✓</button>
-                  <button
-                    id="meetingRoomHistoryResetBtn"
-                    class="btn-ghost meeting-history-icon-btn"
-                    type="button"
-                    aria-label="ล้างตัวกรอง"
-                    title="ล้างตัวกรอง"
-                  >✕</button>
-                </div>
-              </div>
+          <div class="tabs panel-header-tabs">
+            <button
+              class="tab-btn view-toggle-btn is-active"
+              type="button"
+              data-meeting-staff-tab="requests"
+            >
+              รายการคำขอ
+            </button>
+            <button
+              class="tab-btn view-toggle-btn"
+              type="button"
+              data-meeting-staff-tab="history"
+            >
+              ประวัติการขอ
+            </button>
+          </div>
+
+
             </div>
             <div class="table-wrapper">
               <table>
                 <thead>
                   <tr>
                     <th>ห้อง</th>
-                    <th>วันที่</th>
-                    <th>เวลา</th>
+                    <th>ช่วงเวลา</th>
                     <th>ผู้ขอ</th>
                     <th>วัตถุประสงค์</th>
                     <th>สถานะ</th>
@@ -102,7 +91,7 @@
                 </thead>
                 <tbody id="meetingRoomAllTableBody">
                   <tr>
-                    <td colspan="6">กำลังโหลดข้อมูล...</td>
+                    <td colspan="5">กำลังโหลดข้อมูล...</td>
                   </tr>
                 </tbody>
               </table>
