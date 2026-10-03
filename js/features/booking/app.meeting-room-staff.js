@@ -16,6 +16,8 @@ function initMeetingRoomStaffApproval() {
   const historyStartDateInputEl = document.getElementById("meetingRoomHistoryStartDateInput");
   const historyEndDateInputEl = document.getElementById("meetingRoomHistoryEndDateInput");
   const historyResetBtnEl = document.getElementById("meetingRoomHistoryResetBtn");
+  const statusFilterEl = document.getElementById("meetingRoomStatusFilter");
+  const statusFiltersByTab = { requests: "all", history: "all" };
   const historyRoomSelectEl = document.getElementById("meetingRoomHistoryRoomSelect");
   const historySearchInputEl = document.getElementById("meetingRoomHistorySearchInput");
   const exportCsvBtnEl = document.getElementById("meetingRoomExportCsvBtn");
@@ -1721,6 +1723,15 @@ function initMeetingRoomStaffApproval() {
         ? "แสดงประวัติจาก 1,000 รายการล่าสุด หน้าละ 50 รายการ เลือกช่วงวันที่เพื่อค้นย้อนหลัง"
         : "แสดงรายการที่ยังไม่อนุมัติและยังไม่เลยเวลา ใช้ตัวกรองเพื่อหาเฉพาะวัน ห้อง หรือผู้ขอ";
     }
+    if (statusFilterEl) {
+      const statuses = activeTab === "history"
+        ? ["pending", "cancel_requested", "reschedule_requested", "approved", "rejected", "no_show"]
+        : [...STAFF_REQUEST_STATUSES];
+      statusFilterEl.innerHTML = '<option value="all">ทุกสถานะ</option>' + statuses.map((status) =>
+        `<option value="${status}">${escapeText(statusText(status))}</option>`).join("");
+      statusFilterEl.value = statusFiltersByTab[activeTab];
+    }
+    window.syncMeetingRoomMobileActionBar?.();
     if (historySearchWrapEl) {
       historySearchWrapEl.style.display = "grid";
     }
@@ -1738,10 +1749,10 @@ function initMeetingRoomStaffApproval() {
   const getVisibleRowsForActiveTab = (source) => {
     const ordered = sortBookingRows(source);
     const historyRows = ordered.filter(
-      (booking) => booking.status === "approved" || booking.status === "no_show" || isPastBooking(booking)
+      (booking) => !STAFF_REQUEST_STATUSES.has(booking.status) || isPastBooking(booking)
     );
     const requestRows = ordered.filter(
-      (booking) => booking.status !== "approved" && booking.status !== "no_show" && !isPastBooking(booking)
+      (booking) => STAFF_REQUEST_STATUSES.has(booking.status) && !isPastBooking(booking)
     );
     return activeTab === "history" ? historyRows.reverse() : requestRows;
   };
@@ -1763,9 +1774,10 @@ function initMeetingRoomStaffApproval() {
       .join(" ");
 
   const hasActiveBookingFilters = () =>
-    !!historySearchQuery || historyRoomFilter !== "all" || !!historyStartDateFilter || !!historyEndDateFilter;
+    statusFiltersByTab[activeTab] !== "all" || !!historySearchQuery || historyRoomFilter !== "all" || !!historyStartDateFilter || !!historyEndDateFilter;
 
   const bookingMatchesFilters = (booking) => {
+    if (statusFiltersByTab[activeTab] !== "all" && booking.status !== statusFiltersByTab[activeTab]) return false;
     if (historyStartDateFilter && booking.date < historyStartDateFilter) return false;
     if (historyEndDateFilter && booking.date > historyEndDateFilter) return false;
     if (historyRoomFilter !== "all") {
@@ -2511,6 +2523,9 @@ function initMeetingRoomStaffApproval() {
   };
 
   const resetMeetingHistoryFilters = () => {
+    statusFiltersByTab.requests = "all";
+    statusFiltersByTab.history = "all";
+    if (statusFilterEl) statusFilterEl.value = "all";
     historyStartDateFilter = "";
     historyEndDateFilter = "";
     historyRoomFilter = "all";
@@ -2519,6 +2534,7 @@ function initMeetingRoomStaffApproval() {
     if (historyEndDateInputEl) historyEndDateInputEl.value = "";
     if (historyRoomSelectEl) historyRoomSelectEl.value = "all";
     if (historySearchInputEl) historySearchInputEl.value = "";
+    window.syncMeetingRoomMobileActionBar?.();
     resetHistorySubscription();
     pageByTab.requests = 1;
     pageByTab.history = 1;
@@ -2869,6 +2885,7 @@ function initMeetingRoomStaffApproval() {
   const applyMeetingDateFilters = () => {
     historyStartDateFilter = historyStartDateInputEl?.value || "";
     historyEndDateFilter = historyEndDateInputEl?.value || "";
+    window.syncMeetingRoomMobileActionBar?.();
     const validationMessage = validateHistoryDateRange();
     if (validationMessage) {
       setStaffActionMessage(validationMessage, "#b91c1c");
@@ -2881,6 +2898,11 @@ function initMeetingRoomStaffApproval() {
     if (activeTab === "history") subscribeHistoryBookings();
     else render();
   };
+  statusFilterEl?.addEventListener("change", () => {
+    statusFiltersByTab[activeTab] = statusFilterEl.value;
+    pageByTab[activeTab] = 1;
+    render();
+  });
   historyStartDateInputEl?.addEventListener("change", applyMeetingDateFilters);
   historyEndDateInputEl?.addEventListener("change", applyMeetingDateFilters);
 

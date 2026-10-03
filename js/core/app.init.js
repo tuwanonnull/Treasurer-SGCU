@@ -719,6 +719,7 @@ function initMeetingRoomMobileActionBar() {
   const startDateFilter = document.getElementById("meetingRoomHistoryStartDateInput");
   const endDateFilter = document.getElementById("meetingRoomHistoryEndDateInput");
   const roomFilter = document.getElementById("meetingRoomHistoryRoomSelect");
+  const statusFilter = document.getElementById("meetingRoomStatusFilter");
   const searchFilter = document.getElementById("meetingRoomHistorySearchInput");
   const resetFilter = document.getElementById("meetingRoomHistoryResetBtn");
 
@@ -772,7 +773,7 @@ function initMeetingRoomMobileActionBar() {
     const endDateValue = (endDateFilter?.value || "").trim();
     const roomValue = (roomFilter?.value || "all").trim();
     const searchValue = (searchFilter?.value || "").trim();
-    return [Boolean(startDateValue || endDateValue), roomValue !== "all", Boolean(searchValue)].filter(Boolean).length;
+    return [Boolean(startDateValue || endDateValue), roomValue !== "all", (statusFilter?.value || "all") !== "all", Boolean(searchValue)].filter(Boolean).length;
   };
 
   const sync = () => {
@@ -848,8 +849,8 @@ function initMeetingRoomMobileActionBar() {
     }
     if (sheetCaption) {
       sheetCaption.textContent = isHistoryActive()
-        ? "กรองประวัติย้อนหลังตามวัน ห้องประชุม หรือคำค้น"
-        : "กรองรายการที่ต้องจัดการตามวัน ห้องประชุม หรือคำค้น";
+        ? "กรองประวัติย้อนหลังตามวันที่ใช้ห้อง สถานะ ห้องประชุม หรือคำค้น"
+        : "กรองรายการที่ต้องจัดการตามวันที่ใช้ห้อง สถานะ ห้องประชุม หรือคำค้น";
     }
     sheet.classList.add("is-open");
     sheet.setAttribute("aria-hidden", "false");
@@ -912,7 +913,7 @@ function initMeetingRoomMobileActionBar() {
     pageObserver.observe(pageEl, { attributes: true, attributeFilter: ["class"] });
   });
 
-  [requestsTab, historyTab, startDateFilter, endDateFilter, roomFilter, searchFilter].forEach((el) => {
+  [requestsTab, historyTab, startDateFilter, endDateFilter, roomFilter, statusFilter, searchFilter].forEach((el) => {
     if (!el) return;
     el.addEventListener("click", () => window.setTimeout(sync, 0));
     el.addEventListener("input", () => window.setTimeout(sync, 0));

@@ -162,6 +162,22 @@ function initMeetingRoomBookingApp() {
     if (type === "student") return "นิสิต";
     return "";
   };
+  const getRequesterYearAtBooking = (profile = {}, booking = {}) => {
+    const email = (profile.authEmail || booking.requesterEmail || profile.email || "").toString().trim();
+    if (/^\d{10}@alumni\.chula\.ac\.th$/i.test(email)) return "นิสิตเก่า";
+    const studentId = (profile.studentId || "").toString().trim();
+    if (!/^\d{10}$/.test(studentId)) return profile.year || "";
+
+    // Use the submission date so historical bookings retain their original year level.
+    const createdAt = booking.createdAt;
+    const referenceDate = createdAt == null
+      ? new Date()
+      : typeof createdAt?.toDate === "function" ? createdAt.toDate() : new Date(createdAt);
+    if (Number.isNaN(referenceDate.getTime())) return profile.year || "";
+    const academicYearBE = referenceDate.getFullYear() + 543 - (referenceDate.getMonth() < 5 ? 1 : 0);
+    const yearLevel = academicYearBE - (2500 + Number(studentId.slice(0, 2))) + 1;
+    return yearLevel >= 1 && yearLevel <= 8 ? String(yearLevel) : profile.year || "";
+  };
   const deriveRequesterProfileType = (item = {}) => {
     const explicitType = normalizeRequesterProfileType(item.requesterProfileType || item.profileType);
     if (explicitType) return explicitType;
@@ -1140,6 +1156,7 @@ function initMeetingRoomBookingApp() {
       cancelBaseStatus: normalizeStatus(data.cancelBaseStatus),
       cancelRequestReason: data.cancelRequestReason || "",
       requesterEmail: (data.requesterEmail || "").toString().trim().toLowerCase(),
+      createdAt: data.createdAt ?? null,
       projectMode: data.projectMode || DEFAULT_PROJECT_MODE,
       projectCode: data.projectCode || "",
       projectName: data.projectName || "",
@@ -2047,7 +2064,7 @@ function initMeetingRoomBookingApp() {
       const profile = booking.requesterProfile || {};
       rows.splice(1, 0,
         ["คณะ", profile.faculty || "-"],
-        ["ชั้นปี", profile.year || "-"],
+        ["ชั้นปี", getRequesterYearAtBooking(profile, booking) || "-"],
         ["เลขนิสิต", profile.studentId || "-"]
       );
     }

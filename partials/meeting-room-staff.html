@@ -23,11 +23,11 @@
           <div class="meeting-staff-list-controls section-appear">
           <div id="meetingRoomHistorySearchWrap" class="filter-bar meeting-history-filter-bar" style="display:none;">
             <div class="filter-group">
-              <label for="meetingRoomHistoryStartDateInput">ตั้งแต่วันที่</label>
+              <label for="meetingRoomHistoryStartDateInput">วันที่ใช้ห้อง ตั้งแต่</label>
               <input id="meetingRoomHistoryStartDateInput" type="date" />
             </div>
             <div class="filter-group">
-              <label for="meetingRoomHistoryEndDateInput">ถึงวันที่</label>
+              <label for="meetingRoomHistoryEndDateInput">วันที่ใช้ห้อง ถึง</label>
               <input id="meetingRoomHistoryEndDateInput" type="date" />
             </div>
             <div class="filter-group">
@@ -35,6 +35,10 @@
               <select id="meetingRoomHistoryRoomSelect">
                 <option value="all">ทุกห้องประชุม</option>
               </select>
+            </div>
+            <div class="filter-group">
+              <label for="meetingRoomStatusFilter">สถานะ</label>
+              <select id="meetingRoomStatusFilter"><option value="all">ทุกสถานะ</option></select>
             </div>
             <div class="filter-group filter-search">
               <label for="meetingRoomHistorySearchInput">ค้นหาคำขอ</label>

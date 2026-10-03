@@ -1696,6 +1696,20 @@
   font-size: 0.9em;
 }
 
+/* Keep reasons and reschedule notes from widening the table's purpose column. */
+#staffMeetingAll .meeting-staff-purpose-cell {
+  min-width: 0;
+  max-width: 28ch;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#staffMeetingAll .meeting-staff-purpose-cell .meeting-row-meta {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 #staffMeetingAll .meeting-staff-purpose-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -2230,5 +2244,29 @@
 
   #staffMeetingAll .meeting-staff-requester-type {
     align-self: center;
+  }
+}
+
+/* Table filters above the panel; the calendar has its own controls. */
+#meetingRoomHistorySearchWrap.meeting-history-filter-bar {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+#meetingRoomHistorySearchWrap.meeting-history-filter-bar > .filter-group {
+  grid-column: auto;
+  grid-row: auto;
+}
+#meetingRoomHistorySearchWrap.meeting-history-filter-bar > .filter-search {
+  grid-column: 1 / -1;
+  grid-row: auto;
+}
+@media (max-width: 840px) {
+  #meetingRoomHistorySearchWrap.meeting-history-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  #meetingRoomHistorySearchWrap.meeting-history-filter-bar {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
