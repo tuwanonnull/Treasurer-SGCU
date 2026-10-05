@@ -365,6 +365,7 @@
   const renderCalendar = () => {
     const selectedMonthStart = getCalendarMonthState(calendarCursor);
     const weekStart = new Date(calendarCursor);
+    weekStart.setHours(0, 0, 0, 0);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
@@ -415,7 +416,7 @@
         cells.push(`<div class="meeting-week-date${dateKey === todayKey ? " is-today" : ""}${holidayName ? " is-holiday" : ""}"><span>${date.toLocaleDateString("th-TH", { weekday: "short" })}</span><strong>${date.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>${dateKey === todayKey ? '<small>วันนี้</small>' : ""}${holidayName ? `<small class="meeting-week-holiday" title="${escapeText(holidayName)}">วันหยุด</small>` : ""}</div>`);
       });
       visibleRooms.forEach((room) => {
-        cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong><span>สถานะรายวัน</span></div>`);
+        cells.push(`<div class="meeting-week-room"><strong>${escapeText(room.name)}</strong></div>`);
         comparisonDates.forEach((date) => {
           const dateKey = toDateKey(date);
           const holidayName = getHolidayName(date, dateKey);
