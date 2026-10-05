@@ -772,20 +772,20 @@
     word-break: break-word;
   }
 
-  #staffMeetingAll table td {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td {
     grid-template-columns: 88px minmax(0, 1fr);
   }
 
-  #staffMeetingAll table td > * {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td > * {
     max-width: 100%;
     min-width: 0;
   }
 
-  #staffMeetingAll table td[data-label="วัตถุประสงค์"] {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td[data-label="วัตถุประสงค์"] {
     align-items: start;
   }
 
-  #staffMeetingAll .meeting-staff-purpose-cell {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-cell {
     max-height: 96px;
     max-width: 100%;
     overflow: auto;
@@ -797,11 +797,11 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  #staffMeetingAll .meeting-staff-purpose-cell .meeting-row-meta {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-cell .meeting-row-meta {
     margin-top: 6px;
   }
 
-  #staffMeetingAll .staff-status-select {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .staff-status-select {
     max-width: 100%;
     min-width: 0;
     white-space: normal;
@@ -1334,7 +1334,7 @@
     width: 100%;
   }
 
-  #staffMeetingAll .table-wrapper,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper,
   #staffApprovalPendingPanel .project-table-wrapper,
   #orgRepresentativeApprovalSection .project-table-wrapper {
     width: 100%;
@@ -1344,14 +1344,14 @@
     background: transparent;
   }
 
-  #staffMeetingAll .table-wrapper {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper {
     max-height: min(62vh, 520px);
     overflow-x: hidden;
     overflow-y: auto;
     padding-right: 2px;
   }
 
-  #staffMeetingAll table,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table,
   #staffApprovalPendingTable,
   #staffApprovalHistoryTable,
   #orgRepresentativePendingTable,
@@ -1362,7 +1362,7 @@
     width: 100%;
   }
 
-  #staffMeetingAll table thead,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table thead,
   #staffApprovalPendingTable thead,
   #staffApprovalHistoryTable thead,
   #orgRepresentativePendingTable thead,
@@ -1371,7 +1371,7 @@
     display: none;
   }
 
-  #staffMeetingAll table tbody,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table tbody,
   #staffApprovalPendingTable tbody,
   #staffApprovalHistoryTable tbody,
   #orgRepresentativePendingTable tbody,
@@ -1381,7 +1381,7 @@
     gap: 10px;
   }
 
-  #staffMeetingAll table tr,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table tr,
   #staffApprovalPendingTable tr,
   #staffApprovalHistoryTable tr,
   #orgRepresentativePendingTable tr,
@@ -1395,7 +1395,7 @@
     box-shadow: 0 8px 22px rgba(148, 163, 184, 0.16);
   }
 
-  #staffMeetingAll table td,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td,
   #staffApprovalPendingTable td,
   #staffApprovalHistoryTable td,
   #orgRepresentativePendingTable td,
@@ -1413,7 +1413,7 @@
     overflow-wrap: anywhere;
   }
 
-  #staffMeetingAll table td::before,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td::before,
   #staffApprovalPendingTable td::before,
   #staffApprovalHistoryTable td::before,
   #orgRepresentativePendingTable td::before,
@@ -1427,7 +1427,7 @@
     text-align: left;
   }
 
-  #staffMeetingAll table td[colspan],
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td[colspan],
   #staffApprovalPendingTable td[colspan],
   #staffApprovalHistoryTable td[colspan],
   #orgRepresentativePendingTable td[colspan],
@@ -1437,7 +1437,7 @@
     text-align: center !important;
   }
 
-  #staffMeetingAll table td[colspan]::before,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) table td[colspan]::before,
   #staffApprovalPendingTable td[colspan]::before,
   #staffApprovalHistoryTable td[colspan]::before,
   #orgRepresentativePendingTable td[colspan]::before,
@@ -1446,7 +1446,7 @@
     content: none;
   }
 
-  #staffMeetingAll .staff-status-select,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .staff-status-select,
   #staffApprovalPendingTable .staff-status-select,
   #orgRepresentativePendingTable .staff-status-select,
   #orgRepresentativeHistoryTable .staff-status-select,
@@ -1842,32 +1842,32 @@
     margin-left: 0;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) {
     gap: 12px !important;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody tr {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) tr {
     margin: 0 0 12px;
     padding: 15px;
     border-color: rgba(236, 72, 153, 0.22);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody tr:last-child {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) tr:last-child {
     margin-bottom: 0;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll .table-wrapper {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper {
     padding: 2px;
     border-radius: 16px;
     background: #f8fafc;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td {
     padding: 9px 0;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td:last-child {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:last-child {
     margin-top: 6px;
     padding-top: 13px;
     border-top: 1px solid rgba(226, 232, 240, 0.9);

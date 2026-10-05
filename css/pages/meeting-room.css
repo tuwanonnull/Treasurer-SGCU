@@ -385,7 +385,7 @@
   margin-top: 10px;
 }
 
-#staffMeetingAll .panel-header {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .panel-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: start;
@@ -1084,32 +1084,32 @@
 }
 
 .meeting-room-page #meetingRoomTableBody td:nth-child(5),
-#meetingRoomAllTableBody td:nth-child(5) {
+:is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:nth-child(5) {
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
 
-#staffMeetingAll .table-wrapper {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper {
   max-height: min(68vh, 640px);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-#staffMeetingAll table thead th {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
   background: #ffffff;
 }
 
-#staffMeetingAll .panel-header-tabs {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .panel-header-tabs {
   flex: 0 0 auto;
   min-width: 236px;
 }
 
-#staffMeetingAll .panel-header-tabs .tab-btn {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .panel-header-tabs .tab-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1124,7 +1124,7 @@
 
 @media (max-width: 768px) {
   .meeting-room-page #meetingRoomTableBody td:nth-child(5),
-  #meetingRoomAllTableBody td:nth-child(5) {
+  :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:nth-child(5) {
     white-space: nowrap;
     word-break: normal;
     overflow-wrap: normal;
@@ -1676,41 +1676,41 @@
   color: #b91c1c;
 }
 
-#staffMeetingAll .meeting-staff-period,
-#staffMeetingAll .meeting-staff-requester {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-period,
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-#staffMeetingAll .meeting-staff-period {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-period {
   white-space: nowrap;
 }
 
-#staffMeetingAll .meeting-staff-requester {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester {
   overflow-wrap: anywhere;
 }
 
-#staffMeetingAll .meeting-staff-period-time {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-period-time {
   color: var(--text-muted, #6b7280);
   font-size: 0.9em;
 }
 
 /* Keep reasons and reschedule notes from widening the table's purpose column. */
-#staffMeetingAll .meeting-staff-purpose-cell {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-cell {
   min-width: 0;
   max-width: 28ch;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-#staffMeetingAll .meeting-staff-purpose-cell .meeting-row-meta {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-cell .meeting-row-meta {
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-#staffMeetingAll .meeting-staff-purpose-text {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1730,12 +1730,12 @@
     display: none;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll .panel-header {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) .panel-header {
     align-items: flex-start;
     gap: 10px;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll .panel-header-tabs,
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) .panel-header-tabs,
   .page-view[data-page="meeting-room-staff"].active #meetingRoomExportCsvBtn {
     display: none;
   }
@@ -1744,7 +1744,7 @@
     display: none !important;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll .table-wrapper {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper {
     max-height: none;
     overflow: visible;
     padding: 0;
@@ -1752,25 +1752,25 @@
     background: transparent;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll table,
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll thead,
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll tbody,
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll tr,
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll td {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) table,
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) thead,
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) tbody,
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) tr,
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) td {
     display: block;
     width: 100%;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #staffMeetingAll thead {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) thead {
     display: none;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) {
     display: grid;
     gap: 14px;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody tr {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) tr {
     padding: 14px;
     border: 1px solid rgba(236, 72, 153, 0.16);
     border-radius: 14px;
@@ -1778,7 +1778,7 @@
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td {
     min-width: 0;
     padding: 8px 0;
     border: 0;
@@ -1788,14 +1788,14 @@
     overflow-wrap: anywhere;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td[data-label] {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td[data-label] {
     display: grid;
     grid-template-columns: minmax(74px, 0.34fr) minmax(0, 1fr);
     gap: 10px;
     align-items: start;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td[data-label]::before {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td[data-label]::before {
     content: attr(data-label);
     color: #64748b;
     font-size: 11px;
@@ -1803,25 +1803,25 @@
     line-height: 1.45;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td[data-label] > * {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td[data-label] > * {
     grid-column: 2;
     min-width: 0;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td:first-child {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:first-child {
     padding-top: 0;
     font-weight: 800;
     color: #9d174d;
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td:last-child {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:last-child {
     margin-top: 4px;
     padding-top: 12px;
     padding-bottom: 0;
     border-top: 1px solid rgba(226, 232, 240, 0.88);
   }
 
-  .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody td[colspan] {
+  .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td[colspan] {
     display: block;
     padding: 16px 8px;
     text-align: center;
@@ -2203,7 +2203,7 @@
   padding-right: 40px;
 }
 
-#staffMeetingAll .meeting-staff-requester-type {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type {
   display: inline-flex;
   align-self: flex-start;
   align-items: center;
@@ -2216,33 +2216,33 @@
   white-space: nowrap;
 }
 
-#staffMeetingAll .meeting-staff-requester-type.is-student {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type.is-student {
   color: var(--theme-pink-700);
   background: var(--theme-pink-50);
   border-color: var(--theme-pink-200);
 }
 
-#staffMeetingAll .meeting-staff-requester-type.is-affairs {
+:is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type.is-affairs {
   color: #ffffff;
   background: var(--theme-pink-700);
   border-color: var(--theme-pink-700);
 }
 
 @media (max-width: 840px) {
-  #staffMeetingAll .meeting-staff-period,
-  #staffMeetingAll .meeting-staff-requester {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-period,
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px 8px;
   }
 
-  #staffMeetingAll .meeting-staff-requester > span:first-child {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester > span:first-child {
     min-width: 0;
     max-width: 100%;
   }
 
-  #staffMeetingAll .meeting-staff-requester-type {
+  :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type {
     align-self: center;
   }
 }
@@ -2269,4 +2269,56 @@
   #meetingRoomHistorySearchWrap.meeting-history-filter-bar {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.meeting-my-requests-panel {
+  margin-top: 18px;
+  margin-bottom: 18px;
+}
+
+.meeting-my-request-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.meeting-my-request-status .status-pill {
+  white-space: normal;
+}
+
+.meeting-form-panel [hidden] {
+  display: none !important;
+}
+
+.meeting-request-cancel {
+  color: #b91c1c;
+}
+
+#meetingFormTitle {
+  scroll-margin-top: 90px;
+}
+
+#meetingMyRequestsBody .meeting-my-request-row {
+  cursor: pointer;
+}
+
+#meetingMyRequestsBody .meeting-my-request-row:is(:hover, :focus-within, .is-selected) {
+  background: var(--theme-pink-50, #fff1f6);
+}
+
+.meeting-my-request-open {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.meeting-my-request-open:focus-visible {
+  outline: 2px solid var(--theme-pink-700, #be185d);
+  outline-offset: 4px;
+  border-radius: 3px;
 }

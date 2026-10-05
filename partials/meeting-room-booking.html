@@ -14,8 +14,8 @@
           <div class="panel panel-hover section-appear section-delay-1 meeting-form-panel">
             <div class="panel-header">
               <div>
-                <div class="panel-title">แบบฟอร์มขอจองห้องประชุม</div>
-                <div class="panel-caption">ระบบจะเช็คเวลาทับซ้อนอัตโนมัติ และส่งเข้าคิวรออนุมัติ</div>
+                <div id="meetingFormTitle" class="panel-title" tabindex="-1">แบบฟอร์มขอจองห้องประชุม</div>
+                <div id="meetingFormCaption" class="panel-caption">ระบบจะเช็คเวลาทับซ้อนอัตโนมัติ และส่งเข้าคิวรออนุมัติ</div>
               </div>
             </div>
             <div class="panel-body">
@@ -58,39 +58,21 @@
                 </div>
               </form>
 
-              <div class="meeting-form-divider"></div>
-              <div class="meeting-secondary-actions">
-                <button
-                  id="meetingToggleCancelForm"
-                  class="btn-ghost"
-                  type="button"
-                  aria-expanded="false"
-                  aria-controls="meetingCancelSection"
-                >
-                  จัดการคำขอ
-                </button>
-              </div>
-
               <section id="meetingCancelSection" class="meeting-secondary-section" hidden>
-                <div class="meeting-form-divider"></div>
-                <div class="meeting-form-subhead meeting-form-subhead-cancel">
-                  <div class="meeting-form-subtitle">จัดการคำขอ</div>
-                  <div id="meetingManageHelper" class="section-text-sm meeting-manage-helper">
-                    เลือกคำขอที่ต้องการจัดการ แล้วเลือกรายการที่ต้องการส่งให้ Staff พิจารณา
-                  </div>
-                </div>
-                <form id="meetingCancelForm" class="meeting-booking-form meeting-booking-form-cancel">
-                  <div class="borrow-form-row">
+                <div id="meetingManageHelper" class="section-text-sm meeting-manage-helper" hidden></div>
+                <form id="meetingCancelForm" class="meeting-booking-form meeting-booking-form-main">
+                  <div class="borrow-form-row" hidden>
                     <div class="borrow-form-field">
                       <label class="login-label" for="meetingManageAction">รายการที่ต้องการ</label>
                       <select id="meetingManageAction" class="login-input" required>
+                        <option value="detail">ดูข้อมูลคำขอ</option>
                         <option value="cancel">ขอยกเลิกคำขอ</option>
                         <option value="reschedule">ขอเปลี่ยนห้อง/เวลา</option>
                       </select>
                     </div>
-                    <div class="borrow-form-field">
+                    <div class="borrow-form-field" hidden>
                       <label class="login-label" for="meetingCancelBookingSelect">คำขอที่ต้องการจัดการ</label>
-                      <select id="meetingCancelBookingSelect" class="login-input" required>
+                      <select id="meetingCancelBookingSelect" class="login-input">
                         <option value="">เลือกคำขอที่ต้องการจัดการ</option>
                       </select>
                     </div>
@@ -99,27 +81,33 @@
                   <div id="meetingManageRescheduleFields" hidden>
                     <div class="borrow-form-row">
                       <div class="borrow-form-field">
-                        <label class="login-label" for="meetingRescheduleRoom">ห้องใหม่</label>
+                        <label class="login-label" for="meetingRescheduleRoom">ห้องประชุม</label>
                         <select id="meetingRescheduleRoom" class="login-input"></select>
                       </div>
                       <div class="borrow-form-field">
-                        <label class="login-label" for="meetingRescheduleDate">วันที่ใหม่</label>
+                        <label class="login-label" for="meetingRescheduleDate">วันที่</label>
                         <input id="meetingRescheduleDate" class="login-input" type="date" />
                         <div class="section-text-sm">กรุณากรอกปีเป็น ค.ศ. (เช่น 2026)</div>
                       </div>
                     </div>
                     <div class="borrow-form-row">
                       <div class="borrow-form-field">
-                        <label class="login-label" for="meetingRescheduleStartTime">เวลาเริ่มใหม่</label>
+                        <label class="login-label" for="meetingRescheduleStartTime">เวลาเริ่ม</label>
                         <input id="meetingRescheduleStartTime" class="login-input" type="time" />
                       </div>
                       <div class="borrow-form-field">
-                        <label class="login-label" for="meetingRescheduleEndTime">เวลาสิ้นสุดใหม่</label>
+                        <label class="login-label" for="meetingRescheduleEndTime">เวลาสิ้นสุด</label>
                         <input id="meetingRescheduleEndTime" class="login-input" type="time" />
                       </div>
                     </div>
                   </div>
-                  <div class="borrow-form-row">
+                  <div id="meetingManagePurposeRow" class="borrow-form-row" hidden>
+                    <div class="borrow-form-field">
+                      <label class="login-label" for="meetingManagePurpose">วัตถุประสงค์การใช้ห้อง</label>
+                      <textarea id="meetingManagePurpose" class="login-input" rows="3" readonly></textarea>
+                    </div>
+                  </div>
+                  <div id="meetingManageReasonRow" class="borrow-form-row" hidden>
                     <div class="borrow-form-field">
                       <label class="login-label" for="meetingCancelReason">เหตุผล</label>
                       <textarea
@@ -132,11 +120,37 @@
                     </div>
                   </div>
                   <div class="meeting-form-actions">
-                    <button id="meetingManageSubmit" class="btn-ghost" type="submit" disabled>ส่งคำขอ</button>
+                    <button id="meetingManageSubmit" class="btn-primary" type="submit" disabled>ส่งคำขอ</button>
+                    <button id="meetingBackToBooking" class="btn-ghost" type="button" hidden>ยกเลิกการแก้ไข</button>
+                    <button id="meetingRequestCancel" class="btn-ghost meeting-request-cancel" type="button" hidden>ขอยกเลิกคำขอ</button>
+                    <button id="meetingReturnToEdit" class="btn-ghost" type="button" hidden>กลับไปแก้ไข</button>
                     <span id="meetingCancelMessage" class="section-text-sm" aria-live="polite"></span>
                   </div>
                 </form>
               </section>
+            </div>
+          </div>
+
+          <div id="meetingMyRequestsPanel" class="panel panel-hover section-appear section-delay-2 meeting-my-requests-panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title" id="meetingMyRequestsTitle">คำขอจองของฉัน</div>
+                <div class="panel-caption">กดที่รายการเพื่อดูข้อมูลหรือจัดการคำขอในแบบฟอร์มด้านบน</div>
+                <div id="meetingMyRequestsRange" class="section-text-sm"></div>
+              </div>
+            </div>
+            <div id="meetingMyRequestsState" class="panel-body section-text-sm" role="status">กำลังโหลดคำขอ...</div>
+            <div id="meetingMyRequestsWrapper" class="table-wrapper" hidden>
+              <table class="meeting-my-requests-table" aria-labelledby="meetingMyRequestsTitle">
+                <thead><tr>
+                  <th scope="col">ห้อง</th>
+                  <th scope="col">ช่วงเวลา</th>
+                  <th scope="col">ผู้ขอ</th>
+                  <th scope="col">วัตถุประสงค์</th>
+                  <th scope="col">สถานะ</th>
+                </tr></thead>
+                <tbody id="meetingMyRequestsBody"></tbody>
+              </table>
             </div>
           </div>
 
