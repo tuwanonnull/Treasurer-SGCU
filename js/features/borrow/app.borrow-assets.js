@@ -3748,7 +3748,12 @@ function initBorrowAssetsApp() {
     };
   };
 
-  const subscribeBorrowRequests = async () => {
+  let borrowRequestsPage = "";
+  const subscribeBorrowRequests = async (page =
+    document.querySelector(".page-view.active")?.dataset.page ||
+    (window.location.hash || "").replace("#", "").trim()
+  ) => {
+    borrowRequestsPage = page;
     const accessCheckSeq = ++borrowStaffAccessCheckSeq;
     resolveFirestoreBridge();
     if (!hasFirestore) {
@@ -3770,8 +3775,14 @@ function initBorrowAssetsApp() {
       });
     }
     unsubscribeBorrowRequests = [];
+    collectionSnapshotRows.clear();
+    collectionSnapshotCounts.clear();
+    collectionSnapshotErrors.clear();
+    borrowRequests = [];
+    borrowRequestsSnapshotCount = 0;
     myRequestsLoadState = "loading";
     myRequestsLoadError = "";
+    renderBorrowRequests();
 
     const mergeAndRender = () => {
       const merged = [];
@@ -3795,14 +3806,10 @@ function initBorrowAssetsApp() {
     });
 
     const currentEmail = readCurrentUserEmail();
-    let shouldReadAllRequests = !!(
-      typeof staffAuthUser !== "undefined" &&
-      staffAuthUser &&
-      currentEmail
-    );
-
-    const currentHash = (window.location.hash || "").replace("#", "").trim();
-    const isStaffBorrowPage = currentHash === "borrow-assets-staff";
+    // A staff profile does not imply permission to read the entire borrow queue.
+    // The requester page always uses the owner's query, including for staff accounts.
+    let shouldReadAllRequests = false;
+    const isStaffBorrowPage = page === "borrow-assets-staff";
     lastBorrowStaffAccessResult = null;
 
     if (isStaffBorrowPage && currentEmail) {
@@ -3882,6 +3889,7 @@ function initBorrowAssetsApp() {
         const unsubscribe = firestore.onSnapshot(
         requestQuery,
         (snapshot) => {
+          if (accessCheckSeq !== borrowStaffAccessCheckSeq) return;
           collectionSnapshotErrors.set(snapshotKey, "");
           collectionSnapshotCounts.set(snapshotKey, Number(snapshot.size || 0));
           myRequestsLoadState = "loaded";
@@ -3913,17 +3921,18 @@ function initBorrowAssetsApp() {
           }
         },
         (error) => {
+          if (accessCheckSeq !== borrowStaffAccessCheckSeq) return;
           const code = (error?.code || "").toString();
           const loggedIn = !!readCurrentUserEmail();
           collectionSnapshotErrors.set(snapshotKey, code || "unknown");
           collectionSnapshotRows.set(snapshotKey, []);
           collectionSnapshotCounts.set(snapshotKey, 0);
-          if (!shouldReadAllRequests) {
-            myRequestsLoadState = "error";
-            myRequestsLoadError = code === "permission-denied"
-              ? "บัญชีนี้ยังไม่มีสิทธิ์อ่านสถานะคำขอของตนเอง"
-              : "โหลดสถานะคำขอไม่สำเร็จ กรุณาลองใหม่";
-          }
+          myRequestsLoadState = "error";
+          myRequestsLoadError = code === "permission-denied"
+            ? (shouldReadAllRequests
+              ? "บัญชีนี้ยังไม่มีสิทธิ์อ่านข้อมูลคิวคำขอ"
+              : "บัญชีนี้ยังไม่มีสิทธิ์อ่านสถานะคำขอของตนเอง")
+            : "โหลดสถานะคำขอไม่สำเร็จ กรุณาลองใหม่";
           mergeAndRender();
           const totalNow = borrowRequestsSnapshotCount;
           if (totalNow > 0) {
@@ -4917,6 +4926,13 @@ function initBorrowAssetsApp() {
     currentUserEmail = readCurrentUserEmail();
     renderBorrowRequests();
     subscribeBorrowRequests();
+  });
+
+  window.addEventListener("sgcu:page-active", (event) => {
+    const page = event?.detail?.page || "";
+    if (["borrow-assets", "borrow-assets-staff"].includes(page) && page !== borrowRequestsPage) {
+      void subscribeBorrowRequests(page);
+    }
   });
 
   window.addEventListener("sgcu:user-profile-updated", (event) => {
