@@ -797,10 +797,11 @@ function initBorrowAssetsApp() {
       const counterSnap = await transaction.get(counterRef);
       const storedRunning = Number(counterSnap?.data?.()?.lastRunning || 0);
       const visibleRunning = Number(getNextBorrowRequestRunning(prefix)) - 1;
-      const currentRunning = Math.max(
-        Number.isFinite(storedRunning) ? storedRunning : 0,
-        Number.isFinite(visibleRunning) ? visibleRunning : 0
-      );
+      // Existing counters are authoritative: Rules require an increment of exactly one.
+      // Use visible legacy requests only when initializing a missing counter.
+      const currentRunning = counterSnap.exists()
+        ? storedRunning
+        : (Number.isFinite(visibleRunning) ? visibleRunning : 0);
       const nextRunning = currentRunning + 1;
       const requestNo = `${prefix}.${String(nextRunning).padStart(3, "0")}`;
       payload.requestNo = requestNo;

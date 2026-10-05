@@ -122,7 +122,7 @@ service cloud.firestore {
     function canManageBorrowAssets() {
       return isBootstrapHeadStaff() ||
         (
-          signedIn() &&
+          hasStaffProfile() &&
           profileCanManageBorrowAssets(staffProfile())
         );
     }
@@ -592,7 +592,7 @@ service cloud.firestore {
     }
 
     function canReadBorrowRequest() {
-      return canManageBorrowAssets() || isOwnerByEmail(resource.data.requesterEmail);
+      return isOwnerByEmail(resource.data.requesterEmail) || canManageBorrowAssets();
     }
 
     function canUserCancelBorrowRequest() {
@@ -620,7 +620,7 @@ service cloud.firestore {
       allow create: if canCreateBorrowRequest();
       allow get: if canReadBorrowRequest();
       allow list: if canReadBorrowRequest();
-      allow update: if canStaffUpdateBorrowRequest() || canUserCancelBorrowRequest();
+      allow update: if canUserCancelBorrowRequest() || canStaffUpdateBorrowRequest();
       allow delete: if canManageBorrowAssets();
     }
 
@@ -643,7 +643,7 @@ service cloud.firestore {
     match /borrowAssetRequestCounters/{counterId} {
       allow get: if signedIn();
       allow list: if false;
-      allow create, update: if canManageBorrowAssets() || validBorrowRequestCounterWrite(counterId);
+      allow create, update: if validBorrowRequestCounterWrite(counterId) || canManageBorrowAssets();
       allow delete: if false;
     }
 

@@ -8,6 +8,8 @@
     "check": "node tools/build-static.mjs --check && node tools/check-audit-log.mjs && node tools/test-staff-access-catalog.mjs",
     "check:audit": "node tools/check-audit-log.mjs",
     "test:staff-catalog": "node tools/test-staff-access-catalog.mjs",
+    "test:borrow": "node tools/test-borrow-request.mjs",
+    "test:borrow:local": "node tools/start-local-borrow-test.mjs",
     "test:push": "npm --prefix functions test",
     "serve:dist": "python3 -m http.server 4173 --directory dist"
   },
