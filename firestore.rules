@@ -584,10 +584,68 @@ service cloud.firestore {
       return status in ["pending", "approved", "received", "rejected", "cancelled", "returned"];
     }
 
+    function borrowProjectSubmissionIsOpen(project) {
+      return project.get("opensAt", null) == null ||
+        (request.time >= project.opensAt && request.time < project.closesAt);
+    }
+
+    function validBorrowProjectWindow(data) {
+      return (!data.keys().hasAny(["from", "to", "opensAt", "closesAt"])) ||
+        (data.from == "" && data.to == "" && data.opensAt == null && data.closesAt == null) ||
+        (data.from.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+          data.to.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+          data.opensAt is timestamp && data.closesAt is timestamp && data.opensAt < data.closesAt);
+    }
+
+    function validProjectWeekdays(data) {
+      return data.get("customWeekdays", false) is bool &&
+        (!data.get("customWeekdays", false) ||
+          (data.pickupDays is list && data.pickupDays.size() > 0 && data.pickupDays.size() <= 7 &&
+           data.pickupDays.hasOnly([0,1,2,3,4,5,6])));
+    }
+    function projectWeekdayMatches(value, days) {
+      let parts = value.split("-");
+      let date = timestamp.date(int(parts[0]), int(parts[1]), int(parts[2]));
+      return value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && (date.dayOfWeek() % 7) in days;
+    }
+    function projectRequestWeekdaysAllowed(project, data) {
+      return !project.get("customWeekdays", false) ||
+        (projectWeekdayMatches(data.pickupDate, project.pickupDays) &&
+         data.returnDate >= data.pickupDate);
+    }
+
+    function validBorrowProjectSelection() {
+      let data = request.resource.data;
+      let id = data.get("borrowProjectId", "");
+      let path = /databases/$(database)/documents/borrowProjects/$(id);
+      // Keep the currently deployed form working until the new project selector is published.
+      // Empty project IDs represent borrowing directly on behalf of a department.
+      return !data.keys().hasAny(["borrowProjectId"]) ||
+        (id == "" && data.get("borrowProjectName", "") == "") ||
+        (id is string && id.size() > 0 && exists(path) &&
+          data.projectName == "องค์การบริหารสโมสรนิสิต" &&
+          get(path).data.active == true && borrowProjectSubmissionIsOpen(get(path).data) &&
+          get(path).data.academicYear == data.academicYear &&
+          get(path).data.name == data.borrowProjectName && projectRequestWeekdaysAllowed(get(path).data, data));
+    }
+
+    match /borrowProjects/{projectId} {
+      allow read: if signedIn();
+      allow create, update: if canManageBorrowAssets() &&
+        request.resource.data.keys().hasOnly(["name", "academicYear", "orgGroup", "active", "updatedAt", "updatedBy", "source", "sourceCode", "from", "to", "opensAt", "closesAt", "customWeekdays", "pickupDays", "returnDays"]) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 200 &&
+        request.resource.data.academicYear is string && request.resource.data.academicYear.matches('^[23][0-9]{3}$') &&
+        request.resource.data.orgGroup == "องค์การบริหารสโมสรนิสิต" &&
+        request.resource.data.active is bool && request.resource.data.updatedBy == userEmail() &&
+        validBorrowProjectWindow(request.resource.data) && validProjectWeekdays(request.resource.data);
+      allow delete: if canManageBorrowAssets();
+    }
+
     function canCreateBorrowRequest() {
       return signedIn() &&
         request.resource.data.requesterEmail == userEmail() &&
         request.resource.data.status == "pending" &&
+        validBorrowProjectSelection() &&
         validBorrowStatus(request.resource.data.status);
     }
 

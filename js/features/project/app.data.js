@@ -299,6 +299,32 @@ async function resolveProjectSourceConfig(year = selectedProjectSourceYear, opti
   );
 }
 
+// Read ProjectStatus's real source without changing its selected year or using demo fallback rows.
+async function loadBorrowProjectsFromProjectStatus(academicYear) {
+  const year = String(academicYear || "").trim();
+  await window.sgcuVendorLoader?.ensurePapa?.();
+  let sources;
+  if (PROJECT_SOURCES_CSV_URL) {
+    const sourceCsv = await fetchTextWithProgress(PROJECT_SOURCES_CSV_URL, null, { cache: "no-store" });
+    sources = parseProjectSourceList(parseCsvRows(sourceCsv));
+  } else {
+    sources = [{ year: "", projectUrl: SHEET_CSV_URL }];
+  }
+  const source = sources.find(item => item.year === year) || sources.find(item => !item.year);
+  if (!source?.projectUrl) return [];
+  let rows;
+  if (isPublishedHtmlSheetUrl(source.projectUrl)) {
+    const { projectSheet } = await getPublishedHtmlWorkbookSheets(source.projectUrl, null, { cache: "no-store" });
+    const url = normalizePublishedSheetUrl(projectSheet.pageUrl) || buildPublishedSheetUrl(source.projectUrl, projectSheet.gid);
+    rows = parsePublishedSheetRows(await fetchTextWithProgress(url, null, { cache: "no-store" }));
+  } else {
+    rows = parseCsvRows(await fetchTextWithProgress(source.projectUrl, null, { cache: "no-store" }));
+  }
+  if (!rows || rows.length < 2) throw new Error("ไม่พบตารางโครงการใน ProjectStatus");
+  return extractProjectsFromRows(rows.slice(2), rows[1], source.year || "")
+    .filter(project => String(project.year || source.year || "") === year);
+}
+
 async function loadProjectsFromSheet(sourceConfigOverride = null, options = {}) {
   try {
     const force = Boolean(options.force);

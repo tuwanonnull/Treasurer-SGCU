@@ -10,6 +10,15 @@ function initBorrowAssetsApp() {
     : null;
   const borrowClearBtn = document.getElementById("borrowRequestClearBtn");
 
+  const borrowManagedProject = document.getElementById("borrowManagedProject");
+  const staffBorrowRequestProjectFilter = document.getElementById("staffBorrowRequestProjectFilter");
+  const BORROW_PROJECT_ORG = "องค์การบริหารสโมสรนิสิต";
+  let managedBorrowProjects = [];
+  let borrowCatalogReady = false;
+  let borrowCatalogSequence = 0;
+  let borrowCatalogUnsubscribes = [];
+
+
   const borrowProjectName = document.getElementById("borrowProjectName");
   const borrowProjectNameOther = document.getElementById("borrowProjectNameOther");
   const borrowProjectDept = document.getElementById("borrowProjectDept");
@@ -573,22 +582,6 @@ function initBorrowAssetsApp() {
     }
   };
 
-  const toggleBorrowProjectDeptOther = (showOther) => {
-    if (!(borrowProjectDept instanceof HTMLSelectElement)) return;
-    borrowProjectDept.disabled = !!showOther;
-    borrowProjectDept.required = !showOther;
-    if (showOther) {
-      borrowProjectDept.value = "";
-    }
-    if (borrowProjectDeptOther) {
-      borrowProjectDeptOther.style.display = showOther ? "" : "none";
-      borrowProjectDeptOther.required = !!showOther;
-      if (!showOther) {
-        borrowProjectDeptOther.value = "";
-      }
-    }
-  };
-
   const populateBorrowProjectTypeOptions = () => {
     if (!(borrowProjectName instanceof HTMLSelectElement)) return;
     const currentValue = borrowProjectName.value;
@@ -627,40 +620,6 @@ function initBorrowAssetsApp() {
     toggleBorrowProjectNameOther();
   };
 
-  const populateBorrowProjectDeptOptions = () => {
-    if (!(borrowProjectDept instanceof HTMLSelectElement)) return;
-    const selectedType = (borrowProjectName?.value || "").toString().trim();
-    const shouldUseOther = selectedType === OTHER_ORG_VALUE;
-    const currentValue = borrowProjectDept.value;
-
-    while (borrowProjectDept.options.length) {
-      borrowProjectDept.remove(0);
-    }
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    placeholder.textContent = shouldUseOther
-      ? "ระบุฝ่าย / ชมรมด้านล่าง"
-      : (selectedType ? "เลือกฝ่าย / ชมรม" : "เลือกประเภทองค์กรก่อน");
-    borrowProjectDept.appendChild(placeholder);
-
-    if (!shouldUseOther && selectedType) {
-      const options = collectBorrowOrgNameOptions(selectedType);
-      options.forEach((name) => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        borrowProjectDept.appendChild(option);
-      });
-      if (currentValue) {
-        const hasCurrent = Array.from(borrowProjectDept.options).some((opt) => opt.value === currentValue);
-        if (hasCurrent) borrowProjectDept.value = currentValue;
-      }
-    }
-    toggleBorrowProjectDeptOther(shouldUseOther);
-  };
-
   const getBorrowProjectNameValueForSubmit = () => {
     const selected = (borrowProjectName?.value || "").toString().trim();
     if (selected === OTHER_ORG_VALUE) {
@@ -669,13 +628,48 @@ function initBorrowAssetsApp() {
     return selected;
   };
 
-  const getBorrowProjectDeptValueForSubmit = () => {
-    const selectedType = (borrowProjectName?.value || "").toString().trim();
-    if (selectedType === OTHER_ORG_VALUE) {
-      return (borrowProjectDeptOther?.value || "").toString().trim();
-    }
-    return (borrowProjectDept?.value || "").toString().trim();
+  const usesManualBorrowDept = () =>
+    borrowProjectName?.value === OTHER_ORG_VALUE ||
+    (borrowProjectName?.value === BORROW_PROJECT_ORG && !!borrowManagedProject?.value);
+
+  const getBorrowDeptLabel = () => {
+    const type = borrowProjectName?.value || "";
+    if (type.includes("ชมรม")) return "ชมรม";
+    if (type.includes("องค์การบริหาร") || type.includes("สภานิสิต")) return "ฝ่าย";
+    return "หน่วยงาน";
   };
+
+  const populateBorrowProjectDeptOptions = () => {
+    if (!borrowProjectDept || !borrowProjectDeptOther) return;
+    const manual = usesManualBorrowDept();
+    const selectedType = borrowProjectName?.value || "";
+    const current = borrowProjectDept.value;
+    const deptLabel = getBorrowDeptLabel();
+    borrowProjectDept.style.display = manual ? "none" : "";
+    borrowProjectDept.disabled = manual || !selectedType;
+    borrowProjectDept.required = !manual;
+    borrowProjectDeptOther.style.display = manual ? "" : "none";
+    borrowProjectDeptOther.disabled = !manual;
+    borrowProjectDeptOther.required = manual;
+    const label = document.querySelector('label[for="borrowProjectDept"], label[for="borrowProjectDeptOther"]');
+    if (label) {
+      label.htmlFor = manual ? "borrowProjectDeptOther" : "borrowProjectDept";
+      label.innerHTML = `${deptLabel} <span class="borrow-required" aria-hidden="true">*</span>`;
+    }
+    borrowProjectDeptOther.placeholder = `กรอกชื่อ${deptLabel}ที่รับผิดชอบ`;
+    const hint = document.getElementById("borrowDeptHint");
+    if (hint) hint.textContent = manual
+      ? `กรอกชื่อ${deptLabel}ที่รับผิดชอบการยืมครั้งนี้`
+      : selectedType ? `เลือก${deptLabel}ที่รับผิดชอบการยืมจากรายการ` : "กรุณาเลือกประเภทองค์กรด้านบนก่อน";
+    if (manual) return;
+    const names = selectedType ? collectBorrowOrgNameOptions(selectedType) : [];
+    borrowProjectDept.innerHTML = `<option value="">${selectedType ? `เลือก${deptLabel}` : "เลือกประเภทองค์กรก่อน"}</option>` +
+      names.map(name => `<option value="${safeEscape(name)}">${safeEscape(name)}</option>`).join("");
+    if (names.includes(current)) borrowProjectDept.value = current;
+  };
+
+  const getBorrowProjectDeptValueForSubmit = () =>
+    ((usesManualBorrowDept() ? borrowProjectDeptOther : borrowProjectDept)?.value || "").toString().trim();
 
   const normalizeOrgCode = (value) => {
     const raw = (value || "").toString().trim().toUpperCase().replace(/\s+/g, "");
@@ -717,18 +711,17 @@ function initBorrowAssetsApp() {
   const resolveBorrowOrgCode = () => {
     const selectedType = (borrowProjectName?.value || "").toString().trim();
     if (!selectedType || selectedType === OTHER_ORG_VALUE) return "CU.00";
-    const selectedDept = getBorrowProjectDeptValueForSubmit();
     const academicYear = getBorrowAcademicYearBE();
     const rows =
       typeof orgFilters !== "undefined" && Array.isArray(orgFilters) ? orgFilters : [];
     if (!rows.length) return "";
-    const exact = rows.find((item) => {
-      const group = (item?.group || "").toString().trim();
-      const name = resolveBorrowOrgDisplayName(item, academicYear);
-      return group === selectedType && name === selectedDept;
-    });
-    const exactCode = resolveBorrowOrgCodeForYear(exact, academicYear);
-    if (exactCode) return exactCode;
+    if (!usesManualBorrowDept()) {
+      const selectedDept = getBorrowProjectDeptValueForSubmit();
+      const exact = rows.find(item => (item?.group || "").toString().trim() === selectedType &&
+        resolveBorrowOrgDisplayName(item, academicYear) === selectedDept);
+      const exactCode = resolveBorrowOrgCodeForYear(exact, academicYear);
+      if (exactCode) return exactCode;
+    }
     const firstByGroup = rows.find((item) => {
       const group = (item?.group || "").toString().trim();
       return group === selectedType && resolveBorrowOrgCodeForYear(item, academicYear);
@@ -774,7 +767,7 @@ function initBorrowAssetsApp() {
 
   const createBorrowRequestWithNextNumber = async (payload) => {
     const numberParts = getBorrowRequestNoParts();
-    if (!numberParts) return null;
+    if (!numberParts) throw Object.assign(new Error("Missing borrowing organization code"), { code: "borrow/missing-org-code" });
 
     const { termYY, orgCode, prefix } = numberParts;
     const requestRef = firestore.doc(
@@ -1114,6 +1107,460 @@ function initBorrowAssetsApp() {
     return Number.isNaN(date.getTime()) ? null : date;
   };
 
+  const projectWeekdays = [[1, "จันทร์"], [2, "อังคาร"], [3, "พุธ"], [4, "พฤหัส"], [5, "ศุกร์"], [6, "เสาร์"], [0, "อาทิตย์"]];
+  let editingBorrowProjectId = "";
+  const setBorrowProjectEditor = (project = null) => {
+    const form = document.getElementById("staffBorrowProjectForm");
+    if (!form || form.dataset.saving === "true") return;
+    editingBorrowProjectId = project?.id || "";
+    const editing = !!project;
+    document.getElementById("borrowProjectCreateTitle").textContent = editing ? "แก้ไขโครงการ" : "เปิดใช้งานโครงการ";
+    document.getElementById("borrowProjectEditorHint").textContent = editing ? "แก้ไขช่วงเปิดรับคำขอและวันรับพัสดุ แล้วกดบันทึก" : "เลือกปีการศึกษาและรหัสโครงการที่ต้องการ";
+    const year = document.getElementById("staffBorrowProjectYear");
+    year.value = project?.academicYear || getBorrowAcademicYearBE();
+    year.disabled = editing;
+    const source = document.getElementById("staffBorrowProjectSource");
+    source.disabled = editing;
+    document.getElementById("staffBorrowProjectSync").disabled = editing;
+    document.getElementById("borrowProjectSortHint").hidden = editing;
+    const name = document.getElementById("staffBorrowProjectName");
+    name.value = "";
+    name.required = false;
+    name.closest(".borrow-form-field").hidden = true;
+    if (editing) {
+      source.innerHTML = `<option value="editing">${safeEscape(borrowProjectDisplayCode(project))}</option>`;
+      document.getElementById("staffBorrowProjectNameDisplay").textContent = project.name;
+    } else {
+      source.value = "";
+      renderStaffBorrowProjectOptions();
+    }
+    document.getElementById("staffBorrowProjectFrom").value = project?.from || "";
+    document.getElementById("staffBorrowProjectTo").value = project?.to || "";
+    document.getElementById("staffBorrowProjectWeekdays").innerHTML = renderProjectWeekdays(project || {});
+    form.querySelector('button[type="submit"]').textContent = editing ? "บันทึกการแก้ไข" : "เปิดใช้งานโครงการ";
+    document.getElementById("staffBorrowProjectCancelEdit").hidden = !editing;
+    document.getElementById("borrowProjectSubmitHint").hidden = editing;
+    document.querySelectorAll("[data-borrow-project-card]").forEach(card => {
+      const selected = card.dataset.borrowProjectCard === editingBorrowProjectId;
+      card.classList.toggle("is-editing", selected);
+      card.querySelector("[data-borrow-project-edit]")?.setAttribute("aria-pressed", String(selected));
+    });
+  };
+  const renderProjectWeekdays = (project = {}) => `
+    <div class="borrow-project-full borrow-project-weekdays">
+      <label class="borrow-weekdays-toggle">
+        <span class="borrow-weekdays-copy"><strong>กำหนดวันรับเฉพาะโครงการ</strong><span>ปิดเพื่อใช้วันรับส่วนกลาง</span></span>
+        <input type="checkbox" role="switch" name="customWeekdays" ${project.customWeekdays ? "checked" : ""} />
+      </label>
+      <div class="borrow-weekdays-fields" ${project.customWeekdays ? "" : "hidden"}>
+        ${[["pickupDays", "วันที่รับพัสดุได้"]].map(([key, title]) => `
+          <fieldset><legend>${title}</legend><div class="settings-weekday-grid">${projectWeekdays.map(([day, label]) => `<label><input type="checkbox" name="${key}" value="${day}" ${(project[key] || [0,1,2,3,4,5,6]).includes(day) ? "checked" : ""} /> ${label}</label>`).join("")}</div></fieldset>`).join("")}
+      </div>
+    </div>`;
+  const readProjectWeekdays = (form) => {
+    const customWeekdays = !!form.querySelector('[name="customWeekdays"]')?.checked;
+    const read = key => Array.from(form.querySelectorAll(`[name="${key}"]:checked`)).map(input => Number(input.value));
+    const pickupDays = read("pickupDays");
+    if (customWeekdays && !pickupDays.length) throw new Error("เลือกวันรับพัสดุอย่างน้อย 1 วัน");
+    return { customWeekdays, pickupDays };
+  };
+  const projectDateAllowed = (project, key, date) => !project?.customWeekdays ||
+    (Array.isArray(project[key]) && project[key].includes(new Date(`${date}T00:00:00Z`).getUTCDay()));
+
+  const renderManagedBorrowProjectFilter = () => {
+    if (!staffBorrowRequestProjectFilter) return;
+    const current = staffBorrowRequestProjectFilter.value;
+    const options = new Map(managedBorrowProjects.map(project => [project.id, `${borrowProjectDisplayCode(project)} (${project.academicYear})`]));
+    borrowRequests.forEach(item => {
+      if (item.borrowProjectId && !options.has(item.borrowProjectId)) options.set(item.borrowProjectId, item.borrowProjectName || item.borrowProjectId);
+    });
+    staffBorrowRequestProjectFilter.innerHTML = '<option value="all">ทุกโครงการ</option>' +
+      Array.from(options, ([id, name]) => `<option value="${safeEscape(id)}">${safeEscape(name)}</option>`).join("");
+    staffBorrowRequestProjectFilter.value = options.has(current) ? current : "all";
+  };
+
+  const borrowProjectDisplayCode = project =>
+    String(project.sourceCode || project.code || "").trim() || `ยังไม่มีรหัส (${project.name || ""})`;
+
+  const compareBorrowProjectCodes = (a, b) => {
+    const left = String(a.sourceCode || a.code || "").trim();
+    const right = String(b.sourceCode || b.code || "").trim();
+    if (!left !== !right) return left ? -1 : 1;
+    return left.localeCompare(right, "en", { numeric: true, sensitivity: "base" }) ||
+      String(a.name || "").localeCompare(String(b.name || ""), "th");
+  };
+
+  const isBorrowProjectMode = () =>
+    borrowProjectName?.value === BORROW_PROJECT_ORG &&
+    (!!document.getElementById("borrowModeProject")?.checked || !!borrowManagedProject?.value);
+
+  const renderBorrowMode = () => {
+    const projectMode = isBorrowProjectMode();
+    const selector = document.getElementById("borrowProjectSelector");
+    if (selector) selector.hidden = !projectMode;
+    if (borrowManagedProject) {
+      borrowManagedProject.required = projectMode;
+      borrowManagedProject.disabled = !projectMode || !borrowCatalogReady;
+    }
+  };
+
+  const borrowProjectWindowStatus = project => {
+    const today = dayKeyBangkok(new Date());
+    if (project.from && today < project.from) return { text: "ยังไม่ถึงวันเปิดรับ", tone: "upcoming" };
+    if (project.to && today > project.to) return { text: "สิ้นสุดช่วงเปิดรับ", tone: "ended" };
+    return { text: "เปิดรับคำขอ", tone: "open" };
+  };
+
+  const renderManagedBorrowProjects = () => {
+    const show = borrowProjectName?.value === BORROW_PROJECT_ORG;
+    const field = document.getElementById("borrowManagedProjectField");
+    if (field) { field.hidden = !show; field.style.display = show ? "" : "none"; }
+    if (borrowManagedProject) {
+      const current = borrowManagedProject.value;
+      const available = managedBorrowProjects.filter(project => project.active && project.academicYear === String(getBorrowAcademicYearBE())).sort(compareBorrowProjectCodes);
+      borrowManagedProject.innerHTML = '<option value="">เลือกรหัสโครงการ</option>' + available.map(project =>
+        `<option value="${safeEscape(project.id)}">${safeEscape(borrowProjectDisplayCode(project))}</option>`).join("");
+      if (available.some(project => project.id === current)) borrowManagedProject.value = current;
+
+      const message = document.getElementById("borrowManagedProjectMessage");
+      if (message) message.textContent = !borrowCatalogReady ? "กำลังโหลดโครงการ…" : available.length ? "เรียงตามรหัสโครงการจากน้อยไปมาก" : "ยังไม่มีโครงการเปิดใช้งานในปีนี้ เลือกยืมในนามฝ่ายหรือติดต่อสตาฟ";
+    }
+    renderBorrowMode();
+    populateBorrowProjectDeptOptions();
+    const list = document.getElementById("staffBorrowProjectList");
+    const activeProjects = managedBorrowProjects.filter(project => project.active).sort((a, b) => b.academicYear.localeCompare(a.academicYear) || compareBorrowProjectCodes(a, b));
+    const count = document.getElementById("staffBorrowProjectsCount");
+    if (count) count.textContent = `${activeProjects.length} โครงการเปิดใช้งาน`;
+    if (list) list.innerHTML = activeProjects.length ? activeProjects.map(project => {
+      const status = borrowProjectWindowStatus(project);
+      return `
+      <article class="borrow-project-card ${project.id === editingBorrowProjectId ? "is-editing" : ""}" data-borrow-project-card="${safeEscape(project.id)}">
+        <div class="borrow-manager-card-top"><strong class="borrow-manager-code">${safeEscape(borrowProjectDisplayCode(project))}</strong><span class="borrow-manager-status" data-tone="${status.tone}">${status.text}</span></div>
+        <h5 class="borrow-project-card-name">${safeEscape(project.name)}</h5>
+        <p class="borrow-manager-card-meta">ปีการศึกษา ${safeEscape(project.academicYear)} · ${project.source === "project-status" ? "ProjectStatus" : "เพิ่มโดยสตาฟ"}</p>
+        <div class="borrow-manager-period"><span>ช่วงเปิดรับคำขอ</span><strong>${project.from ? `${safeEscape(formatDate(project.from))} – ${safeEscape(formatDate(project.to))}` : "เปิดรับทุกวัน"}</strong></div>
+        <div class="borrow-project-pickup-summary"><span>${project.customWeekdays ? "วันรับเฉพาะโครงการ" : "วันรับพัสดุ"}</span><strong>${project.customWeekdays ? projectWeekdays.filter(([day]) => (project.pickupDays || []).includes(day)).map(([, label]) => label).join(" / ") : "ใช้วันรับส่วนกลาง"}</strong></div>
+        <button type="button" class="borrow-project-edit-link" data-borrow-project-edit="${safeEscape(project.id)}" aria-pressed="${project.id === editingBorrowProjectId}" aria-label="แก้ไขโครงการ ${safeEscape(borrowProjectDisplayCode(project))}">แก้ไขโครงการ <span aria-hidden="true">→</span></button>
+        <div class="borrow-manager-card-footer"><span>ประวัติคำขอยืมคืนยังคงอยู่</span><div class="borrow-manager-card-actions"><button type="button" class="btn-ghost" data-borrow-project-toggle="${safeEscape(project.id)}" aria-label="ปิดใช้งาน ${safeEscape(borrowProjectDisplayCode(project))}">ปิดใช้งาน</button><button type="button" class="btn-ghost" data-borrow-project-delete="${safeEscape(project.id)}" aria-label="ลบโครงการ ${safeEscape(borrowProjectDisplayCode(project))}">ลบโครงการ</button></div></div>
+      </article>`;
+    }).join("") : '<div class="borrow-manager-empty"><span class="borrow-plus-icon" aria-hidden="true"></span><strong>ยังไม่มีโครงการที่เปิดใช้งาน</strong><p>เลือกรหัสโครงการและช่วงวันที่<br />แล้วกด “เปิดใช้งานโครงการ” เพื่อเริ่มรับคำขอ</p></div>';
+    renderManagedBorrowProjectFilter();
+    renderStaffBorrowProjectOptions();
+    renderBorrowSubmissionWindow();
+  };
+
+  const renderBorrowSubmissionWindow = () => {
+    updateBorrowPickupDateRule();
+    const message = document.getElementById("borrowSubmissionWindowMessage");
+    const project = borrowProjectName?.value === BORROW_PROJECT_ORG
+      ? managedBorrowProjects.find(item => item.id === borrowManagedProject?.value) : null;
+    const summary = document.getElementById("borrowSelectedProjectSummary");
+    if (summary) summary.hidden = !project;
+    const nameDisplay = document.getElementById("borrowManagedProjectNameDisplay");
+    if (nameDisplay) nameDisplay.textContent = project?.name || "เลือกรหัสโครงการเพื่อดูชื่อโครงการ";
+    if (message) message.textContent = !project ? "" : project.from
+      ? `โครงการ ${borrowProjectDisplayCode(project)}: เปิดรับคำขอ ${formatDate(project.from)} ถึง ${formatDate(project.to)} (เวลาไทย)`
+      : `โครงการ ${borrowProjectDisplayCode(project)}: เปิดรับคำขอทุกวัน`;
+  };
+
+  const subscribeBorrowCatalog = () => {
+    const sequence = ++borrowCatalogSequence;
+    borrowCatalogUnsubscribes.forEach(unsubscribe => unsubscribe());
+    borrowCatalogUnsubscribes = [];
+    borrowCatalogReady = false;
+    managedBorrowProjects = [];
+    renderManagedBorrowProjects();
+    renderBorrowSubmissionWindow();
+    if (!resolveFirestoreBridge() || !readCurrentUserEmail()) return;
+    let projectsReady = false;
+    const refresh = () => {
+      borrowCatalogReady = projectsReady;
+      renderManagedBorrowProjects();
+      renderBorrowSubmissionWindow();
+    };
+    const failed = (error) => {
+      if (sequence !== borrowCatalogSequence) return;
+      projectsReady = false;
+      borrowCatalogReady = false;
+      renderManagedBorrowProjects();
+      setBorrowMessage("โหลดโครงการหรือช่วงเปิดรับคำขอไม่สำเร็จ กรุณารีเฟรชหน้า", "#b91c1c");
+      const message = document.getElementById("staffBorrowProjectMessage");
+      if (message) message.textContent = "โหลดข้อมูลไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อและสิทธิ์";
+      console.error("borrow catalog load failed", error);
+    };
+    borrowCatalogUnsubscribes.push(firestore.onSnapshot(firestore.collection(firestore.db, "borrowProjects"), snap => {
+      if (sequence !== borrowCatalogSequence) return;
+      managedBorrowProjects = snap.docs.map(doc => ({ ...doc.data(), id: doc.id })).sort((a, b) => b.academicYear.localeCompare(a.academicYear) || a.name.localeCompare(b.name, "th"));
+      projectsReady = true;
+      refresh();
+    }, failed));
+  };
+
+  let projectStatusOptions = [];
+  let projectStatusOptionsYear = "";
+  let dropdownBorrowProjects = [];
+  const renderStaffBorrowProjectOptions = () => {
+    if (editingBorrowProjectId) return;
+    const select = document.getElementById("staffBorrowProjectSource");
+    if (!select) return;
+    const year = document.getElementById("staffBorrowProjectYear")?.value || getBorrowAcademicYearBE();
+    const previous = select.value !== "" ? dropdownBorrowProjects[Number(select.value)] : null;
+    const wasManual = select.value === "__manual__";
+    const existing = managedBorrowProjects.filter(item => item.academicYear === year);
+    dropdownBorrowProjects = existing.filter(item => !item.active).map(item => ({ ...item, existingId: item.id }));
+    if (projectStatusOptionsYear === year) {
+      projectStatusOptions.forEach(item => {
+        if (!existing.some(project => normalizeBorrowProjectName(project.name) === normalizeBorrowProjectName(item.name))) dropdownBorrowProjects.push(item);
+      });
+    }
+    dropdownBorrowProjects.sort(compareBorrowProjectCodes);
+    select.innerHTML = '<option value="">เลือกโครงการที่ต้องการเปิด</option>' + dropdownBorrowProjects.map((item, index) =>
+      `<option value="${index}">${safeEscape(borrowProjectDisplayCode(item))}</option>`).join("") + '<option value="__manual__">เพิ่มโครงการที่ไม่มีในรายการ</option>';
+    const index = previous ? dropdownBorrowProjects.findIndex(item => item.name === previous.name) : -1;
+    select.value = wasManual ? "__manual__" : index >= 0 ? String(index) : "";
+    renderStaffBorrowProjectName();
+  };
+  const renderStaffBorrowProjectName = () => {
+    if (editingBorrowProjectId) return;
+    const value = document.getElementById("staffBorrowProjectSource")?.value || "";
+    const selected = value !== "" ? dropdownBorrowProjects[Number(value)] : null;
+    const display = document.getElementById("staffBorrowProjectNameDisplay");
+    if (display) display.textContent = value === "__manual__" ? "กรอกชื่อโครงการใหม่ด้านล่าง" : selected?.name || "เลือกรหัสโครงการเพื่อดูชื่อโครงการ";
+    const nameInput = document.getElementById("staffBorrowProjectName");
+    if (nameInput?.closest) {
+      nameInput.closest(".borrow-form-field").hidden = value !== "__manual__";
+      nameInput.required = value === "__manual__";
+    }
+  };
+  const normalizeBorrowProjectName = value => String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("th");
+  const loadBorrowProjectOptions = async year => {
+    const rows = await loadBorrowProjectsFromProjectStatus(year);
+    return rows.filter(project => project.orgGroup === BORROW_PROJECT_ORG && project.name?.trim());
+  };
+  const refreshBorrowProjectStatus = async () => {
+    const year = document.getElementById("staffBorrowProjectYear").value;
+    const select = document.getElementById("staffBorrowProjectSource");
+    const message = document.getElementById("staffBorrowProjectMessage");
+    const button = document.getElementById("staffBorrowProjectSync");
+    button.disabled = true;
+    button.textContent = "กำลังโหลด…";
+    try {
+      const items = await loadBorrowProjectOptions(year);
+      if (document.getElementById("staffBorrowProjectYear").value !== year) return;
+      projectStatusOptions = items;
+      projectStatusOptionsYear = year;
+      renderStaffBorrowProjectOptions();
+      message.textContent = "เลือกโครงการจาก dropdown แล้วกดเปิดใช้งานโครงการ";
+    } catch (error) { message.textContent = "โหลด ProjectStatus ไม่สำเร็จ กรุณาลองใหม่"; }
+    finally { button.disabled = !!editingBorrowProjectId; button.textContent = "โหลดจาก ProjectStatus"; }
+  };
+  const borrowProjectDatePatch = (from, to) => {
+    if ((from || to) && (!parseDateYmd(from) || !parseDateYmd(to) || from > to)) {
+      throw new Error("กรุณาระบุวันเริ่มต้นและวันสิ้นสุดให้ครบ โดยวันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น");
+    }
+    return { from, to, opensAt: from ? new Date(`${from}T00:00:00+07:00`) : null,
+      closesAt: to ? new Date(new Date(`${to}T00:00:00+07:00`).getTime() + 86400000) : null };
+  };
+  const addSelectedBorrowProject = async (academicYear, selected, manualName, datePatch) => {
+    if (selected?.existingId) {
+      const ref = firestore.doc(firestore.db, "borrowProjects", selected.existingId);
+      await firestore.runTransaction(firestore.db, async transaction => {
+        const snap = await transaction.get(ref);
+        if (!snap.exists() || snap.data().academicYear !== academicYear) throw new Error("ไม่พบโครงการในปีการศึกษานี้");
+        if (snap.data().active) throw new Error("โครงการนี้เปิดใช้งานแล้ว");
+        transaction.update(ref, { active: true, ...datePatch, updatedAt: firestore.serverTimestamp(), updatedBy: readCurrentUserEmail() });
+      });
+      return;
+    }
+    const source = await loadBorrowProjectOptions(academicYear);
+    const project = selected ? source.find(item => item.code === selected.code && item.name === selected.name) : null;
+    if (selected && !project) throw new Error("ไม่พบโครงการที่เลือกใน ProjectStatus กรุณาโหลดตัวเลือกใหม่");
+    const name = (project?.name || manualName || "").trim();
+    if (!name) throw new Error("กรุณาเลือกโครงการหรือระบุชื่อโครงการ");
+    if (!project && source.some(item => normalizeBorrowProjectName(item.name) === normalizeBorrowProjectName(name))) {
+      throw new Error("โครงการนี้มีใน ProjectStatus กรุณาโหลดตัวเลือกและเลือกโครงการนั้น");
+    }
+    const existing = await firestore.getDocs(firestore.collection(firestore.db, "borrowProjects"));
+    if (existing.docs.some(doc => doc.data().academicYear === academicYear && normalizeBorrowProjectName(doc.data().name) === normalizeBorrowProjectName(name))) {
+      throw new Error("เพิ่มโครงการนี้แล้ว สามารถปรับช่วงวันที่หรือเปิดรับอีกครั้งในรายการด้านล่าง");
+    }
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${academicYear}:${normalizeBorrowProjectName(name)}`));
+    const id = `selected-${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("")}`;
+    const ref = firestore.doc(firestore.db, "borrowProjects", id);
+    await firestore.runTransaction(firestore.db, async transaction => {
+      if ((await transaction.get(ref)).exists()) throw new Error("เพิ่มโครงการนี้แล้ว");
+      transaction.set(ref, { name, academicYear, orgGroup: BORROW_PROJECT_ORG, active: true,
+        source: project ? "project-status" : "manual", sourceCode: project?.code || "", ...datePatch,
+        updatedAt: firestore.serverTimestamp(), updatedBy: readCurrentUserEmail() });
+    });
+  };
+
+  let borrowProjectDeleteDialogOpen = false;
+  const confirmBorrowProjectDelete = (project) => {
+    if (borrowProjectDeleteDialogOpen) return Promise.resolve(false);
+    borrowProjectDeleteDialogOpen = true;
+    const previousFocus = document.activeElement;
+    const dialog = document.createElement("dialog");
+    dialog.className = "borrow-project-delete-dialog";
+    dialog.setAttribute("aria-labelledby", "borrowProjectDeleteTitle");
+    dialog.setAttribute("aria-describedby", "borrowProjectDeleteDescription");
+    dialog.innerHTML = `
+      <div class="borrow-project-delete-heading">
+        <span class="borrow-project-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5m4-5v5"/></svg></span>
+        <button type="button" class="modal-close" data-project-delete-cancel aria-label="ปิด">×</button>
+      </div>
+      <h3 id="borrowProjectDeleteTitle">ลบโครงการนี้?</h3>
+      <p id="borrowProjectDeleteDescription">โครงการจะถูกลบถาวรจากระบบยืมพัสดุ</p>
+      <div class="borrow-project-delete-target"><strong>${safeEscape(borrowProjectDisplayCode(project))}</strong><span>${safeEscape(project.name)}</span><small>ปีการศึกษา ${safeEscape(project.academicYear)}</small></div>
+      <p class="borrow-project-delete-history">คำขอยืมคืนเดิมและประวัติยังคงอยู่</p>
+      <div class="borrow-project-delete-actions">
+        <button type="button" class="btn-ghost" data-project-delete-cancel autofocus>ยกเลิก</button>
+        <button type="button" class="btn-primary" data-project-delete-confirm>ยืนยันลบโครงการ</button>
+      </div>`;
+    document.body.appendChild(dialog);
+    return new Promise(resolve => {
+      let confirmed = false;
+      const close = () => dialog.close();
+      dialog.querySelectorAll("[data-project-delete-cancel]").forEach(button => button.addEventListener("click", close));
+      dialog.querySelector("[data-project-delete-confirm]").addEventListener("click", () => { confirmed = true; close(); });
+      dialog.addEventListener("click", event => {
+        if (event.target !== dialog) return;
+        const rect = dialog.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) close();
+      });
+      dialog.addEventListener("close", () => {
+        dialog.remove();
+        borrowProjectDeleteDialogOpen = false;
+        if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+        resolve(confirmed);
+      }, { once: true });
+      dialog.showModal();
+    });
+  };
+
+  const bindBorrowCatalogManagement = () => {
+    const yearInput = document.getElementById("staffBorrowProjectYear");
+    if (yearInput) yearInput.value = getBorrowAcademicYearBE();
+    document.getElementById("staffBorrowProjectSync")?.addEventListener("click", () => void refreshBorrowProjectStatus());
+    const projectForm = document.getElementById("staffBorrowProjectForm");
+    const weekdaysCreate = document.getElementById("staffBorrowProjectWeekdays");
+    if (weekdaysCreate) weekdaysCreate.innerHTML = renderProjectWeekdays();
+    document.getElementById("staffBorrowSettings")?.addEventListener("change", event => {
+      if (event.target.name !== "customWeekdays") return;
+      event.target.closest(".borrow-project-weekdays").querySelector(".borrow-weekdays-fields").hidden = !event.target.checked;
+    });
+    projectForm?.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (projectForm.dataset.saving === "true" || !ensureStaffPermission() || !projectForm.reportValidity()) return;
+      const nameInput = document.getElementById("staffBorrowProjectName");
+      const name = nameInput.value.trim();
+      const academicYear = yearInput.value;
+      const message = document.getElementById("staffBorrowProjectMessage");
+      const button = projectForm.querySelector('button[type="submit"]');
+      button.disabled = true;
+      projectForm.dataset.saving = "true";
+      try {
+        if (editingBorrowProjectId) {
+          const project = managedBorrowProjects.find(item => item.id === editingBorrowProjectId && item.active);
+          if (!project) throw new Error("โครงการนี้ถูกลบหรือปิดใช้งานแล้ว กรุณายกเลิกการแก้ไข");
+          const dates = borrowProjectDatePatch(document.getElementById("staffBorrowProjectFrom").value, document.getElementById("staffBorrowProjectTo").value);
+          await firestore.updateDoc(firestore.doc(firestore.db, "borrowProjects", project.id), {
+            ...dates, ...readProjectWeekdays(projectForm), updatedAt: firestore.serverTimestamp(), updatedBy: readCurrentUserEmail()
+          });
+          projectForm.dataset.saving = "false";
+          setBorrowProjectEditor();
+          message.textContent = "บันทึกการแก้ไขโครงการแล้ว";
+          return;
+        }
+        const sourceValue = document.getElementById("staffBorrowProjectSource").value;
+        if (!sourceValue) throw new Error("กรุณาเลือกโครงการจาก dropdown");
+        const selected = sourceValue === "__manual__" ? null : dropdownBorrowProjects[Number(sourceValue)];
+        if (sourceValue !== "__manual__" && !selected) throw new Error("กรุณาเลือกโครงการใหม่");
+        const dates = borrowProjectDatePatch(document.getElementById("staffBorrowProjectFrom").value, document.getElementById("staffBorrowProjectTo").value);
+        await addSelectedBorrowProject(academicYear, selected, name, { ...dates, ...readProjectWeekdays(projectForm) });
+        nameInput.value = "";
+        document.getElementById("staffBorrowProjectSource").value = "";
+        renderStaffBorrowProjectName();
+        message.textContent = "เปิดใช้งานเฉพาะโครงการที่เลือกแล้ว";
+      } catch (error) { message.textContent = error.message || "เพิ่มโครงการไม่สำเร็จ กรุณาลองใหม่"; }
+      finally { button.disabled = false; projectForm.dataset.saving = "false"; }
+    });
+    document.getElementById("staffBorrowProjectCancelEdit")?.addEventListener("click", () => {
+      setBorrowProjectEditor();
+    });
+    document.getElementById("staffBorrowProjectList")?.addEventListener("click", async event => {
+      if (projectForm?.dataset.saving === "true") return;
+      const action = event.target.closest("[data-borrow-project-toggle], [data-borrow-project-delete]");
+      const card = event.target.closest("[data-borrow-project-card]");
+      if (!action && card && ensureStaffPermission()) {
+        const project = managedBorrowProjects.find(item => item.id === card.dataset.borrowProjectCard);
+        if (!project) return;
+        setBorrowProjectEditor(project);
+        if (window.matchMedia("(max-width: 1000px)").matches) {
+          projectForm.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+        }
+        document.getElementById("staffBorrowProjectFrom")?.focus({ preventScroll: true });
+        return;
+      }
+      const button = event.target.closest("[data-borrow-project-toggle], [data-borrow-project-delete]");
+      if (!button || !ensureStaffPermission()) return;
+      const deleting = !!button.dataset.borrowProjectDelete;
+      const project = managedBorrowProjects.find(item => item.id === (button.dataset.borrowProjectDelete || button.dataset.borrowProjectToggle));
+      if (!project) return;
+      if (deleting && !await confirmBorrowProjectDelete(project)) return;
+      button.disabled = true;
+      const message = document.getElementById("staffBorrowProjectMessage");
+      try {
+        const ref = firestore.doc(firestore.db, "borrowProjects", project.id);
+        if (deleting) {
+          await firestore.deleteDoc(ref);
+          message.textContent = "ลบโครงการออกจากฐานข้อมูลแล้ว ประวัติคำขอยืมคืนยังคงอยู่";
+        } else {
+          await firestore.updateDoc(ref, {
+            active: !project.active, updatedAt: firestore.serverTimestamp(), updatedBy: readCurrentUserEmail()
+          });
+          message.textContent = project.active ? "นำโครงการออกจากตัวเลือกแล้ว ประวัติการยืมเดิมยังคงอยู่" : "เปิดรับคำขอโครงการแล้ว";
+        }
+        if (editingBorrowProjectId === project.id) setBorrowProjectEditor();
+      } catch (error) { message.textContent = "แก้ไขโครงการไม่สำเร็จ กรุณาลองใหม่"; }
+      finally { button.disabled = false; }
+    });
+    yearInput?.addEventListener("change", () => {
+      projectStatusOptions = [];
+      projectStatusOptionsYear = "";
+      renderStaffBorrowProjectOptions();
+      void refreshBorrowProjectStatus();
+    });
+    const sourceSelect = document.getElementById("staffBorrowProjectSource");
+    const nameInput = document.getElementById("staffBorrowProjectName");
+    sourceSelect?.addEventListener("change", () => {
+      renderStaffBorrowProjectName();
+      const manual = sourceSelect.value === "__manual__";
+      nameInput.closest(".borrow-form-field").hidden = !manual;
+      nameInput.required = manual;
+      const selected = sourceSelect.value !== "" ? dropdownBorrowProjects[Number(sourceSelect.value)] : null;
+      document.getElementById("staffBorrowProjectFrom").value = selected?.from || "";
+      document.getElementById("staffBorrowProjectTo").value = selected?.to || "";
+      if (weekdaysCreate) weekdaysCreate.innerHTML = renderProjectWeekdays(selected || {});
+    });
+    sourceSelect?.addEventListener("focus", () => {
+      if (projectStatusOptionsYear !== yearInput.value) void refreshBorrowProjectStatus();
+    });
+    ["borrowModeDepartment", "borrowModeProject"].forEach(id => {
+      document.getElementById(id)?.addEventListener("change", () => {
+        if (document.getElementById("borrowModeDepartment")?.checked && borrowManagedProject) borrowManagedProject.value = "";
+        renderBorrowMode();
+        populateBorrowProjectDeptOptions();
+        renderBorrowSubmissionWindow();
+      });
+    });
+    borrowManagedProject?.addEventListener("change", () => {
+      renderBorrowMode();
+      populateBorrowProjectDeptOptions();
+      renderBorrowSubmissionWindow();
+    });
+  };
+
   const normalizeAllowedPickupDays = (value) => {
     const source = Array.isArray(value) ? value : DEFAULT_ALLOWED_PICKUP_DAYS;
     const days = source
@@ -1134,7 +1581,11 @@ function initBorrowAssetsApp() {
 
   const updateBorrowPickupDateRule = () => {
     if (!borrowPickupDateRule) return;
-    const dayText = formatAllowedPickupDays(getAllowedPickupDays());
+    const project = borrowProjectName?.value === BORROW_PROJECT_ORG
+      ? managedBorrowProjects.find(item => item.id === borrowManagedProject?.value) : null;
+    const dayText = formatAllowedPickupDays(project?.customWeekdays ? project.pickupDays : getAllowedPickupDays());
+    const returnRule = document.getElementById("borrowReturnDateRule");
+    if (returnRule) returnRule.textContent = "คืนได้ทุกวัน โดยไม่ก่อนวันรับพัสดุ";
     borrowPickupDateRule.textContent = dayText === "ทุกวัน"
       ? "รับพัสดุได้ทุกวัน เวลา 16.00 น."
       : `รับพัสดุได้เฉพาะวัน${dayText} เวลา 16.00 น.`;
@@ -1543,10 +1994,13 @@ function initBorrowAssetsApp() {
   };
 
   const formatBorrowStatusUpdateError = (error, fallback = "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่") => {
-    const code = (error?.code || "").toString().trim();
+    const code = (error?.code || "").toString().trim().replace(/^firestore\//, "");
     const message = (error?.message || "").toString().trim();
-    if (code === "permission-denied") return "ไม่มีสิทธิ์อัปเดตสถานะคำขอนี้ (Firestore Rules)";
-    if (code === "resource-exhausted") return "อนุมัติไม่สำเร็จ: พัสดุคงเหลือไม่พอ";
+    if (code === "permission-denied") return "ไม่มีสิทธิ์ดำเนินการกับคำขอนี้ (Firestore Rules)";
+    if (code === "borrow/insufficient-stock") return "อนุมัติไม่สำเร็จ: พัสดุคงเหลือไม่พอ";
+    if (code === "resource-exhausted") return "โควตาฐานข้อมูลเต็ม ยังดำเนินการไม่ได้ (resource-exhausted)";
+    if (code === "unavailable") return "เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
+    if (code === "unauthenticated") return "การเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่";
     if (code === "not-found") return "ไม่พบคำขอนี้ในระบบ";
     if (code === "invalid-argument") return `อัปเดตสถานะไม่สำเร็จ (invalid-argument${message ? `: ${message}` : ""})`;
     if (code) return `${fallback} (${code}${message ? `: ${message}` : ""})`;
@@ -1581,7 +2035,7 @@ function initBorrowAssetsApp() {
 
       if (ENABLE_ASSET_AVAILABILITY_CHECK && item.delta > 0 && nextReserved > item.maxRemaining) {
         const err = new Error(`พัสดุ ${item.code} คงเหลือไม่พอ`);
-        err.code = "resource-exhausted";
+        err.code = "borrow/insufficient-stock";
         err.assetCode = item.code;
         err.available = Math.max(0, item.maxRemaining - currentReserved);
         throw err;
@@ -1910,6 +2364,7 @@ function initBorrowAssetsApp() {
     "เบอร์โทร": item.phone || "",
     "Line ID": item.lineId || "",
     "ประเภทองค์กร": item.projectName || "",
+    "โครงการ": item.borrowProjectName || "",
     "ฝ่าย / ชมรม": item.projectDept || "",
     "กิจกรรม": item.projectDetail || "",
     "รายการพัสดุ": getAssetsCsvText(item.assets),
@@ -1935,6 +2390,7 @@ function initBorrowAssetsApp() {
         "เบอร์โทร",
         "Line ID",
         "ประเภทองค์กร",
+        "โครงการ",
         "ฝ่าย / ชมรม",
         "กิจกรรม",
         "รายการพัสดุ",
@@ -1983,6 +2439,7 @@ function initBorrowAssetsApp() {
       item.projectName,
       item.projectDept,
       item.projectDetail,
+      item.borrowProjectName,
       item.staffNote,
       statusText(item.status),
       summarizeAssetsInline(item.assets),
@@ -2024,6 +2481,8 @@ function initBorrowAssetsApp() {
   };
 
   function matchesStaffBorrowRequestFilters(item) {
+    const projectId = staffBorrowRequestProjectFilter?.value || "all";
+    if (projectId !== "all" && item.borrowProjectId !== projectId) return false;
     const term = (staffBorrowRequestSearch?.value || "").trim().toLowerCase();
     const status = staffBorrowRequestStatusFilter?.value || "all";
     const org = staffBorrowRequestOrgFilter?.value || "all";
@@ -2058,6 +2517,7 @@ function initBorrowAssetsApp() {
       (staffBorrowRequestSearch?.value || "").trim() ||
       (staffBorrowRequestStatusFilter?.value || "all") !== "all" ||
       (staffBorrowRequestOrgFilter?.value || "all") !== "all" ||
+      (staffBorrowRequestProjectFilter?.value || "all") !== "all" ||
       (staffBorrowRequestDeptFilter?.value || "all") !== "all" ||
       (staffBorrowRequestDueFilter?.value || "all") !== "all" ||
       staffBorrowRequestPickupFrom?.value ||
@@ -2068,6 +2528,7 @@ function initBorrowAssetsApp() {
 
   const countActiveStaffBorrowRequestFilters = () => {
     const values = [
+      (staffBorrowRequestProjectFilter?.value || "all") !== "all" ? staffBorrowRequestProjectFilter?.value : "",
       (staffBorrowRequestStatusFilter?.value || "all") !== "all" ? staffBorrowRequestStatusFilter?.value : "",
       (staffBorrowRequestOrgFilter?.value || "all") !== "all" ? staffBorrowRequestOrgFilter?.value : "",
       (staffBorrowRequestDeptFilter?.value || "all") !== "all" ? staffBorrowRequestDeptFilter?.value : "",
@@ -2094,6 +2555,15 @@ function initBorrowAssetsApp() {
   const renderStaffBorrowRequestFilterSummary = (filteredCount, totalCount) => {
     if (!staffBorrowRequestFilterSummary) return;
     const hasFilters = hasActiveStaffBorrowRequestFilters();
+    const advancedCount = Array.from(document.querySelectorAll("#staffBorrowAdvancedFilters select, #staffBorrowAdvancedFilters input"))
+      .filter((control) => control.value && control.value !== "all").length;
+    const countEl = document.getElementById("staffBorrowAdvancedFilterCount");
+    if (countEl) {
+      countEl.textContent = `${advancedCount} เงื่อนไข`;
+      countEl.hidden = advancedCount === 0;
+    }
+    const resetEl = document.getElementById("staffBorrowRequestFiltersReset");
+    if (resetEl) resetEl.hidden = !hasFilters;
     staffBorrowRequestFilterSummary.textContent = hasFilters
       ? `แสดง ${filteredCount} จาก ${totalCount} รายการตามตัวกรอง`
       : `แสดง ${totalCount} รายการ`;
@@ -2492,7 +2962,7 @@ function initBorrowAssetsApp() {
     borrowRequestForm.reset();
     populateBorrowProjectTypeOptions();
     toggleBorrowProjectNameOther();
-    populateBorrowProjectDeptOptions();
+    renderManagedBorrowProjects();
     resetAssetRows();
     setBorrowMessage("ล้างข้อมูลที่กรอกแล้ว", "#374151");
   };
@@ -2698,13 +3168,6 @@ function initBorrowAssetsApp() {
           <td>
             <div class="borrow-my-note-cell">
               <span>${safeEscape(noteText)}</span>
-              <button
-                class="btn-ghost borrow-row-detail-btn"
-                type="button"
-                data-action="detail"
-                data-request-id="${safeEscape(item.id || "")}"
-                data-request-source="${safeEscape(item.sourceCollection || "")}"
-              >ดูรายละเอียด</button>
             </div>
           </td>
         </tr>
@@ -2712,8 +3175,6 @@ function initBorrowAssetsApp() {
     }).join("");
   };
 
-  const renderStaffSummary = () => {
-    if (staffSummaryCards.length < 3) return;
     const dayKeyBangkok = (dateObj) => {
       if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return "";
       return new Intl.DateTimeFormat("en-CA", {
@@ -2723,6 +3184,9 @@ function initBorrowAssetsApp() {
         day: "2-digit"
       }).format(dateObj);
     };
+
+  const renderStaffSummary = () => {
+    if (staffSummaryCards.length < 3) return;
     const todayYmd = dayKeyBangkok(new Date());
     const approvedToday = borrowRequests.filter((item) =>
       (item.status === STATUS_APPROVED || item.status === STATUS_RECEIVED) &&
@@ -2756,7 +3220,7 @@ function initBorrowAssetsApp() {
   const renderRequesterCell = (item) => {
     const fullName = [item.firstName, item.lastName].filter(Boolean).join(" ").trim() || "-";
     const academicYearMeta = item.academicYear ? `ปีการศึกษา ${item.academicYear}` : "";
-    const projectMeta = [academicYearMeta, item.projectName, item.projectDept].filter(Boolean).join(" • ");
+    const projectMeta = [academicYearMeta, item.projectName, item.projectDept, item.borrowProjectName].filter(Boolean).join(" • ");
     const contactMeta = [item.phone, item.lineId ? `Line: ${item.lineId}` : ""]
       .filter(Boolean)
       .join(" • ");
@@ -2840,35 +3304,30 @@ function initBorrowAssetsApp() {
   const renderStaffRequestCard = (item, actionHtml, staffNote = "") => {
     const fullName = [item.firstName, item.lastName].filter(Boolean).join(" ").trim() || "-";
     const requestNo = (item.requestNo || item.id || "-").toString().trim();
-    const academicYearMeta = item.academicYear ? `ปีการศึกษา ${item.academicYear}` : "";
-    const projectMeta = [academicYearMeta, item.projectName, item.projectDept].filter(Boolean).join(" • ");
-    const contactMeta = [item.phone, item.lineId ? `Line: ${item.lineId}` : ""]
-      .filter(Boolean)
-      .join(" • ");
+    const orgMeta = [item.projectName, item.projectDept].filter(Boolean).join(" • ");
+    const contactMeta = [item.phone, item.lineId ? `Line: ${item.lineId}` : ""].filter(Boolean).join(" • ");
     const followupHtml = renderFollowupCell(item);
-    const followupBlock = followupHtml !== "-"
-      ? `<div class="borrow-staff-card-alert">${followupHtml}</div>`
-      : "";
     return `
       <article class="borrow-staff-request-card">
-        <div class="borrow-staff-card-main">
+        <header class="borrow-queue-card-header">
           <div class="borrow-staff-card-topline">
             <span class="borrow-staff-request-no">${safeEscape(requestNo)}</span>
-            <span class="borrow-staff-request-date">ยื่น ${safeEscape(formatDate(item.createdDate || "") || "-")}</span>
+            <span class="borrow-staff-request-date">ยื่น ${safeEscape(formatDate(item.createdDate || "") || "-")}${item.academicYear ? ` · ปีการศึกษา ${safeEscape(item.academicYear)}` : ""}</span>
           </div>
+          <div class="borrow-queue-badges">${statusBadge(item.status)}${followupHtml !== "-" ? followupHtml : ""}</div>
+        </header>
+        <div class="borrow-staff-card-main">
+          <div class="borrow-queue-label">ผู้ขอ / หน่วยงาน</div>
           <div class="borrow-staff-card-name">${safeEscape(fullName)}</div>
-          ${projectMeta ? `<div class="borrow-staff-card-meta">${safeEscape(projectMeta)}</div>` : ""}
+          ${orgMeta ? `<div class="borrow-staff-card-meta">${safeEscape(orgMeta)}</div>` : ""}
+          ${item.borrowProjectName ? `<div class="borrow-queue-project"><span>โครงการ</span>${safeEscape(item.borrowProjectName)}</div>` : ""}
           ${contactMeta ? `<div class="borrow-staff-card-contact">${safeEscape(contactMeta)}</div>` : ""}
-          ${followupBlock}
         </div>
-        <div class="borrow-staff-card-assets">
-          ${renderAssetsCell(item.assets, staffNote)}
-        </div>
+        <div class="borrow-staff-card-assets">${renderAssetsCell(item.assets, staffNote)}</div>
         <div class="borrow-staff-card-period">
+          <div class="borrow-queue-label">กำหนดรับ–คืน</div>
           ${renderPeriodCell(item)}
-          <div class="borrow-staff-actions borrow-staff-card-actions">
-            ${actionHtml}
-          </div>
+          <div class="borrow-staff-actions borrow-staff-card-actions">${actionHtml}</div>
         </div>
       </article>
     `;
@@ -2884,7 +3343,7 @@ function initBorrowAssetsApp() {
     if (staffRequestPanelCaptionEl) {
       staffRequestPanelCaptionEl.textContent = staffRequestTabMode === "history"
         ? "แสดงคำขอที่ดำเนินการแล้วหรือเลยวันคืนก่อนอนุมัติ"
-        : "ตรวจสอบรายละเอียดก่อนกดอนุมัติ/ตีกลับ";
+        : "ตรวจสอบพัสดุและวันรับ–คืน แล้วเลือกดำเนินการกับคำขอ";
     }
   };
 
@@ -3415,7 +3874,7 @@ function initBorrowAssetsApp() {
     const requesterEmailMeta = (item.requesterEmail || "").toString().trim();
     const contactMeta = [item.phone, item.lineId ? `Line: ${item.lineId}` : ""].filter(Boolean).join(" • ");
     const academicYearMeta = item.academicYear ? `ปีการศึกษา ${item.academicYear}` : "";
-    const projectMeta = [academicYearMeta, item.projectName, item.projectDept].filter(Boolean).join(" • ");
+    const projectMeta = [academicYearMeta, item.projectName, item.projectDept, item.borrowProjectName].filter(Boolean).join(" • ");
     const activityMeta = (item.projectDetail || "").toString().trim();
     const originalPickupDate = (item.originalPickupDate || "").toString().trim();
     const hasChangedPickupDate = !!originalPickupDate && originalPickupDate !== item.pickupDate;
@@ -3691,6 +4150,7 @@ function initBorrowAssetsApp() {
     renderMyRequests();
     renderMyBorrowOverview();
     populateStaffBorrowRequestFilterOptions();
+    renderManagedBorrowProjectFilter();
     updateStaffBorrowMobileFilterToggle();
     renderStaffQueue();
     renderStaffHistory();
@@ -3733,6 +4193,8 @@ function initBorrowAssetsApp() {
       phone: (safeData.phone || "").toString().trim(),
       lineId: (safeData.lineId || "").toString().trim(),
       academicYear: (safeData.academicYear || safeData.schoolYear || "").toString().trim(),
+      borrowProjectId: (safeData.borrowProjectId || "").toString(),
+      borrowProjectName: (safeData.borrowProjectName || "").toString(),
       projectName: (safeData.projectName || "").toString().trim(),
       projectDept: (safeData.projectDept || "").toString().trim(),
       projectOrgSource: (safeData.projectOrgSource || "").toString().trim().toLowerCase(),
@@ -3968,7 +4430,29 @@ function initBorrowAssetsApp() {
 
   const submitBorrowRequest = async () => {
     if (!borrowRequestForm || !borrowSubmitBtn) return;
+    if (!borrowCatalogReady) {
+      setBorrowMessage("กำลังโหลดโครงการและช่วงเปิดรับคำขอ กรุณาลองอีกครั้ง", "#b91c1c");
+      return;
+    }
+    const selectedBorrowProject = borrowProjectName?.value === BORROW_PROJECT_ORG
+      ? managedBorrowProjects.find(project => project.id === borrowManagedProject?.value && project.active && project.academicYear === String(getBorrowAcademicYearBE()))
+      : null;
+    if (isBorrowProjectMode() && !selectedBorrowProject) {
+      setBorrowMessage("กรุณาเลือกโครงการที่เปิดรับคำขอในปีการศึกษานี้", "#b91c1c");
+      borrowManagedProject?.focus();
+      return;
+    }
+    const today = dayKeyBangkok(new Date());
+    if (selectedBorrowProject && ((selectedBorrowProject.from && today < selectedBorrowProject.from) || (selectedBorrowProject.to && today > selectedBorrowProject.to))) {
+      setBorrowMessage("ขณะนี้อยู่นอกช่วงวันที่เปิดรับคำขอของโครงการนี้", "#b91c1c");
+      return;
+    }
     if (!borrowRequestForm.reportValidity()) return;
+    if (!getBorrowProjectDeptValueForSubmit()) {
+      setBorrowMessage(`กรุณา${usesManualBorrowDept() ? "กรอกชื่อ" : "เลือก"}${getBorrowDeptLabel()}`, "#b91c1c");
+      (usesManualBorrowDept() ? borrowProjectDeptOther : borrowProjectDept)?.focus();
+      return;
+    }
 
     currentUserEmail = readCurrentUserEmail();
     if (!currentUserEmail) {
@@ -3990,8 +4474,10 @@ function initBorrowAssetsApp() {
       return;
     }
     const pickupDay = pickupDateObj.getDay();
-    const allowedPickupDays = getAllowedPickupDays();
-    if (!allowedPickupDays.includes(pickupDay)) {
+    const allowedPickupDays = selectedBorrowProject?.customWeekdays ? selectedBorrowProject.pickupDays : getAllowedPickupDays();
+    if (selectedBorrowProject?.customWeekdays
+      ? !projectDateAllowed(selectedBorrowProject, "pickupDays", borrowPickupDate?.value || "")
+      : !allowedPickupDays.includes(pickupDay)) {
       const dayText = formatAllowedPickupDays(allowedPickupDays);
       setBorrowMessage(
         dayText === "ทุกวัน"
@@ -4044,6 +4530,8 @@ function initBorrowAssetsApp() {
       year: requesterProfile.year,
       phone: requesterProfile.phone,
       lineId: requesterProfile.lineId,
+      borrowProjectId: selectedBorrowProject?.id || "",
+      borrowProjectName: selectedBorrowProject?.name || "",
       projectName: getBorrowProjectNameValueForSubmit(),
       projectDept: getBorrowProjectDeptValueForSubmit(),
       projectOrgSource: borrowProjectName?.value === OTHER_ORG_VALUE ? "external" : "master",
@@ -4066,32 +4554,54 @@ function initBorrowAssetsApp() {
     setBorrowMessage("กำลังส่งคำขอ...", "#374151");
     try {
       const docRef = await createBorrowRequestWithNextNumber(payload);
-      void window.sgcuAuditLog?.write?.({
-        action: "borrow.request.create",
-        entityType: "borrowAssetRequest",
-        entityId: docRef?.id || "",
-        after: payload,
-        source: "web_app"
-      });
-      if (borrowRequestForm) borrowRequestForm.reset();
-      toggleBorrowProjectNameOther();
-      populateBorrowProjectDeptOptions();
-      resetAssetRows();
-      setBorrowMessage("ส่งคำขอเรียบร้อยแล้ว สามารถติดตามสถานะได้ด้านล่าง", "#15803d");
+      // The request is committed. Optional logging or UI cleanup must not report a failed submission.
+      const successMessage = `ส่งคำขอเรียบร้อยแล้ว${payload.requestNo ? ` เลขที่ ${payload.requestNo}` : ""} สามารถติดตามสถานะได้ด้านล่าง`;
+      setBorrowMessage(successMessage, "#15803d");
+      try {
+        Promise.resolve(window.sgcuAuditLog?.write?.({
+          action: "borrow.request.create",
+          entityType: "borrowAssetRequest",
+          entityId: docRef?.id || "",
+          after: payload,
+          source: "web_app"
+        })).catch(error => console.error("borrow request audit failed", error));
+      } catch (error) {
+        console.error("borrow request audit failed", error);
+      }
+      try {
+        borrowRequestForm.reset();
+        toggleBorrowProjectNameOther();
+        renderManagedBorrowProjects();
+        resetAssetRows();
+        setBorrowMessage(successMessage, "#15803d");
+      } catch (error) {
+        setBorrowMessage(`${successMessage} กรุณารีเฟรชหน้าก่อนส่งคำขอใหม่`, "#15803d");
+        console.error("borrow request saved but form reset failed", error);
+      }
     } catch (error) {
-      const code = (error?.code || "").toString();
+      const code = (error?.code || "").toString().replace(/^firestore\//, "");
       const hasLogin = !!readCurrentUserEmail();
       if (code === "permission-denied") {
         if (!hasLogin) {
           setBorrowMessage("กรุณาเข้าสู่ระบบก่อนส่งคำขอ", "#b91c1c");
         } else {
           setBorrowMessage(
-            "บัญชีนี้ยังไม่มีสิทธิ์เขียนข้อมูลในระบบ (Firestore Rules) กรุณาติดต่อผู้ดูแลระบบ",
+            "ส่งคำขอไม่ได้ กรุณาตรวจสอบช่วงเปิดรับคำขอและโครงการอีกครั้ง หรือติดต่อสตาฟเพื่อตรวจสอบสิทธิ์",
             "#b91c1c"
           );
         }
       } else {
-        setBorrowMessage("ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "#b91c1c");
+        const messages = {
+          "resource-exhausted": "โควตาฐานข้อมูลเต็มชั่วคราว จึงยังส่งคำขอไม่ได้ กรุณาติดต่อสตาฟหรือรอให้โควตากลับมา (resource-exhausted)",
+          "unavailable": "เชื่อมต่อระบบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง",
+          "deadline-exceeded": "การส่งคำขอใช้เวลานาน กรุณาตรวจสอบรายการคำขอก่อนลองใหม่",
+          "unauthenticated": "การเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่",
+          "invalid-argument": "ข้อมูลคำขอบางส่วนไม่ถูกต้อง กรุณาติดต่อสตาฟ (invalid-argument)",
+          "aborted": "มีการส่งคำขอพร้อมกัน กรุณาลองส่งอีกครั้ง",
+          "borrow/missing-org-code": "ไม่พบรหัสองค์กร กรุณาเลือกประเภทองค์กรและฝ่ายใหม่"
+        };
+        const diagnostic = (code || error?.name || "unknown").replace(/[^a-zA-Z0-9/_-]/g, "").slice(0, 60);
+        setBorrowMessage(messages[code] || `ส่งคำขอไม่สำเร็จ (${diagnostic}) กรุณาแจ้งรหัสนี้ให้สตาฟตรวจสอบ`, "#b91c1c");
       }
       console.error("borrow request submit failed - app.borrow-assets.js:2167", error);
     } finally {
@@ -4223,22 +4733,24 @@ function initBorrowAssetsApp() {
     void ensureBorrowOrgCodeData().then(() => {
       updateBorrowAcademicYearDisplay();
       populateBorrowProjectTypeOptions();
-      populateBorrowProjectDeptOptions();
+      renderManagedBorrowProjects();
     });
     populateBorrowProjectTypeOptions();
-    populateBorrowProjectDeptOptions();
+    renderManagedBorrowProjects();
     if (borrowProjectName) {
       borrowProjectName.addEventListener("change", () => {
+        if (borrowManagedProject) borrowManagedProject.value = "";
+        const departmentMode = document.getElementById("borrowModeDepartment");
+        const projectMode = document.getElementById("borrowModeProject");
+        if (departmentMode) departmentMode.checked = true;
+        if (projectMode) projectMode.checked = false;
         toggleBorrowProjectNameOther();
-        populateBorrowProjectDeptOptions();
+        renderManagedBorrowProjects();
       });
       borrowProjectName.addEventListener("focus", () => {
         populateBorrowProjectTypeOptions();
-        populateBorrowProjectDeptOptions();
+        renderManagedBorrowProjects();
       });
-    }
-    if (borrowProjectDept) {
-      borrowProjectDept.addEventListener("focus", populateBorrowProjectDeptOptions);
     }
     const firstRow = borrowAssetList.querySelector("[data-asset-row]");
     if (firstRow) {
@@ -4378,13 +4890,8 @@ function initBorrowAssetsApp() {
           target.value = prevValue;
           target.classList.remove("is-pending", "is-approved", "is-rejected", "is-cancel-requested", "is-delete");
           target.classList.add(borrowStatusSelectClass(prevValue));
-          const code = (error?.code || "").toString().trim();
-          setStaffQueueMessage(
-            code === "permission-denied"
-              ? "ไม่มีสิทธิ์ลบคำขอ (Firestore Rules)"
-              : "ลบคำขอไม่สำเร็จ กรุณาลองใหม่",
-            "#b91c1c"
-          );
+          setStaffQueueMessage(formatBorrowStatusUpdateError(error, "ลบคำขอไม่สำเร็จ"), "#b91c1c");
+          console.error("borrow request delete failed", error);
           return;
         }
       }
@@ -4453,6 +4960,7 @@ function initBorrowAssetsApp() {
           formatBorrowStatusUpdateError(error),
           "#b91c1c"
         );
+        console.error("borrow request status update failed", error);
       }
     };
 
@@ -4633,6 +5141,7 @@ function initBorrowAssetsApp() {
   };
 
   const clearStaffBorrowAdvancedFilters = () => {
+    if (staffBorrowRequestProjectFilter) staffBorrowRequestProjectFilter.value = "all";
     if (staffBorrowRequestStatusFilter) staffBorrowRequestStatusFilter.value = "all";
     if (staffBorrowRequestOrgFilter) staffBorrowRequestOrgFilter.value = "all";
     if (staffBorrowRequestDeptFilter) staffBorrowRequestDeptFilter.value = "all";
@@ -4654,6 +5163,7 @@ function initBorrowAssetsApp() {
     input?.addEventListener("input", applyStaffBorrowRequestFilters);
   });
   [
+    staffBorrowRequestProjectFilter,
     staffBorrowRequestStatusFilter,
     staffBorrowRequestOrgFilter,
     staffBorrowRequestDeptFilter,
@@ -4661,7 +5171,19 @@ function initBorrowAssetsApp() {
   ].forEach((select) => {
     select?.addEventListener("change", applyStaffBorrowRequestFilters);
   });
-  staffBorrowRequestSearchClear?.addEventListener("click", clearStaffBorrowRequestFilters);
+  staffBorrowRequestSearchClear?.addEventListener("click", () => {
+    if (staffBorrowRequestSearch) staffBorrowRequestSearch.value = "";
+    applyStaffBorrowRequestFilters();
+    staffBorrowRequestSearch?.focus();
+  });
+  document.getElementById("staffBorrowRequestFiltersReset")?.addEventListener("click", clearStaffBorrowRequestFilters);
+  document.getElementById("staffBorrowAdvancedToggle")?.addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    const panel = document.getElementById("staffBorrowAdvancedFilters");
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    button.setAttribute("aria-expanded", String(!panel.hidden));
+  });
   updateStaffBorrowMobileFilterToggle();
 
   staffAssetsPagerEl?.addEventListener("click", (event) => {
@@ -4680,6 +5202,7 @@ function initBorrowAssetsApp() {
   const staffBorrowQueue = document.getElementById("staffBorrowQueue");
   const staffBorrowInventory = document.getElementById("staffBorrowInventory");
   const staffBorrowHistory = document.getElementById("staffBorrowHistory");
+  const staffBorrowSettings = document.getElementById("staffBorrowSettings");
   const isStaffBorrowMobile = () =>
     !window.matchMedia || window.matchMedia("(max-width: 840px)").matches;
   const isStaffBorrowRequestsMainTabActive = () =>
@@ -4746,6 +5269,7 @@ function initBorrowAssetsApp() {
         (action === "queue" && isStaffBorrowRequestsMainTabActive() && staffRequestTabMode !== "history" && !filterOpen) ||
           (action === "history" && isStaffBorrowRequestsMainTabActive() && staffRequestTabMode === "history" && !filterOpen) ||
           (action === "inventory" && isStaffBorrowInventoryMainTabActive() && !filterOpen) ||
+          (action === "settings" && staffBorrowSettings?.style.display === "block" && !filterOpen) ||
           (action === "filters" && filterOpen)
       );
     });
@@ -4765,7 +5289,7 @@ function initBorrowAssetsApp() {
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const setStaffBorrowMainTab = (tabName) => {
-    const activeTab = tabName === "inventory" ? "inventory" : "requests";
+    const activeTab = ["inventory", "settings"].includes(tabName) ? tabName : "requests";
     if (activeTab !== "requests") {
       setStaffBorrowMobileFilterOpen(false);
     }
@@ -4779,6 +5303,11 @@ function initBorrowAssetsApp() {
       staffBorrowInventory.style.display = showInventory ? "block" : "none";
       staffBorrowInventory.classList.toggle("section-visible", showInventory);
     }
+    if (staffBorrowSettings) {
+      const showSettings = activeTab === "settings";
+      staffBorrowSettings.style.display = showSettings ? "block" : "none";
+      staffBorrowSettings.classList.toggle("section-visible", showSettings);
+    }
     staffMainTabBtns.forEach((btn) => {
       const matched = (btn.dataset.assetsStaffMainTab || "requests") === activeTab;
       btn.classList.toggle("is-active", matched);
@@ -4790,7 +5319,7 @@ function initBorrowAssetsApp() {
       } else {
         void loadBorrowAssets();
       }
-    } else {
+    } else if (activeTab === "requests") {
       renderBorrowRequests();
     }
     syncStaffBorrowMobileActionBar();
@@ -4840,6 +5369,10 @@ function initBorrowAssetsApp() {
         setStaffBorrowMobileFilterOpen(false);
         document.querySelector('[data-assets-staff-main-tab="inventory"]')?.click();
         scrollToStaffBorrowRequests(staffBorrowInventory);
+      } else if (action === "settings") {
+        setStaffBorrowMobileFilterOpen(false);
+        document.querySelector('[data-assets-staff-main-tab="settings"]')?.click();
+        scrollToStaffBorrowRequests(staffBorrowSettings);
       } else if (action === "filters") {
         if (!isStaffBorrowRequestsMainTabActive()) {
           document.querySelector('[data-assets-staff-main-tab="requests"]')?.click();
@@ -4885,6 +5418,8 @@ function initBorrowAssetsApp() {
     renderBorrowRequests();
   });
 
+  bindBorrowCatalogManagement();
+  subscribeBorrowCatalog();
   currentUserEmail = readCurrentUserEmail();
   restoreBorrowProfileForCurrentUser();
   void readBorrowProfileFromFirestore().then((profile) => {
@@ -4903,6 +5438,7 @@ function initBorrowAssetsApp() {
     if (resolveFirestoreBridge()) return;
     firestoreRetryTimer = window.setTimeout(() => {
       subscribeBorrowRequests();
+      subscribeBorrowCatalog();
       scheduleFirestoreRetry();
     }, 1200);
   };
@@ -4911,6 +5447,7 @@ function initBorrowAssetsApp() {
   if (window.sgcuAuth?.auth && typeof window.sgcuAuth.onAuthStateChanged === "function") {
     window.sgcuAuth.onAuthStateChanged(window.sgcuAuth.auth, () => {
       currentUserEmail = readCurrentUserEmail();
+      subscribeBorrowCatalog();
       restoreBorrowProfileForCurrentUser();
       void readBorrowProfileFromFirestore().then((profile) => {
         if (profile) applyBorrowProfileToForm(profile);
@@ -4943,6 +5480,7 @@ function initBorrowAssetsApp() {
   });
 
   window.addEventListener("beforeunload", () => {
+    borrowCatalogUnsubscribes.forEach(unsubscribe => unsubscribe());
     if (Array.isArray(unsubscribeBorrowRequests) && unsubscribeBorrowRequests.length) {
       unsubscribeBorrowRequests.forEach((fn) => {
         try {

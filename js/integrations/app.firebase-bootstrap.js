@@ -193,6 +193,8 @@ function getDateKeyInBangkok() {
 }
 
 window.sgcuVisitorCounter.syncDailyVisitorCount = async () => {
+  // Local previews must not consume production reads/writes for visitor statistics.
+  if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) return null;
   const dateKey = getDateKeyInBangkok();
   const dailyRef = doc(db, "site_daily_visitors", dateKey);
   const allTimeRef = doc(db, "site_stats", "visitors_all_time");

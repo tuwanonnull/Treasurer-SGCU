@@ -28,59 +28,63 @@
                   </div>
                 </div>
                 <div class="panel-body borrow-detail-layout">
-                  <section class="borrow-detail-section">
+                  <section class="borrow-detail-section borrow-request-context">
                     <div class="borrow-detail-section-head">
-                      <div class="borrow-detail-section-title">ข้อมูลโครงการ</div>
-                      <div class="borrow-detail-section-caption">ระบุหน่วยงานและกิจกรรมที่ต้องใช้พัสดุ</div>
+                      <div class="borrow-detail-section-title">ผู้รับผิดชอบการยืม</div>
+                      <div class="borrow-detail-section-caption">เลือกองค์กร แล้วระบุฝ่ายหรือโครงการที่ต้องใช้พัสดุ</div>
                     </div>
-                    <div class="borrow-form-row borrow-academic-year-row">
+                    <div class="borrow-context-top">
                       <div class="borrow-form-field">
-                        <label class="login-label">ปีการศึกษาที่ใช้สำหรับรายชื่อองค์กร</label>
-                        <div id="borrowAcademicYearDisplay" class="login-input readonly-field" aria-live="polite">-</div>
-                      </div>
-                    </div>
-                    <div class="borrow-form-row">
-                      <div class="borrow-form-field">
-                        <label class="login-label" for="borrowProjectName">ประเภทองค์กร</label>
+                        <label class="login-label" for="borrowProjectName">ประเภทองค์กร <span class="borrow-required" aria-hidden="true">*</span></label>
                         <select id="borrowProjectName" class="login-input" required>
                           <option value="" selected disabled>เลือกประเภทองค์กร</option>
-                          <!-- JS เติมตัวเลือกจากประเภทองค์กร -->
                         </select>
-                        <input
-                          id="borrowProjectNameOther"
-                          class="login-input"
-                          type="text"
-                          placeholder="ระบุประเภทองค์กร"
-                          style="margin-top:8px; display:none;"
-                        />
+                        <input id="borrowProjectNameOther" class="login-input" type="text" placeholder="ระบุประเภทองค์กร" aria-label="ระบุประเภทองค์กร" style="display:none" />
                       </div>
-                      <div class="borrow-form-field">
-                        <label class="login-label" for="borrowProjectDept">ฝ่าย / ชมรม</label>
-                        <select id="borrowProjectDept" class="login-input" required>
-                          <option value="" selected disabled>เลือกฝ่าย / ชมรม</option>
-                          <!-- JS เติมตัวเลือกจากฝ่าย / ชมรม -->
-                        </select>
-                        <input
-                          id="borrowProjectDeptOther"
-                          class="login-input"
-                          type="text"
-                          placeholder="ระบุฝ่าย / ชมรม"
-                          style="margin-top:8px; display:none;"
-                        />
+                      <div class="borrow-form-field borrow-context-year">
+                        <span class="login-label">ปีการศึกษา</span>
+                        <div id="borrowAcademicYearDisplay" class="borrow-year-value" aria-live="polite">-</div>
                       </div>
                     </div>
 
-                    <div class="borrow-form-row">
-                      <div class="borrow-form-field">
-                        <label class="login-label" for="borrowProjectDetail">ชื่อโครงการหรือรายละเอียดกิจกรรม</label>
-                        <textarea
-                          id="borrowProjectDetail"
-                          class="login-input"
-                          rows="3"
-                          placeholder="ระบุชื่อโครงการหรือรายละเอียดกิจกรรมที่ขอยืมพัสดุ"
-                          required
-                        ></textarea>
+                    <div id="borrowManagedProjectField" class="borrow-project-choice" hidden>
+                      <fieldset class="borrow-mode-picker">
+                        <legend>รูปแบบการยืม</legend>
+                        <p class="borrow-mode-intro">เลือกผู้รับผิดชอบคำขอครั้งนี้</p>
+                        <div class="borrow-mode-options">
+                          <label class="borrow-mode-option">
+                            <input id="borrowModeDepartment" name="borrowRequestMode" type="radio" value="department" checked />
+                            <span class="borrow-mode-option-copy"><strong>ยืมในนามฝ่าย</strong><span>เลือกฝ่ายจากรายการ ไม่ต้องระบุโครงการ</span></span>
+                          </label>
+                          <label class="borrow-mode-option">
+                            <input id="borrowModeProject" name="borrowRequestMode" type="radio" value="project" />
+                            <span class="borrow-mode-option-copy"><strong>ยืมภายใต้โครงการ</strong><span>เลือกรหัสโครงการ แล้วกรอกฝ่ายที่รับผิดชอบ</span></span>
+                          </label>
+                        </div>
+                      </fieldset>
+                      <div id="borrowProjectSelector" class="borrow-form-field borrow-project-selector" hidden>
+                        <label class="login-label" for="borrowManagedProject">รหัสโครงการ <span class="borrow-required" aria-hidden="true">*</span></label>
+                        <select id="borrowManagedProject" class="login-input" aria-describedby="borrowManagedProjectMessage"></select>
+                        <p id="borrowManagedProjectMessage" class="section-text-sm" aria-live="polite"></p>
                       </div>
+                      <div id="borrowSelectedProjectSummary" class="borrow-selected-project" hidden>
+                        <span class="borrow-selected-project-label">ชื่อโครงการ</span>
+                        <output id="borrowManagedProjectNameDisplay" for="borrowManagedProject" class="borrow-selected-project-name" aria-live="polite"></output>
+                        <p id="borrowSubmissionWindowMessage" class="borrow-project-window" aria-live="polite"></p>
+                      </div>
+                    </div>
+
+                    <div class="borrow-form-field">
+                      <label class="login-label" for="borrowProjectDept">หน่วยงาน <span class="borrow-required" aria-hidden="true">*</span></label>
+                      <select id="borrowProjectDept" class="login-input" required aria-describedby="borrowDeptHint">
+                        <option value="">เลือกประเภทองค์กรก่อน</option>
+                      </select>
+                      <input id="borrowProjectDeptOther" class="login-input" type="text" maxlength="200" placeholder="เช่น ฝ่ายกิจกรรม ฝ่ายสถานที่" aria-describedby="borrowDeptHint" style="display:none" disabled />
+                      <p id="borrowDeptHint" class="section-text-sm">เลือกประเภทองค์กรเพื่อระบุหน่วยงานที่รับผิดชอบ</p>
+                    </div>
+                    <div class="borrow-context-purpose borrow-form-field">
+                      <label class="login-label" for="borrowProjectDetail">รายละเอียดการใช้งาน <span class="borrow-required" aria-hidden="true">*</span></label>
+                      <textarea id="borrowProjectDetail" class="login-input" rows="3" placeholder="ระบุกิจกรรม สถานที่ และวัตถุประสงค์ที่ต้องใช้พัสดุ" required></textarea>
                     </div>
                   </section>
 
@@ -162,7 +166,8 @@
                       </div>
                       <div class="borrow-form-field">
                         <label class="login-label" for="borrowReturnDate">วันที่คืนพัสดุ</label>
-                        <input id="borrowReturnDate" class="login-input" type="date" required />
+                        <input id="borrowReturnDate" class="login-input" type="date" required aria-describedby="borrowReturnDateRule" />
+                        <div id="borrowReturnDateRule" class="section-text-sm borrow-date-rule"></div>
                       </div>
                     </div>
                   </section>

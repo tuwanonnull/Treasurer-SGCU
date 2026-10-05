@@ -8,11 +8,12 @@
             </div>
             <div class="tabs borrow-staff-main-tabs" aria-label="เลือกมุมมองจัดการยืมคืนพัสดุ">
               <button class="tab-btn view-toggle-btn is-active" data-assets-staff-main-tab="requests" type="button">
-                คำขอยืม-คืน
+                รายการขอยืม
               </button>
               <button class="tab-btn view-toggle-btn" data-assets-staff-main-tab="inventory" type="button">
                 คลังพัสดุ
               </button>
+              <button class="tab-btn view-toggle-btn" data-assets-staff-main-tab="settings" type="button">ตั้งค่าการยืม</button>
             </div>
           </div>
 
@@ -32,8 +33,8 @@
                       id="staffBorrowRequestSearchClear"
                       class="search-clear"
                       type="button"
-                      aria-label="ล้างตัวกรองทั้งหมด"
-                      title="ล้างตัวกรองทั้งหมด"
+                      aria-label="ล้างคำค้นหา"
+                      title="ล้างคำค้นหา"
                     >
                       ✕
                     </button>
@@ -51,6 +52,14 @@
                     <option value="returned">คืนแล้ว</option>
                   </select>
                 </div>
+                <button id="staffBorrowAdvancedToggle" class="btn-ghost borrow-advanced-toggle" type="button" aria-expanded="false" aria-controls="staffBorrowAdvancedFilters">
+                    <svg class="borrow-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+                    <span>ตัวกรองเพิ่มเติม</span>
+                    <span id="staffBorrowAdvancedFilterCount" class="borrow-filter-count" hidden></span>
+                    <svg class="borrow-filter-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg>
+                  </button>
+                <div id="staffBorrowAdvancedFilters" class="borrow-advanced-filters" hidden>
+                  <div class="borrow-advanced-filter-grid">
                 <div class="filter-group">
                   <label for="staffBorrowRequestOrgFilter">ประเภทองค์กร</label>
                   <select id="staffBorrowRequestOrgFilter">
@@ -62,6 +71,10 @@
                   <select id="staffBorrowRequestDeptFilter">
                     <option value="all">ทุกฝ่าย / ชมรม</option>
                   </select>
+                </div>
+                <div class="filter-group">
+                  <label for="staffBorrowRequestProjectFilter">โครงการ</label>
+                  <select id="staffBorrowRequestProjectFilter"><option value="all">ทุกโครงการ</option></select>
                 </div>
                 <div class="filter-group">
                   <label for="staffBorrowRequestDueFilter">กำหนดคืน</label>
@@ -90,6 +103,9 @@
                   <label for="staffBorrowRequestReturnTo">วันที่คืนถึง</label>
                   <input id="staffBorrowRequestReturnTo" type="date" />
                 </div>
+                  </div>
+                </div>
+                <button id="staffBorrowRequestFiltersReset" class="btn-ghost borrow-filter-reset" type="button" hidden>ล้างตัวกรองทั้งหมด</button>
               </div>
             </div>
             <div id="staffBorrowRequestFilterSummary" class="panel-meta borrow-staff-request-filter-summary" aria-live="polite"></div>
@@ -97,9 +113,9 @@
               <div class="panel-header">
                 <div>
                   <div id="staffRequestPanelTitle" class="panel-title">รายการขอยืมพัสดุ</div>
-                  <div id="staffRequestPanelCaption" class="panel-caption">ตรวจสอบรายละเอียดก่อนกดอนุมัติ/ตีกลับ</div>
+                  <div id="staffRequestPanelCaption" class="panel-caption">ตรวจสอบพัสดุและวันรับ–คืน แล้วเลือกดำเนินการกับคำขอ</div>
                 </div>
-                <button id="staffBorrowExportCsvBtn" class="btn-ghost csv-export-btn" type="button">Export CSV</button>
+                <button id="staffBorrowExportCsvBtn" class="btn-ghost csv-export-btn" type="button">ส่งออก CSV</button>
                 <div class="tabs panel-header-tabs">
                   <button class="tab-btn view-toggle-btn is-active" data-assets-staff-tab="queue" type="button">
                     รายการขอยืมพัสดุ
@@ -217,7 +233,7 @@
                     <div id="borrowAssetsCountStaff" class="panel-meta">พบ 0 รายการ</div>
                   </div>
                 </header>
-                <div class="table-wrapper borrow-staff-requests-wrapper borrow-assets-staff-wrapper">
+                <div class="table-wrapper borrow-staff-requests-wrapper borrow-assets-staff-wrapper" tabindex="0" role="region" aria-label="รายการพัสดุทั้งหมด เลื่อนเพื่อดูเพิ่มเติม">
                   <table class="borrow-staff-requests-table borrow-assets-staff-table">
                   <thead>
                     <tr>
@@ -243,15 +259,18 @@
                 </div>
               </section>
             </section>
-            <div class="panel panel-hover borrow-staff-settings-panel">
+          </div>
+
+          <div id="staffBorrowSettings" class="section-appear section-delay-1" style="display: none;">
+            <div id="staffBorrowPickupSettings" class="panel borrow-staff-settings-panel borrow-default-pickup">
               <div class="panel-header">
                 <div>
-                  <div class="panel-title">ตั้งค่าการยืมพัสดุ</div>
-                  <div class="panel-caption">กำหนดวันที่ผู้ขอสามารถเลือกเป็นวันรับพัสดุได้</div>
+                  <h3 id="staffBorrowPickupTitle" class="panel-title">วันรับพัสดุส่วนกลาง</h3>
+                  <div id="staffBorrowPickupHint" class="panel-caption">วันรับมาตรฐานสำหรับการยืมทั่วไปและโครงการที่ใช้ค่ากลาง</div>
                 </div>
               </div>
               <form id="staffBorrowPickupDaysForm" class="borrow-staff-pickup-days-form">
-                <div class="settings-weekday-grid" role="group" aria-label="วันที่เปิดรับพัสดุ">
+                <div class="settings-weekday-grid" role="group" aria-labelledby="staffBorrowPickupTitle" aria-describedby="staffBorrowPickupHint">
                   <label><input type="checkbox" value="1" data-staff-borrow-pickup-day /> จันทร์</label>
                   <label><input type="checkbox" value="2" data-staff-borrow-pickup-day /> อังคาร</label>
                   <label><input type="checkbox" value="3" data-staff-borrow-pickup-day /> พุธ</label>
@@ -260,12 +279,53 @@
                   <label><input type="checkbox" value="6" data-staff-borrow-pickup-day /> เสาร์</label>
                   <label><input type="checkbox" value="0" data-staff-borrow-pickup-day /> อาทิตย์</label>
                 </div>
-                <div class="borrow-staff-settings-actions">
-                  <button id="staffBorrowPickupDaysSaveBtn" class="btn-primary" type="submit">บันทึกวันรับพัสดุ</button>
-                  <div id="staffBorrowPickupDaysMessage" class="section-text-sm settings-status" aria-live="polite"></div>
+                <div class="borrow-default-pickup-footer">
+                  <span class="borrow-project-field-hint">เลือกวันรับได้มากกว่า 1 วัน</span>
+                  <div class="borrow-staff-settings-actions">
+                  <button id="staffBorrowPickupDaysSaveBtn" class="btn-primary" type="submit">บันทึกวันรับส่วนกลาง</button>
+                  </div>
                 </div>
+                <div id="staffBorrowPickupDaysMessage" class="section-text-sm settings-status" role="status" aria-live="polite"></div>
               </form>
             </div>
+            <section id="staffBorrowProjectsPanel" class="panel borrow-staff-settings-panel borrow-project-manager">
+              <header class="borrow-manager-header">
+                <div><h3>โครงการภายใต้องค์การบริหาร</h3><p>เลือกโครงการ กำหนดช่วงเปิดรับคำขอ และเลือกใช้วันรับส่วนกลางหรือวันรับเฉพาะโครงการ</p></div>
+                <span id="staffBorrowProjectsCount" class="borrow-manager-count" aria-live="polite">0 โครงการเปิดใช้งาน</span>
+              </header>
+              <div class="borrow-manager-layout">
+                <section class="borrow-manager-create" aria-labelledby="borrowProjectCreateTitle">
+                  <div class="borrow-manager-section-heading"><span class="borrow-manager-step borrow-plus-icon" aria-hidden="true"></span><div><h4 id="borrowProjectCreateTitle">เปิดใช้งานโครงการ</h4><p id="borrowProjectEditorHint">เลือกปีการศึกษาและรหัสโครงการที่ต้องการ</p></div></div>
+                  <form id="staffBorrowProjectForm" class="borrow-form-row borrow-catalog-form borrow-project-setup">
+                    <div class="borrow-form-field"><label class="login-label" for="staffBorrowProjectYear">ปีการศึกษา (พ.ศ.)</label>
+                      <input id="staffBorrowProjectYear" class="login-input" type="number" min="2500" max="3000" required /></div>
+                    <div class="borrow-project-refresh"><button id="staffBorrowProjectSync" class="btn-ghost" type="button">โหลดจาก ProjectStatus</button></div>
+                    <div class="borrow-form-field borrow-project-full"><label class="login-label" for="staffBorrowProjectSource">รหัสโครงการ <span class="borrow-required" aria-hidden="true">*</span></label>
+                      <select id="staffBorrowProjectSource" class="login-input" required aria-describedby="borrowProjectSortHint"><option value="">เลือกโครงการที่ต้องการเปิด</option></select>
+                      <small id="borrowProjectSortHint" class="section-text-sm">เรียงตามรหัส • แสดงเฉพาะโครงการที่ยังไม่เปิดใช้งาน</small></div>
+                    <div class="borrow-form-field borrow-project-full"><label class="login-label" for="staffBorrowProjectNameDisplay">ชื่อโครงการ</label>
+                      <output id="staffBorrowProjectNameDisplay" for="staffBorrowProjectSource" class="borrow-project-name-display" aria-live="polite">เลือกรหัสโครงการเพื่อดูชื่อโครงการ</output></div>
+                    <div class="borrow-form-field borrow-project-full" hidden><label class="login-label" for="staffBorrowProjectName">ชื่อโครงการใหม่</label>
+                      <input id="staffBorrowProjectName" class="login-input" maxlength="200" placeholder="กรอกชื่อโครงการที่ไม่มีในรายการ" /></div>
+                    <fieldset class="borrow-project-full borrow-project-date-group">
+                      <legend>ช่วงเปิดรับคำขอ</legend>
+                      <div class="borrow-project-date-inputs">
+                        <div class="borrow-form-field"><label class="login-label" for="staffBorrowProjectFrom">เริ่มรับคำขอ</label><input id="staffBorrowProjectFrom" class="login-input" type="date" aria-describedby="staffBorrowProjectDateHint" /></div>
+                        <div class="borrow-form-field"><label class="login-label" for="staffBorrowProjectTo">วันสุดท้าย</label><input id="staffBorrowProjectTo" class="login-input" type="date" aria-describedby="staffBorrowProjectDateHint" /></div>
+                      </div>
+                      <p id="staffBorrowProjectDateHint" class="borrow-project-field-hint">เว้นว่างทั้งคู่เพื่อเปิดรับทุกวัน <span>รวมวันเริ่มต้นและวันสุดท้าย · เวลาไทย</span></p>
+                    </fieldset>
+                    <div id="staffBorrowProjectWeekdays" class="borrow-project-full"></div>
+                    <div class="borrow-project-full borrow-manager-submit"><button class="btn-primary" type="submit">เปิดใช้งานโครงการ</button><button id="staffBorrowProjectCancelEdit" class="btn-ghost" type="button" hidden>ยกเลิก</button><small id="borrowProjectSubmitHint">เปิดเฉพาะโครงการที่เลือกเท่านั้น</small></div>
+                  </form>
+                </section>
+                <section class="borrow-manager-active" aria-labelledby="borrowProjectActiveTitle">
+                  <div class="borrow-manager-section-heading"><div><h4 id="borrowProjectActiveTitle">โครงการที่เปิดใช้งาน</h4><p>กดโครงการเพื่อแก้ไขช่วงเปิดรับและวันรับพัสดุในฟอร์ม</p></div></div>
+                  <div id="staffBorrowProjectList"></div>
+                </section>
+              </div>
+              <p id="staffBorrowProjectMessage" class="section-text-sm borrow-catalog-message borrow-manager-feedback" role="status" aria-live="polite"></p>
+            </section>
           </div>
 
           <div id="staffBorrowHistory" class="section-appear section-delay-1" style="display: none;">
