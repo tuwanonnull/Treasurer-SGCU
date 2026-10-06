@@ -1,0 +1,42 @@
+/* Shared empty lists, including responsive tables rendered as cards. */
+.list-empty-state {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 260px;
+  height: 100%;
+  padding: 32px 24px;
+  border: 1px dashed var(--theme-pink-200, #fbcfe8);
+  border-radius: 16px;
+  background: #fffafb;
+  text-align: center;
+  white-space: normal;
+}
+.list-empty-state .list-empty-state-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--theme-pink-100, #fce7f3);
+  color: var(--theme-pink-600, #db2777);
+}
+.list-empty-state-icon svg { display: block; width: 24px; height: 24px; }
+.list-empty-state strong { max-width: 100%; color: #475569; font-size: 15px; font-weight: 600; line-height: 1.6; }
+.list-empty-state p { max-width: 440px; margin: 0; color: #64748b; font-size: 13px; line-height: 1.8; }
+.borrow-my-request-card-empty:has(> .list-empty-state) { padding: 0; border: 0; background: transparent; }
+table tbody tr:has(> .list-empty-cell) { height: auto; background: transparent; box-shadow: none; }
+table tbody td.list-empty-cell { padding: 16px; text-align: center; border-bottom: 0; }
+table tbody td.list-empty-cell::before { display: none; }
+@media (max-width: 840px) {
+  .list-empty-state { min-height: 220px; padding: 24px 16px; }
+  /* Keep native table row/cell display so colspan continues to span columns. */
+  table tbody td.list-empty-cell { padding: 12px; box-sizing: border-box; }
+}

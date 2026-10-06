@@ -2225,7 +2225,7 @@
 
   const renderRows = () => {
     if (!requestRows.length) {
-      tableBodyEl.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#6b7280;">ยังไม่มีรายการคำของบ</td></tr>';
+      tableBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการคำของบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       updateSummary();
       void renderOrgSummaryChart();
       return;
@@ -2233,7 +2233,7 @@
 
     const rows = getReviewFilteredRows();
     if (!rows.length) {
-      tableBodyEl.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#6b7280;">ไม่พบรายการตามตัวกรอง</td></tr>';
+      tableBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ไม่พบรายการตามตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       updateSummary();
       void renderOrgSummaryChart();
       return;

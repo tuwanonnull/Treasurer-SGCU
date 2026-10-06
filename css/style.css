@@ -1,7 +1,7 @@
 /* Split stylesheet entrypoint. Keep imports ordered to preserve the original cascade. */
 @import url("./core/base.css?v=20260611-thai-text-rendering-1");
 @import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/operations.css?v=20260902-borrow-asset-filters-row-1");
+@import url("./pages/operations.css?v=20261006-empty-states-1");
 @import url("./pages/meeting-room.css?v=20260906-calendar-native-picker-2");
 @import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
 @import url("./core/layout.css?v=20260518-csv-refresh-5");
@@ -18,6 +18,8 @@
 @import url("./pages/pdf.css?v=20260903-print-page-break-1");
 @import url("./components/app-loader.css?v=20260514-loader-logo-shadow-1");
 @import url("./pages/meeting-public-calendar.css?v=20260827-matrix-row-height-2");
+@import url("./components/empty-state.css?v=20261006-borrow-empty-width-1");
+@import url("./pages/borrow-mobile.css?v=20261006-borrow-empty-width-1");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {

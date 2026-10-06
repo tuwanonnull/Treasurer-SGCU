@@ -2012,11 +2012,11 @@ function initStaffAccessPages() {
       `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${currentOrgStructureMembers.length.toLocaleString("th-TH")} รายชื่อจาก Firestore`;
 
     if (!currentOrgStructureMembers.length) {
-      orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4">ยังไม่มีรายชื่อใน Firestore</td></tr>`;
+      orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายชื่อในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
     }
     if (!visibleItems.length) {
-      orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4">ไม่พบรายชื่อตามตัวกรอง</td></tr>`;
+      orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ไม่พบรายชื่อตามตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       return;
     }
 
@@ -2662,7 +2662,7 @@ function initStaffAccessPages() {
     myCaptionEl.textContent = `แสดงผล ${currentMyApplications.length} รายการ`;
 
     if (!currentMyApplications.length) {
-      myTableBodyEl.innerHTML = '<tr><td colspan="4">ยังไม่มีคำขอสมัครสตาฟ</td></tr>';
+      myTableBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีคำขอสมัครสตาฟ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
     }
 
@@ -2925,7 +2925,7 @@ function initStaffAccessPages() {
       approvalCaptionEl.textContent = `แสดงผล ${filteredApplications.length} จาก ${currentPendingApplications.length} รายการ`;
       setMessage(approvalMessageEl, "", "#6b7280");
       if (!filteredApplications.length) {
-        approvalBodyEl.innerHTML = `<tr><td colspan="5">${currentPendingApplications.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ไม่มีคำขอที่รออนุมัติ"}</td></tr>`;
+        approvalBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState(currentPendingApplications.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ไม่มีคำขอที่รออนุมัติ", "ตรวจสอบตัวกรองที่เลือก หรือกลับมาดูเมื่อมีรายการใหม่")}</td></tr>`;
         syncPendingBulkSelectionUi();
         refreshSummaryCounts();
         syncApprovalPanelCaption();
@@ -3080,7 +3080,7 @@ function initStaffAccessPages() {
         setMessage(approvalMessageEl, "", "#6b7280");
       }
       if (!filteredHistory.length) {
-        approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4">${currentApprovedHistoryGrouped.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ยังไม่มีรายการที่อนุมัติ"}</td></tr>`;
+        approvalHistoryBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState(currentApprovedHistoryGrouped.length ? "ไม่พบรายการที่ตรงกับตัวกรอง" : "ยังไม่มีรายการที่อนุมัติ", "ตรวจสอบตัวกรองที่เลือก หรือกลับมาดูเมื่อมีรายการใหม่")}</td></tr>`;
         syncCurrentStaffBulkSelectionUi();
         refreshSummaryCounts();
         syncApprovalPanelCaption();
@@ -3815,7 +3815,7 @@ function initStaffAccessPages() {
       return;
     }
     if (!visibleRows.length) {
-      organizationCatalogTableBodyEl.innerHTML = '<tr><td colspan="5" data-label="ทะเบียนองค์กร">ไม่พบองค์กรตามตัวกรองที่เลือก</td></tr>';
+      organizationCatalogTableBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ไม่พบองค์กรตามตัวกรองที่เลือก", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       return;
     }
     organizationCatalogTableBodyEl.innerHTML = visibleRows.map((item) => `
@@ -5320,7 +5320,7 @@ function initStaffAccessPages() {
     }
 
     if (!currentOrgRepresentativeFilteredOrganizations.length) {
-      orgRepresentativeOverviewBodyEl.innerHTML = '<tr><td colspan="4">ไม่พบองค์กรตามตัวกรองที่เลือก</td></tr>';
+      orgRepresentativeOverviewBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ไม่พบองค์กรตามตัวกรองที่เลือก", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       syncOrgRepresentativePanelCaption();
       return;
     }
@@ -5360,7 +5360,7 @@ function initStaffAccessPages() {
     );
 
     if (!currentOrgRepresentativePending.length) {
-      orgRepresentativePendingBodyEl.innerHTML = '<tr><td colspan="5">ไม่มีคำขอตัวแทนองค์กรที่รออนุมัติ</td></tr>';
+      orgRepresentativePendingBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ไม่มีคำขอตัวแทนองค์กรที่รออนุมัติ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       setMessage(orgRepresentativeMessageEl, "", "#6b7280");
       syncOrgRepresentativePanelCaption();
       return;
@@ -5415,7 +5415,7 @@ function initStaffAccessPages() {
     orgRepresentativeHistoryCaptionEl.textContent = `แสดงผล ${currentOrgRepresentativeApproved.length} รายการ`;
 
     if (!currentOrgRepresentativeApproved.length) {
-      orgRepresentativeHistoryBodyEl.innerHTML = '<tr><td colspan="5">ยังไม่มีตัวแทนองค์กรที่อนุมัติแล้ว</td></tr>';
+      orgRepresentativeHistoryBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีตัวแทนองค์กรที่อนุมัติแล้ว", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       syncOrgRepresentativePanelCaption();
       return;
     }
@@ -5763,7 +5763,7 @@ function initStaffAccessPages() {
           </tr>
         `;
       }).join("")
-      : '<tr><td colspan="4">ยังไม่มีคำขอตัวแทนขององค์กรนี้</td></tr>';
+      : `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีคำขอตัวแทนขององค์กรนี้", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
 
     approvalDetailBodyEl.removeAttribute("data-application-id");
     approvalDetailBodyEl.innerHTML = `

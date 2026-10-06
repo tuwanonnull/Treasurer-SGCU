@@ -2133,7 +2133,7 @@ function initMeetingRoomStaffApproval() {
       if (!pending.length) {
         queueBody.innerHTML = `
           <tr>
-            <td colspan="7">ยังไม่มีคำขอรออนุมัติ</td>
+            <td colspan="7" class="list-empty-cell">${renderListEmptyState("ยังไม่มีคำขอรออนุมัติ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "calendar")}</td>
           </tr>
         `;
       } else {
@@ -2213,7 +2213,7 @@ function initMeetingRoomStaffApproval() {
           .join("")
       : `
           <tr>
-            <td colspan="5">${emptyText}</td>
+            <td colspan="5" class="${historyLoadErrorText && activeTab === "history" ? "" : "list-empty-cell"}">${historyLoadErrorText && activeTab === "history" ? escapeText(emptyText) : renderListEmptyState(emptyText, hasFilters ? "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น" : "คำขอจองห้องประชุมในหมวดนี้จะแสดงที่นี่เมื่อมีรายการ", hasFilters ? "search" : "calendar")}</td>
           </tr>
         `;
 

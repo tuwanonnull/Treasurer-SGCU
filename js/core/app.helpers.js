@@ -19,6 +19,17 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+// Shared presentation only: rendering an empty list never fetches data.
+function renderListEmptyState(title, description = "", icon = "document") {
+  const paths = {
+    document: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h3M8 18h6"/>',
+    box: '<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5"/>'
+  };
+  return `<div class="list-empty-state"><span class="list-empty-state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths[icon] || paths.document}</svg></span><strong>${escapeHtml(title)}</strong>${description ? `<p>${escapeHtml(description)}</p>` : ""}</div>`;
+}
+
 function parseBudget(text) {
   if (!text) return 0;
   const cleaned = text.toString().replace(/,/g, "").replace(/[^\d.-]/g, "");

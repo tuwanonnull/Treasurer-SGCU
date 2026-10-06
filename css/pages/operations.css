@@ -10828,7 +10828,7 @@ body.has-dashboard-floating-filter {
 .borrow-manager-count { flex-shrink: 0; padding: 7px 12px; border-radius: 8px; background: #fce7f3; color: #9d174d; font-size: 12px; font-weight: 600; }
 .borrow-manager-layout { display: grid; grid-template-columns: minmax(300px, .95fr) minmax(320px, 1.05fr); }
 .borrow-manager-create { padding: 24px; background: #fff; min-width: 0; }
-.borrow-manager-active { padding: 24px; background: #f8fafc; border-left: 1px solid #e2e8f0; min-width: 0; }
+.borrow-manager-active { display: flex; flex-direction: column; padding: 24px; background: #f8fafc; border-left: 1px solid #e2e8f0; min-width: 0; }
 .borrow-manager-section-heading { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
 .borrow-manager-section-heading h4 { margin: 0; font-size: 15px; color: #334155; }
 .borrow-manager-step { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #fce7f3; color: #9d174d; font-size: 20px; flex-shrink: 0; }
@@ -10840,6 +10840,8 @@ body.has-dashboard-floating-filter {
 .borrow-manager-submit button { width: 100%; min-height: 44px; }
 .borrow-manager-submit small { color: #64748b; font-size: 12px; }
 .borrow-project-manager #staffBorrowProjectList { padding: 0; gap: 14px; }
+.borrow-project-manager #staffBorrowProjectList:has(> .borrow-manager-empty) { flex: 1; display: flex; flex-direction: column; }
+.borrow-project-manager #staffBorrowProjectList > .borrow-manager-empty { flex: 1; }
 .borrow-project-manager #staffBorrowProjectList span { flex: initial; }
 .borrow-manager-card-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .borrow-manager-code { font-size: 14px; color: #334155; overflow-wrap: anywhere; }

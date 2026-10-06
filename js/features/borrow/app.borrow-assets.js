@@ -1854,7 +1854,7 @@ function initBorrowAssetsApp() {
     if (!followups.length) {
       borrowFollowupTableBody.innerHTML = `
         <tr>
-          <td colspan="3">ยังไม่มีรายการที่ต้องติดตาม</td>
+          <td colspan="3" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการที่ต้องติดตาม", "รายการพัสดุที่ต้องติดตามจะแสดงที่นี่", "box")}</td>
         </tr>
       `;
       return;
@@ -1905,7 +1905,7 @@ function initBorrowAssetsApp() {
     if (!followups.length) {
       staffBorrowFollowupTableBody.innerHTML = `
         <tr>
-          <td colspan="5">ยังไม่มีรายการที่ต้องติดตาม</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการที่ต้องติดตาม", "รายการพัสดุที่ต้องติดตามจะแสดงที่นี่", "box")}</td>
         </tr>
       `;
       return;
@@ -2666,7 +2666,7 @@ function initBorrowAssetsApp() {
     if (!rows.length) {
       borrowAssetsTableBody.innerHTML = `
         <tr>
-          <td colspan="6">ไม่พบรายการพัสดุ</td>
+          <td colspan="6" class="list-empty-cell">${renderListEmptyState("ไม่พบรายการพัสดุ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "box")}</td>
         </tr>
       `;
       return;
@@ -2679,12 +2679,12 @@ function initBorrowAssetsApp() {
             : "-";
         return `
           <tr>
-            <td>${safeEscape(row.type || "-")}</td>
-            <td>${safeEscape(row.code || "-")}</td>
-            <td>${safeEscape(row.name || "-")}</td>
-            <td>${safeEscape(row.location || "-")}</td>
-            <td>${safeEscape(remainingText)}</td>
-            <td>${safeEscape(row.note || "-")}</td>
+            <td data-label="ประเภท">${safeEscape(row.type || "-")}</td>
+            <td data-label="รหัส">${safeEscape(row.code || "-")}</td>
+            <td data-label="รายการ">${safeEscape(row.name || "-")}</td>
+            <td data-label="ที่เก็บ">${safeEscape(row.location || "-")}</td>
+            <td data-label="คงเหลือ">${safeEscape(remainingText)}</td>
+            <td data-label="หมายเหตุ">${safeEscape(row.note || "-")}</td>
           </tr>
         `;
       })
@@ -2697,7 +2697,7 @@ function initBorrowAssetsApp() {
       renderBorrowAssetsStaffPager({ total: 0 });
       borrowAssetsTableBodyStaff.innerHTML = `
         <tr>
-          <td colspan="11" data-label="รายการพัสดุ">ไม่พบรายการพัสดุ</td>
+          <td colspan="11" class="list-empty-cell">${renderListEmptyState("ไม่พบรายการพัสดุ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "box")}</td>
         </tr>
       `;
       return;
@@ -3056,24 +3056,22 @@ function initBorrowAssetsApp() {
     if (myRequestsPanel) {
       myRequestsPanel.classList.add("section-visible");
     }
-    const isCompactMobile =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(max-width: 840px)").matches;
-    const renderEmptyState = (message) => {
+    const renderEmptyState = (message, isEmpty = false) => {
+      const content = isEmpty ? renderListEmptyState(message, "เลือกพัสดุและกรอกแบบฟอร์มเพื่อส่งคำขอยืม รายการของคุณจะแสดงที่นี่", "box") : safeEscape(message);
       myRequestsTableBody.innerHTML = `
         <tr>
-          <td colspan="4">${safeEscape(message)}</td>
+          <td colspan="4" class="${isEmpty ? "list-empty-cell" : ""}">${content}</td>
         </tr>
       `;
-      if (myRequestsCardsEl && isCompactMobile) {
-        myRequestsCardsEl.innerHTML = `<article class="borrow-my-request-card-empty">${safeEscape(message)}</article>`;
+      if (myRequestsCardsEl) {
+        myRequestsCardsEl.innerHTML = `<article class="borrow-my-request-card-empty">${content}</article>`;
       }
     };
     if (myRequestsTableWrapper) {
-      myRequestsTableWrapper.style.display = isCompactMobile ? "none" : "";
+      myRequestsTableWrapper.style.removeProperty("display");
     }
     if (myRequestsCardsEl) {
-      myRequestsCardsEl.hidden = !isCompactMobile;
+      myRequestsCardsEl.hidden = false;
       myRequestsCardsEl.innerHTML = "";
     }
     if (!currentUserEmail) {
@@ -3091,11 +3089,11 @@ function initBorrowAssetsApp() {
       } else if (myRequestsLoadState === "error") {
         renderEmptyState(myRequestsLoadError || "โหลดสถานะคำขอไม่สำเร็จ กรุณาลองใหม่");
       } else {
-        renderEmptyState("ยังไม่มีคำขอยืมพัสดุ");
+        renderEmptyState("ยังไม่มีคำขอยืมพัสดุ", true);
       }
       return;
     }
-    if (myRequestsCardsEl && isCompactMobile) {
+    if (myRequestsCardsEl) {
       myRequestsCardsEl.innerHTML = list.map((item) => {
         const itemsText = (item.assets || [])
           .map((asset) => `${safeEscape(asset.name || asset.code || "-")} ${safeEscape(asset.qty || 0)} ${safeEscape(asset.unit || "")}`.trim())
@@ -3365,7 +3363,7 @@ function initBorrowAssetsApp() {
       renderStaffRequestPager({ total: 0 });
       staffQueueTableBody.innerHTML = `
         <tr>
-          <td colspan="5">${hasActiveStaffBorrowRequestFilters() ? "ไม่พบคำขอตามตัวกรอง" : "ยังไม่มีคำขอในระบบ"}</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState(hasActiveStaffBorrowRequestFilters() ? "ไม่พบคำขอตามตัวกรอง" : "ยังไม่มีคำขอในระบบ", hasActiveStaffBorrowRequestFilters() ? "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น" : "คำขอในหมวดนี้จะแสดงที่นี่เมื่อมีรายการ", hasActiveStaffBorrowRequestFilters() ? "search" : "box")}</td>
         </tr>
       `;
       renderStaffSummary();
@@ -3415,7 +3413,7 @@ function initBorrowAssetsApp() {
         if (!historyList.length) {
           staffHistoryTableBody.innerHTML = `
             <tr>
-              <td colspan="5">ยังไม่มีประวัติคำขอ</td>
+              <td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีประวัติคำขอ", "รายการที่ดำเนินการแล้วจะแสดงที่นี่", "box")}</td>
             </tr>
           `;
         } else {
@@ -3430,7 +3428,7 @@ function initBorrowAssetsApp() {
       renderStaffRequestPager({ total: 0 });
       staffQueueTableBody.innerHTML = `
         <tr>
-          <td colspan="5">${hasActiveStaffBorrowRequestFilters() ? "ไม่พบประวัติตามตัวกรอง" : "ยังไม่มีประวัติคำขอ"}</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState(hasActiveStaffBorrowRequestFilters() ? "ไม่พบประวัติตามตัวกรอง" : "ยังไม่มีประวัติคำขอ", hasActiveStaffBorrowRequestFilters() ? "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น" : "คำขอในหมวดนี้จะแสดงที่นี่เมื่อมีรายการ", hasActiveStaffBorrowRequestFilters() ? "search" : "box")}</td>
         </tr>
       `;
       if (staffHistoryTableBody) {

@@ -1273,7 +1273,7 @@ function initBudgetApprovalRequestPage() {
     if (!items.length) {
       representativeApplicationsBodyEl.innerHTML = `
         <tr>
-          <td colspan="4" style="text-align:center; color:#6b7280;">ยังไม่มีคำขอสมัครเป็นตัวแทนองค์กร</td>
+          <td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีคำขอสมัครเป็นตัวแทนองค์กร", "ส่งคำขอสมัครเป็นตัวแทนองค์กรเพื่อติดตามสถานะที่นี่", "document")}</td>
         </tr>
       `;
       if (representativeStatusCaptionEl) {
@@ -1439,7 +1439,7 @@ function initBudgetApprovalRequestPage() {
     if (!items.length) {
       myRequestsTableBodyEl.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align:center; color:#6b7280;">ยังไม่มีรายการคำขออนุมัติงบประมาณ</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการคำขออนุมัติงบประมาณ", "เลือกรอบรับคำขอและกรอกแบบฟอร์มเพื่อยื่นคำขออนุมัติงบประมาณ", "document")}</td>
         </tr>
       `;
       myRequestsCaptionEl.textContent = "ยังไม่มีรายการ";

@@ -499,11 +499,11 @@ function initContentManagementStaffPage() {
     const loadStatus = state.listStatus ? ` · ${state.listStatus}` : "";
     tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} ข่าวจาก Firestore${loadStatus}`;
     if (!state.items.length) {
-      tableBody.innerHTML = `<tr><td colspan="4">ยังไม่มีข่าวใน Firestore</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีข่าวในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
     }
     if (!visibleItems.length) {
-      tableBody.innerHTML = `<tr><td colspan="4">ไม่พบข่าวตามตัวกรอง</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ไม่พบข่าวตามตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       return;
     }
     tableBody.innerHTML = visibleItems
@@ -1022,11 +1022,11 @@ function initContentDocumentsStaffPage() {
     const reorderLabel = state.isReorderMode ? " · โหมดจัดลำดับ: ลากหัวหมวด หรือลากเอกสารไปวางในหมวดที่ต้องการ แล้วกดบันทึก" : "";
     tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} เอกสารจาก ${sourceLabel}${loadStatus}${reorderLabel}`;
     if (!state.items.length) {
-      tableBody.innerHTML = `<tr><td colspan="4">ยังไม่มีเอกสารใน Sheet</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีเอกสารในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
     }
     if (!visibleItems.length) {
-      tableBody.innerHTML = `<tr><td colspan="4">ไม่พบเอกสารตามตัวกรอง</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ไม่พบเอกสารตามตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
       return;
     }
     const renderDocumentRow = (item) => {

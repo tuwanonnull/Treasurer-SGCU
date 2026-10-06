@@ -1368,7 +1368,7 @@ function initMeetingRoomBookingApp() {
       if (!sorted.length) {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="5">ยังไม่มีการจอง</td>
+            <td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีการจอง", "เลือกห้องประชุมและช่วงเวลาที่ต้องการเพื่อส่งคำขอจอง", "calendar")}</td>
           </tr>
         `;
       } else {
@@ -1573,7 +1573,10 @@ function initMeetingRoomBookingApp() {
       : !hasFirestore || bookingsLoadFailed ? "โหลดคำขอไม่สำเร็จ กรุณาลองใหม่จากปฏิทินการจอง"
         : !bookingsLoaded ? "กำลังโหลดคำขอ..."
           : !own.length ? "ยังไม่มีคำขอจองของคุณในช่วงวันที่นี้" : "";
-    myRequestsState.textContent = state;
+    const isEmpty = currentUserEmail && hasFirestore && !bookingsLoadFailed && bookingsLoaded && !own.length;
+    myRequestsState.innerHTML = isEmpty
+      ? renderListEmptyState(state, "เลือกห้องประชุมและช่วงเวลาในปฏิทินเพื่อส่งคำขอจอง", "calendar")
+      : escapeText(state);
     myRequestsState.hidden = !state;
     myRequestsWrapper.hidden = Boolean(state);
     if (state) {
