@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://treasurer.sgcu.in.th/sitemap.xml
