@@ -47,12 +47,16 @@ function openProjectModal(project) {
   const advanceStatus = project.advanceStatus || "-";
   const advanceDocNo = project.advanceDocNo || "-";
   const advanceDue = project.advanceDueDate || "-";
+  const advanceLoanAmounts = getAdvanceLoanAmounts(project);
   const advancePercentText =
-    project.advancePercent != null
-      ? project.advancePercent.toFixed(0) + "%"
+    advanceLoanAmounts.isTransferEffective || project.advancePercent != null
+      ? advanceLoanAmounts.advancePercent.toFixed(0) + "%"
       : "-";
+  const advanceAmount = advanceLoanAmounts.isTransferEffective
+    ? advanceLoanAmounts.advanceAmount
+    : project.advanceAmount;
   const advanceAmountText =
-    project.advanceAmount != null ? `${formatMoney(project.advanceAmount)} บาท` : "-";
+    advanceAmount != null ? `${formatMoney(advanceAmount)} บาท` : "-";
   const normalizedAdvanceStatus = advanceStatus.trim();
   const advanceStatusBadgeClass =
     normalizedAdvanceStatus === "-" || normalizedAdvanceStatus === "ยังไม่เริ่มดำเนินการ"

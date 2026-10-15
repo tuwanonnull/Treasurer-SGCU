@@ -90,16 +90,24 @@ function escapeHtml(text) {
   });
 }
 
-function buildPdfData(project, signatureData) {
-  const budget100 =
-    project.approvedBudget100 != null ? project.approvedBudget100 : project.budget || 0;
+function getAdvanceLoanAmounts(project) {
+  const isTransferEffective = (project.transferStatus || "").trim() ===
+    "กระบวนการโอนงบประมาณมีผลบังคับใช้";
+  const budget100 = isTransferEffective
+    ? project.transferNet
+    : (project.approvedBudget100 != null ? project.approvedBudget100 : project.budget || 0);
   const advancePercent = Number.isFinite(Number(project.advancePercent))
     ? Number(project.advancePercent)
     : 80;
   const configuredAdvanceAmount = parseAmountNumber(project.advanceAmount);
-  const advanceAmount = configuredAdvanceAmount != null
+  const advanceAmount = !isTransferEffective && configuredAdvanceAmount != null
     ? configuredAdvanceAmount
     : Math.round(Number(budget100 || 0) * (advancePercent / 100) * 100) / 100;
+  return { isTransferEffective, budget100, advancePercent, advanceAmount };
+}
+
+function buildPdfData(project, signatureData) {
+  const { budget100, advancePercent, advanceAmount } = getAdvanceLoanAmounts(project);
   const dateRange = formatThaiDateRange(project.approveDate, project.lastWorkDate);
   const evidenceDueDateText = formatThaiDateNoPrefix(project.evidenceDueDate);
   const signers = getPdfSigners(project);

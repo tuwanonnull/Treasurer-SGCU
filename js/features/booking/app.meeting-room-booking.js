@@ -24,7 +24,6 @@ function initMeetingRoomBookingApp() {
   const myRequestsBody = document.getElementById("meetingMyRequestsBody");
   const myRequestsState = document.getElementById("meetingMyRequestsState");
   const myRequestsWrapper = document.getElementById("meetingMyRequestsWrapper");
-  const myRequestsRange = document.getElementById("meetingMyRequestsRange");
   const cancelSection = document.getElementById("meetingCancelSection");
   const toggleCancelFormBtn = document.getElementById("meetingToggleCancelForm");
   const cancelForm = document.getElementById("meetingCancelForm");
@@ -1122,6 +1121,16 @@ function initMeetingRoomBookingApp() {
   };
 
   let bookings = [];
+  let myBookings = [];
+  let unsubscribeMyBookings = null;
+  let myBookingsLoaded = false;
+  let myBookingsLoadFailed = false;
+
+  const getMyBookingsStartDate = () => {
+    return toDateKeyForQuery(new Date());
+  };
+
+  const findBooking = (predicate) => myBookings.find(predicate) || bookings.find(predicate);
   let unsubscribe = null;
   let unsubscribeRooms = null;
   let unsubscribeHolidays = null;
@@ -1290,6 +1299,7 @@ function initMeetingRoomBookingApp() {
     roomsLoadFailed = false;
     bookingsLoadFailed = false;
     subscribeRooms();
+    subscribeMyBookings();
     subscribeBookings();
     subscribeHolidays();
     renderMeetingLoadState();
@@ -1532,7 +1542,7 @@ function initMeetingRoomBookingApp() {
   const ownCancelableBookings = () => {
     if (!currentUserEmail) return [];
     const nowMs = Date.now();
-    return sortBookings(bookings).filter((item) => {
+    return sortBookings(myBookings).filter((item) => {
       const status = (item.status || "").toString().toLowerCase();
       if (status === "rejected" || status === "cancel_requested" || status === "reschedule_requested" || status === "no_show") return false;
       const email = (item.requesterEmail || "").toString().trim().toLowerCase();
@@ -1544,7 +1554,7 @@ function initMeetingRoomBookingApp() {
   const ownReschedulableBookings = () => {
     if (!currentUserEmail) return [];
     const nowMs = Date.now();
-    return sortBookings(bookings).filter((item) => {
+    return sortBookings(myBookings).filter((item) => {
       const status = (item.status || "").toString().toLowerCase();
       if (status === "rejected" || status === "cancel_requested" || status === "reschedule_requested" || status === "no_show") return false;
       const email = (item.requesterEmail || "").toString().trim().toLowerCase();
@@ -1555,10 +1565,8 @@ function initMeetingRoomBookingApp() {
 
   const renderMyRequests = () => {
     if (!myRequestsBody || !myRequestsState || !myRequestsWrapper) return;
-    const range = getBookingQueryWindow();
-    if (myRequestsRange) myRequestsRange.textContent = `รายการช่วง ${formatDate(range.start)} – ${formatDate(range.end)}`;
     const own = currentUserEmail
-      ? bookings.filter((item) => (item.requesterEmail || "").toString().trim().toLowerCase() === currentUserEmail)
+      ? myBookings.filter((item) => item.date >= getMyBookingsStartDate() && (item.requesterEmail || "").toString().trim().toLowerCase() === currentUserEmail)
       : [];
     const now = Date.now();
     own.sort((a, b) => {
@@ -1570,12 +1578,12 @@ function initMeetingRoomBookingApp() {
       return aUpcoming ? aKey.localeCompare(bKey) : bKey.localeCompare(aKey);
     });
     const state = !currentUserEmail ? "กรุณาเข้าสู่ระบบเพื่อดูคำขอจองของคุณ"
-      : !hasFirestore || bookingsLoadFailed ? "โหลดคำขอไม่สำเร็จ กรุณาลองใหม่จากปฏิทินการจอง"
-        : !bookingsLoaded ? "กำลังโหลดคำขอ..."
-          : !own.length ? "ยังไม่มีคำขอจองของคุณในช่วงวันที่นี้" : "";
-    const isEmpty = currentUserEmail && hasFirestore && !bookingsLoadFailed && bookingsLoaded && !own.length;
+      : !hasFirestore || myBookingsLoadFailed ? "โหลดคำขอไม่สำเร็จ กรุณาลองใหม่"
+        : !myBookingsLoaded ? "กำลังโหลดคำขอ..."
+          : !own.length ? "ไม่พบคำขอจองของคุณในช่วงวันที่ที่แสดง" : "";
+    const isEmpty = currentUserEmail && hasFirestore && !myBookingsLoadFailed && myBookingsLoaded && !own.length;
     myRequestsState.innerHTML = isEmpty
-      ? renderListEmptyState(state, "เลือกห้องประชุมและช่วงเวลาในปฏิทินเพื่อส่งคำขอจอง", "calendar")
+      ? renderListEmptyState(state, "เลือกห้องและเวลาในปฏิทินเพื่อจองใหม่", "calendar")
       : escapeText(state);
     myRequestsState.hidden = !state;
     myRequestsWrapper.hidden = Boolean(state);
@@ -1673,7 +1681,7 @@ function initMeetingRoomBookingApp() {
   };
 
   const updateManageActionUI = () => {
-    const booking = bookings.find((item) => item.id === selectedOwnBookingId && currentUserEmail && (item.requesterEmail || "").toString().trim().toLowerCase() === currentUserEmail);
+    const booking = findBooking((item) => item.id === selectedOwnBookingId && currentUserEmail && (item.requesterEmail || "").toString().trim().toLowerCase() === currentUserEmail);
     if (!booking) selectedOwnBookingId = "";
     const hasBooking = Boolean(booking);
     form.hidden = hasBooking;
@@ -1705,9 +1713,8 @@ function initMeetingRoomBookingApp() {
     if (managePurposeRow) managePurposeRow.hidden = !isReschedule;
     if (managePurposeInput) managePurposeInput.value = booking?.purpose || "";
     if (manageHelperEl) {
-      manageHelperEl.hidden = !hasBooking || isReschedule;
-      manageHelperEl.textContent = isCancel ? "ระบุเหตุผลการยกเลิกเพื่อส่งให้ Staff พิจารณา"
-        : "คำขอนี้ดูข้อมูลได้ แต่ไม่สามารถเปลี่ยนห้อง/เวลาหรือขอยกเลิกได้ในสถานะปัจจุบัน";
+      manageHelperEl.hidden = !hasBooking || !isCancel;
+      manageHelperEl.textContent = isCancel ? "ระบุเหตุผลการยกเลิกเพื่อส่งให้ Staff พิจารณา" : "";
     }
     if (manageSubmitBtn) {
       manageSubmitBtn.hidden = !isEditing;
@@ -2009,7 +2016,7 @@ function initMeetingRoomBookingApp() {
       setBookingDetailStatusMessage("ไม่มีสิทธิ์ปรับสถานะคำขอ", "#b91c1c");
       return;
     }
-    const booking = bookings.find((item) => item.id === bookingId);
+    const booking = findBooking((item) => item.id === bookingId);
     if (!booking) {
       setBookingDetailStatusMessage("ไม่พบรายการจองนี้", "#b91c1c");
       return;
@@ -2251,7 +2258,7 @@ function initMeetingRoomBookingApp() {
 
   const openBookingDetailModal = (bookingOrId, options = {}) => {
     const booking = typeof bookingOrId === "string"
-      ? bookings.find((item) => item.id === bookingOrId)
+      ? findBooking((item) => item.id === bookingOrId)
       : bookingOrId;
     if (bookingDetailTitleEl) {
       bookingDetailTitleEl.textContent = "รายละเอียดการจองห้องประชุม";
@@ -2847,7 +2854,47 @@ function initMeetingRoomBookingApp() {
     }
   };
 
+  // Subscribe by owner independently of the calendar. Filtering dates locally
+  // keeps this query usable without requiring a new composite Firestore index.
+  const subscribeMyBookings = () => {
+    if (typeof unsubscribeMyBookings === "function") unsubscribeMyBookings();
+    unsubscribeMyBookings = null;
+    myBookings = [];
+    myBookingsLoaded = false;
+    myBookingsLoadFailed = false;
+    const email = currentUserEmail;
+    renderMyRequests();
+    if (!hasFirestore || !email) return;
+    const onError = () => {
+      if (email !== currentUserEmail) return;
+      myBookingsLoadFailed = true;
+      myBookingsLoaded = true;
+      renderMyRequests();
+      scheduleMeetingAutoRetry();
+    };
+    try {
+      const query = firestore.query(
+        firestore.collection(firestore.db, BOOKING_COLLECTION_NAME),
+        firestore.where("requesterEmail", "==", email)
+      );
+      unsubscribeMyBookings = firestore.onSnapshot(query, (snapshot) => {
+        if (email !== currentUserEmail) return;
+        const start = getMyBookingsStartDate();
+        myBookings = snapshot.docs.map(mapSnapshotDoc).filter((item) => item.date >= start);
+        myBookingsLoaded = true;
+        myBookingsLoadFailed = false;
+        renderOwnBookingOptions();
+        updateManageActionUI();
+        renderMyRequests();
+      }, onError);
+    } catch (_) {
+      onError();
+    }
+  };
+
   const subscribeBookings = () => {
+    if (typeof unsubscribe === "function") unsubscribe();
+    unsubscribe = null;
     if (!hasFirestore) {
       bookingsLoaded = true;
       bookingsLoadFailed = true;
@@ -3131,7 +3178,7 @@ function initMeetingRoomBookingApp() {
       return;
     }
 
-    const booking = bookings.find((item) => item.id === bookingId);
+    const booking = findBooking((item) => item.id === bookingId);
     if (!booking) {
       setCancelMessage("ไม่พบคำขอที่เลือก", "#b91c1c");
       return;
@@ -3241,7 +3288,7 @@ function initMeetingRoomBookingApp() {
       return;
     }
 
-    const booking = bookings.find((item) => item.id === bookingId);
+    const booking = findBooking((item) => item.id === bookingId);
     if (!booking) {
       setRescheduleMessage("ไม่พบคำขอที่เลือก", "#b91c1c");
       return;
@@ -3418,7 +3465,7 @@ function initMeetingRoomBookingApp() {
     const row = event.target.closest("[data-my-booking-id]");
     if (!row) return;
     const id = row.dataset.myBookingId;
-    const booking = bookings.find((item) => item.id === id);
+    const booking = findBooking((item) => item.id === id);
     if (!currentUserEmail || !booking || (booking.requesterEmail || "").toString().trim().toLowerCase() !== currentUserEmail) return;
     if (selectedOwnBookingId !== id) {
       clearManageDraft();
@@ -3487,6 +3534,8 @@ function initMeetingRoomBookingApp() {
   if (window.sgcuAuth?.auth && typeof window.sgcuAuth.onAuthStateChanged === "function") {
     window.sgcuAuth.onAuthStateChanged(window.sgcuAuth.auth, () => {
       currentUserEmail = readCurrentUserEmail();
+      resolveFirestoreBridge();
+      subscribeMyBookings();
       if (!currentUserEmail) setReminderBanner("");
       flushApprovalEventsForCurrentUser();
       restoreMeetingProfileForCurrentUser();
@@ -3656,6 +3705,7 @@ function initMeetingRoomBookingApp() {
 
   if (resolveFirestoreBridge()) {
     subscribeRooms();
+    subscribeMyBookings();
     subscribeBookings();
     subscribeHolidays();
   } else {
@@ -3708,7 +3758,7 @@ function initMeetingRoomBookingApp() {
       button.disabled = true;
       void applyStatusByIdFromModal(bookingId, select.value).finally(() => {
         button.disabled = false;
-        const latest = bookings.find((item) => item.id === bookingId);
+        const latest = findBooking((item) => item.id === bookingId);
         if (latest) {
           setBookingDetailBody(latest, activeDetailOptions);
         }
@@ -3750,6 +3800,7 @@ function initMeetingRoomBookingApp() {
   window.openMeetingBookingDayListModal = openDayBookingListModal;
 
   window.addEventListener("beforeunload", () => {
+    if (typeof unsubscribeMyBookings === "function") unsubscribeMyBookings();
     if (typeof unsubscribe === "function") {
       unsubscribe();
     }
