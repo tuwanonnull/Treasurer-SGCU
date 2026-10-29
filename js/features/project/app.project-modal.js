@@ -322,8 +322,9 @@ function openProjectModal(project) {
           canDownloadPdf
             ? `
         <div class="modal-actions">
-          <button type="button" class="btn-primary pdf-download-btn" data-project-pdf>ดาวน์โหลดเอกสารยืมรองจ่าย (อัตโนมัติ)</button>
+          <button type="button" class="btn-primary" data-project-pdf aria-expanded="false" aria-controls="advanceLoanPanel">สร้างเอกสารยืมรองจ่าย</button>
         </div>
+        <div id="advanceLoanPanel" class="project-document-panel" hidden></div>
         `
             : ""
         }
@@ -408,7 +409,16 @@ function openProjectModal(project) {
 
   const pdfBtn = projectModalBodyEl.querySelector("[data-project-pdf]");
   if (pdfBtn) {
-    pdfBtn.addEventListener("click", () => openPdfSignModal(project));
+    pdfBtn.addEventListener("click", () => {
+      const panel = projectModalBodyEl.querySelector("#advanceLoanPanel");
+      panel.hidden = !panel.hidden;
+      pdfBtn.setAttribute("aria-expanded", String(!panel.hidden));
+      if (!panel.hidden) {
+        if (!panel.childElementCount) mountAdvanceLoanForm(panel, project);
+        panel.querySelector("input")?.focus();
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    });
   }
 
   // toggle กล่อง contact ผู้ช่วยเหรัญญิก

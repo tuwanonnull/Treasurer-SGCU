@@ -48,6 +48,13 @@ function formatPdfNumber(value) {
   return formatMoney(value);
 }
 
+function splitPdfAmount(value) {
+  const amount = parseAmountNumber(value);
+  if (amount === null) return { baht: "", satang: "" };
+  const [baht, satang] = amount.toFixed(2).split(".");
+  return { baht: Number(baht).toLocaleString("en-US"), satang };
+}
+
 function formatPercentForPdf(value) {
   if (value === null || value === undefined || value === "" || isNaN(value)) return "";
   return Number(value).toFixed(0);
@@ -108,6 +115,8 @@ function getAdvanceLoanAmounts(project) {
 
 function buildPdfData(project, signatureData) {
   const { budget100, advancePercent, advanceAmount } = getAdvanceLoanAmounts(project);
+  const budgetParts = splitPdfAmount(budget100);
+  const advanceParts = splitPdfAmount(advanceAmount);
   const dateRange = formatThaiDateRange(project.approveDate, project.lastWorkDate);
   const evidenceDueDateText = formatThaiDateNoPrefix(project.evidenceDueDate);
   const signers = getPdfSigners(project);
@@ -135,6 +144,10 @@ function buildPdfData(project, signatureData) {
     projectDateRange: dateRange,
     approvedBudget100Text: formatPdfNumber(budget100),
     approvedBudget80Text: formatPdfNumber(advanceAmount),
+    approvedBudget100Baht: budgetParts.baht,
+    approvedBudget100Satang: budgetParts.satang,
+    approvedBudget80Baht: advanceParts.baht,
+    approvedBudget80Satang: advanceParts.satang,
     approvedBudget100Words: thaiBahtText(budget100),
     approvedBudget80Words: thaiBahtText(advanceAmount),
     evidenceDueDateText,
@@ -227,7 +240,7 @@ function setupPdfSignatures(rootEl, project) {
 }
 
 async function downloadProjectPdf(project, signatureData, printWin = null) {
-  if (!pdfRootEl) return;
+  if (!pdfRootEl) throw new Error("ไม่พบแบบฟอร์มเอกสาร กรุณารีเฟรชแล้วลองอีกครั้ง");
 
   // Account data improves the generated document, but a slow Firestore request
   // must never leave the Create PDF button waiting indefinitely.
@@ -236,8 +249,9 @@ async function downloadProjectPdf(project, signatureData, printWin = null) {
     new Promise((resolve) => window.setTimeout(resolve, 2500))
   ]);
 
-  if (printWin && !printWin.closed) {
-    openPdfPrintWindow(project, printWin, signatureData);
+  if (printWin) {
+    if (printWin.closed) throw new Error("หน้าตัวอย่างถูกปิด กรุณาเปิดตัวอย่างอีกครั้ง");
+    if (!openPdfPrintWindow(project, printWin, signatureData)) throw new Error("ไม่สามารถเปิดตัวอย่างเอกสารได้");
     return;
   }
 
@@ -246,104 +260,47 @@ async function downloadProjectPdf(project, signatureData, printWin = null) {
   }
 }
 
-function openPdfSignModal(project) {
-  const modal = document.getElementById("pdfSignModal");
-  if (!modal) return;
-
-  // Reset form
-  const form = document.getElementById("pdfSignForm");
-  form.reset();
-
-  // Determine Central vs Club
+function mountAdvanceLoanForm(panel, project) {
   const isCentral = ["องค์การบริหารสโมสรนิสิต", "สภานิสิต", "องค์การบริหารสโมสรนิสิต, สภานิสิต"].includes(project.orgGroup);
-  
-  const clubFields = document.getElementById("pdfSignClubFields");
-  const orgLabel = document.getElementById("pdfSignOrgLabel");
-  const orgLabel2 = document.getElementById("pdfSignOrgLabel2");
-
-  const headNameInput = document.getElementById("pdfSignHeadName");
-  const clubTreasurerInput = document.getElementById("pdfSignClubTreasurer");
-  const advisorInput = document.getElementById("pdfSignAdvisor");
-  
-  if (isCentral) {
-    clubFields.style.display = "none";
-    if(headNameInput) headNameInput.required = false;
-    if(clubTreasurerInput) clubTreasurerInput.required = false;
-    if(advisorInput) advisorInput.required = false;
-  } else {
-    clubFields.style.display = "flex";
-    if(headNameInput) headNameInput.required = true;
-    if(clubTreasurerInput) clubTreasurerInput.required = true;
-    if(advisorInput) advisorInput.required = true;
-
-    const orgName = project.orgName || "ชมรม";
-    if(orgLabel) orgLabel.textContent = orgName;
-    if(orgLabel2) orgLabel2.textContent = orgName;
-  }
-
-  // Show modal
-  if (typeof openDialog === "function") {
-    openDialog(modal, { focusSelector: "#pdfSignLeadName" });
-  } else {
-    modal.classList.add("show");
-  }
-
-  // Handle Close/Cancel
-  const closeBtn = document.getElementById("pdfSignModalClose");
-  const cancelBtn = document.getElementById("pdfSignCancel");
-  
-  const closeHandler = () => {
-    if (typeof closeDialog === "function") {
-      closeDialog(modal);
-    } else {
-      modal.classList.remove("show");
-    }
-  };
-  
-  closeBtn.onclick = closeHandler;
-  cancelBtn.onclick = closeHandler;
-
-  // Handle Submit
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    
-    const signatureData = {
-      name: document.getElementById("pdfSignLeadName").value.trim(),
-      phone: document.getElementById("pdfSignLeadPhone").value.trim(),
-      headName: document.getElementById("pdfSignHeadName").value.trim(),
-      clubTreasurer: document.getElementById("pdfSignClubTreasurer").value.trim(),
-      advisor: document.getElementById("pdfSignAdvisor").value.trim()
-    };
-
-    const submitButton = form.querySelector('[type="submit"]');
-    const originalButtonText = submitButton?.textContent || "สร้าง PDF";
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = "กำลังสร้าง PDF...";
-    }
-
-    // Open synchronously while the submit still has user activation. Mobile
-    // browsers commonly ignore print requests created after asynchronous work.
-    const printWin = window.open("", "_blank");
-    if (printWin) {
-      printWin.document.write(`<!doctype html><html lang="th"><head><meta charset="UTF-8"><title>กำลังสร้าง PDF...</title></head><body style="font-family:sans-serif;padding:24px">กำลังสร้างเอกสาร...</body></html>`);
-      printWin.document.close();
-    }
-
+  const field = (name, label, type = "text") => `<label class="project-document-field">${escapeHtml(label)} *<input class="login-input" name="${name}" type="${type}" maxlength="150" required></label>`;
+  panel.innerHTML = `<h3>สร้างเอกสารยืมรองจ่าย</h3>
+    <p class="project-document-context">กรอกข้อมูลผู้ลงนามเพื่อตรวจสอบเอกสารก่อนพิมพ์</p>
+    <form class="project-document-form">
+      <div class="project-document-grid">
+        ${field("name", "ชื่อประธานโครงการ")}
+        ${field("phone", "เบอร์โทรศัพท์ประธานโครงการ", "tel")}
+        ${isCentral ? "" : field("headName", `ชื่อประธาน${project.orgName || "ชมรม"}`) + field("clubTreasurer", `ชื่อเหรัญญิก${project.orgName || "ชมรม"}`) + field("advisor", "ชื่ออาจารย์ที่ปรึกษา")}
+      </div>
+      <p class="project-document-error" role="alert"></p>
+      <div class="modal-actions"><button class="btn-primary" type="submit">ดูตัวอย่าง / พิมพ์ PDF</button></div>
+    </form>`;
+  const form = panel.querySelector("form");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = form.querySelector('[role="alert"]');
+    const button = form.querySelector('[type="submit"]');
+    error.textContent = "";
+    if (button.disabled || !form.reportValidity()) return;
+    const signatureData = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim()]));
+    const empty = [...form.querySelectorAll("input[required]")].find(input => !input.value.trim());
+    if (empty) { error.textContent = "กรุณากรอกข้อมูลผู้ลงนามให้ครบถ้วน"; empty.focus(); return; }
+    let printWin;
+    button.disabled = true;
+    button.textContent = "กำลังเตรียมเอกสาร…";
     try {
+      printWin = window.open("", "_blank");
+      if (!printWin) throw new Error("กรุณาอนุญาตหน้าต่างป๊อปอัป แล้วเปิดตัวอย่างอีกครั้ง");
+      printWin.document.write('<!doctype html><html lang="th"><meta charset="utf-8"><title>กำลังเตรียมเอกสาร</title><body>กำลังเตรียมเอกสาร…</body></html>');
+      printWin.document.close();
       await downloadProjectPdf(project, signatureData, printWin);
-      closeHandler();
-    } catch (error) {
+    } catch (reason) {
       if (printWin && !printWin.closed) printWin.close();
-      console.error("Unable to create advanceloan PDF - app.advance-loan-pdf.js:330", error);
-      alert("ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง");
+      error.textContent = reason.message || "ไม่สามารถสร้างเอกสารได้ กรุณาลองใหม่อีกครั้ง";
     } finally {
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
-      }
+      button.disabled = false;
+      button.textContent = "ดูตัวอย่าง / พิมพ์ PDF";
     }
-  };
+  });
 }
 
 function parsePdfDate(text) {
@@ -482,6 +439,7 @@ async function waitForPdfAssets(doc, rootEl) {
 
   const images = Array.from(rootEl.querySelectorAll("img"));
   await Promise.all(images.map((img) => {
+    img.loading = "eager";
     if (img.complete) return Promise.resolve();
     return new Promise((resolve) => {
       img.addEventListener("load", resolve, { once: true });
@@ -510,37 +468,45 @@ function openPdfPrintWindow(project, printWin, signatureData) {
 
   const cssHref = "css/style.css";
   const baseHref = new URL(".", window.location.href).href;
+  tempRoot.querySelectorAll("img").forEach((img) => {
+    img.loading = "eager";
+    img.src = new URL(img.getAttribute("src"), baseHref).href;
+  });
 
   let hasPrepared = false;
   let fallbackTimer = 0;
-  const prepareAndPrint = async () => {
+  const preparePreview = async () => {
     if (hasPrepared || printWin.closed) return;
     hasPrepared = true;
     if (fallbackTimer) window.clearTimeout(fallbackTimer);
     const previewStage = printWin.document.querySelector(".pdf-preview-stage");
-    (previewStage || printWin.document.body).appendChild(tempRoot);
-    await waitForPdfAssets(printWin.document, tempRoot);
+    const previewRoot = printWin.document.getElementById("pdfRootPrint");
+    await waitForPdfAssets(printWin.document, previewRoot);
+    if (printWin.closed) return;
     const fitPreview = () => {
       if (!previewStage || printWin.matchMedia("print").matches) return;
-      const pageWidth = tempRoot.offsetWidth;
+      const pageWidth = previewRoot.offsetWidth;
       const viewportWidth = printWin.visualViewport?.width
         || printWin.document.documentElement.clientWidth
         || printWin.innerWidth;
       const availableWidth = Math.max(0, viewportWidth - 24);
       const scale = pageWidth > 0 ? Math.min(1, availableWidth / pageWidth) : 1;
-      tempRoot.style.transform = `scale(${scale})`;
+      previewRoot.style.transform = `scale(${scale})`;
       previewStage.style.width = `${pageWidth * scale}px`;
-      previewStage.style.height = `${tempRoot.scrollHeight * scale}px`;
+      previewStage.style.height = `${previewRoot.scrollHeight * scale}px`;
     };
     fitPreview();
     printWin.addEventListener("resize", fitPreview);
     printWin.focus();
-    printWin.print();
+    const printButton = printWin.document.getElementById("advancePrintButton");
+    printButton.disabled = false;
+    printButton.textContent = "พิมพ์ / บันทึก PDF";
+    printButton.onclick = () => printWin.print();
   };
 
   // Bind before closing the document to avoid missing a synchronous load event.
   printWin.onload = () => {
-    void prepareAndPrint();
+    void preparePreview();
   };
 
   printWin.document.open();
@@ -552,14 +518,11 @@ function openPdfPrintWindow(project, printWin, signatureData) {
         <base href="${baseHref}" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${docTitle}</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" />
         <link rel="stylesheet" href="${cssHref}" />
         <style>
-          body { margin: 0; background: #e9edf3; font-family: "THSarabunNew", "TH Sarabun New", serif; }
+          body { margin: 0; background: radial-gradient(circle at top right, #fff1f2, #fdf2ff 45%, #fff7f0 100%); font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; transform-origin: top left; }
-          .pdf-print-toolbar { position: sticky; top: 0; z-index: 10; display: flex; justify-content: center; gap: 10px; padding: 12px; background: #fff4f8; border-bottom: 1px solid #f8bdd4; }
-          .pdf-print-toolbar button { border-radius: 999px; padding: 10px 22px; font: 700 16px sans-serif; cursor: pointer; }
-          .pdf-print-primary { border: 1px solid #e72983; color: #fff; background: #e72983; }
-          .pdf-print-back { border: 1px solid #e72983; color: #d91f73; background: #fff; }
           .pdf-preview-stage { margin: 24px auto; overflow: hidden; }
           @media screen {
             .pdf-root > section { min-height: 297mm; margin: 0 0 18px; background: #fff; box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16); box-sizing: border-box; overflow: hidden; }
@@ -567,19 +530,22 @@ function openPdfPrintWindow(project, printWin, signatureData) {
           }
           @media print {
             body { background: #fff; }
-            .pdf-print-toolbar { display: none !important; }
+            .receipt-toolbar { display: none !important; }
             .pdf-preview-stage { display: contents; width: auto !important; height: auto !important; margin: 0; overflow: visible; }
             .pdf-root { transform: none !important; }
             .pdf-root > section { margin: 0; box-shadow: none; overflow: visible; }
           }
         </style>
       </head>
-      <body><div class="pdf-print-toolbar"><button class="pdf-print-back" type="button" onclick="if(window.opener&&!window.opener.closed){window.opener.focus();window.close();}else{window.location.href='${baseHref}';}">กลับไปเว็บหลัก</button><button class="pdf-print-primary" type="button" onclick="window.print()">พิมพ์ / บันทึก PDF</button></div><main class="pdf-preview-stage"></main></body>
+      <body><nav class="receipt-toolbar" aria-label="เครื่องมือเอกสาร"><div class="receipt-toolbar-inner">
+        <div class="receipt-project-info"><div class="receipt-project-meta"><span class="receipt-project-code">${escapeHtml(String(project.code || "โครงการ"))}</span><span>ตัวอย่างเอกสารยืมรองจ่าย</span></div><div class="receipt-project-name">${escapeHtml(String(project.name || ""))}</div></div>
+        <div class="receipt-toolbar-actions"><button class="receipt-ui-button receipt-ui-secondary" type="button" onclick="if(window.opener&&!window.opener.closed){window.opener.focus();window.close();}else{window.location.href='${baseHref}';}">← กลับไปแก้ไข</button><button class="receipt-ui-button receipt-ui-primary" type="button" id="advancePrintButton" disabled>กำลังเตรียมเอกสาร…</button></div>
+      </div></nav><main class="pdf-preview-stage">${tempRoot.outerHTML}</main></body>
     </html>
   `);
   printWin.document.close();
   fallbackTimer = window.setTimeout(() => {
-    void prepareAndPrint();
+    void preparePreview();
   }, 250);
 
   return true;
@@ -652,6 +618,7 @@ function downloadPdfInSameTab(project, signatureData) {
         <base href="${baseHref}" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${docTitle}</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" />
         <link rel="stylesheet" href="css/style.css" />
         <style>
           body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }

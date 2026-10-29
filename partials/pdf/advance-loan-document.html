@@ -157,35 +157,41 @@
         </div>
 
         <table class="pdf-table">
+          <colgroup>
+            <col style="width: 9%" />
+            <col style="width: 63%" />
+            <col style="width: 21%" />
+            <col style="width: 7%" />
+          </colgroup>
           <thead>
             <tr>
               <th>ลำดับ</th>
               <th>รายการ</th>
-              <th>จำนวนเงิน</th>
+              <th colspan="2">จำนวนเงิน</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>1</td>
               <td>จำนวนเงินงบประมาณที่ได้รับการอนุมัติ</td>
-              <td><span data-pdf-field="approvedBudget100Text"></span></td>
+              <td class="pdf-table-baht"><span data-pdf-field="approvedBudget100Baht"></span></td>
+              <td class="pdf-table-satang"><span data-pdf-field="approvedBudget100Satang"></span></td>
             </tr>
             <tr>
               <td>2</td>
               <td>จำนวนเงินยืมรองจ่าย</td>
-              <td><span data-pdf-field="approvedBudget80Text"></span></td>
+              <td class="pdf-table-baht"><span data-pdf-field="approvedBudget80Baht"></span></td>
+              <td class="pdf-table-satang"><span data-pdf-field="approvedBudget80Satang"></span></td>
             </tr>
             <tr>
               <td colspan="2" class="pdf-table-total">รวม</td>
-              <td class="pdf-table-total-amount"><span data-pdf-field="approvedBudget80Text"></span></td>
+              <td class="pdf-table-baht"><span data-pdf-field="approvedBudget80Baht"></span></td>
+              <td class="pdf-table-satang"><span data-pdf-field="approvedBudget80Satang"></span></td>
             </tr>
           </tbody>
         </table>
 
-        <div class="pdf-line">
-          <span class="label">รวมเป็นเงิน</span>
-          <span class="pdf-fill pdf-fill-lg pdf-fill-parentheses" data-pdf-field="approvedBudget80Words"></span>
-        </div>
+        <div class="pdf-table-words">รวมเป็นเงิน (<span data-pdf-field="approvedBudget80Words"></span>)</div>
 
         <div class="pdf-signature-block pdf-signature-right">
           <div class="pdf-sign-line"></div>
