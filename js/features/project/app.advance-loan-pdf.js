@@ -448,6 +448,12 @@ async function waitForPdfAssets(doc, rootEl) {
   }));
 }
 
+function getAdvanceLoanStylesheetHref() {
+  // Match the main page's deployed bundle instead of the unversioned SW cache.
+  const version = window.sgcuAssetVersion || "20261029-advance-table-1";
+  return `css/style.css?v=${encodeURIComponent(version)}`;
+}
+
 function openPdfPrintWindow(project, printWin, signatureData) {
   if (!pdfRootEl) return false;
 
@@ -466,7 +472,7 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   applyThaiSegmentation(tempRoot);
   setupPdfSignatures(tempRoot, project);
 
-  const cssHref = "css/style.css";
+  const cssHref = getAdvanceLoanStylesheetHref();
   const baseHref = new URL(".", window.location.href).href;
   tempRoot.querySelectorAll("img").forEach((img) => {
     img.loading = "eager";
@@ -619,7 +625,7 @@ function downloadPdfInSameTab(project, signatureData) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${docTitle}</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" />
-        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="${getAdvanceLoanStylesheetHref()}" />
         <style>
           body { margin: 0; background: #fff; font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; }
