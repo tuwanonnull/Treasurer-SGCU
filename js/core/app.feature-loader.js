@@ -31,6 +31,7 @@
       "project-status": [
         "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
         "js/features/project/app.advance-loan-pdf.js",
+        "js/features/project/app.receipt-documents.js",
         "js/features/project/app.project-modal.js",
         "js/features/project/app.charts.js",
         "js/features/project/app.pie.js",
@@ -41,6 +42,7 @@
       "dashboard-staff": [
         "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
         "js/features/project/app.advance-loan-pdf.js",
+        "js/features/project/app.receipt-documents.js",
         "js/features/project/app.project-modal.js",
         "js/features/project/app.document-signers.js?v=20260828-runtime-reload-1",
         "js/features/project/app.charts.js",

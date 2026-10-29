@@ -383,6 +383,10 @@ function openProjectModal(project) {
           </div>
         </div>
         ${closeCheckerContactHtml}
+        <div class="modal-actions">
+          <button type="button" class="btn-primary" data-project-documents aria-expanded="false" aria-controls="projectDocumentPanel">สร้างเอกสาร</button>
+        </div>
+        <div id="projectDocumentPanel" class="project-document-panel" hidden></div>
       </section>
 
     </div>
@@ -390,6 +394,17 @@ function openProjectModal(project) {
 
   projectModalBodyEl.innerHTML = html;
   openDialog(projectModalEl, { focusSelector: "#projectModalClose" });
+  const documentsButton = projectModalBodyEl.querySelector("[data-project-documents]");
+  documentsButton.addEventListener("click", () => {
+    const panel = projectModalBodyEl.querySelector("#projectDocumentPanel");
+    panel.hidden = !panel.hidden;
+    documentsButton.setAttribute("aria-expanded", String(!panel.hidden));
+    if (!panel.hidden) {
+      if (!panel.childElementCount) mountProjectDocuments(panel, project);
+      panel.querySelector("button")?.focus();
+      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
 
   const pdfBtn = projectModalBodyEl.querySelector("[data-project-pdf]");
   if (pdfBtn) {

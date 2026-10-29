@@ -1,0 +1,22 @@
+.project-document-panel { margin-top: 16px; padding: 20px; border: 1px solid #f3c5da; border-radius: 16px; background: #fffafd; }
+.project-document-panel[hidden], .project-document-form[hidden] { display: none; }
+.project-document-panel h3 { margin: 0 0 8px; }
+.project-document-context { color: #64748b; overflow-wrap: anywhere; }
+.project-document-types { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.project-document-types [aria-pressed="true"] { color: #9d174d; border-color: #db2777; background: #fce7f3; }
+.project-document-form { display: grid; gap: 12px; }
+.project-document-form fieldset { min-width: 0; margin: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; }
+.project-document-form fieldset:disabled { opacity: .55; }
+.project-document-form legend { padding: 0 6px; font-weight: 600; }
+.project-document-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.project-document-field { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.project-document-field .login-input { width: 100%; min-width: 0; box-sizing: border-box; }
+.project-document-form .project-document-row { margin-bottom: 12px; background: #fff; }
+.project-document-row > button { margin-top: 8px; }
+.project-document-total { font-weight: 700; overflow-wrap: anywhere; }
+.project-document-error { color: #b91c1c; }
+@media (max-width: 600px) {
+  .project-document-panel { padding: 12px; }
+  .project-document-grid { grid-template-columns: minmax(0, 1fr); }
+  .project-document-types > button { width: 100%; }
+}

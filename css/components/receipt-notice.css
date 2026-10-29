@@ -1,0 +1,56 @@
+/* The preview controls share the main site's pink palette and rounded surfaces. */
+.receipt-toolbar, .receipt-print-dialog {
+  --receipt-pink: #be185d;
+  --receipt-border: rgba(236, 72, 153, .22);
+  --receipt-gradient: linear-gradient(135deg, #ec4899, #db2777);
+  font-family: "Kanit", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+}
+.receipt-ui-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 20px; border: 1px solid transparent;
+  border-radius: 999px; font: 500 14px/1.5 "Kanit", "Noto Sans Thai", Tahoma, sans-serif;
+  cursor: pointer; transition: background .16s, box-shadow .16s, transform .16s;
+}
+.receipt-ui-primary { color: white; background: var(--receipt-gradient); box-shadow: 0 8px 20px rgba(236, 72, 153, .22); }
+.receipt-ui-secondary { color: var(--receipt-pink); background: rgba(255,255,255,.85); border-color: #f9a8d4; }
+.receipt-ui-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(236,72,153,.2); }
+.receipt-ui-secondary:hover { background: #fff1f2; }
+.receipt-ui-button:disabled { opacity: .55; cursor: wait; }
+.receipt-ui-button:focus-visible, .receipt-dialog-close:focus-visible { outline: 2px solid #db2777; outline-offset: 3px; }
+.receipt-print-dialog {
+  box-sizing: border-box; width: min(560px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px); overflow-y: auto; padding: 28px;
+  border: 1px solid rgba(248,187,208,.8); border-radius: 26px;
+  background: radial-gradient(circle at top left, #fdf2ff, #fff 65%);
+  box-shadow: 0 24px 70px rgba(15,23,42,.25); color: #1e293b; font-size: 14px; line-height: 1.7;
+}
+.receipt-print-dialog::backdrop { background: rgba(15,23,42,.4); backdrop-filter: blur(6px); }
+.receipt-dialog-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.receipt-dialog-icon { flex: 0 0 48px; height: 48px; display: grid; place-items: center; border-radius: 16px; color: #be185d; background: #fce7f3; border: 1px solid #fbcfe8; }
+.receipt-dialog-icon svg { width: 25px; height: 25px; }
+.receipt-dialog-heading h2 { margin: 0; font-size: 21px; font-weight: 600; color: #1e293b; }
+.receipt-dialog-heading p { margin: 3px 0 0; color: #64748b; font-size: 13px; }
+.receipt-dialog-close { align-self: flex-start; margin-left: auto; flex-shrink: 0; width: 32px; height: 32px; border: 0; border-radius: 0; background: transparent; color: #9d174d; font: 24px/1 sans-serif; cursor: pointer; }
+.receipt-submission-notice { padding: 18px; border: 1px solid #fbcfe8; border-radius: 18px; background: rgba(255,255,255,.85); color: #475569; font: inherit; overflow-wrap: anywhere; }
+.receipt-submission-notice strong { display: block; color: #9d174d; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.receipt-submission-notice p { margin: 8px 0; }
+.receipt-submission-notice p:first-of-type { padding: 10px 12px; border-radius: 10px; background: #fff1f2; color: #9d174d; font-weight: 500; }
+.receipt-submission-notice ul { margin: 6px 0 0; padding-left: 22px; }
+.receipt-submission-notice li { padding-left: 3px; margin-top: 7px; }
+.receipt-submission-notice li::marker { color: #db2777; }
+.receipt-print-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #fce7f3; }
+@media (max-width: 560px) {
+  .receipt-print-dialog { padding: 20px; border-radius: 22px; }
+  .receipt-dialog-heading { gap: 10px; }
+  .receipt-dialog-icon { flex-basis: 40px; height: 40px; border-radius: 13px; }
+  .receipt-dialog-heading h2 { font-size: 18px; }
+  .receipt-dialog-heading p { font-size: 12px; }
+  .receipt-submission-notice { padding: 14px; }
+  .receipt-print-dialog-actions { flex-direction: column-reverse; }
+  .receipt-print-dialog-actions button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .receipt-ui-button { transition: none; } }
+@media print {
+  .receipt-submission-notice, .receipt-print-dialog { display: none !important; }
+  .receipt-print-dialog::backdrop { background: transparent; backdrop-filter: none; }
+}

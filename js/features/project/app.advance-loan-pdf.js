@@ -165,7 +165,7 @@ function fillPdfFields(data, rootEl = pdfRootEl) {
   });
 }
 
-function applyThaiSegmentation(rootEl) {
+function applyThaiSegmentation(rootEl, selector = ".pdf-paragraph, .pdf-sign-name, .pdf-sign-role, .pdf-sign-org, [data-pdf-field]") {
   if (!rootEl || typeof Intl === "undefined" || !Intl.Segmenter) return;
 
   const segmenter = new Intl.Segmenter("th", { granularity: "word" });
@@ -177,7 +177,7 @@ function applyThaiSegmentation(rootEl) {
     const node = walker.currentNode;
     const parent = node.parentElement;
     if (!parent || parent.closest("style, script, .pdf-no-segment")) continue;
-    if (!parent.closest(".pdf-paragraph, .pdf-sign-name, .pdf-sign-role, .pdf-sign-org, [data-pdf-field]")) continue;
+    if (!parent.closest(selector)) continue;
     textNodes.push(node);
   }
 
