@@ -73,6 +73,25 @@
   break-before: page !important;
 }
 
+.pdf-root > .pdf-signature-page {
+  page-break-before: always !important;
+  break-before: page !important;
+}
+
+.pdf-signature-inline {
+  margin-left: auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-signature-inline-club {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  text-align: center;
+  font-size: 14pt;
+}
+
 .pdf-flow {
   width: 210mm;
   box-sizing: border-box;

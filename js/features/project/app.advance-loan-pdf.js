@@ -239,6 +239,38 @@ function setupPdfSignatures(rootEl, project) {
   }
 }
 
+function fitAdvanceLoanSignatures(rootEl) {
+  const letter = rootEl.querySelector('.pdf-flow');
+  const signaturePage = rootEl.querySelector('.pdf-signature-page');
+  if (!letter || !signaturePage) return;
+  const doc = rootEl.ownerDocument;
+  const central = signaturePage.querySelector('#sig-central');
+  const club = signaturePage.querySelector('#sig-club');
+  const isCentral = central && central.style.display !== 'none';
+  const columns = isCentral ? [central] : Array.from(club?.firstElementChild?.children || []);
+  if (!columns.length) return;
+
+  // Measure at the full A4 width, after assets load and before preview scaling.
+  // Use the same 1mm rounding allowance as the printed page boxes.
+  const pageBottom = letter.getBoundingClientRect().top + 296 * 96 / 25.4
+    - parseFloat(doc.defaultView.getComputedStyle(letter).paddingBottom);
+  while (columns.some(column => column.children.length)) {
+    const row = doc.createElement('div');
+    row.className = isCentral
+      ? 'pdf-signature-block pdf-signature-inline'
+      : 'pdf-signature-inline pdf-signature-inline-club';
+    const originals = columns.map(column => column.firstElementChild);
+    originals.forEach(block => row.appendChild(block ? block.cloneNode(true) : doc.createElement('div')));
+    letter.appendChild(row);
+    if (row.getBoundingClientRect().bottom > pageBottom) {
+      row.remove();
+      break;
+    }
+    originals.forEach(block => block?.remove());
+  }
+  if (columns.every(column => !column.children.length)) signaturePage.remove();
+}
+
 async function downloadProjectPdf(project, signatureData, printWin = null) {
   if (!pdfRootEl) throw new Error("ไม่พบแบบฟอร์มเอกสาร กรุณารีเฟรชแล้วลองอีกครั้ง");
 
@@ -489,6 +521,7 @@ function openPdfPrintWindow(project, printWin, signatureData) {
     const previewRoot = printWin.document.getElementById("pdfRootPrint");
     await waitForPdfAssets(printWin.document, previewRoot);
     if (printWin.closed) return;
+    fitAdvanceLoanSignatures(previewRoot);
     const fitPreview = () => {
       if (!previewStage || printWin.matchMedia("print").matches) return;
       const pageWidth = previewRoot.offsetWidth;
@@ -591,6 +624,7 @@ function downloadPdfInSameTab(project, signatureData) {
     if (fallbackTimer) window.clearTimeout(fallbackTimer);
     doc.body.appendChild(tempRoot);
     await waitForPdfAssets(doc, tempRoot);
+    fitAdvanceLoanSignatures(tempRoot);
     const originalPageTitle = document.title;
     let hasRestoredTitle = false;
     const restorePageTitle = () => {

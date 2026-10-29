@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ทดสอบเอกสารการเงิน</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { margin: 0; padding: 24px 16px; background: #fff7fb; }
+    main { max-width: 900px; margin: auto; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    .preview-caption { color: #64748b; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ทดสอบเอกสารการเงิน</h1>
+    <p class="preview-caption">ใช้โครงการตัวอย่าง อบจ. · ข้อมูลที่กรอกใช้สร้างตัวอย่างเอกสารเท่านั้น ไม่บันทึกเข้าระบบ</p>
+    <div id="receiptPreview" class="project-document-panel"></div>
+  </main>
+  <script src="/js/features/project/app.advance-loan-pdf.js"></script>
+  <script src="/js/features/project/app.receipt-documents.js"></script>
+  <script>
+    mountProjectDocuments(document.getElementById('receiptPreview'), {
+      code: 'TEST-001',
+      name: 'โครงการทดสอบเอกสาร',
+      orgName: 'องค์การบริหารสโมสรนิสิต',
+      orgGroup: 'องค์การบริหารสโมสรนิสิต'
+    });
+  </script>
+</body>
+</html>

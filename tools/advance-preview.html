@@ -1,0 +1,10 @@
+<!doctype html><html lang="th"><head><title>ทดสอบเอกสารยืมรองจ่าย</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/css/style.css"></head><body>
+<main style="max-width:900px;margin:32px auto;padding:16px"><h1>ทดสอบเอกสารยืมรองจ่าย</h1><p>ใช้โครงการตัวอย่าง ไม่บันทึกข้อมูลเข้าระบบ</p><button class="btn-primary" onclick="openProjectModal(project)">เปิดโครงการตัวอย่าง</button></main>
+<div class="modal" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle"><div class="modal-dialog"><div class="modal-header"><div><div id="projectModalTitle" class="modal-title"></div><div id="projectModalHeaderRow" class="modal-header-row"></div></div><button id="projectModalClose" class="modal-close" type="button" onclick="closeProjectModal()" aria-label="ปิดรายละเอียดโครงการ">×</button></div><div id="projectModalTitleBadge"></div><div class="modal-body" id="projectModalBody"></div></div></div><!-- ADVANCE_TEMPLATE -->
+<script src="/js/core/app.dialog.js"></script><script src="/js/features/project/app.advance-loan-pdf.js"></script><script src="/js/features/project/app.receipt-documents.js"></script><script src="/js/features/project/app.project-modal.js"></script>
+<script>
+const projectModalEl=document.getElementById('projectModal'),projectModalTitleEl=document.getElementById('projectModalTitle'),projectModalTitleBadgeEl=document.getElementById('projectModalTitleBadge'),projectModalHeaderRowEl=document.getElementById('projectModalHeaderRow'),projectModalBodyEl=document.getElementById('projectModalBody'),pdfRootEl=document.getElementById('pdfRoot');
+const PROJECT_PENDING_APPROVAL_STATUS='รออนุมัติ', assistantContactsByName={},orgFilters=[];
+const formatMoney=n=>Number(n).toLocaleString('th-TH'),statusMainToBadgeClass=()=>'';
+const project={code:'TEST-01',name:'โครงการทดสอบยืมรองจ่าย',orgName:'องค์การบริหารสโมสรนิสิต',orgGroup:'องค์การบริหารสโมสรนิสิต',statusMain:'อนุมัติโครงการ',approveDate:'29/10/2026',lastWorkDate:'20/12/2026',daysToDeadline:45,budget:10000};openProjectModal(project);
+</script></body></html>
