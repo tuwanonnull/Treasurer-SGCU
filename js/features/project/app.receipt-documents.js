@@ -63,6 +63,58 @@ function receiptDate(value, long = false) {
   }).format(date);
 }
 
+function receiptProjectDate(value) {
+  const text = String(value ?? "").trim();
+  let parts = text.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (!parts) {
+    const dayFirst = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (dayFirst) parts = [text, dayFirst[3], dayFirst[2], dayFirst[1]];
+  }
+  let iso;
+  if (parts) {
+    let year = Number(parts[1]);
+    if (year < 100) year += 2000;
+    if (year >= 2400) year -= 543;
+    iso = `${year}-${parts[2].padStart(2, "0")}-${parts[3].padStart(2, "0")}`;
+  } else {
+    const parsed = parseProjectDate(value);
+    if (!parsed) throw new Error("ข้อมูลวันที่โครงการไม่ครบถ้วนหรือไม่ถูกต้อง กรุณาติดต่อผู้ดูแลโครงการ");
+    iso = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+  }
+  receiptDate(iso);
+  return iso;
+}
+
+function receiptDateRange(project) {
+  const issues = [];
+  const read = (value, label) => {
+    if (!String(value ?? "").trim() || String(value).trim() === "-") {
+      issues.push(`ยังไม่มี${label}`);
+      return null;
+    }
+    try { return receiptProjectDate(value); } catch {
+      issues.push(`${label}ไม่ถูกต้อง`);
+      return null;
+    }
+  };
+  const min = read(project.approveDate, "วันที่อนุมัติ");
+  const max = read(project.lastWorkDate, "วันปฏิบัติงานสุดท้าย");
+  if (issues.length) throw new Error(`${issues.join(" และ ")} กรุณาติดต่อผู้ดูแลโครงการ`);
+  if (min > max) throw new Error("วันที่อนุมัติอยู่หลังวันปฏิบัติงานสุดท้าย กรุณาติดต่อผู้ดูแลโครงการ");
+  return { min, max };
+}
+
+function validateReceiptDate(value, range) {
+  receiptDate(value);
+  if (value < range.min || value > range.max) {
+    throw new Error(`วันที่ต้องอยู่ในช่วงวันที่อนุมัติ ${receiptDate(range.min)} ถึงวันปฏิบัติงานสุดท้าย ${receiptDate(range.max)}`);
+  }
+}
+
+function receiptProjectUnit(project) {
+  return [project.orgName, project.name].map((value) => String(value || "").trim()).filter(Boolean).join(" ");
+}
+
 function resolveProjectReceiptTemplate(project) {
   const group = String(project.orgGroup || "").trim();
   const name = String(project.orgName || "").trim();
@@ -82,17 +134,27 @@ function resolveProjectReceiptTemplate(project) {
 function mountProjectDocuments(panel, project) {
   const esc = receiptEscape;
   panel.innerHTML = `
-    <h3>สร้างเอกสารสำหรับโครงการนี้</h3>
+    <h3>เลือกเอกสารที่ต้องการกรอก</h3>
     <p class="project-document-context">${esc(project.code || "")} · ${esc(project.name || "")}<br>${esc(project.orgName || "")}</p>
     <div class="project-document-types" role="group" aria-label="เลือกประเภทเอกสาร">
-      ${Object.entries(PROJECT_RECEIPT_TITLES).map(([type, title]) => `<button type="button" class="btn-ghost" data-receipt-type="${type}" aria-pressed="false">${title}</button>`).join("")}
+      ${Object.entries(PROJECT_RECEIPT_TITLES).map(([type, title]) => `<button type="button" class="project-document-type" data-receipt-type="${type}" aria-pressed="false">
+        <span class="project-document-type-title">${title}</span>
+        <span class="project-document-type-description">${type === "voucher" ? "ให้ผู้รับเงินลงนามเป็นหลักฐานการรับเงิน" : "ให้ผู้ซื้อ / ผู้จ้างลงนามรับรองการจ่ายเงิน"}</span>
+        <span class="project-document-type-action" aria-hidden="true">เลือกเอกสารนี้ <span>→</span></span>
+      </button>`).join("")}
     </div>
+    <p class="project-document-mobile-description" data-receipt-description aria-live="polite">เลือกประเภทเอกสารเพื่อเริ่มกรอกข้อมูล</p>
+    <p class="project-document-download-hint">แนะนำให้ดาวน์โหลดเอกสารผ่านคอมพิวเตอร์ (PC/Desktop)</p>
     <div data-receipt-editor></div>`;
   panel.querySelectorAll("[data-receipt-type]").forEach((button) => {
     button.addEventListener("click", () => {
       const editor = panel.querySelector("[data-receipt-editor]");
+      panel.querySelector("[data-receipt-description]").textContent = button.querySelector(".project-document-type-description").textContent;
       // Keep each form mounted so switching types does not discard entered values.
-      panel.querySelectorAll("[data-receipt-type]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      panel.querySelectorAll("[data-receipt-type]").forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+        item.querySelector(".project-document-type-action").innerHTML = item === button ? "เลือกแล้ว <span>✓</span>" : "เลือกเอกสารนี้ <span>→</span>";
+      });
       editor.querySelectorAll("form").forEach((form) => { form.hidden = true; });
       let form = editor.querySelector(`[data-document-type="${button.dataset.receiptType}"]`);
       if (!form) {
@@ -103,7 +165,10 @@ function mountProjectDocuments(panel, project) {
         mountReceiptForm(form, project, button.dataset.receiptType);
       }
       form.hidden = false;
-      (form.querySelector("[data-template-note]") || form.querySelector("input"))?.focus();
+      // Keep the mobile selector in view without opening the keyboard on a type change.
+      if (!window.matchMedia("(max-width: 600px)").matches) {
+        (form.querySelector("[data-template-note]") || form.querySelector("input"))?.focus();
+      }
     });
   });
 }
@@ -112,17 +177,21 @@ function mountReceiptForm(form, project, type) {
   const template = resolveProjectReceiptTemplate(project);
   const esc = receiptEscape, certificate = type === "certificate";
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
-  const unit = [project.orgName, project.name].filter(Boolean).join(" / ");
+  const unit = receiptProjectUnit(project);
+  let range, dateError = "";
+  try { range = receiptDateRange(project); } catch (error) { dateError = error.message; }
+  const defaultDate = range && today >= range.min && today <= range.max ? today : "";
   const field = (name, label, value = "", inputType = "text", required = true, max = 100) =>
-    `<label class="project-document-field">${label}${required ? " *" : ""}<input class="login-input" name="${name}" type="${inputType}" value="${esc(value)}" ${required ? "required" : ""} maxlength="${max}"></label>`;
+    `<label class="project-document-field">${label}${required ? " *" : ""}<input class="login-input" name="${name}" type="${inputType}" value="${esc(value)}" ${required ? "required" : ""} ${name === "unit" ? "readonly" : ""} ${inputType === "date" && range ? `min="${range.min}" max="${range.max}"` : ""} maxlength="${max}"></label>`;
   form.innerHTML = `
     ${template.available ? "" : `<p data-template-note role="status" tabindex="-1">${esc(template.note)}</p>`}
+    ${dateError ? `<p data-template-note role="status" tabindex="-1" class="project-document-error">${esc(dateError)}</p>` : `<p>วันที่ในเอกสารต้องอยู่ระหว่าง ${receiptDate(range.min)} ถึง ${receiptDate(range.max)} (วันที่อนุมัติถึงวันปฏิบัติงานสุดท้าย)</p>`}
     <fieldset data-receipt-fields>
       <legend>${PROJECT_RECEIPT_TITLES[type]}</legend>
       <p>ช่องที่มี * จำเป็นต้องกรอก</p>
       <div class="project-document-grid">
-        ${field("date", certificate ? "วันที่ลงนามรับรอง" : "วันที่รับเงิน", today, "date")}
-        ${certificate ? field("unit", "หน่วยงาน / โครงการ", unit, "text", true, 180) : field("place", "เขียนที่ (สถานที่ซื้อ)")}
+        ${field("date", certificate ? "วันที่ลงนามรับรอง" : "วันที่รับเงิน", defaultDate, "date")}
+        ${certificate ? field("unit", "หน่วยงาน โครงการ", unit, "text", true, 180) : field("place", "เขียนที่ (สถานที่ซื้อ)")}
         ${field("person", certificate ? "ชื่อ–นามสกุลผู้ซื้อ / จ้าง" : "ชื่อ–นามสกุลผู้รับเงิน")}
         ${certificate ? field("position", "ตำแหน่งในหน่วยงาน / โครงการ") : field("house", "บ้านเลขที่") + field("road", "ถนน", "", "text", false) + field("subdistrict", "ตำบล / แขวง") + field("district", "อำเภอ / เขต") + field("province", "จังหวัด") + field("phone", "เบอร์โทรศัพท์ผู้รับเงิน", "", "tel", true, 30) + field("payer", "ชื่อ–นามสกุลผู้จ่ายเงิน")}
         ${template.key === "club" ? field("advisor", "ชื่อ–นามสกุลอาจารย์ที่ปรึกษา") : ""}
@@ -155,7 +224,7 @@ function mountReceiptForm(form, project, type) {
     const row = document.createElement("fieldset");
     row.className = "project-document-row";
     row.innerHTML = `<legend></legend><div class="project-document-grid">
-      ${certificate ? field("itemDate", "วันที่ซื้อ / จ้าง", form.elements.date.value || today, "date") : ""}
+      ${certificate ? field("itemDate", "วันที่ซื้อ / จ้าง", form.elements.date.value || defaultDate, "date") : ""}
       ${field("description", "รายละเอียดรายการ", "", "text", true, certificate ? 100 : 160)}
       <label class="project-document-field">จำนวนเงิน (บาท) *<input class="login-input" name="amount" type="number" min="0.01" max="999999999.99" step="0.01" inputmode="decimal" required></label>
       ${certificate ? field("note", "หมายเหตุ / ใช้ในงานใด", "", "text", false, 80) : ""}
@@ -167,7 +236,7 @@ function mountReceiptForm(form, project, type) {
   add.onclick = () => { addRow(); rows.lastElementChild.querySelector("input")?.focus(); };
   rows.addEventListener("input", refresh);
   addRow();
-  form.querySelector("[data-receipt-fields]").disabled = !template.available;
+  form.querySelector("[data-receipt-fields]").disabled = !template.available || !range;
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const error = form.querySelector("[data-receipt-error]");
@@ -205,6 +274,13 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
   const esc = receiptEscape, certificate = type === "certificate";
   const club = resolveProjectReceiptTemplate(project).key === "club";
   if (club && !String(data.advisor || "").trim()) throw new Error("กรุณากรอกชื่ออาจารย์ที่ปรึกษา");
+  const range = receiptDateRange(project);
+  validateReceiptDate(data.date, range);
+  if (certificate) {
+    items.forEach((item) => validateReceiptDate(item.date, range));
+    data = { ...data, unit: receiptProjectUnit(project) };
+    if (!data.unit) throw new Error("โครงการยังไม่มีข้อมูลหน่วยงาน โครงการ กรุณาติดต่อผู้ดูแลโครงการ");
+  }
   const maxRows = certificate ? 14 : 8;
   if (!items.length || items.length > maxRows) throw new Error("จำนวนรายการเกินแบบฟอร์ม");
   const total = items.reduce((sum, item) => {
@@ -220,8 +296,8 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
   const tableRows = Array.from({ length: maxRows }, (_, i) => {
     const item = items[i];
     return certificate
-      ? `<tr><td>${item ? esc(receiptDate(item.date)) : "&nbsp;"}</td><td class="receipt-description">${item ? esc(item.description) : ""}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td><td class="receipt-description">${item ? esc(item.note) : ""}</td></tr>`
-      : `<tr><td class="receipt-description">${item ? esc(item.description) : "&nbsp;"}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td></tr>`;
+      ? `<tr${item ? ` data-receipt-amount="${item.satang}"` : ""}><td>${item ? esc(receiptDate(item.date)) : "&nbsp;"}</td><td class="receipt-description">${item ? esc(item.description) : ""}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td><td class="receipt-description">${item ? esc(item.note) : ""}</td></tr>`
+      : `<tr${item ? ` data-receipt-amount="${item.satang}"` : ""}><td class="receipt-description">${item ? esc(item.description) : "&nbsp;"}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td></tr>`;
   }).join("");
   const cssURL = esc(new URL("css/pages/receipt-print.css", baseURI).href);
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -246,15 +322,17 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
       <p class="receipt-field-row">${field("เบอร์โทรศัพท์", data.phone)}</p><p>ได้รับเงินจากสโมสรนิสิต จุฬาลงกรณ์มหาวิทยาลัย ดังรายการต่อไปนี้</p></div>`}
     <table><colgroup>${certificate ? '<col style="width:17%"><col style="width:40%"><col style="width:20%"><col style="width:23%">' : '<col style="width:72%"><col style="width:28%">'}</colgroup>
     <thead><tr>${certificate ? "<th>วันที่</th><th>รายละเอียด</th><th>จำนวนเงิน</th><th>หมายเหตุ</th>" : "<th>รายการ</th><th>จำนวนเงิน</th>"}</tr></thead>
-    <tbody>${tableRows}<tr>${certificate ? '<td></td><td class="money">รวม</td>' : '<td class="money">รวม</td>'}<td class="money">${receiptMoney(total)}</td>${certificate ? "<td></td>" : ""}</tr></tbody></table>
+    <tbody>${tableRows}<tr data-receipt-total-row>${certificate ? '<td></td><td class="money" data-page-total-label>รวม</td>' : '<td class="money" data-page-total-label>รวม</td>'}<td class="money" data-page-total>${receiptMoney(total)}</td>${certificate ? "<td></td>" : ""}</tr></tbody></table>
     <div class="receipt-ending"><p class="total-words receipt-field-row">${field("รวมเงิน (ตัวอักษร)", receiptBahtText(total))}</p>
     ${certificate ? `<div class="declaration"><p class="receipt-field-row receipt-certifier-row">${field("ข้าพเจ้า", data.person)}${field("ตำแหน่ง", data.position)}</p><p class="receipt-field-row">${field("หน่วยงาน", data.unit)}</p><p>ขอรับรองว่ารายจ่ายข้างต้นนี้ ไม่อาจเรียกใบเสร็จรับเงินจากผู้รับเงินได้และข้าพเจ้าได้จ่ายเงินในการดำเนินการอย่างโดยแท้จริง</p></div><div class="certificate-sign">${sign(data.person, `วันที่ ${esc(receiptDate(data.date))}`)}${club ? sign(data.advisor, "อาจารย์ที่ปรึกษา") : ""}</div>` : sign(data.person, "ผู้รับเงิน") + sign(data.payer, "ผู้จ่ายเงิน") + (club ? sign(data.advisor, "อาจารย์ที่ปรึกษา") : "")}</div></main></div>
+    <script src="${esc(new URL('js/features/project/receipt-pagination.js', baseURI).href)}"></script>
     <script>
+    ${receiptBahtText.toString()}
     function layoutReceiptFields() {
-      const unit = document.querySelector('.unit');
-      if (unit && unit.querySelector('.fill').getBoundingClientRect().height > parseFloat(getComputedStyle(unit).lineHeight) * 1.5) {
-        unit.classList.add('unit-wide');
-      }
+      document.querySelectorAll('.unit').forEach(unit => {
+        unit.classList.remove('unit-wide');
+        if (unit.querySelector('.fill').getBoundingClientRect().height > parseFloat(getComputedStyle(unit).lineHeight) * 1.5) unit.classList.add('unit-wide');
+      });
       document.querySelectorAll('.fill').forEach(field => {
         field.querySelector('.fill-rules')?.remove();
         const height = parseFloat(getComputedStyle(field).lineHeight);
@@ -276,6 +354,10 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
       try {
         const fonts = await Promise.all([document.fonts.load('16pt ReceiptThai'), document.fonts.load('bold 16pt ReceiptThai')]);
         if (fonts.some(result => !result.length)) throw new Error('font');
+        // Resolve long unit headers before measuring the available table area.
+        layoutReceiptFields();
+        document.querySelectorAll('.fill-rules').forEach(rule => rule.remove());
+        paginateReceiptDocument();
         layoutReceiptFields();
         const dialog = document.getElementById('receiptPrintDialog');
         document.getElementById('receiptPrintCancel').onclick = () => dialog.close();
@@ -287,6 +369,6 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
         button.disabled = false;
         button.textContent = 'พิมพ์ / บันทึก PDF';
         button.onclick = () => dialog.showModal();
-      } catch { document.getElementById('receiptPrintStatus').textContent = 'โหลดฟอนต์ไม่สำเร็จ กรุณาปิดแล้วเปิดตัวอย่างอีกครั้ง'; }
+      } catch (error) { document.getElementById('receiptPrintStatus').textContent = error.message === 'font' ? 'โหลดฟอนต์ไม่สำเร็จ กรุณาปิดแล้วเปิดตัวอย่างอีกครั้ง' : 'เตรียมเอกสารไม่สำเร็จ: ' + error.message; }
     });</script></body></html>`;
 }

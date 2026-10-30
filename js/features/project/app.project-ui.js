@@ -1088,7 +1088,7 @@ function updateTrendLineChart(filtered) {
   const trimmed = entries.slice(-10);
   const monthNamesShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
   const formatMonthLabel = (date) => {
-    const year = date.getFullYear().toString().slice(-2);
+    const year = date.getFullYear() + 543;
     return `${monthNamesShort[date.getMonth()]} ${year}`;
   };
   let labels = trimmed.map(({ date }) => formatMonthLabel(date));
@@ -1528,7 +1528,7 @@ function renderHomeKpis(sourceProjects = projects) {
 
   const labels = entries.map(([, bucket]) => {
     const m = bucket.date.getMonth();
-    const y = bucket.date.getFullYear().toString().slice(-2);
+    const y = bucket.date.getFullYear() + 543;
     return `${monthNamesShort[m]} ${y}`;
   });
   const approvedData = entries.map(([, bucket]) => Math.round(bucket.approved));

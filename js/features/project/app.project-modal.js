@@ -9,6 +9,8 @@ function openProjectModal(project) {
   const approveStatus = project.approvalStatus || project.statusMain || PROJECT_PENDING_APPROVAL_STATUS;
   const approvalBadgeClass = statusMainToBadgeClass(approveStatus);
   const canDownloadPdf = shouldShowPdfDownload(project);
+  let documentUnavailableReason = "";
+  try { receiptDateRange(project); } catch (error) { documentUnavailableReason = error.message; }
 
   // title + badge ด้านบน
   projectModalTitleEl.textContent = name;
@@ -384,10 +386,13 @@ function openProjectModal(project) {
           </div>
         </div>
         ${closeCheckerContactHtml}
+        ${documentUnavailableReason ? `<p class="project-document-entry-help">ยังไม่สามารถกรอกเอกสารประกอบการเบิกจ่ายได้: ${escapeHtml(documentUnavailableReason)}</p>` : `
         <div class="modal-actions">
-          <button type="button" class="btn-primary" data-project-documents aria-expanded="false" aria-controls="projectDocumentPanel">สร้างเอกสาร</button>
+          <button type="button" class="btn-primary" data-project-documents aria-expanded="false" aria-controls="projectDocumentPanel" aria-describedby="projectDocumentHelp">กรอกเอกสารประกอบการเบิกจ่าย</button>
         </div>
+        <p id="projectDocumentHelp" class="project-document-entry-help">ใบสำคัญรับเงิน / ใบรับรองแทนใบเสร็จ — กรอกข้อมูลแล้วพิมพ์หรือบันทึกเป็น PDF</p>
         <div id="projectDocumentPanel" class="project-document-panel" hidden></div>
+        `}
       </section>
 
     </div>
@@ -396,7 +401,7 @@ function openProjectModal(project) {
   projectModalBodyEl.innerHTML = html;
   openDialog(projectModalEl, { focusSelector: "#projectModalClose" });
   const documentsButton = projectModalBodyEl.querySelector("[data-project-documents]");
-  documentsButton.addEventListener("click", () => {
+  documentsButton?.addEventListener("click", () => {
     const panel = projectModalBodyEl.querySelector("#projectDocumentPanel");
     panel.hidden = !panel.hidden;
     documentsButton.setAttribute("aria-expanded", String(!panel.hidden));

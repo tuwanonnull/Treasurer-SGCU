@@ -4,6 +4,8 @@ import vm from 'node:vm';
 
 const source = await fs.readFile(new URL('../js/features/project/app.receipt-documents.js', import.meta.url), 'utf8');
 const ctx = vm.createContext({ Intl, Date, URL });
+const helpers = await fs.readFile(new URL('../js/core/app.helpers.js', import.meta.url), 'utf8');
+vm.runInContext(helpers.slice(helpers.indexOf('function parseProjectDate('), helpers.indexOf('function formatMoney(')), ctx);
 vm.runInContext(source, ctx);
 assert.equal(ctx.resolveProjectReceiptTemplate({ orgGroup: ' องค์การบริหารสโมสรนิสิต ' }).key, 'objor');
 assert.equal(ctx.resolveProjectReceiptTemplate({ orgName: 'องค์การบริหารสโมสรนิสิตจุฬาฯ' }).available, true);
@@ -30,8 +32,9 @@ assert.throws(() => ctx.receiptDate('2026-02-30'));
 assert.throws(() => ctx.receiptDate(''));
 const data = { date: '2026-10-29', person: '<script>alert(1)</script>', unit: 'หน่วยงานทดสอบ', position: 'ประธาน', payer: 'ผู้จ่ายทดสอบ' };
 const items = [{ satang: 10, description: '<img onerror=alert(1)>', date: '2026-10-29', note: 'ทดสอบ' }, { satang: 20, date: '2026-10-29', description: 'รายการสอง', note: 'ทดสอบ' }];
+const projectDates = { approveDate: '1/10/2569', lastWorkDate: '31/10/2569' };
 for (const type of ['voucher', 'certificate']) {
-  const html = ctx.buildReceiptDocument(type, data, items, {code:'TEST', name:'โครงการทดสอบ'}, 'http://localhost/');
+  const html = ctx.buildReceiptDocument(type, data, items, {...projectDates, code:'TEST', name:'โครงการทดสอบ'}, 'http://localhost/');
   assert.match(html, /0.30/);
   assert.match(html, /ศูนย์บาทสามสิบสตางค์/);
   assert.match(html, /&lt;script&gt;/);
@@ -44,7 +47,7 @@ assert.throws(() => ctx.buildReceiptDocument('voucher', data, Array(9).fill(item
 console.log('Receipt document money, Thai text, dates, escaping, and template tests passed.');
 
 for (const type of ['voucher', 'certificate']) {
-  const project = { orgGroup: 'ชมรมฝ่ายกีฬา', orgName: 'ชมรมทดสอบ' };
+  const project = { ...projectDates, orgGroup: 'ชมรมฝ่ายกีฬา', orgName: 'ชมรมทดสอบ' };
   assert.throws(() => ctx.buildReceiptDocument(type, data, items, project, 'http://localhost/'), /อาจารย์ที่ปรึกษา/);
   const html = ctx.buildReceiptDocument(type, { ...data, advisor: 'อาจารย์ทดสอบ <script>' }, items, project, 'http://localhost/');
   assert.match(html, /อาจารย์ที่ปรึกษา/);
@@ -52,3 +55,28 @@ for (const type of ['voucher', 'certificate']) {
   assert.equal((html.match(/class="signature"/g) || []).length, type === 'voucher' ? 3 : 2);
 }
 console.log('Club templates require and include advisor signatures for both document types.');
+
+const project = { ...projectDates, orgName: 'หน่วยงานต้นทาง', name: 'โครงการต้นทาง' };
+for (const type of ['voucher', 'certificate']) {
+  for (const date of ['2026-10-01', '2026-10-31']) {
+    assert.doesNotThrow(() => ctx.buildReceiptDocument(type, { ...data, date }, [{ ...items[0], date }], project, 'http://localhost/'));
+  }
+  for (const date of ['2026-09-30', '2026-11-01']) {
+    assert.throws(() => ctx.buildReceiptDocument(type, { ...data, date }, items, project, 'http://localhost/'), /วันที่ต้องอยู่ในช่วง/);
+    assert.throws(() => ctx.buildReceiptDocument('certificate', data, [{ ...items[0], date }], project, 'http://localhost/'), /วันที่ต้องอยู่ในช่วง/);
+  }
+  for (const dates of [{ approveDate: '' }, { lastWorkDate: '' }, { approveDate: '31/02/2569' }, { approveDate: '2026-11-01' }]) {
+    assert.throws(() => ctx.buildReceiptDocument(type, data, items, { ...project, ...dates }, 'http://localhost/'));
+  }
+}
+assert.equal(ctx.receiptProjectDate('2569-10-01'), '2026-10-01');
+assert.equal(ctx.receiptProjectDate('2026-10-01'), '2026-10-01');
+const lockedUnitHtml = ctx.buildReceiptDocument('certificate', { ...data, unit: 'ค่าที่แก้ไขเอง' }, items, project, 'http://localhost/');
+assert.match(lockedUnitHtml, /หน่วยงานต้นทาง โครงการต้นทาง/);
+assert.doesNotMatch(lockedUnitHtml, /ค่าที่แก้ไขเอง|หน่วยงานต้นทาง \/ โครงการต้นทาง/);
+console.log('Receipt date boundaries, invalid project dates, and project-owned unit values passed.');
+assert.throws(() => ctx.receiptDateRange({ lastWorkDate: '2026-10-31' }), /ยังไม่มีวันที่อนุมัติ/);
+assert.throws(() => ctx.receiptDateRange({ approveDate: '2026-10-01' }), /ยังไม่มีวันปฏิบัติงานสุดท้าย/);
+assert.throws(() => ctx.receiptDateRange({}), /ยังไม่มีวันที่อนุมัติ และ ยังไม่มีวันปฏิบัติงานสุดท้าย/);
+assert.throws(() => ctx.receiptDateRange({ ...projectDates, approveDate: '31/02/2569' }), /วันที่อนุมัติไม่ถูกต้อง/);
+assert.throws(() => ctx.receiptDateRange({ ...projectDates, lastWorkDate: 'อ่านไม่ได้' }), /วันปฏิบัติงานสุดท้ายไม่ถูกต้อง/);

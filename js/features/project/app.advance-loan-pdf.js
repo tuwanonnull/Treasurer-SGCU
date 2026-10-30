@@ -296,6 +296,7 @@ function mountAdvanceLoanForm(panel, project) {
   const isCentral = ["องค์การบริหารสโมสรนิสิต", "สภานิสิต", "องค์การบริหารสโมสรนิสิต, สภานิสิต"].includes(project.orgGroup);
   const field = (name, label, type = "text") => `<label class="project-document-field">${escapeHtml(label)} *<input class="login-input" name="${name}" type="${type}" maxlength="150" required></label>`;
   panel.innerHTML = `<h3>สร้างเอกสารยืมรองจ่าย</h3>
+    <p class="project-document-download-hint">แนะนำให้ดาวน์โหลดเอกสารผ่านคอมพิวเตอร์ (PC/Desktop)</p>
     <p class="project-document-context">กรอกข้อมูลผู้ลงนามเพื่อตรวจสอบเอกสารก่อนพิมพ์</p>
     <form class="project-document-form">
       <div class="project-document-grid">
