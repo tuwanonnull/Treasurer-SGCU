@@ -20,6 +20,9 @@ function initMeetingRoomBookingApp() {
   const managePurposeInput = document.getElementById("meetingManagePurpose");
   const manageReasonRow = document.getElementById("meetingManageReasonRow");
   let selectedOwnBookingId = "";
+  let highlightedOwnBookingId = "";
+  const myRequestsNotice = document.getElementById("meetingMyRequestsNotice");
+  const myRequestsTitle = document.getElementById("meetingMyRequestsTitle");
   let manageRequestSubmitting = false;
   const myRequestsBody = document.getElementById("meetingMyRequestsBody");
   const myRequestsState = document.getElementById("meetingMyRequestsState");
@@ -32,7 +35,6 @@ function initMeetingRoomBookingApp() {
   const cancelMessageEl = document.getElementById("meetingCancelMessage");
   const manageActionSelect = document.getElementById("meetingManageAction");
   const manageHelperEl = document.getElementById("meetingManageHelper");
-  const manageBookingSummaryEl = document.getElementById("meetingManageBookingSummary");
   const manageRescheduleFields = document.getElementById("meetingManageRescheduleFields");
   const manageSubmitBtn = document.getElementById("meetingManageSubmit");
   const rescheduleSection = document.getElementById("meetingRescheduleSection");
@@ -1591,20 +1593,26 @@ function initMeetingRoomBookingApp() {
       myRequestsBody.innerHTML = "";
       return;
     }
+    const editableBookingIds = new Set(ownReschedulableBookings().map((item) => item.id));
     myRequestsBody.innerHTML = own.map((item) => {
       const notes = [];
       if (item.rejectionReason) notes.push(`หมายเหตุจาก Staff: ${item.rejectionReason}`);
       if (item.status === "cancel_requested" && item.cancelRequestReason) notes.push(`เหตุผลขอยกเลิก: ${item.cancelRequestReason}`);
       if (item.status === "reschedule_requested") {
-        notes.push(`ขอเปลี่ยนเป็น: ${normalizeRoomDisplay(item.rescheduleRequestedRoomId, item.rescheduleRequestedRoomName)} · ${formatDate(item.rescheduleRequestedDate)} ${item.rescheduleRequestedStartTime || "-"}–${item.rescheduleRequestedEndTime || "-"}`);
+        notes.push(`เวลาเดิม: ${formatDate(item.date)} ${item.startTime || "-"}–${item.endTime || "-"} → ขอเปลี่ยนเป็น: ${normalizeRoomDisplay(item.rescheduleRequestedRoomId, item.rescheduleRequestedRoomName)} · ${formatDate(item.rescheduleRequestedDate)} ${item.rescheduleRequestedStartTime || "-"}–${item.rescheduleRequestedEndTime || "-"}`);
         if (item.rescheduleRequestReason) notes.push(`เหตุผล: ${item.rescheduleRequestReason}`);
       }
       const label = item.status === "rejected" ? (item.cancelledByRequester ? "ยกเลิกแล้ว" : "ไม่อนุมัติ") : statusText(item.status);
 
       const requesterProfileType = deriveRequesterProfileType(item);
       const requesterType = getRequesterProfileTypeLabel(requesterProfileType);
-      return `<tr class="meeting-my-request-row${item.id === selectedOwnBookingId ? " is-selected" : ""}" data-my-booking-id="${escapeText(item.id)}">
-        <td data-label="ห้อง"><button type="button" class="meeting-my-request-open" aria-label="${escapeText(`เปิดคำขอ ${normalizeRoomDisplay(item.roomId, item.roomName)} ${formatDate(item.date)} ${item.startTime || ""}`)}" aria-controls="meetingCancelSection">${escapeText(normalizeRoomDisplay(item.roomId, item.roomName))}</button></td>
+      const isEditable = editableBookingIds.has(item.id);
+      const roomName = escapeText(normalizeRoomDisplay(item.roomId, item.roomName));
+      const roomContent = isEditable
+        ? `<button type="button" class="meeting-my-request-open" aria-label="${escapeText(`แก้ไขคำขอ ${normalizeRoomDisplay(item.roomId, item.roomName)} ${formatDate(item.date)} ${item.startTime || ""}`)}" aria-controls="meetingCancelSection">${roomName}</button>`
+        : roomName;
+      return `<tr class="meeting-my-request-row${isEditable ? " is-editable" : ""}${(item.id === selectedOwnBookingId || item.id === highlightedOwnBookingId) ? " is-selected" : ""}" data-my-booking-id="${escapeText(item.id)}">
+        <td data-label="ห้อง">${roomContent}</td>
         <td data-label="ช่วงเวลา"><div class="meeting-staff-period"><span>${escapeText(formatDate(item.date))}</span><span class="meeting-staff-period-time">${escapeText(item.startTime || "-")} - ${escapeText(item.endTime || "-")}</span></div></td>
         <td data-label="ผู้ขอ"><div class="meeting-staff-requester"><span>${escapeText(item.requester || "-")}</span>${item.requester && requesterType ? `<span class="meeting-staff-requester-type is-${escapeText(requesterProfileType)}">${escapeText(requesterType)}</span>` : ""}</div></td>
         <td data-label="วัตถุประสงค์"><div class="meeting-staff-purpose-cell"><div class="meeting-staff-purpose-text" title="${escapeText(item.purpose || "-")}">${escapeText(item.purpose || "-")}</div>${notes.map((note) => `<div class="meeting-row-meta">${escapeText(note)}</div>`).join("")}</div></td>
@@ -1653,33 +1661,6 @@ function initMeetingRoomBookingApp() {
     rescheduleBookingSelect.disabled = !currentUserEmail || !rescheduleList.length;
   };
 
-  const renderManageBookingSummary = (booking) => {
-    if (!manageBookingSummaryEl) return;
-    if (!booking) {
-      manageBookingSummaryEl.hidden = true;
-      manageBookingSummaryEl.innerHTML = "";
-      return;
-    }
-    const room = normalizeRoomDisplay(booking.roomId, booking.roomName);
-    const date = formatDate(booking.date);
-    const time = `${booking.startTime || "-"} - ${booking.endTime || "-"}`;
-    const purpose = (booking.purpose || "-").toString();
-    manageBookingSummaryEl.hidden = false;
-    manageBookingSummaryEl.innerHTML = `
-      <div class="meeting-manage-summary-kicker">คำขอที่เลือก</div>
-      <div class="meeting-manage-summary-main">${escapeText(room)}</div>
-      <div class="meeting-manage-summary-meta">
-        <span>${escapeText(date)}</span>
-        <span>${escapeText(time)}</span>
-      </div>
-      <div class="meeting-manage-summary-purpose">${escapeText(purpose)}</div>
-      <span class="status-pill ${statusBadgeClass(booking.status)}">${escapeText(booking.status === "rejected" && booking.cancelledByRequester ? "ยกเลิกแล้ว" : statusText(booking.status))}</span>
-      ${booking.rejectionReason ? `<div class="meeting-row-meta">หมายเหตุจาก Staff: ${escapeText(booking.rejectionReason)}</div>` : ""}
-      ${booking.status === "cancel_requested" ? `<div class="meeting-row-meta">เหตุผลขอยกเลิก: ${escapeText(booking.cancelRequestReason || "-")}</div>` : ""}
-      ${booking.status === "reschedule_requested" ? `<div class="meeting-row-meta">ขอเปลี่ยนเป็น: ${escapeText(normalizeRoomDisplay(booking.rescheduleRequestedRoomId, booking.rescheduleRequestedRoomName))} · ${escapeText(formatDate(booking.rescheduleRequestedDate))} ${escapeText(booking.rescheduleRequestedStartTime || "-")} – ${escapeText(booking.rescheduleRequestedEndTime || "-")}<br>เหตุผล: ${escapeText(booking.rescheduleRequestReason || "-")}</div>` : ""}
-    `;
-  };
-
   const updateManageActionUI = () => {
     const booking = findBooking((item) => item.id === selectedOwnBookingId && currentUserEmail && (item.requesterEmail || "").toString().trim().toLowerCase() === currentUserEmail);
     if (!booking) selectedOwnBookingId = "";
@@ -1708,8 +1689,6 @@ function initMeetingRoomBookingApp() {
     }
     if (manageRescheduleFields) manageRescheduleFields.hidden = !isReschedule;
     if (manageReasonRow) manageReasonRow.hidden = !isEditing;
-    renderManageBookingSummary(booking);
-    if (manageBookingSummaryEl && isReschedule) manageBookingSummaryEl.hidden = true;
     if (managePurposeRow) managePurposeRow.hidden = !isReschedule;
     if (managePurposeInput) managePurposeInput.value = booking?.purpose || "";
     if (manageHelperEl) {
@@ -1718,11 +1697,11 @@ function initMeetingRoomBookingApp() {
     }
     if (manageSubmitBtn) {
       manageSubmitBtn.hidden = !isEditing;
-      manageSubmitBtn.textContent = manageRequestSubmitting ? "กำลังส่งคำขอ..." : isReschedule ? "บันทึกการแก้ไขคำขอ" : "ยืนยันส่งคำขอยกเลิก";
+      manageSubmitBtn.textContent = manageRequestSubmitting ? "กำลังส่งคำขอ..." : isReschedule ? "บันทึกการแก้ไข" : "ยืนยันส่งคำขอยกเลิก";
       manageSubmitBtn.disabled = !isEditing || manageRequestSubmitting;
     }
     if (backToBookingBtn) {
-      backToBookingBtn.textContent = isEditing ? "ยกเลิกการแก้ไข" : "กลับไปจองใหม่";
+      backToBookingBtn.textContent = isEditing ? "ละทิ้งการแก้ไข" : "กลับไปจองใหม่";
       backToBookingBtn.disabled = manageRequestSubmitting;
     }
     if (requestCancelBtn) {
@@ -3243,7 +3222,11 @@ function initMeetingRoomBookingApp() {
         { context: "cancel_form" }
       );
       await window.sgcuWebPush?.dispatchMeetingNotification(bookingId, booking.status).catch(() => null);
-      setCancelMessage("ส่งคำขอยกเลิกเรียบร้อยแล้ว (รอ Staff อนุมัติ)", "#047857");
+      completeManageRequest(bookingId, {
+        status: "cancel_requested",
+        cancelBaseStatus: normalizeStatus(booking.status),
+        cancelRequestReason: cancelReason
+      }, "ส่งคำขอยกเลิกแล้ว รอสตาฟอนุมัติ");
       if (cancelBookingSelect) cancelBookingSelect.value = "";
       if (cancelReasonInput) cancelReasonInput.value = "";
     } catch (err) {
@@ -3416,7 +3399,16 @@ function initMeetingRoomBookingApp() {
         { context: "reschedule_form" }
       );
       await window.sgcuWebPush?.dispatchMeetingNotification(bookingId, booking.status).catch(() => null);
-      setRescheduleMessage("ส่งคำขอเปลี่ยนห้อง/เวลาเรียบร้อยแล้ว (รอ Staff อนุมัติ)", "#047857");
+      completeManageRequest(bookingId, {
+        status: "reschedule_requested",
+        rescheduleBaseStatus: normalizeStatus(booking.status),
+        rescheduleRequestedRoomId: requestedRoomId,
+        rescheduleRequestedRoomName: requestedRoomName,
+        rescheduleRequestedDate: nextDate,
+        rescheduleRequestedStartTime: nextStartTime,
+        rescheduleRequestedEndTime: nextEndTime,
+        rescheduleRequestReason: reason
+      }, "ส่งคำขอเปลี่ยนห้อง/เวลาแล้ว รอสตาฟอนุมัติ");
       if (rescheduleBookingSelect) rescheduleBookingSelect.value = "";
       if (cancelBookingSelect) cancelBookingSelect.value = "";
       if (rescheduleRoomSelect) rescheduleRoomSelect.value = "";
@@ -3461,6 +3453,25 @@ function initMeetingRoomBookingApp() {
     setCancelMessage("");
   };
 
+  const completeManageRequest = (bookingId, changes, message) => {
+    myBookings = myBookings.map((item) => item.id === bookingId ? { ...item, ...changes } : item);
+    selectedOwnBookingId = "";
+    highlightedOwnBookingId = bookingId;
+    clearManageDraft();
+    renderOwnBookingOptions();
+    updateManageActionUI();
+    renderMyRequests();
+    if (myRequestsNotice) {
+      myRequestsNotice.textContent = message;
+      myRequestsNotice.hidden = false;
+    }
+    myRequestsTitle?.focus({ preventScroll: true });
+    document.getElementById("meetingMyRequestsPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const row = Array.from(myRequestsBody?.querySelectorAll("[data-my-booking-id]") || [])
+      .find((item) => item.dataset.myBookingId === bookingId);
+    row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
   myRequestsBody?.addEventListener("click", (event) => {
     if (manageRequestSubmitting) return;
     const row = event.target.closest("[data-my-booking-id]");
@@ -3468,6 +3479,9 @@ function initMeetingRoomBookingApp() {
     const id = row.dataset.myBookingId;
     const booking = findBooking((item) => item.id === id);
     if (!currentUserEmail || !booking || (booking.requesterEmail || "").toString().trim().toLowerCase() !== currentUserEmail) return;
+    if (!ownReschedulableBookings().some((item) => item.id === id)) return;
+    if (myRequestsNotice) myRequestsNotice.hidden = true;
+    highlightedOwnBookingId = "";
     if (selectedOwnBookingId !== id) {
       clearManageDraft();
       manageActionSelect.value = ownReschedulableBookings().some((item) => item.id === id) ? "reschedule" : "detail";
@@ -3535,6 +3549,8 @@ function initMeetingRoomBookingApp() {
   if (window.sgcuAuth?.auth && typeof window.sgcuAuth.onAuthStateChanged === "function") {
     window.sgcuAuth.onAuthStateChanged(window.sgcuAuth.auth, () => {
       currentUserEmail = readCurrentUserEmail();
+      highlightedOwnBookingId = "";
+      if (myRequestsNotice) { myRequestsNotice.hidden = true; myRequestsNotice.textContent = ""; }
       resolveFirestoreBridge();
       subscribeMyBookings();
       if (!currentUserEmail) setReminderBanner("");

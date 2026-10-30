@@ -167,6 +167,37 @@
   margin-bottom: 0;
 }
 
+/* Keep the request purpose beside the reason while editing a booking. */
+.meeting-manage-notes {
+  display: flex;
+  gap: 12px;
+}
+
+.meeting-manage-notes > .borrow-form-row {
+  flex: 1;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 0;
+}
+
+.meeting-manage-notes:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+#meetingManagePurpose {
+  resize: none;
+  min-height: 92px;
+  height: 92px;
+  max-height: 92px;
+  overflow-y: auto;
+}
+
+@media (max-width: 720px) {
+  .meeting-manage-notes {
+    flex-direction: column;
+  }
+}
+
 .meeting-form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -252,47 +283,12 @@
   color: #6b7280;
 }
 
-.meeting-manage-summary {
-  border: 1px solid rgba(236, 72, 153, 0.18);
-  border-radius: 8px;
-  background: #fff;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 8px 22px rgba(236, 72, 153, 0.08);
-}
-
-.meeting-manage-summary-kicker {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--theme-pink-700);
-}
-
-.meeting-manage-summary-main {
-  margin-top: 2px;
-  font-weight: 800;
-  color: #111827;
-}
-
-.meeting-manage-summary-meta {
+.meeting-date-heading {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 5px;
-  color: #4b5563;
-  font-size: 0.88rem;
-}
-
-.meeting-manage-summary-meta span {
-  border-radius: 999px;
-  background: rgba(253, 242, 248, 0.9);
-  padding: 3px 8px;
-}
-
-.meeting-manage-summary-purpose {
-  margin-top: 6px;
-  color: #374151;
-  font-size: 0.9rem;
-  overflow-wrap: anywhere;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 2px;
 }
 
 .meeting-booking-form .borrow-form-field .login-label {
@@ -2283,6 +2279,35 @@
   gap: 8px;
 }
 
+/* Match the staff reference screenshot: room / period / requester / purpose / status.
+   Keep staff's automatic layout untouched; user rows must not resize these columns. */
+@media (min-width: 841px) {
+  #meetingMyRequestsPanel table {
+    table-layout: fixed;
+  }
+
+  #meetingMyRequestsPanel th:nth-child(1) { width: 14.6%; }
+  #meetingMyRequestsPanel th:nth-child(2) { width: 12.1%; }
+  #meetingMyRequestsPanel th:nth-child(3) { width: 17.5%; }
+  #meetingMyRequestsPanel th:nth-child(4) { width: 31.6%; }
+  #meetingMyRequestsPanel th:nth-child(5) { width: 24.2%; }
+
+  #meetingMyRequestsPanel td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #meetingMyRequestsPanel .meeting-staff-period {
+    white-space: normal;
+  }
+
+  #meetingMyRequestsPanel .meeting-my-request-open {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 .meeting-my-request-status .status-pill {
   white-space: normal;
 }
@@ -2291,19 +2316,62 @@
   display: none !important;
 }
 
-.meeting-request-cancel {
+#meetingBackToBooking {
+  margin-inline-start: auto;
+  color: #475569;
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+#meetingBackToBooking:hover:not(:disabled) {
+  color: #334155;
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.12);
+}
+
+#meetingRequestCancel {
+  margin-inline-start: 0;
   color: #b91c1c;
+  border-color: #f87171;
+  background: #ffffff;
+}
+
+#meetingRequestCancel:hover:not(:disabled) {
+  color: #991b1b;
+  border-color: #dc2626;
+  background: #fef2f2;
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.12);
+}
+
+#meetingCancelMessage:empty {
+  display: none;
+}
+
+#meetingCancelMessage:not(:empty) {
+  flex-basis: 100%;
+}
+
+@media (max-width: 720px) {
+  #meetingBackToBooking {
+    margin-inline-start: 0;
+  }
+
+  #meetingRequestCancel {
+    margin-bottom: 8px;
+  }
 }
 
 #meetingFormTitle {
   scroll-margin-top: 90px;
 }
 
-#meetingMyRequestsBody .meeting-my-request-row {
+#meetingMyRequestsBody .meeting-my-request-row.is-editable {
   cursor: pointer;
 }
 
-#meetingMyRequestsBody .meeting-my-request-row:is(:hover, :focus-within, .is-selected) {
+#meetingMyRequestsBody .meeting-my-request-row.is-editable:is(:hover, :focus-within),
+#meetingMyRequestsBody .meeting-my-request-row.is-selected {
   background: var(--theme-pink-50, #fff1f6);
 }
 
@@ -2321,4 +2389,26 @@
   outline: 2px solid var(--theme-pink-700, #be185d);
   outline-offset: 4px;
   border-radius: 3px;
+}
+
+.meeting-my-requests-notice {
+  margin: 0 14px 12px;
+  padding: 10px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 13px;
+}
+
+#meetingMyRequestsPanel {
+  scroll-margin-top: 90px;
+}
+
+/* Details stay readable in the list now that request rows do not open a detail dialog. */
+#meetingMyRequestsPanel .meeting-staff-purpose-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
 }

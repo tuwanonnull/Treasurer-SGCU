@@ -3,6 +3,7 @@
 .project-document-panel h3 { margin: 0 0 8px; }
 .project-document-context { margin: 0; color: #64748b; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; }
 .project-document-entry-help { margin: 8px 0 0; color: #64748b; font-size: 13px; line-height: 1.6; }
+#projectDocumentHelp { font-size: 11px; font-weight: 400; color: #9ca3af; }
 .project-document-download-hint { margin: 12px 0 20px; color: #475569; font-size: 13px; line-height: 1.6; }
 .project-document-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0 12px; }
 .project-document-type { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0; padding: 18px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; color: #334155; font: inherit; text-align: left; white-space: normal; cursor: pointer; }

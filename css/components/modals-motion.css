@@ -104,6 +104,11 @@
   color: #6b7280;
 }
 
+#projectModalHeaderRow:empty,
+#projectModal .modal-subtitle:has(> #projectModalTitleBadge:empty) {
+  display: none;
+}
+
 .modal-close {
   border: none;
   background: transparent;

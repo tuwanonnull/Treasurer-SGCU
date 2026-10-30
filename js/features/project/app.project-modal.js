@@ -1,4 +1,61 @@
 /* Modal: รายละเอียดโครงการ + PDF autofill */
+const projectDocumentCloseAnimations = new WeakMap();
+
+function revealProjectDocumentPanel(button) {
+  // Keep the opening button visible and focused; entering an input here can
+  // open the mobile keyboard or compete with the document's scroll animation.
+  button.focus({ preventScroll: true });
+  const containerRect = projectModalBodyEl.getBoundingClientRect();
+  const buttonRect = button.getBoundingClientRect();
+  const top = projectModalBodyEl.scrollTop + buttonRect.top - containerRect.top - 16;
+  // Opening a form should move down toward it, never pull the reader back up.
+  if (top <= projectModalBodyEl.scrollTop) return;
+  projectModalBodyEl.scrollTo({
+    top,
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+  });
+}
+
+function toggleProjectDocumentPanel(panel, button) {
+  const opening = button.getAttribute("aria-expanded") !== "true";
+  const previousAnimation = projectDocumentCloseAnimations.get(panel);
+  projectDocumentCloseAnimations.delete(panel);
+  previousAnimation?.cancel();
+  button.setAttribute("aria-expanded", String(opening));
+  panel.inert = !opening;
+  if (opening) {
+    panel.hidden = false;
+    return true;
+  }
+  if (panel.contains(document.activeElement)) button.focus({ preventScroll: true });
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !panel.animate) {
+    panel.hidden = true;
+    return false;
+  }
+  const style = getComputedStyle(panel);
+  const animation = panel.animate([
+    {
+      opacity: style.opacity, transform: style.transform, height: style.height,
+      paddingTop: style.paddingTop, paddingBottom: style.paddingBottom,
+      marginTop: style.marginTop, borderTopWidth: style.borderTopWidth,
+      borderBottomWidth: style.borderBottomWidth, overflow: "hidden", minHeight: "0"
+    },
+    {
+      opacity: 0, transform: "translateY(6px)", height: "0px",
+      paddingTop: "0px", paddingBottom: "0px", marginTop: "0px",
+      borderTopWidth: "0px", borderBottomWidth: "0px", overflow: "hidden", minHeight: "0"
+    }
+  ], { duration: 260, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards" });
+  projectDocumentCloseAnimations.set(panel, animation);
+  animation.finished.then(() => {
+    if (projectDocumentCloseAnimations.get(panel) !== animation) return;
+    panel.hidden = true;
+    projectDocumentCloseAnimations.delete(panel);
+    animation.cancel();
+  }, () => {}); // Reopening cancels the pending close without hiding the panel.
+  return false;
+}
+
 function openProjectModal(project) {
   if (!projectModalEl) return;
 
@@ -403,12 +460,9 @@ function openProjectModal(project) {
   const documentsButton = projectModalBodyEl.querySelector("[data-project-documents]");
   documentsButton?.addEventListener("click", () => {
     const panel = projectModalBodyEl.querySelector("#projectDocumentPanel");
-    panel.hidden = !panel.hidden;
-    documentsButton.setAttribute("aria-expanded", String(!panel.hidden));
-    if (!panel.hidden) {
+    if (toggleProjectDocumentPanel(panel, documentsButton)) {
       if (!panel.childElementCount) mountProjectDocuments(panel, project);
-      panel.querySelector("button")?.focus();
-      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      revealProjectDocumentPanel(documentsButton);
     }
   });
 
@@ -416,12 +470,9 @@ function openProjectModal(project) {
   if (pdfBtn) {
     pdfBtn.addEventListener("click", () => {
       const panel = projectModalBodyEl.querySelector("#advanceLoanPanel");
-      panel.hidden = !panel.hidden;
-      pdfBtn.setAttribute("aria-expanded", String(!panel.hidden));
-      if (!panel.hidden) {
+      if (toggleProjectDocumentPanel(panel, pdfBtn)) {
         if (!panel.childElementCount) mountAdvanceLoanForm(panel, project);
-        panel.querySelector("input")?.focus();
-        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        revealProjectDocumentPanel(pdfBtn);
       }
     });
   }

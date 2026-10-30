@@ -28,9 +28,11 @@
                     </select>
                   </div>
                   <div class="borrow-form-field">
-                    <label class="login-label" for="meetingDate">วันที่</label>
-                    <input id="meetingDate" class="login-input" type="date" required />
-                    <div class="section-text-sm">กรุณากรอกปีเป็น ค.ศ. (เช่น 2026)</div>
+                    <div class="meeting-date-heading">
+                      <label class="login-label" for="meetingDate">วันที่</label>
+                      <span id="meetingDateHint" class="section-text-sm">กรุณากรอกปีเป็น ค.ศ. (เช่น 2026)</span>
+                    </div>
+                    <input id="meetingDate" class="login-input" type="date" aria-describedby="meetingDateHint" required />
                   </div>
                 </div>
 
@@ -77,7 +79,6 @@
                       </select>
                     </div>
                   </div>
-                  <div id="meetingManageBookingSummary" class="meeting-manage-summary" hidden></div>
                   <div id="meetingManageRescheduleFields" hidden>
                     <div class="borrow-form-row">
                       <div class="borrow-form-field">
@@ -85,9 +86,11 @@
                         <select id="meetingRescheduleRoom" class="login-input"></select>
                       </div>
                       <div class="borrow-form-field">
-                        <label class="login-label" for="meetingRescheduleDate">วันที่</label>
-                        <input id="meetingRescheduleDate" class="login-input" type="date" />
-                        <div class="section-text-sm">กรุณากรอกปีเป็น ค.ศ. (เช่น 2026)</div>
+                        <div class="meeting-date-heading">
+                          <label class="login-label" for="meetingRescheduleDate">วันที่</label>
+                          <span id="meetingRescheduleDateHint" class="section-text-sm">กรุณากรอกปีเป็น ค.ศ. (เช่น 2026)</span>
+                        </div>
+                        <input id="meetingRescheduleDate" class="login-input" type="date" aria-describedby="meetingRescheduleDateHint" />
                       </div>
                     </div>
                     <div class="borrow-form-row">
@@ -101,29 +104,31 @@
                       </div>
                     </div>
                   </div>
-                  <div id="meetingManagePurposeRow" class="borrow-form-row" hidden>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="meetingManagePurpose">วัตถุประสงค์การใช้ห้อง</label>
-                      <textarea id="meetingManagePurpose" class="login-input" rows="3" readonly></textarea>
+                  <div class="meeting-manage-notes">
+                    <div id="meetingManagePurposeRow" class="borrow-form-row" hidden>
+                      <div class="borrow-form-field">
+                        <label class="login-label" for="meetingManagePurpose">วัตถุประสงค์การใช้ห้อง</label>
+                        <textarea id="meetingManagePurpose" class="login-input" rows="3" readonly></textarea>
+                      </div>
                     </div>
-                  </div>
-                  <div id="meetingManageReasonRow" class="borrow-form-row" hidden>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="meetingCancelReason">เหตุผล</label>
-                      <textarea
-                        id="meetingCancelReason"
-                        class="login-input"
-                        rows="2"
-                        placeholder="ระบุเหตุผลที่ต้องการจัดการคำขอ"
-                        required
-                      ></textarea>
+                    <div id="meetingManageReasonRow" class="borrow-form-row" hidden>
+                      <div class="borrow-form-field">
+                        <label class="login-label" for="meetingCancelReason">เหตุผล</label>
+                        <textarea
+                          id="meetingCancelReason"
+                          class="login-input"
+                          rows="2"
+                          placeholder="ระบุเหตุผลที่ต้องการจัดการคำขอ"
+                          required
+                        ></textarea>
+                      </div>
                     </div>
                   </div>
                   <div class="meeting-form-actions">
-                    <button id="meetingManageSubmit" class="btn-primary" type="submit" disabled>ส่งคำขอ</button>
-                    <button id="meetingBackToBooking" class="btn-ghost" type="button" hidden>ยกเลิกการแก้ไข</button>
-                    <button id="meetingRequestCancel" class="btn-ghost meeting-request-cancel" type="button" hidden>ขอยกเลิกคำขอ</button>
+                    <button id="meetingRequestCancel" class="btn-ghost meeting-request-cancel" type="button" hidden>ขอยกเลิกการจอง</button>
                     <button id="meetingReturnToEdit" class="btn-ghost" type="button" hidden>กลับไปแก้ไข</button>
+                    <button id="meetingBackToBooking" class="btn-ghost" type="button" hidden>ละทิ้งการแก้ไข</button>
+                    <button id="meetingManageSubmit" class="btn-primary" type="submit" disabled>ส่งคำขอ</button>
                     <span id="meetingCancelMessage" class="section-text-sm" aria-live="polite"></span>
                   </div>
                 </form>
@@ -134,10 +139,11 @@
           <div id="meetingMyRequestsPanel" class="panel panel-hover section-appear section-delay-2 meeting-my-requests-panel">
             <div class="panel-header">
               <div>
-                <div class="panel-title" id="meetingMyRequestsTitle">คำขอจองของฉัน</div>
-                <div class="panel-caption">กดที่รายการเพื่อดูข้อมูลหรือจัดการคำขอในแบบฟอร์มด้านบน</div>
+                <div class="panel-title" id="meetingMyRequestsTitle" tabindex="-1">คำขอจองของฉัน</div>
+                <div class="panel-caption">ดูรายละเอียดในตาราง หรือกดรายการที่ยังแก้ไขได้เพื่อจัดการคำขอ</div>
               </div>
             </div>
+            <div id="meetingMyRequestsNotice" class="meeting-my-requests-notice" role="status" aria-live="polite" hidden></div>
             <div id="meetingMyRequestsState" class="panel-body section-text-sm" role="status">กำลังโหลดคำขอ...</div>
             <div id="meetingMyRequestsWrapper" class="table-wrapper" hidden>
               <table class="meeting-my-requests-table" aria-labelledby="meetingMyRequestsTitle">
