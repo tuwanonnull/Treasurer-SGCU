@@ -2290,7 +2290,7 @@ function initMeetingRoomStaffApproval() {
       payload.status = "rejected";
       payload.rejectionReason = buildNoShowReason(booking.rejectionReason || "");
     }
-    if (booking.status !== "reschedule_requested" && status === "rejected") {
+    if (booking.status !== "reschedule_requested" && booking.status !== "cancel_requested" && status === "rejected") {
       let rejectionReason = (options.rejectionReason || "").toString().trim();
       if (!rejectionReason) {
         rejectionReason = (await askRejectionReason(booking.rejectionReason || "")) || "";
@@ -2312,6 +2312,7 @@ function initMeetingRoomStaffApproval() {
       payload.cancelledByRequester = false;
     }
     if (booking.status === "cancel_requested" && status === "rejected") {
+      payload.rejectionReason = "";
       payload.cancelBaseStatus = "";
       payload.cancelledByRequester = true;
       payload.cancelledAt = firestore.serverTimestamp();
@@ -2756,7 +2757,7 @@ function initMeetingRoomStaffApproval() {
       } else if (action === "reject") {
         void setStatusById(id, "rejected").finally(restoreButton);
       } else if (action === "approve-cancel") {
-        void setStatusById(id, "rejected", { rejectionReason: "อนุมัติคำขอยกเลิก" }).finally(restoreButton);
+        void setStatusById(id, "rejected").finally(restoreButton);
       } else if (action === "reject-cancel") {
         void setStatusById(id, "approved").finally(restoreButton);
       } else if (action === "cancel") {

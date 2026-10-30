@@ -2037,7 +2037,7 @@ function initMeetingRoomBookingApp() {
       payload.status = "rejected";
       payload.rejectionReason = buildNoShowReason(booking.rejectionReason || "");
     }
-    if (booking.status !== "reschedule_requested" && nextStatus === "rejected") {
+    if (booking.status !== "reschedule_requested" && booking.status !== "cancel_requested" && nextStatus === "rejected") {
       let rejectionReason = (await askRejectionReason(booking.rejectionReason || "")) || "";
       if (!rejectionReason) {
         setBookingDetailStatusMessage("กรุณาระบุเหตุผลที่ไม่อนุมัติ", "#b91c1c");
@@ -2056,6 +2056,7 @@ function initMeetingRoomBookingApp() {
       payload.cancelledByRequester = false;
     }
     if (booking.status === "cancel_requested" && nextStatus === "rejected") {
+      payload.rejectionReason = "";
       payload.cancelBaseStatus = "";
       payload.cancelledByRequester = true;
       payload.cancelledAt = firestore.serverTimestamp();
