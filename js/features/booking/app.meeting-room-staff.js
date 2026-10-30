@@ -1253,20 +1253,51 @@ function initMeetingRoomStaffApproval() {
       .join("");
   };
 
+  const roomNameKey = (value) =>
+    (value || "").toString().normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
+
+  // Serialize room mutations across tabs. Read legacy IDs as well as IDs recorded
+  // by concurrent writers, then read their current values inside the transaction.
+  // The catalog has no name, so room lists never display it as a room.
+  const mutateRoomCatalog = async (change) => {
+    const collection = firestore.collection(firestore.db, ROOM_COLLECTION_NAME);
+    const snapshot = await firestore.getDocs(collection);
+    const catalogRef = firestore.doc(firestore.db, ROOM_COLLECTION_NAME, "__catalog");
+    return firestore.runTransaction(firestore.db, async (transaction) => {
+      const catalog = await transaction.get(catalogRef);
+      const ids = [...new Set([
+        ...snapshot.docs.map((item) => item.id),
+        ...(catalog.exists() ? catalog.data().roomIds || [] : [])
+      ])].filter((id) => id !== "__catalog");
+      const current = [];
+      for (const id of ids) {
+        const item = await transaction.get(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, id));
+        if (item.exists() && roomNameKey(item.data().name)) current.push({ ...item.data(), id });
+      }
+      const result = change(transaction, current);
+      transaction.set(catalogRef, { roomIds: current.map((room) => room.id) });
+      return result;
+    });
+  };
+
   const seedDefaultRoomsIfEmpty = async () => {
     if (!hasFirestore || isSeedingDefaultRooms) return;
     isSeedingDefaultRooms = true;
     try {
-      for (const room of DEFAULT_ROOMS) {
-        await firestore.addDoc(firestore.collection(firestore.db, ROOM_COLLECTION_NAME), {
-          name: room.name,
-          bookingAccess: normalizeRoomBookingAccess(room.bookingAccess),
-          createdAt: firestore.serverTimestamp(),
-          updatedAt: firestore.serverTimestamp()
-        });
-      }
+      await mutateRoomCatalog((transaction, current) => {
+        if (current.length) return;
+        for (const room of DEFAULT_ROOMS) {
+          transaction.set(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, room.id), {
+            name: room.name,
+            bookingAccess: normalizeRoomBookingAccess(room.bookingAccess),
+            createdAt: firestore.serverTimestamp(),
+            updatedAt: firestore.serverTimestamp()
+          });
+          current.push(room);
+        }
+      });
     } catch (err) {
-      // keep fallback rooms if seed fails
+      // Keep fallback rooms if the server cannot confirm an empty collection.
     } finally {
       isSeedingDefaultRooms = false;
     }
@@ -1390,7 +1421,7 @@ function initMeetingRoomStaffApproval() {
       setRoomManageMessage("กรุณากรอกชื่อห้องประชุม", "#b91c1c");
       return false;
     }
-    const duplicate = rooms.some((room) => room.name.toLowerCase() === name.toLowerCase());
+    const duplicate = rooms.some((room) => roomNameKey(room.name) === roomNameKey(name));
     if (duplicate) {
       setRoomManageMessage("มีห้องประชุมชื่อนี้อยู่แล้ว", "#b91c1c");
       return false;
@@ -1400,11 +1431,17 @@ function initMeetingRoomStaffApproval() {
       return false;
     }
     try {
-      const createdDoc = await firestore.addDoc(firestore.collection(firestore.db, ROOM_COLLECTION_NAME), {
-        name,
-        bookingAccess,
-        createdAt: firestore.serverTimestamp(),
-        updatedAt: firestore.serverTimestamp()
+      const createdDoc = firestore.doc(firestore.collection(firestore.db, ROOM_COLLECTION_NAME));
+      await mutateRoomCatalog((transaction, current) => {
+        if (current.some((room) => roomNameKey(room.name) === roomNameKey(name))) {
+          throw new Error("duplicate-room");
+        }
+        transaction.set(createdDoc, {
+          name, bookingAccess,
+          createdAt: firestore.serverTimestamp(),
+          updatedAt: firestore.serverTimestamp()
+        });
+        current.push({ id: createdDoc.id, name });
       });
       await writeAuditLog(
         "meeting_room.created",
@@ -1418,7 +1455,7 @@ function initMeetingRoomStaffApproval() {
       if (roomManageInput) roomManageInput.value = "";
       return true;
     } catch (err) {
-      setRoomManageMessage("ไม่สามารถเพิ่มห้องประชุมได้ในขณะนี้", "#b91c1c");
+      setRoomManageMessage(err?.message === "duplicate-room" ? "มีห้องประชุมชื่อนี้อยู่แล้ว" : "ไม่สามารถเพิ่มห้องประชุมได้ในขณะนี้", "#b91c1c");
       return false;
     }
   };
@@ -1496,7 +1533,12 @@ function initMeetingRoomStaffApproval() {
       return false;
     }
     try {
-      await firestore.deleteDoc(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId));
+      await mutateRoomCatalog((transaction, current) => {
+        if (current.length <= 1) throw new Error("last-room");
+        transaction.delete(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId));
+        const index = current.findIndex((item) => item.id === roomId);
+        if (index >= 0) current.splice(index, 1);
+      });
       await writeAuditLog(
         "meeting_room.deleted",
         "meetingRoom",
@@ -1522,25 +1564,27 @@ function initMeetingRoomStaffApproval() {
       setRoomManageMessage("กรุณากรอกชื่อห้องประชุมใหม่", "#b91c1c");
       return false;
     }
-    if (nextName.toLowerCase() === room.name.toLowerCase()) {
+    if (roomNameKey(nextName) === roomNameKey(room.name)) {
       setRoomManageMessage("ชื่อห้องประชุมยังเหมือนเดิม", "#6b7280");
       return true;
     }
     const duplicate = rooms.some(
-      (item) => item.id !== roomId && item.name.toLowerCase() === nextName.toLowerCase()
+      (item) => item.id !== roomId && roomNameKey(item.name) === roomNameKey(nextName)
     );
     if (duplicate) {
       setRoomManageMessage("มีห้องประชุมชื่อนี้อยู่แล้ว", "#b91c1c");
       return false;
     }
     try {
-      await firestore.updateDoc(
-        firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId),
-        {
+      await mutateRoomCatalog((transaction, current) => {
+        if (current.some((item) => item.id !== roomId && roomNameKey(item.name) === roomNameKey(nextName))) {
+          throw new Error("duplicate-room");
+        }
+        transaction.update(firestore.doc(firestore.db, ROOM_COLLECTION_NAME, roomId), {
           name: nextName,
           updatedAt: firestore.serverTimestamp()
-        }
-      );
+        });
+      });
       await writeAuditLog(
         "meeting_room.renamed",
         "meetingRoom",
@@ -1553,7 +1597,7 @@ function initMeetingRoomStaffApproval() {
       setRoomManageMessage("แก้ไขชื่อห้องประชุมเรียบร้อยแล้ว", "#047857");
       return true;
     } catch (err) {
-      setRoomManageMessage("ไม่สามารถแก้ไขชื่อห้องประชุมได้ในขณะนี้", "#b91c1c");
+      setRoomManageMessage(err?.message === "duplicate-room" ? "มีห้องประชุมชื่อนี้อยู่แล้ว" : "ไม่สามารถแก้ไขชื่อห้องประชุมได้ในขณะนี้", "#b91c1c");
       return false;
     }
   };
