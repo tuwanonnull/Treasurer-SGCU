@@ -237,12 +237,18 @@ function mountReceiptForm(form, project, type) {
   rows.addEventListener("input", refresh);
   addRow();
   form.querySelector("[data-receipt-fields]").disabled = !template.available || !range;
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const button = form.querySelector('[type="submit"]');
+    if (button.disabled) return;
     const error = form.querySelector("[data-receipt-error]");
     error.textContent = "";
     if (!resolveProjectReceiptTemplate(project).available || !form.reportValidity()) return;
     let preview;
+    const buttonLabel = button.textContent;
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.textContent = "กำลังเตรียมเอกสาร…";
     try {
       const data = Object.fromEntries(new FormData(form));
       for (const input of form.querySelectorAll("input[required]")) {
@@ -259,12 +265,20 @@ function mountReceiptForm(form, project, type) {
       applyThaiSegmentation(printDocument.querySelector(".receipt-sheet"), "p, .signature, td:not(.money), .fill");
       preview = window.open("", "_blank");
       if (!preview) throw new Error("ไม่สามารถเปิดตัวอย่างได้ กรุณาอนุญาตหน้าต่างป๊อปอัปแล้วลองอีกครั้ง");
+      showProjectDocumentLoading(preview);
+      // Let the loading view paint before replacing it with the document.
+      await new Promise(resolve => window.setTimeout(resolve, 180));
+      if (preview.closed) throw new Error("หน้าตัวอย่างถูกปิด กรุณาเปิดตัวอย่างอีกครั้ง");
       preview.document.open();
       preview.document.write("<!doctype html>" + printDocument.documentElement.outerHTML);
       preview.document.close();
     } catch (reason) {
       if (preview) preview.close();
       error.textContent = reason.message || "สร้างเอกสารไม่สำเร็จ กรุณาลองอีกครั้ง";
+    } finally {
+      button.disabled = false;
+      button.removeAttribute("aria-busy");
+      button.textContent = buttonLabel;
     }
   });
 }

@@ -292,6 +292,18 @@ async function downloadProjectPdf(project, signatureData, printWin = null) {
   }
 }
 
+function showProjectDocumentLoading(printWin) {
+printWin.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>กำลังเตรียมเอกสาร</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fffafd; color: #475569; font: 16px/1.6 system-ui, sans-serif; }
+    [role="status"] { padding: 24px; text-align: center; }
+    .spinner { display: block; width: 32px; height: 32px; margin: 0 auto 16px; border: 3px solid #fce7f3; border-top-color: #db2777; border-radius: 50%; animation: spin 800ms linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+  </style></head><body><div role="status"><span class="spinner" aria-hidden="true"></span>กำลังเตรียมเอกสาร…</div></body></html>`);
+printWin.document.close();
+}
+
 function mountAdvanceLoanForm(panel, project) {
   const isCentral = ["องค์การบริหารสโมสรนิสิต", "สภานิสิต", "องค์การบริหารสโมสรนิสิต, สภานิสิต"].includes(project.orgGroup);
   const field = (name, label, type = "text") => `<label class="project-document-field">${escapeHtml(label)} *<input class="login-input" name="${name}" type="${type}" maxlength="150" required></label>`;
@@ -319,18 +331,19 @@ function mountAdvanceLoanForm(panel, project) {
     if (empty) { error.textContent = "กรุณากรอกข้อมูลผู้ลงนามให้ครบถ้วน"; empty.focus(); return; }
     let printWin;
     button.disabled = true;
+    button.setAttribute("aria-busy", "true");
     button.textContent = "กำลังเตรียมเอกสาร…";
     try {
       printWin = window.open("", "_blank");
       if (!printWin) throw new Error("กรุณาอนุญาตหน้าต่างป๊อปอัป แล้วเปิดตัวอย่างอีกครั้ง");
-      printWin.document.write('<!doctype html><html lang="th"><meta charset="utf-8"><title>กำลังเตรียมเอกสาร</title><body>กำลังเตรียมเอกสาร…</body></html>');
-      printWin.document.close();
+      showProjectDocumentLoading(printWin);
       await downloadProjectPdf(project, signatureData, printWin);
     } catch (reason) {
       if (printWin && !printWin.closed) printWin.close();
       error.textContent = reason.message || "ไม่สามารถสร้างเอกสารได้ กรุณาลองใหม่อีกครั้ง";
     } finally {
       button.disabled = false;
+      button.removeAttribute("aria-busy");
       button.textContent = "ดูตัวอย่าง / พิมพ์ PDF";
     }
   });

@@ -24,6 +24,17 @@
 .project-document-row > button { margin-top: 8px; }
 .project-document-total { font-weight: 700; overflow-wrap: anywhere; }
 .project-document-error { color: #b91c1c; }
+.project-document-panel:not([hidden]), .project-document-form:not([hidden]) { animation: project-document-enter 220ms ease-out both; }
+.project-document-form button[aria-busy="true"] { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.project-document-form button[aria-busy="true"]::before { content: ""; width: 14px; height: 14px; flex-shrink: 0; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: project-document-spin 800ms linear infinite; }
+@keyframes project-document-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes project-document-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .project-document-panel:not([hidden]), .project-document-form:not([hidden]), .project-document-form button[aria-busy="true"]::before { animation: none; }
+}
 @media (max-width: 600px) {
   .project-document-panel { padding: 12px; }
   .project-document-grid { grid-template-columns: minmax(0, 1fr); }
