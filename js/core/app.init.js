@@ -521,7 +521,6 @@ function initDashboardMobileActionBar() {
       <header class="mobile-filter-header">
         <div>
           <h2 id="dashboardMobileFilterTitle" class="mobile-filter-title">ตัวกรองภาพรวมโครงการ</h2>
-          <p class="mobile-filter-caption">เลือกปีการศึกษา ประเภทองค์กร ฝ่าย/ชมรม หรือค้นหาโครงการ</p>
         </div>
         <button class="mobile-filter-close" type="button" aria-label="ปิดตัวกรอง" data-dashboard-filter-close>×</button>
       </header>
@@ -572,6 +571,10 @@ function initDashboardMobileActionBar() {
       year !== initialYear ? `ปี ${getSelectedText("yearSelectStaff")}` : "",
       orgType !== "all" ? getSelectedText("orgTypeSelectStaff") : "",
       org !== "all" ? getSelectedText("orgSelectStaff") : "",
+      getStaffProjectTrackingFilters().monthFrom || getStaffProjectTrackingFilters().monthTo ? "ช่วงเดือน" : "",
+      getStaffProjectTrackingFilters().orgs.length ? "ฝ่ายที่เปรียบเทียบ" : "",
+      getStaffProjectTrackingFilters().status !== "all" ? getSelectedText("projectStatusFilterStaff") : "",
+      getStaffProjectTrackingFilters().advance !== "all" ? getSelectedText("projectAdvanceFilterStaff") : "",
       search ? `ค้นหา: ${search}` : ""
     ].filter(Boolean);
   };
@@ -690,6 +693,8 @@ function initDashboardMobileActionBar() {
     }
   });
 
+  sheet.addEventListener("change", sync);
+  sheet.addEventListener("input", sync);
   section.addEventListener("change", sync);
   section.addEventListener("input", sync);
   document.querySelectorAll(".page-view").forEach((pageEl) => {
@@ -2317,6 +2322,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     closeDesktopNavGroups();
   });
 
+  ["projectStatusFilterStaff", "projectAdvanceFilterStaff", "projectMonthFromStaff", "projectMonthToStaff", "projectCompareOrgsStaff"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", () => refreshProjectStatus("staff"));
+  });
+  document.getElementById("projectOrgComparisonSortStaff")?.addEventListener("change", () => {
+    updateProjectOrgComparison(getVisibleProjectsForContext("staff"));
+  });
+  document.getElementById("projectCompareLevelStaff")?.addEventListener("change", () => {
+    document.querySelectorAll("#projectCompareOrgsStaff input").forEach((el) => { el.checked = false; });
+    document.getElementById("projectCompareSearchStaff").value = "";
+    refreshProjectStatus("staff");
+  });
+  document.getElementById("projectCompareSearchStaff")?.addEventListener("input", () => filterProjectComparisonOptions());
+  document.getElementById("projectCompareClearStaff")?.addEventListener("click", () => {
+    document.querySelectorAll("#projectCompareOrgsStaff input").forEach((el) => { el.checked = false; });
+    refreshProjectStatus("staff");
+  });
+  document.getElementById("projectFiltersDoneStaff")?.addEventListener("click", () => {
+    document.getElementById("dashboardFilterCloseStaff")?.click();
+  });
+  document.getElementById("projectFiltersResetStaff")?.addEventListener("click", () => resetProjectFilters("staff"));
+
   // ===== 6) Event เปลี่ยน filter ของ Project Status (public/staff) =====
   ["public", "staff"].forEach((key) => {
     const ctx = projectStatusContexts[key];
@@ -2358,7 +2384,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (ctx.projectSearchClearBtn && ctx.projectSearchInput) {
       ctx.projectSearchClearBtn.addEventListener("click", () => {
-        resetProjectFilters(key);
+        if (key === "staff") {
+          ctx.projectSearchInput.value = "";
+          refreshProjectStatus(key);
+        } else {
+          resetProjectFilters(key);
+        }
         ctx.projectSearchInput.focus();
       });
     }

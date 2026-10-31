@@ -1,3 +1,15 @@
+// Filter state is needed during startup, before the project UI feature loads.
+function getStaffProjectTrackingFilters() {
+  return {
+    status: document.getElementById("projectStatusFilterStaff")?.value || "all",
+    advance: document.getElementById("projectAdvanceFilterStaff")?.value || "all",
+    monthFrom: document.getElementById("projectMonthFromStaff")?.value || "",
+    monthTo: document.getElementById("projectMonthToStaff")?.value || "",
+    level: document.getElementById("projectCompareLevelStaff")?.value || "orgGroup",
+    orgs: Array.from(document.querySelectorAll('#projectCompareOrgsStaff input:checked')).map((el) => el.value)
+  };
+}
+
 /* Sorting + auth gating for Project Status */
 const lastProjectStatusRefreshSignatureByContext = {
   public: "",
@@ -27,7 +39,7 @@ function buildProjectStatusRefreshSignature(ctxKey) {
     ctx.orgTypeSelect?.value || "all",
     ctx.orgSelect?.value || "all",
     (ctx.projectSearchInput?.value || "").trim().toLowerCase(),
-    ctx.projectStatusFilterEl?.value || "all",
+    ctxKey === "staff" ? JSON.stringify(getStaffProjectTrackingFilters()) : "",
     (ctx.projectBudgetMinInput?.value || "").trim(),
     (ctx.projectBudgetMaxInput?.value || "").trim(),
     ctx.longestOpenAssistantFilterEl?.value || "all",
@@ -113,6 +125,7 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   }
   if (typeof initOrgTypeOptions === "function") initOrgTypeOptions();
   if (typeof initOrgOptions === "function") initOrgOptions();
+  if (ctxKey === "staff") syncProjectComparisonOptions();
   const signature = buildProjectStatusRefreshSignature(ctxKey);
   if (
     !didInitializeCharts &&
@@ -125,6 +138,18 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   }
 
   const filtered = getVisibleProjectsForContext(ctxKey);
+  if (ctxKey === "staff") {
+    updateProjectOrgComparison(filtered);
+    updateProjectFilterPresentation();
+    const filters = getStaffProjectTrackingFilters();
+    const result = document.getElementById("projectFilterResultsStaff");
+    if (result) result.textContent = filters.monthFrom && filters.monthTo && filters.monthFrom > filters.monthTo
+      ? "เดือนเริ่มต้นต้องไม่อยู่หลังเดือนสิ้นสุด"
+      : filtered.length
+      ? `พบ ${filtered.length} โครงการ`
+      : "ไม่พบโครงการ · ลองล้างตัวกรอง";
+    window.syncDashboardMobileActionBar?.();
+  }
   const summary = updateSummaryCards(filtered);
   updateDashboardInsights(filtered, summary);
   updateTable(filtered);
@@ -163,6 +188,19 @@ function resetProjectFilters(ctxKey = activeProjectStatusContext) {
       defaultYear && hasDefaultYear
         ? defaultYear
         : yearSelect.options[0]?.value || "all";
+  }
+  if (ctxKey === "staff") {
+    const level = document.getElementById("projectCompareLevelStaff");
+    if (level) level.value = "orgGroup";
+    ["projectMonthFromStaff", "projectMonthToStaff", "projectCompareSearchStaff"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    document.querySelectorAll('#projectCompareOrgsStaff input').forEach((el) => { el.checked = false; });
+    ["projectStatusFilterStaff", "projectAdvanceFilterStaff"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "all";
+    });
   }
   if (orgTypeSelect) orgTypeSelect.value = "all";
   initOrgOptions();
@@ -470,6 +508,10 @@ function syncDashboardDesktopFilterState() {
     currentYear !== button.dataset.filterDefaultYear,
     (ctx.orgTypeSelect?.value || "all") !== "all",
     (ctx.orgSelect?.value || "all") !== "all",
+    Boolean(getStaffProjectTrackingFilters().monthFrom || getStaffProjectTrackingFilters().monthTo),
+    getStaffProjectTrackingFilters().orgs.length > 0,
+    getStaffProjectTrackingFilters().status !== "all",
+    getStaffProjectTrackingFilters().advance !== "all",
     Boolean((ctx.projectSearchInput?.value || "").trim())
   ].filter(Boolean).length;
 

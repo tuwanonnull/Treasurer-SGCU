@@ -23,11 +23,28 @@
             <div class="dashboard-floating-filter-head">
               <div>
                 <strong>ตัวกรองโครงการ</strong>
-                <span>ปรับตัวกรองได้โดยไม่ออกจากส่วนที่กำลังดู</span>
               </div>
               <button id="dashboardFilterCloseStaff" class="modal-close" type="button" aria-label="ปิดตัวกรอง" title="ปิดตัวกรอง">✕</button>
             </div>
-            <div id="filterBarStaff" class="filter-bar">
+            <div id="filterBarStaff" class="filter-bar project-filter-panel">
+              <div class="project-filter-body">
+              <div class="filter-group filter-search">
+                <label for="projectSearchInputStaff">ค้นหาโครงการ</label>
+                <div class="search-box">
+                  <input
+                    id="projectSearchInputStaff"
+                    type="search"
+                    placeholder="รหัส / ชื่อโครงการ"
+                  />
+                  <button id="projectSearchClearStaff" class="search-clear" type="button" aria-label="ล้างคำค้น">
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div id="projectActiveFiltersStaff" class="project-active-filters" aria-label="เงื่อนไขที่เลือก"></div>
+              <fieldset class="project-filter-section">
+                <legend>ช่วงเวลา</legend>
+                <div class="project-filter-fields project-filter-fields-three">
               <div class="filter-group filter-year">
                 <label for="yearSelectStaff">ปีการศึกษา</label>
                 <select id="yearSelectStaff">
@@ -35,34 +52,74 @@
                   <option value="2568" selected>2568</option>
                 </select>
               </div>
-
               <div class="filter-group filter-orgtype">
-                <label for="orgTypeSelectStaff">ประเภทองค์กร</label>
-                <select id="orgTypeSelectStaff">
-                  <option value="all">ทุกประเภทองค์กร</option>
-                  <!-- JS จะเติมตัวเลือกฝ่าย/กลุ่มองค์กร -->
-                </select>
+                <label for="projectMonthFromStaff">ตั้งแต่เดือน</label>
+                <input id="projectMonthFromStaff" type="month" aria-describedby="projectMonthHintStaff" />
               </div>
-
               <div class="filter-group filter-org">
-                <label for="orgSelectStaff">ฝ่าย / ชมรม</label>
-                <select id="orgSelectStaff">
-                  <option value="all">ทุกฝ่าย / ทุกชมรม</option>
-                  <!-- JS จะเติมรายชื่อฝ่าย/ชมรม -->
+                <label for="projectMonthToStaff">ถึงเดือน</label>
+                <input id="projectMonthToStaff" type="month" aria-describedby="projectMonthHintStaff" />
+              </div>
+                </div>
+                <p id="projectMonthHintStaff" class="project-filter-hint">อิงวันปฏิบัติงานวันสุดท้าย (ไม่รวมรายการที่ไม่มีวันที่เมื่อเลือกเดือน)</p>
+                <p id="projectMonthErrorStaff" class="project-filter-error" role="alert" hidden>เดือนเริ่มต้นต้องไม่อยู่หลังเดือนสิ้นสุด</p>
+              </fieldset>
+              <fieldset class="project-filter-section project-organization-filter">
+                <legend>องค์กร / ฝ่าย <span id="projectCompareCountStaff" hidden></span></legend>
+                <!-- Retain option sources for the shared project context. -->
+                <div hidden>
+                  <select id="orgTypeSelectStaff" aria-label="ประเภทองค์กร"><option value="all">ทุกประเภทองค์กร</option></select>
+                  <select id="orgSelectStaff" aria-label="ฝ่าย / ชมรม"><option value="all">ทุกฝ่าย / ทุกชมรม</option></select>
+                </div>
+                <div class="project-organization-toolbar">
+                  <div class="filter-group">
+                    <label for="projectCompareLevelStaff">เลือกระดับ</label>
+                    <select id="projectCompareLevelStaff">
+                      <option value="orgGroup" selected>องค์กรใหญ่</option>
+                      <option value="orgName">ฝ่าย / ชมรม</option>
+                    </select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="projectCompareSearchStaff">ค้นหาในรายการ</label>
+                    <input id="projectCompareSearchStaff" type="search" placeholder="ชื่อองค์กร / ฝ่าย" />
+                  </div>
+                </div>
+                <div class="project-organization-selection">
+                  <span>เลือกได้หลายรายการ · ไม่เลือก = ทั้งหมด</span>
+                  <button id="projectCompareClearStaff" class="btn-ghost" type="button">ล้างที่เลือก</button>
+                </div>
+                <div id="projectCompareOrgsStaff" class="project-compare-options"></div>
+                <p id="projectCompareEmptyStaff" class="project-filter-hint" hidden>ไม่พบรายการที่ตรงกับคำค้น</p>
+              </fieldset>
+              <fieldset class="project-filter-section">
+                <legend>สถานะและการเงิน</legend>
+                <div class="project-filter-fields">
+              <div class="filter-group filter-orgtype">
+                <label for="projectStatusFilterStaff">สถานะโครงการ</label>
+                <select id="projectStatusFilterStaff">
+                  <option value="all">ทุกสถานะ</option>
+                  <option value="pending">อยู่ระหว่างดำเนินการ</option>
+                  <option value="approved">อนุมัติแล้ว</option>
+                  <option value="closed">ปิดโครงการแล้ว</option>
+                  <option value="terminal">ยกเลิก / ไม่ปิดโครงการ</option>
                 </select>
               </div>
-
-              <div class="filter-group filter-search">
-                <label for="projectSearchInputStaff">ค้นหาข้อความ (โค้ด / ชื่อ / ฝ่าย)</label>
-                <div class="search-box">
-                  <input
-                    id="projectSearchInputStaff"
-                    type="search"
-                    placeholder="พิมพ์คำค้น เช่น SGCU-01 หรือ ชมรมกีฬา"
-                  />
-                  <button id="projectSearchClearStaff" class="search-clear" type="button" aria-label="ล้างตัวกรองทั้งหมด">
-                    ✕
-                  </button>
+              <div class="filter-group filter-org">
+                <label for="projectAdvanceFilterStaff">เงินทดรองจ่าย</label>
+                <select id="projectAdvanceFilterStaff">
+                  <option value="all">ทุกโครงการ</option>
+                  <option value="borrowed">มีการยืมเงิน</option>
+                  <option value="not-borrowed">ไม่มีการยืมเงิน</option>
+                </select>
+              </div>
+                </div>
+              </fieldset>
+              </div>
+              <div class="dashboard-filter-results">
+                <span id="projectFilterResultsStaff" role="status" aria-live="polite"></span>
+                <div class="project-filter-actions">
+                  <button id="projectFiltersResetStaff" class="btn-ghost" type="button">ล้างทั้งหมด</button>
+                  <button id="projectFiltersDoneStaff" class="btn-primary" type="button">ดูผลลัพธ์</button>
                 </div>
               </div>
             </div>
@@ -411,6 +468,31 @@
               <header class="dashboard-section-header">
                 <h3 class="dashboard-section-title">วิเคราะห์เพิ่มเติม</h3>
               </header>
+            <article class="chart-card project-org-comparison-card">
+              <header class="project-comparison-header">
+                <div>
+                  <h3 id="projectOrgComparisonTitleStaff" class="chart-title">เปรียบเทียบระหว่างองค์กรใหญ่</h3>
+                  <p id="projectOrgComparisonCaptionStaff" class="chart-caption" aria-live="polite"></p>
+                </div>
+                <div class="filter-group project-comparison-sort">
+                  <label for="projectOrgComparisonSortStaff">เรียงตาม</label>
+                  <select id="projectOrgComparisonSortStaff">
+                    <option value="budget">วงเงินมาก → น้อย</option>
+                    <option value="count">จำนวนโครงการมาก → น้อย</option>
+                    <option value="rate">อัตราปิดสูง → ต่ำ</option>
+                    <option value="name">ชื่อองค์กร / ฝ่าย</option>
+                  </select>
+                </div>
+              </header>
+              <div class="project-org-comparison-scroll" role="region" aria-labelledby="projectOrgComparisonTitleStaff" tabindex="0">
+                <table class="data-table" aria-describedby="projectComparisonNoteStaff">
+                  <thead><tr><th id="projectOrgComparisonNameStaff" scope="col">องค์กรใหญ่</th><th scope="col">โครงการ</th><th scope="col">วงเงินรวม (บาท)</th><th scope="col">ปิดแล้ว</th><th scope="col">อัตราปิดโครงการ</th></tr></thead>
+                  <tbody id="projectOrgComparisonBodyStaff"></tbody>
+                </table>
+              </div>
+              <div id="projectOrgComparisonCardsStaff" class="project-comparison-mobile" role="list" aria-labelledby="projectOrgComparisonTitleStaff"></div>
+              <p id="projectComparisonNoteStaff" class="project-comparison-note">อัตราปิดไม่นับโครงการยกเลิก / ไม่ปิดโครงการ</p>
+            </article>
             <div class="dashboard-lower" style="margin-top:12px;">
               <article class="chart-card dashboard-budget-comparison-card dashboard-card-wide">
                 <header class="chart-header">

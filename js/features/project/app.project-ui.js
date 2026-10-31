@@ -180,16 +180,189 @@ function hasAdvanceBorrow(project) {
   return false;
 }
 
+function syncProjectComparisonOptions() {
+  const container = document.getElementById("projectCompareOrgsStaff");
+  const level = getStaffProjectTrackingFilters().level;
+  const select = document.getElementById(level === "orgGroup" ? "orgTypeSelectStaff" : "orgSelectStaff");
+  if (!container || !select) return;
+  const selected = new Set(getStaffProjectTrackingFilters().orgs);
+  const names = Array.from(select.options).filter((opt) => opt.value !== "all").map((opt) => opt.value);
+  const signature = JSON.stringify([level, names]);
+  if (container.dataset.options !== signature) {
+    container.replaceChildren();
+    names.forEach((name) => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = name;
+      input.checked = selected.has(name);
+      label.append(input, document.createTextNode(name));
+      container.appendChild(label);
+    });
+    container.dataset.options = signature;
+  }
+  const hasSelection = getStaffProjectTrackingFilters().orgs.length > 0;
+  const groupSelect = document.getElementById("orgTypeSelectStaff");
+  const orgSelect = document.getElementById("orgSelectStaff");
+  groupSelect.disabled = level === "orgGroup" && hasSelection;
+  orgSelect.disabled = hasSelection;
+  if (groupSelect.disabled) groupSelect.value = "all";
+  if (orgSelect.disabled) orgSelect.value = "all";
+  filterProjectComparisonOptions();
+}
+
+function filterProjectComparisonOptions() {
+  const query = (document.getElementById("projectCompareSearchStaff")?.value || "").trim().toLocaleLowerCase("th");
+  const labels = Array.from(document.querySelectorAll("#projectCompareOrgsStaff label"));
+  labels.forEach((label) => { label.hidden = !label.textContent.toLocaleLowerCase("th").includes(query); });
+  const empty = document.getElementById("projectCompareEmptyStaff");
+  if (empty) empty.hidden = labels.some((label) => !label.hidden);
+}
+
+function updateProjectFilterPresentation() {
+  const filters = getStaffProjectTrackingFilters();
+  const count = document.getElementById("projectCompareCountStaff");
+  const unit = filters.level === "orgGroup" ? "องค์กร" : "ฝ่าย";
+  if (count) {
+    count.textContent = `${filters.orgs.length} ${unit}`;
+    count.hidden = !filters.orgs.length;
+  }
+  const clear = document.getElementById("projectCompareClearStaff");
+  if (clear) clear.disabled = !filters.orgs.length;
+  const invalid = Boolean(filters.monthFrom && filters.monthTo && filters.monthFrom > filters.monthTo);
+  const error = document.getElementById("projectMonthErrorStaff");
+  if (error) error.hidden = !invalid;
+  ["projectMonthFromStaff", "projectMonthToStaff"].forEach((id) => {
+    document.getElementById(id)?.setAttribute("aria-invalid", String(invalid));
+  });
+  const chips = document.getElementById("projectActiveFiltersStaff");
+  if (!chips) return;
+  chips.replaceChildren();
+  const addChip = (label, clear) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "project-filter-chip";
+    button.textContent = `${label} ×`;
+    button.setAttribute("aria-label", `ล้าง ${label}`);
+    button.addEventListener("click", () => { clear(); refreshProjectStatus("staff"); });
+    chips.appendChild(button);
+  };
+  ["orgTypeSelectStaff", "orgSelectStaff", "projectStatusFilterStaff", "projectAdvanceFilterStaff"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && el.value !== "all") addChip(el.selectedOptions[0].textContent, () => { el.value = "all"; });
+  });
+  const monthLabel = (value) => {
+    if (!value) return "";
+    const [year, month] = value.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString("th-TH", { month: "short", year: "numeric" });
+  };
+  if (filters.monthFrom || filters.monthTo) addChip(`${monthLabel(filters.monthFrom) || "เริ่มต้น"} – ${monthLabel(filters.monthTo) || "เป็นต้นไป"}`, () => {
+    document.getElementById("projectMonthFromStaff").value = "";
+    document.getElementById("projectMonthToStaff").value = "";
+  });
+  filters.orgs.forEach((name) => addChip(name, () => {
+    document.querySelectorAll("#projectCompareOrgsStaff input").forEach((el) => { if (el.value === name) el.checked = false; });
+  }));
+  chips.hidden = !chips.childElementCount;
+}
+
+function buildProjectOrgComparisonRows(filtered, selectedOrgs = [], level = "orgName") {
+  const rows = new Map(selectedOrgs.map((name) => [name, { name, count: 0, budget: 0, closed: 0, eligible: 0 }]));
+  filtered.forEach((project) => {
+    const name = project[level] || (level === "orgGroup" ? "ไม่ระบุประเภทองค์กร" : "ไม่ระบุฝ่าย / ชมรม");
+    if (!rows.has(name)) rows.set(name, { name, count: 0, budget: 0, closed: 0, eligible: 0 });
+    const row = rows.get(name);
+    row.count++;
+    row.budget += Number(project.budget) || 0;
+    if (!isProjectTerminalWithoutClosure(project)) {
+      row.eligible++;
+      if (isProjectClosed(project)) row.closed++;
+    }
+  });
+  return Array.from(rows.values()).sort((a, b) => b.budget - a.budget || a.name.localeCompare(b.name, "th"));
+}
+
+function updateProjectOrgComparison(filtered) {
+  const body = document.getElementById("projectOrgComparisonBodyStaff");
+  const caption = document.getElementById("projectOrgComparisonCaptionStaff");
+  if (!body || !caption) return;
+  const filters = getStaffProjectTrackingFilters();
+  const rows = buildProjectOrgComparisonRows(filtered, filters.orgs, filters.level);
+  const sort = document.getElementById("projectOrgComparisonSortStaff")?.value || "budget";
+  const rate = (row) => row.eligible ? row.closed / row.eligible : -1;
+  rows.sort((a, b) => {
+    const difference = sort === "name" ? 0 : sort === "count" ? b.count - a.count
+      : sort === "rate" ? rate(b) - rate(a) : b.budget - a.budget;
+    return difference || a.name.localeCompare(b.name, "th");
+  });
+  const unit = filters.level === "orgGroup" ? "องค์กรใหญ่" : "ฝ่าย / ชมรม";
+  const title = document.getElementById("projectOrgComparisonTitleStaff");
+  const nameHeader = document.getElementById("projectOrgComparisonNameStaff");
+  if (title) title.textContent = `เปรียบเทียบระหว่าง${unit}`;
+  if (nameHeader) nameHeader.textContent = unit;
+  caption.textContent = `${rows.length} ${unit} · ${filtered.length} โครงการ ตามตัวกรอง`;
+  body.innerHTML = rows.length ? rows.map((row) => {
+    const percent = row.eligible ? Math.round(row.closed / row.eligible * 100) : null;
+    return `<tr>
+      <th scope="row"><span class="project-comparison-org-name">${escapeHtml(row.name)}</span></th>
+      <td class="project-comparison-number">${row.count.toLocaleString("th-TH")}</td>
+      <td><div class="project-comparison-budget"><strong>${formatMoney(row.budget)}</strong></div></td>
+      <td class="project-comparison-number">${row.closed.toLocaleString("th-TH")}</td>
+      <td><span class="project-comparison-percent">${percent === null ? '<span title="ไม่มีโครงการที่นำมาคำนวณอัตราปิด">—</span>' : `${percent}%`}</span></td>
+    </tr>`;
+  }).join("") : '<tr><td class="project-comparison-empty" colspan="5">ไม่พบโครงการที่ตรงกับตัวกรอง</td></tr>';
+
+  const cards = document.getElementById("projectOrgComparisonCardsStaff");
+  if (cards) cards.innerHTML = rows.length ? rows.map((row) => {
+    const percent = row.eligible ? `${Math.round(row.closed / row.eligible * 100)}%` : "—";
+    return `<article class="project-comparison-mobile-row" role="listitem">
+      <h4>${escapeHtml(row.name)}</h4>
+      <dl>
+        <div class="project-comparison-mobile-budget"><dt>วงเงินรวม (บาท)</dt><dd>${formatMoney(row.budget)}</dd></div>
+        <div><dt>โครงการ</dt><dd>${row.count.toLocaleString("th-TH")}</dd></div>
+        <div><dt>ปิดแล้ว</dt><dd>${row.closed.toLocaleString("th-TH")}</dd></div>
+        <div><dt>อัตราปิด</dt><dd>${percent}</dd></div>
+      </dl>
+    </article>`;
+  }).join("") : '<p class="project-comparison-empty">ไม่พบโครงการที่ตรงกับตัวกรอง</p>';
+
+}
+
+function matchesProjectTrackingFilters(project, filters) {
+  const closed = isProjectClosed(project);
+  const terminal = isProjectTerminalWithoutClosure(project);
+  const statusMatch = filters.status === "all" ||
+    (filters.status === "pending" && !closed && !terminal) ||
+    (filters.status === "approved" && isProjectApproved(project)) ||
+    (filters.status === "closed" && closed) ||
+    (filters.status === "terminal" && terminal);
+  const advanceMatch = filters.advance === "all" ||
+    (filters.advance === "borrowed" ? hasAdvanceBorrow(project) : !hasAdvanceBorrow(project));
+  let monthMatch = true;
+  if (filters.monthFrom || filters.monthTo) {
+    const date = project.lastWorkDateObj || parseProjectDate(project.lastWorkDate);
+    const month = date && !Number.isNaN(date.getTime())
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}` : "";
+    monthMatch = Boolean(month) && (!filters.monthFrom || month >= filters.monthFrom) &&
+      (!filters.monthTo || month <= filters.monthTo);
+  }
+  const orgMatch = !filters.orgs?.length || filters.orgs.includes(project[filters.level || "orgName"]);
+  return statusMatch && advanceMatch && monthMatch && orgMatch;
+}
+
 function filterProjects() {
   const year = yearSelect ? yearSelect.value : "all";
   const orgGroup = orgTypeSelect ? orgTypeSelect.value : "all";
   const org = orgSelect ? orgSelect.value : "all";
   const searchTerm = projectSearchInput ? projectSearchInput.value.trim().toLowerCase() : "";
 
+  const trackingFilters = activeProjectStatusContext === "staff"
+    ? getStaffProjectTrackingFilters() : { status: "all", advance: "all" };
   return projects.filter((p) => {
     const yearMatch = year === "all" || p.year === year;
-    const groupMatch = orgGroup === "all" || p.orgGroup === orgGroup;
-    const orgMatch = org === "all" || p.orgName === org;
+    const compareGroups = trackingFilters.level === "orgGroup" && trackingFilters.orgs?.length;
+    const groupMatch = compareGroups || orgGroup === "all" || p.orgGroup === orgGroup;
+    const orgMatch = trackingFilters.orgs?.length || org === "all" || p.orgName === org;
     let searchText = "";
     if (searchTerm) {
       searchText = p.searchText;
@@ -209,7 +382,7 @@ function filterProjects() {
     }
     const searchMatch = !searchTerm || searchText.includes(searchTerm);
 
-    return yearMatch && groupMatch && orgMatch && searchMatch;
+    return yearMatch && groupMatch && orgMatch && searchMatch && matchesProjectTrackingFilters(p, trackingFilters);
   });
 }
 
