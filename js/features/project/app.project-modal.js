@@ -444,11 +444,7 @@ function openProjectModal(project) {
         </div>
         ${closeCheckerContactHtml}
         ${documentUnavailableReason ? `<p class="project-document-entry-help">ยังไม่สามารถกรอกเอกสารประกอบการเบิกจ่ายได้: ${escapeHtml(documentUnavailableReason)}</p>` : `
-        <div class="modal-actions">
-          <button type="button" class="btn-primary" data-project-documents aria-expanded="false" aria-controls="projectDocumentPanel" aria-describedby="projectDocumentHelp">กรอกเอกสารประกอบการเบิกจ่าย</button>
-        </div>
-        <p id="projectDocumentHelp" class="project-document-entry-help">ใบสำคัญรับเงิน / ใบรับรองแทนใบเสร็จ — กรอกข้อมูลแล้วพิมพ์หรือบันทึกเป็น PDF</p>
-        <div id="projectDocumentPanel" class="project-document-panel" hidden></div>
+        <div id="projectDocumentPanel" class="project-document-section"></div>
         `}
       </section>
 
@@ -457,14 +453,8 @@ function openProjectModal(project) {
 
   projectModalBodyEl.innerHTML = html;
   openDialog(projectModalEl, { focusSelector: "#projectModalClose" });
-  const documentsButton = projectModalBodyEl.querySelector("[data-project-documents]");
-  documentsButton?.addEventListener("click", () => {
-    const panel = projectModalBodyEl.querySelector("#projectDocumentPanel");
-    if (toggleProjectDocumentPanel(panel, documentsButton)) {
-      if (!panel.childElementCount) mountProjectDocuments(panel, project);
-      revealProjectDocumentPanel(documentsButton);
-    }
-  });
+  const documentsPanel = projectModalBodyEl.querySelector("#projectDocumentPanel");
+  if (documentsPanel) mountProjectDocuments(documentsPanel, project);
 
   const pdfBtn = projectModalBodyEl.querySelector("[data-project-pdf]");
   if (pdfBtn) {

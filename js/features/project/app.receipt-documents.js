@@ -132,10 +132,9 @@ function resolveProjectReceiptTemplate(project) {
 }
 
 function mountProjectDocuments(panel, project) {
-  const esc = receiptEscape;
   panel.innerHTML = `
-    <h3>เลือกเอกสารที่ต้องการกรอก</h3>
-    <p class="project-document-context">${esc(project.code || "")} · ${esc(project.name || "")}<br>${esc(project.orgName || "")}</p>
+    <div class="project-document-header">
+    <div class="project-document-selector">
     <div class="project-document-types" role="group" aria-label="เลือกประเภทเอกสาร">
       ${Object.entries(PROJECT_RECEIPT_TITLES).map(([type, title]) => `<button type="button" class="project-document-type" data-receipt-type="${type}" aria-pressed="false">
         <span class="project-document-type-title">${title}</span>
@@ -143,12 +142,67 @@ function mountProjectDocuments(panel, project) {
         <span class="project-document-type-action" aria-hidden="true">เลือกเอกสารนี้ <span>→</span></span>
       </button>`).join("")}
     </div>
+    </div>
+    </div>
+    <div class="project-document-body" data-receipt-body hidden>
+    <div class="project-document-body-header">
+      <h3>เอกสารประกอบการเบิกจ่าย</h3>
+      <button type="button" class="project-document-collapse" data-receipt-collapse aria-label="ย่อแบบฟอร์มเอกสาร" title="ย่อแบบฟอร์ม" aria-expanded="false"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="project-document-guidance">
     <p class="project-document-mobile-description" data-receipt-description aria-live="polite">เลือกประเภทเอกสารเพื่อเริ่มกรอกข้อมูล</p>
     <p class="project-document-download-hint">แนะนำให้ดาวน์โหลดเอกสารผ่านคอมพิวเตอร์ (PC/Desktop)</p>
-    <div data-receipt-editor></div>`;
+    </div>
+    <div data-receipt-editor></div>
+    </div>`;
+  const editor = panel.querySelector("[data-receipt-editor]");
+  const body = panel.querySelector("[data-receipt-body]");
+  const collapse = panel.querySelector("[data-receipt-collapse]");
+  let bodyAnimation;
+  function animateBody(startHeight, startOpacity, opening) {
+    bodyAnimation?.cancel();
+    bodyAnimation = null;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !body.animate) {
+      body.hidden = !opening;
+      return Promise.resolve(true);
+    }
+    const endHeight = opening ? body.getBoundingClientRect().height : 0;
+    const animation = body.animate([
+      { height: `${startHeight}px`, opacity: startOpacity, overflow: "hidden" },
+      { height: `${endHeight}px`, opacity: opening ? 1 : 0, overflow: "hidden" }
+    ], { duration: 260, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "both" });
+    bodyAnimation = animation;
+    return animation.finished.then(() => {
+      if (bodyAnimation !== animation) return false;
+      body.hidden = !opening;
+      bodyAnimation = null;
+      animation.cancel();
+      return true;
+    }, () => false);
+  }
+  collapse.addEventListener("click", () => {
+    const height = body.getBoundingClientRect().height;
+    const opacity = getComputedStyle(body).opacity;
+    const selected = panel.querySelector('[data-receipt-type][aria-pressed="true"]');
+    selected?.focus({ preventScroll: true });
+    collapse.setAttribute("aria-expanded", "false");
+    panel.querySelectorAll("[data-receipt-type]").forEach(button => button.setAttribute("aria-pressed", "false"));
+    body.inert = true;
+    animateBody(height, opacity, false);
+  });
   panel.querySelectorAll("[data-receipt-type]").forEach((button) => {
     button.addEventListener("click", () => {
-      const editor = panel.querySelector("[data-receipt-editor]");
+      const opening = collapse.getAttribute("aria-expanded") !== "true";
+      const scrollContainer = panel.closest(".modal-body");
+      const initialScroll = scrollContainer?.scrollTop;
+      const startHeight = body.hidden ? 0 : body.getBoundingClientRect().height;
+      const startOpacity = body.hidden ? 0 : getComputedStyle(body).opacity;
+      bodyAnimation?.cancel();
+      bodyAnimation = null;
+      body.hidden = false;
+      body.inert = false;
+      collapse.hidden = false;
+      collapse.setAttribute("aria-expanded", "true");
       panel.querySelector("[data-receipt-description]").textContent = button.querySelector(".project-document-type-description").textContent;
       // Keep each form mounted so switching types does not discard entered values.
       panel.querySelectorAll("[data-receipt-type]").forEach((item) => {
@@ -165,10 +219,19 @@ function mountProjectDocuments(panel, project) {
         mountReceiptForm(form, project, button.dataset.receiptType);
       }
       form.hidden = false;
-      // Keep the mobile selector in view without opening the keyboard on a type change.
-      if (!window.matchMedia("(max-width: 600px)").matches) {
-        (form.querySelector("[data-template-note]") || form.querySelector("input"))?.focus();
-      }
+      animateBody(startHeight, startOpacity, true).then(completed => {
+        if (!completed || !opening || !scrollContainer || !body.isConnected || body.inert || body.hidden) return;
+        // Bring the selector near the top so more of the form is visible,
+        // while respecting any scroll the user made during expansion.
+        if (Math.abs(scrollContainer.scrollTop - initialScroll) > 2) return;
+        const room = button.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top - 16;
+        if (room <= 0) return;
+        scrollContainer.scrollBy({
+          top: room,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+        });
+      });
+      button.focus({ preventScroll: true });
     });
   });
 }
@@ -185,7 +248,7 @@ function mountReceiptForm(form, project, type) {
     `<label class="project-document-field">${label}${required ? " *" : ""}<input class="login-input" name="${name}" type="${inputType}" value="${esc(value)}" ${required ? "required" : ""} ${name === "unit" ? "readonly" : ""} ${inputType === "date" && range ? `min="${range.min}" max="${range.max}"` : ""} maxlength="${max}"></label>`;
   form.innerHTML = `
     ${template.available ? "" : `<p data-template-note role="status" tabindex="-1">${esc(template.note)}</p>`}
-    ${dateError ? `<p data-template-note role="status" tabindex="-1" class="project-document-error">${esc(dateError)}</p>` : `<p>วันที่ในเอกสารต้องอยู่ระหว่าง ${receiptDate(range.min)} ถึง ${receiptDate(range.max)} (วันที่อนุมัติถึงวันปฏิบัติงานสุดท้าย)</p>`}
+    ${dateError ? `<p data-template-note role="status" tabindex="-1" class="project-document-error">${esc(dateError)}</p>` : `<p class="project-document-date-hint">วันที่ในเอกสาร: <strong>${receiptDate(range.min)} – ${receiptDate(range.max)}</strong> <span>(วันที่อนุมัติถึงวันปฏิบัติงานสุดท้าย)</span></p>`}
     <fieldset data-receipt-fields>
       <legend>${PROJECT_RECEIPT_TITLES[type]}</legend>
       <p>ช่องที่มี * จำเป็นต้องกรอก</p>
