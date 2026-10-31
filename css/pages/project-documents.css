@@ -6,21 +6,34 @@
 #projectDocumentHelp { font-size: 11px; font-weight: 400; color: #9ca3af; }
 .project-document-download-hint { margin: 12px 0 20px; color: #475569; font-size: 13px; line-height: 1.6; }
 .project-document-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0 12px; }
-.project-document-type { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0; padding: 18px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; color: #334155; font: inherit; text-align: left; white-space: normal; cursor: pointer; }
-.project-document-type:hover { border-color: #db2777; background: #fffafd; }
-.project-document-type:focus-visible { outline: 3px solid #db2777; outline-offset: 3px; }
+.project-document-type { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0; padding: 18px; border: 1px solid var(--theme-border); border-radius: 12px; background: var(--theme-pink-50); color: var(--theme-pink-800); font: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.project-document-type:hover { border-color: var(--theme-pink-400); background: var(--theme-pink-100); }
+.project-document-type:focus-visible { outline: 3px solid var(--theme-pink-500); outline-offset: 3px; }
 .project-document-type-title { font-size: 16px; font-weight: 600; line-height: 1.5; }
-.project-document-type-description { color: #475569; font-size: 13px; line-height: 1.6; }
-.project-document-type-action { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; color: #9d174d; font-size: 13px; font-weight: 500; }
-.project-document-types [aria-pressed="true"] { color: #9d174d; border-color: #db2777; background: #fdf2f8; box-shadow: inset 0 0 0 1px #db2777; }
+.project-document-type-description { color: var(--theme-pink-800); font-size: 13px; line-height: 1.6; }
+.project-document-type-action { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; color: var(--theme-pink-700); font-size: 13px; font-weight: 500; }
+.project-document-types [aria-pressed="true"] { color: #fff; border-color: var(--theme-pink-700); background: var(--theme-pink-700); box-shadow: 0 2px 6px var(--theme-focus); }
+.project-document-types [aria-pressed="true"] .project-document-type-description,
+.project-document-types [aria-pressed="true"] .project-document-type-action { color: inherit; }
 .project-document-mobile-description { display: none; }
-.project-document-form { display: grid; gap: 12px; }
+.project-document-form { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 12px; }
 .project-document-form fieldset { min-width: 0; margin: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; }
 .project-document-form fieldset:disabled { opacity: .55; }
 .project-document-form legend { padding: 0 6px; font-weight: 600; }
 .project-document-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .project-document-field { display: grid; align-content: start; gap: 6px; min-width: 0; }
 .project-document-field .login-input { width: 100%; min-width: 0; box-sizing: border-box; }
+/* Keep the native date control within its grid cell in Safari and installed web apps. */
+.project-document-field input[type="date"] {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  min-height: 40px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.project-document-field input[type="date"]::-webkit-date-and-time-value { min-width: 0; text-align: left; }
 .project-document-form .project-document-row { margin-bottom: 12px; background: #fff; }
 .project-document-row > button { margin-top: 8px; }
 .project-document-total { font-weight: 700; overflow-wrap: anywhere; }

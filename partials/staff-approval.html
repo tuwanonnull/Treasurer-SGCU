@@ -277,21 +277,6 @@
           </div>
           <div id="staffApprovalStaffSection">
           <div id="staffApprovalMainPanel" class="staff-approval-main-panel">
-          <div id="staffApprovalPendingPanel" class="panel panel-hover staff-access-panel">
-            <div class="panel-header">
-              <div>
-                <h3 id="staffApprovalPanelTitle" class="panel-title">คำขอที่รออนุมัติ</h3>
-                <p id="staffApprovalPanelCaption" class="panel-caption">แสดงผล 0 รายการ</p>
-              </div>
-              <div class="tabs staff-approval-view-toggle" role="tablist" aria-label="เลือกมุมมองสมาชิกสตาฟ">
-                <button id="staffApprovalShowPendingBtn" type="button" class="tab-btn view-toggle-btn is-active" role="tab" aria-selected="true">
-                  คำขอเข้าร่วม
-                </button>
-                <button id="staffApprovalShowHistoryBtn" type="button" class="tab-btn view-toggle-btn" role="tab" aria-selected="false">
-                  สตาฟปัจจุบัน
-                </button>
-              </div>
-            </div>
             <div id="staffApprovalFilters" class="filter-bar staff-member-filter-bar" aria-label="ตัวกรองสมาชิกและคำขอ">
                 <div class="filter-group filter-year">
                   <label for="staffApprovalDivisionFilter">ฝ่าย</label>
@@ -321,10 +306,26 @@
                   </div>
                 </div>
             </div>
-            <div id="staffApprovalPendingContent">
-              <div class="staff-selection-mode-toolbar">
-                <button id="staffApprovalSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false">เลือกหลายรายการ</button>
+          <div id="staffApprovalPendingPanel" class="panel panel-hover staff-access-panel">
+            <div class="panel-header">
+              <div>
+                <h3 id="staffApprovalPanelTitle" class="panel-title">คำขอที่รออนุมัติ</h3>
+                <p id="staffApprovalPanelCaption" class="panel-caption">แสดงผล 0 รายการ</p>
               </div>
+              <div class="staff-approval-header-actions">
+                <button id="staffApprovalSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false">เลือกหลายรายการ</button>
+                <button id="staffCurrentSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false" style="display:none;">เลือกหลายรายการ</button>
+                <div class="tabs staff-approval-view-toggle" role="tablist" aria-label="เลือกมุมมองสมาชิกสตาฟ">
+                  <button id="staffApprovalShowPendingBtn" type="button" class="tab-btn view-toggle-btn is-active" role="tab" aria-selected="true">
+                    คำขอเข้าร่วม
+                  </button>
+                  <button id="staffApprovalShowHistoryBtn" type="button" class="tab-btn view-toggle-btn" role="tab" aria-selected="false">
+                    สตาฟปัจจุบัน
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="staffApprovalPendingContent">
               <div id="staffApprovalMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
               <div id="staffApprovalBulkBar" class="staff-bulk-action-bar" hidden>
                 <div><strong id="staffApprovalBulkCount">เลือกแล้ว 0 รายการ</strong><span>ลบเฉพาะคำขอที่ยังรออนุมัติ</span></div>
@@ -353,9 +354,6 @@
               </div>
             </div>
             <div id="staffApprovalHistoryContent" style="display:none;">
-              <div class="staff-selection-mode-toolbar">
-                <button id="staffCurrentSelectionToggleBtn" class="btn-ghost staff-selection-mode-btn" type="button" aria-pressed="false">เลือกหลายรายการ</button>
-              </div>
               <p id="staffApprovalHistoryCaption" class="panel-caption" style="display:none;">แสดงผล 0 รายการ</p>
               <div id="staffCurrentBulkBar" class="staff-bulk-action-bar" hidden>
                 <div><strong id="staffCurrentBulkCount">เลือกแล้ว 0 คน</strong><span>เพิกถอนตำแหน่งและสิทธิ์สตาฟทั้งหมด</span></div>

@@ -396,6 +396,8 @@ function initStaffAccessPages() {
     if (approvalPendingPanelEl) approvalPendingPanelEl.style.display = "";
     if (approvalPendingContentEl) approvalPendingContentEl.style.display = showPending ? "" : "none";
     if (approvalHistoryContentEl) approvalHistoryContentEl.style.display = showPending ? "none" : "";
+    if (staffApprovalSelectionToggleBtnEl) staffApprovalSelectionToggleBtnEl.style.display = showPending ? "" : "none";
+    if (staffCurrentSelectionToggleBtnEl) staffCurrentSelectionToggleBtnEl.style.display = showPending ? "none" : "";
     if (approvalPanelTitleEl) {
       approvalPanelTitleEl.textContent = showPending ? "คำขอที่รออนุมัติ" : "รายชื่อผู้ปฏิบัติงานตอนนี้";
     }

@@ -538,10 +538,21 @@
   cursor: pointer;
 }
 
-.staff-selection-mode-toolbar {
+.staff-approval-header-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin: 0 0 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.staff-approval-header-actions .staff-approval-view-toggle {
+  margin: 0;
+}
+
+.staff-approval-header-actions .staff-selection-mode-btn {
+  white-space: nowrap;
 }
 
 .staff-selection-mode-btn[aria-pressed="true"] {
