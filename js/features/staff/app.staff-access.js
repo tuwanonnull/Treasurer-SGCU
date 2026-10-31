@@ -83,6 +83,7 @@ function initStaffAccessPages() {
   const staffAuthAccessPanelEl = document.getElementById("staffAuthAccessPanel");
   const staffAuthAccessFormEl = document.getElementById("staffAuthAccessForm");
   const staffAuthAccessTableBodyEl = document.getElementById("staffAuthAccessTableBody");
+  const staffAuthAccessMobileListEl = document.getElementById("staffAuthAccessMobileList");
   const staffAuthAccessListCaptionEl = document.getElementById("staffAuthAccessListCaption");
   const staffAuthAccessProfilePreviewEl = document.getElementById("staffAuthAccessProfilePreview");
   const staffAuthAccessMessageEl = document.getElementById("staffAuthAccessMessage");
@@ -189,6 +190,7 @@ function initStaffAccessPages() {
   const divisionNameOptionsDatalistEl = document.getElementById("staffDivisionNameOptionsList");
   const orgStructureMemberFormEl = document.getElementById("orgStructureMemberForm");
   const orgStructureTableBodyEl = document.getElementById("orgStructureTableBody");
+  const orgStructureMobileListEl = document.getElementById("orgStructureMobileList");
   const orgStructureListCaptionEl = document.getElementById("orgStructureListCaption");
   const orgStructureFormMessageEl = document.getElementById("orgStructureFormMessage");
   const orgStructureTermFilterEl = document.getElementById("orgStructureTermFilter");
@@ -324,6 +326,7 @@ function initStaffAccessPages() {
     query: "",
     visibleLimit: ORGANIZATION_CATALOG_PAGE_SIZE
   };
+  let orgStructureTermInitialized = false;
   const orgStructureFilters = {
     query: "",
     term: "all",
@@ -1984,7 +1987,12 @@ function initStaffAccessPages() {
     orgStructureTermFilterEl.innerHTML = `<option value="all">ทุกรุ่น</option>${terms
       .map((term) => `<option value="${escapeStaffHtml(term)}">${escapeStaffHtml(term)}</option>`)
       .join("")}`;
-    orgStructureTermFilterEl.value = terms.includes(currentValue) ? currentValue : "all";
+    const currentTerm = `SGCU${getAcademicYearCodeXX()}`;
+    const defaultTerm = terms.includes(currentTerm) ? currentTerm : (terms[0] || "all");
+    orgStructureTermFilterEl.value = orgStructureTermInitialized
+      ? (currentValue === "all" || terms.includes(currentValue) ? currentValue : defaultTerm)
+      : defaultTerm;
+    if (terms.length) orgStructureTermInitialized = true;
     orgStructureFilters.term = orgStructureTermFilterEl.value || "all";
   };
 
@@ -2006,12 +2014,36 @@ function initStaffAccessPages() {
     });
   };
 
+  const renderOrgStructureMobileMembers = (items) => {
+    if (!orgStructureMobileListEl) return;
+    if (!items.length) {
+      orgStructureMobileListEl.innerHTML = currentOrgStructureMembers.length
+        ? renderListEmptyState("ไม่พบรายชื่อตามตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")
+        : renderListEmptyState("ยังไม่มีรายชื่อในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document");
+      return;
+    }
+    orgStructureMobileListEl.innerHTML = items.map((item) => {
+      const status = item.status || "published";
+      const statusLabel = ({ published: "เผยแพร่แล้ว", draft: "ฉบับร่าง", archived: "เก็บถาวร" })[status] || status;
+      return `<button type="button" class="org-directory-mobile-card" data-org-member-id="${escapeStaffHtml(item.id)}" aria-label="แก้ไข ${escapeStaffHtml(item.fullName || "รายชื่อ")}">
+        <strong class="org-directory-mobile-name">${escapeStaffHtml(item.fullName || "-")}</strong>
+        <span class="org-directory-mobile-position">${escapeStaffHtml([item.position, item.nick ? `(${item.nick})` : ""].filter(Boolean).join(" "))}</span>
+        <span class="org-directory-mobile-meta">
+          <span>รุ่น ${escapeStaffHtml(item.term || "-")}</span>
+          <span class="content-admin-status is-${escapeStaffHtml(status)}">${escapeStaffHtml(statusLabel)}</span>
+        </span>
+        <span class="org-directory-mobile-code">รหัสตำแหน่ง · ${escapeStaffHtml(item.positionCode || "-")}</span>
+      </button>`;
+    }).join("");
+  };
+
   const renderOrgStructureMembers = () => {
     if (!orgStructureTableBodyEl || !orgStructureListCaptionEl) return;
     syncOrgStructureFilterOptions();
     const visibleItems = getFilteredOrgStructureMembers();
+    renderOrgStructureMobileMembers(visibleItems);
     orgStructureListCaptionEl.textContent =
-      `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${currentOrgStructureMembers.length.toLocaleString("th-TH")} รายชื่อจาก Firestore`;
+      `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${currentOrgStructureMembers.length.toLocaleString("th-TH")} รายชื่อ`;
 
     if (!currentOrgStructureMembers.length) {
       orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายชื่อในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
@@ -2025,31 +2057,200 @@ function initStaffAccessPages() {
     orgStructureTableBodyEl.innerHTML = visibleItems
       .map((item) => {
         return `
-          <tr class="org-structure-admin-row" data-org-member-id="${escapeStaffHtml(item.id)}" tabindex="0" role="button" aria-label="แก้ไข ${escapeStaffHtml(item.fullName)}">
+          <tr class="org-directory-member-row" data-org-member-id="${escapeStaffHtml(item.id)}" tabindex="0" role="button" aria-label="แก้ไข ${escapeStaffHtml(item.fullName)}">
             <td>
               <strong>${escapeStaffHtml(item.fullName || "-")}</strong>
               <small>${escapeStaffHtml([item.position, item.nick ? `(${item.nick})` : ""].filter(Boolean).join(" "))}</small>
             </td>
             <td>${escapeStaffHtml(item.positionCode || "-")}</td>
             <td>${escapeStaffHtml(item.term || "-")}</td>
-            <td><span class="content-admin-status status-${escapeStaffHtml(item.status || "published")}">${escapeStaffHtml(item.status || "published")}</span></td>
+            <td><span class="content-admin-status is-${escapeStaffHtml(item.status || "published")}">${escapeStaffHtml(({ published: "เผยแพร่แล้ว", draft: "ฉบับร่าง", archived: "เก็บถาวร" })[item.status || "published"] || item.status)}</span></td>
           </tr>
         `;
       })
       .join("");
   };
 
+  const orgStructurePlacement = {
+    term: document.getElementById("orgStructureTermInput"),
+    position: document.getElementById("orgStructurePositionSelect"),
+    order: document.getElementById("orgStructureOrderInput"),
+    hint: document.getElementById("orgStructurePlacementHint"),
+    advanced: document.getElementById("orgStructureAdvanced")
+  };
+  let orgStructurePlacementOptions = [];
+  const parseOrgStructurePlacement = (code) => {
+    const match = normalizeOrgStructureText(code).match(/^SGCU(\d{2})\.10\.(\d{2})\.(\d{2})-(\d{3})$/i);
+    return match ? { term: match[1], yy: match[2], zz: match[3], order: Number(match[4]) } : null;
+  };
+
+  const syncOrgStructurePlacementFromCode = () => {
+    if (!orgStructurePlacement.position) return;
+    const parsed = parseOrgStructurePlacement(orgStructureFields.positionCode?.value);
+    const options = new Map();
+    [...DEFAULT_POSITION_OPTIONS, ...currentPositionCatalog].forEach((item) => {
+      const name = normalizeOrgStructureText(item.name);
+      const yy = normalizeCode2(item.divisionCodeYY);
+      const zz = normalizeCode2(item.levelCodeZZ);
+      if (name && /^\d{2}$/.test(yy) && /^\d{2}$/.test(zz)) options.set(name, { name, yy, zz });
+    });
+    orgStructurePlacementOptions = Array.from(options.values());
+    let selected = -1;
+    if (parsed) {
+      const name = normalizeOrgStructureText(orgStructureFields.position?.value);
+      selected = orgStructurePlacementOptions.findIndex((item) => item.yy === parsed.yy && item.zz === parsed.zz && item.name === name);
+      if (selected < 0) {
+        selected = orgStructurePlacementOptions.length;
+        orgStructurePlacementOptions.push({ name: name || `ตำแหน่งเดิม (${parsed.yy}.${parsed.zz})`, yy: parsed.yy, zz: parsed.zz });
+      }
+    }
+    orgStructurePlacement.position.innerHTML = '<option value="">เลือกตำแหน่ง</option>' + orgStructurePlacementOptions
+      .map((item, index) => `<option value="${index}">${escapeStaffHtml(item.name)}</option>`).join("");
+    orgStructurePlacement.position.value = selected < 0 ? "" : String(selected);
+    const filteredTerm = orgStructureFilters.term.match(/^SGCU(\d{2})$/)?.[1];
+    orgStructurePlacement.term.value = parsed?.term || filteredTerm || getAcademicYearCodeXX();
+    orgStructurePlacement.order.value = parsed ? String(parsed.order) : "";
+    orgStructurePlacement.order.min = parsed?.order === 0 ? "0" : "1";
+    const hasLegacyCode = !!orgStructureFields.positionCode?.value && !parsed;
+    if (orgStructurePlacement.advanced) orgStructurePlacement.advanced.open = hasLegacyCode;
+    if (orgStructurePlacement.hint) orgStructurePlacement.hint.textContent = parsed
+      ? `รุ่น SGCU${parsed.term} · ${orgStructureFields.position?.value || "ตำแหน่งเดิม"} · ลำดับ ${parsed.order} (คงค่าจากรหัสเดิม)`
+      : hasLegacyCode
+        ? "รายชื่อนี้ใช้รหัสรูปแบบเดิม ระบบจะเก็บรหัสเดิมไว้ หรือเลือกตำแหน่งเพื่อสร้างรหัสใหม่"
+        : "เลือกตำแหน่ง ระบบจะเสนอลำดับถัดไปในตำแหน่งนั้นให้ เลขน้อยแสดงก่อนเลขมาก";
+  };
+
+  const updateOrgStructurePlacementCode = (suggestOrder = false, updateName = false) => {
+    const rawSelection = orgStructurePlacement.position?.value;
+    const selected = rawSelection === "" ? null : orgStructurePlacementOptions[Number(rawSelection)];
+    const rawTerm = orgStructurePlacement.term?.value || "";
+    const validTerm = /^\d{1,2}$/.test(rawTerm);
+    if (!selected || !validTerm) {
+      if (orgStructureFields.positionCode) orgStructureFields.positionCode.value = "";
+      if (orgStructurePlacement.hint) orgStructurePlacement.hint.textContent = "กรุณาระบุรุ่น 0–99 และเลือกตำแหน่ง";
+      return;
+    }
+    const term = rawTerm.padStart(2, "0");
+    const prefix = `SGCU${term}.10.${selected.yy}.${selected.zz}-`;
+    if (suggestOrder) {
+      const usedOrders = currentOrgStructureMembers
+        .filter((item) => item.id !== orgStructureFields.id?.value && item.positionCode?.toUpperCase().startsWith(prefix))
+        .map((item) => parseOrgStructurePlacement(item.positionCode)?.order || 0);
+      orgStructurePlacement.order.value = String(Math.max(0, ...usedOrders) + 1);
+    }
+    const order = Number(orgStructurePlacement.order?.value);
+    if (!Number.isInteger(order) || order < 1 || order > 999) {
+      orgStructureFields.positionCode.value = "";
+      orgStructurePlacement.hint.textContent = "กรุณาระบุลำดับ 1–999 ที่ยังไม่มีผู้ใช้ในตำแหน่งนี้";
+      return;
+    }
+    orgStructureFields.positionCode.value = `${prefix}${String(order).padStart(3, "0")}`;
+    if (updateName && orgStructureFields.position) orgStructureFields.position.value = selected.name;
+    orgStructurePlacement.hint.textContent = `รุ่น SGCU${term} · ${selected.name} · ลำดับ ${order} — เรียงภายในตำแหน่งเดียวกันจากเลขน้อยไปมาก`;
+    updateOrgStructureStudentMeta();
+  };
+
   const resetOrgStructureForm = () => {
     orgStructureMemberFormEl?.reset();
+    const title = document.getElementById("orgStructureEditorTitle");
+    if (title) title.textContent = "เพิ่มรายชื่อ";
     if (orgStructureFields.id) orgStructureFields.id.value = "";
     if (orgStructureFields.status) orgStructureFields.status.value = "published";
     updateOrgStructureStudentMeta();
     updateOrgStructurePhotoPreview();
     setMessage(orgStructureFormMessageEl, "");
+    syncOrgStructurePlacementFromCode();
+  };
+
+  let orgStructureEditorAnimation = null;
+  let orgStructureEditorReturnFocus = null;
+  const setOrgStructureEditorOpen = (open) => {
+    const editor = document.getElementById("orgStructureEditor");
+    const addButton = document.getElementById("orgStructureAddBtn");
+    if (!editor || (!open && (editor.hidden || editor.inert))) return;
+    const properties = ["height", "paddingTop", "paddingBottom", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth"];
+    const measure = () => {
+      const style = window.getComputedStyle(editor);
+      return Object.fromEntries(properties.map((key) => [key,
+        key === "height" ? editor.getBoundingClientRect().height : parseFloat(style[key]) || 0
+      ]));
+    };
+    const wasHidden = editor.hidden;
+    const from = wasHidden ? Object.fromEntries(properties.map((key) => [key, 0])) : measure();
+    const fromOpacity = wasHidden ? 0 : Number(window.getComputedStyle(editor).opacity);
+    orgStructureEditorAnimation?.cancel();
+    orgStructureEditorAnimation = null;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (open && !editor.contains(document.activeElement)) orgStructureEditorReturnFocus = document.activeElement;
+    const returnTarget = orgStructureEditorReturnFocus?.isConnected ? orgStructureEditorReturnFocus : addButton;
+    const target = open ? editor : returnTarget;
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const scrollStart = scrollRoot.scrollTop;
+    editor.hidden = false;
+    editor.inert = !open;
+    addButton?.setAttribute("aria-expanded", String(open));
+    const natural = measure();
+    const to = open ? natural : Object.fromEntries(properties.map((key) => [key, 0]));
+    const savedStyle = editor.style.cssText;
+    const savedScrollBehavior = scrollRoot.style.scrollBehavior;
+    const savedAnchor = scrollRoot.style.overflowAnchor;
+    const outerHeight = natural.height + natural.marginTop + natural.marginBottom;
+    const finalMaxScroll = Math.max(0, scrollRoot.scrollHeight - (open ? 0 : outerHeight) - window.innerHeight);
+    const targetTop = target ? target.getBoundingClientRect().top + scrollRoot.scrollTop - 90 : scrollStart;
+    const scrollEnd = Math.max(0, Math.min(finalMaxScroll, targetTop));
+    let frame = 0;
+    let stopped = false;
+    const restore = () => {
+      editor.style.cssText = savedStyle;
+      scrollRoot.style.scrollBehavior = savedScrollBehavior;
+      scrollRoot.style.overflowAnchor = savedAnchor;
+    };
+    const finish = () => {
+      stopped = true;
+      editor.hidden = !open;
+      restore();
+      orgStructureEditorAnimation = null;
+      (open ? orgStructureFields.firstName : returnTarget)?.focus({ preventScroll: true });
+    };
+    scrollRoot.style.scrollBehavior = "auto";
+    scrollRoot.style.overflowAnchor = "none";
+    Object.assign(editor.style, { boxSizing: "border-box", minHeight: "0", overflow: "hidden" });
+    const apply = (progress) => {
+      for (const key of properties) editor.style[key] = `${from[key] + (to[key] - from[key]) * progress}px`;
+      editor.style.opacity = String(fromOpacity + ((open ? 1 : 0) - fromOpacity) * progress);
+      // One frame loop owns layout and scroll; native smooth scrolling must not compete.
+      scrollRoot.scrollTop = scrollStart + (scrollEnd - scrollStart) * progress;
+    };
+    if (reducedMotion) {
+      apply(1);
+      finish();
+      return;
+    }
+    const animation = {
+      cancel() {
+        stopped = true;
+        cancelAnimationFrame(frame);
+        restore();
+      }
+    };
+    orgStructureEditorAnimation = animation;
+    apply(0);
+    const start = performance.now();
+    const tick = (now) => {
+      if (stopped) return;
+      const elapsed = Math.min(1, (now - start) / 360);
+      const progress = elapsed < 0.5 ? 4 * elapsed ** 3 : 1 - (-2 * elapsed + 2) ** 3 / 2;
+      apply(progress);
+      if (elapsed < 1) frame = requestAnimationFrame(tick);
+      else finish();
+    };
+    frame = requestAnimationFrame(tick);
   };
 
   const fillOrgStructureForm = (item) => {
     if (!item || !orgStructureMemberFormEl) return;
+    const title = document.getElementById("orgStructureEditorTitle");
+    if (title) title.textContent = "แก้ไขรายชื่อ";
     Object.keys(orgStructureFields).forEach((key) => {
       const field = orgStructureFields[key];
       if (!field) return;
@@ -2058,8 +2259,8 @@ function initStaffAccessPages() {
     updateOrgStructureStudentMeta();
     updateOrgStructurePhotoPreview();
     setMessage(orgStructureFormMessageEl, `กำลังแก้ไข: ${item.fullName || item.positionCode}`, "#1d4ed8");
-    orgStructureMemberFormEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    orgStructureFields.positionCode?.focus();
+    syncOrgStructurePlacementFromCode();
+    setOrgStructureEditorOpen(true);
   };
 
   const readOrgStructurePayload = () => {
@@ -2082,7 +2283,10 @@ function initStaffAccessPages() {
       photoUrl: normalizeOrgStructureText(orgStructureFields.photoUrl?.value),
       status: normalizeOrgStructureText(orgStructureFields.status?.value) || "published"
     };
-    if (!payload.positionCode) throw new Error("กรุณากรอกรหัสตำแหน่ง");
+    if (!payload.positionCode) throw new Error("กรุณาเลือกรุ่น ตำแหน่ง และลำดับให้ครบถ้วน");
+    const duplicate = currentOrgStructureMembers.some((item) => item.id !== orgStructureFields.id?.value
+      && normalizeOrgStructureText(item.positionCode).toUpperCase() === payload.positionCode.toUpperCase());
+    if (duplicate) throw new Error("ลำดับนี้มีผู้ใช้แล้วในรุ่นและตำแหน่งเดียวกัน กรุณาเลือกลำดับอื่น");
     if (!payload.position) throw new Error("กรุณากรอกตำแหน่ง");
     if (!payload.firstName) throw new Error("กรุณากรอกชื่อ");
     if (payload.studentId && !studentMeta.isComplete) {
@@ -2187,6 +2391,7 @@ function initStaffAccessPages() {
   const startOrgStructureMembersListener = () => {
     if (!orgStructureTableBodyEl || !resolveStore() || unsubscribeOrgStructureMembers) return;
     orgStructureListCaptionEl.textContent = "กำลังโหลดรายชื่อ...";
+    if (orgStructureMobileListEl) orgStructureMobileListEl.innerHTML = '<p class="panel-caption">กำลังโหลดรายชื่อ...</p>';
     orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4">กำลังโหลดรายชื่อ...</td></tr>`;
     unsubscribeOrgStructureMembers = firestore.onSnapshot(
       firestore.collection(firestore.db, COLLECTION_ORG_STRUCTURE),
@@ -2199,6 +2404,7 @@ function initStaffAccessPages() {
       (error) => {
         console.error("load org structure members failed - app.staff-access.js:2198", error);
         orgStructureListCaptionEl.textContent = "โหลดทำเนียบรุ่นไม่สำเร็จ";
+        if (orgStructureMobileListEl) orgStructureMobileListEl.innerHTML = renderListEmptyState("โหลดรายชื่อไม่สำเร็จ", "ลองกดรีเฟรชเพื่อโหลดอีกครั้ง", "document");
         orgStructureTableBodyEl.innerHTML = `<tr><td colspan="4">ไม่สามารถโหลดรายชื่อจาก Firestore ได้</td></tr>`;
       }
     );
@@ -6118,6 +6324,8 @@ function initStaffAccessPages() {
   };
 
   const resetAuthAccessForm = () => {
+    const title = document.getElementById("staffAuthAccessEditorTitle");
+    if (title) title.textContent = "เพิ่มสิทธิ์เข้าใช้ชั่วคราว";
     if (staffAuthAccessFields.id) staffAuthAccessFields.id.value = "";
     if (staffAuthAccessFields.email) staffAuthAccessFields.email.value = "";
     if (staffAuthAccessFields.startsAt) staffAuthAccessFields.startsAt.value = toDateInputValue(new Date());
@@ -6130,6 +6338,8 @@ function initStaffAccessPages() {
   };
 
   const fillAuthAccessForm = (entry = {}) => {
+    const title = document.getElementById("staffAuthAccessEditorTitle");
+    if (title) title.textContent = "แก้ไขสิทธิ์เข้าใช้ชั่วคราว";
     if (staffAuthAccessFields.id) staffAuthAccessFields.id.value = entry.id || normalizeAuthAccessEmail(entry.email || "");
     if (staffAuthAccessFields.email) staffAuthAccessFields.email.value = normalizeAuthAccessEmail(entry.email || entry.id || "");
     if (staffAuthAccessFields.startsAt) staffAuthAccessFields.startsAt.value = toDateInputValue(entry.startsAt);
@@ -6144,7 +6354,8 @@ function initStaffAccessPages() {
   const renderAuthEmailAccessRows = async () => {
     if (!staffAuthAccessTableBodyEl) return;
     if (!currentAuthEmailAccessEntries.length) {
-      staffAuthAccessTableBodyEl.innerHTML = '<tr><td colspan="3">ยังไม่มีรายการสิทธิ์เข้าใช้ชั่วคราว</td></tr>';
+      staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3" class="list-empty-cell">${renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กดเพิ่มสิทธิ์ชั่วคราวเพื่อเริ่มต้น", "document")}</td></tr>`;
+      if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กดเพิ่มสิทธิ์ชั่วคราวเพื่อเริ่มต้น", "document");
       if (staffAuthAccessListCaptionEl) staffAuthAccessListCaptionEl.textContent = "แสดงผล 0 รายการ";
       return;
     }
@@ -6159,12 +6370,23 @@ function initStaffAccessPages() {
       } catch (error) {
         console.warn("auth access row profile lookup failed - app.staff-access.js:6158", error);
       }
-      return `
+      const status = readAuthAccessStatus(entry);
+      const tone = ({ "ใช้งานได้": "active", "รอเริ่ม": "pending", "หมดอายุ": "expired", "ปิดสิทธิ์": "inactive" })[status] || "inactive";
+      const badge = `<span class="staff-auth-status is-${tone}">${escapeStaffHtml(status)}</span>`;
+      const profileSummary = renderAuthAccessProfileSummary(profile);
+      const mobile = `<button type="button" class="staff-auth-mobile-card" data-auth-access-email="${escapeStaffHtml(email)}" aria-label="แก้ไขสิทธิ์เข้าใช้ของ ${escapeStaffHtml(email)}">
+        <strong>${escapeStaffHtml(email || "-")}</strong>
+        <span class="staff-auth-mobile-profile">${profileSummary.replaceAll("<div>", "<span>").replaceAll("</div>", "</span>")}</span>
+        ${badge}
+        <span class="staff-auth-mobile-period"><span>เริ่ม ${escapeStaffHtml(formatDateTime(entry.startsAt))}</span><span>สิ้นสุด ${escapeStaffHtml(formatDateTime(entry.endsAt))}</span></span>
+        <span class="staff-auth-mobile-reason">${escapeStaffHtml(entry.reason || "-")}</span>
+      </button>`;
+      const desktop = `
         <tr data-auth-access-email="${escapeStaffHtml(email)}" tabindex="0" role="button" aria-label="แก้ไขสิทธิ์เข้าใช้ของ ${escapeStaffHtml(email)}">
           <td data-label="บัญชี">
             <strong>${escapeStaffHtml(email || "-")}</strong>
-            <div class="section-text-sm">${renderAuthAccessProfileSummary(profile)}</div>
-            <div class="section-text-sm">${escapeStaffHtml(readAuthAccessStatus(entry))}</div>
+            <div class="section-text-sm">${profileSummary}</div>
+            ${badge}
           </td>
           <td data-label="ช่วงเวลา">
             <div>${escapeStaffHtml(formatDateTime(entry.startsAt))}</div>
@@ -6173,8 +6395,10 @@ function initStaffAccessPages() {
           <td data-label="เหตุผล">${escapeStaffHtml(entry.reason || "-")}</td>
         </tr>
       `;
+      return { desktop, mobile };
     }));
-    staffAuthAccessTableBodyEl.innerHTML = rows.join("");
+    staffAuthAccessTableBodyEl.innerHTML = rows.map((row) => row.desktop).join("");
+    if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = rows.map((row) => row.mobile).join("");
   };
 
   const startAuthEmailAccessListener = () => {
@@ -6185,6 +6409,7 @@ function initStaffAccessPages() {
     }
     if (!getCurrentAuthEmail()) {
       currentAuthEmailAccessEntries = [];
+      if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.textContent = "กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้";
       staffAuthAccessTableBodyEl.innerHTML = '<tr><td colspan="3">กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้</td></tr>';
       if (staffAuthAccessListCaptionEl) staffAuthAccessListCaptionEl.textContent = "ยังไม่ได้เข้าสู่ระบบ";
       return;
@@ -6206,6 +6431,7 @@ function initStaffAccessPages() {
       (error) => {
         console.error("auth email access listener failed - app.staff-access.js:6205", error);
         const msg = buildListenerErrorText("โหลดสิทธิ์เข้าใช้ชั่วคราวไม่สำเร็จ", error);
+        if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.textContent = msg;
         staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3">${toSafeText(msg)}</td></tr>`;
         setMessage(staffAuthAccessMessageEl, msg, "#b91c1c");
       }
@@ -8081,10 +8307,16 @@ function initStaffAccessPages() {
   staffAuthAccessFields.email?.addEventListener("blur", () => {
     void refreshAuthAccessProfilePreview();
   });
-  staffAuthAccessTableBodyEl?.addEventListener("click", (event) => {
+  document.getElementById("staffAuthAccessAddBtn")?.addEventListener("click", () => {
+    resetAuthAccessForm();
+    document.getElementById("staffAuthAccessEditor")?.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    staffAuthAccessFields.email?.focus({ preventScroll: true });
+  });
+  const staffAuthAccessListPanelEl = document.getElementById("staffAuthAccessListPanel");
+  staffAuthAccessListPanelEl?.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    const rowEl = target.closest("tr[data-auth-access-email]");
+    const rowEl = target.closest("[data-auth-access-email]");
     if (!(rowEl instanceof HTMLElement)) return;
     const email = normalizeAuthAccessEmail(rowEl.dataset.authAccessEmail || "");
     const entry = currentAuthEmailAccessEntries.find((item) => normalizeAuthAccessEmail(item.email || item.id || "") === email);
@@ -8093,11 +8325,12 @@ function initStaffAccessPages() {
       staffAuthAccessFormEl?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   });
-  staffAuthAccessTableBodyEl?.addEventListener("keydown", (event) => {
+  staffAuthAccessListPanelEl?.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.target?.closest("button")) return;
     const target = event.target;
     if (!(target instanceof Element)) return;
-    const rowEl = target.closest("tr[data-auth-access-email]");
+    const rowEl = target.closest("[data-auth-access-email]");
     if (!(rowEl instanceof HTMLElement)) return;
     event.preventDefault();
     const email = normalizeAuthAccessEmail(rowEl.dataset.authAccessEmail || "");
@@ -8108,17 +8341,34 @@ function initStaffAccessPages() {
     }
   });
 
+  document.getElementById("orgStructureEditorClose")?.addEventListener("click", () => {
+    setOrgStructureEditorOpen(false);
+  });
+
+  document.getElementById("orgStructureAddBtn")?.addEventListener("click", () => {
+    resetOrgStructureForm();
+    setOrgStructureEditorOpen(true);
+  });
+
   if (orgStructureMemberFormEl) {
+    orgStructureMemberFormEl.addEventListener("invalid", (event) => {
+      if (orgStructurePlacement.advanced?.contains(event.target)) orgStructurePlacement.advanced.open = true;
+    }, true);
     orgStructureMemberFormEl.addEventListener("submit", (event) => {
       void saveOrgStructureMember(event);
     });
   }
+  orgStructurePlacement.position?.addEventListener("change", () => updateOrgStructurePlacementCode(true, true));
+  orgStructurePlacement.term?.addEventListener("input", () => updateOrgStructurePlacementCode(true));
+  orgStructurePlacement.order?.addEventListener("input", () => updateOrgStructurePlacementCode());
+  orgStructureFields.positionCode?.addEventListener("change", syncOrgStructurePlacementFromCode);
   orgStructureFields.studentId?.addEventListener("input", updateOrgStructureStudentMeta);
   orgStructureFields.studentId?.addEventListener("blur", updateOrgStructureStudentMeta);
   orgStructureFields.positionCode?.addEventListener("input", updateOrgStructureStudentMeta);
   orgStructureFields.positionCode?.addEventListener("blur", updateOrgStructureStudentMeta);
-  if (orgStructureTableBodyEl) {
-    orgStructureTableBodyEl.addEventListener("click", (event) => {
+  const orgStructureInteractionEl = orgStructureTableBodyEl?.closest(".org-directory-list-panel") || orgStructureTableBodyEl;
+  if (orgStructureInteractionEl) {
+    orgStructureInteractionEl.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const rowEl = target.closest("[data-org-member-id]");
@@ -8127,8 +8377,9 @@ function initStaffAccessPages() {
       const item = currentOrgStructureMembers.find((entry) => entry.id === id);
       if (item) fillOrgStructureForm(item);
     });
-    orgStructureTableBodyEl.addEventListener("keydown", (event) => {
+    orgStructureInteractionEl.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
+      if (event.target?.closest("button")) return;
       const target = event.target;
       if (!(target instanceof Element)) return;
       const rowEl = target.closest("[data-org-member-id]");
@@ -8150,6 +8401,7 @@ function initStaffAccessPages() {
   orgStructureArchiveBtnEl?.addEventListener("click", archiveCurrentOrgStructureMember);
   orgStructureResetBtnEl?.addEventListener("click", resetOrgStructureForm);
   orgStructureTermFilterEl?.addEventListener("change", () => {
+    orgStructureTermInitialized = true;
     orgStructureFilters.term = orgStructureTermFilterEl.value || "all";
     renderOrgStructureMembers();
   });
@@ -8164,6 +8416,7 @@ function initStaffAccessPages() {
   orgStructureFields.photoUrl?.addEventListener("input", updateOrgStructurePhotoPreview);
   orgStructureFields.photoUrl?.addEventListener("change", updateOrgStructurePhotoPreview);
   orgStructureFilterResetEl?.addEventListener("click", () => {
+    orgStructureTermInitialized = false;
     if (orgStructureSearchInputEl) orgStructureSearchInputEl.value = "";
     if (orgStructureTermFilterEl) orgStructureTermFilterEl.value = "all";
     if (orgStructureStatusFilterEl) orgStructureStatusFilterEl.value = "all";

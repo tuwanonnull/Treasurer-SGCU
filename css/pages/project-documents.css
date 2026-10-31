@@ -6,13 +6,13 @@
 #projectDocumentHelp { font-size: 11px; font-weight: 400; color: #9ca3af; }
 .project-document-download-hint { margin: 12px 0 20px; color: #475569; font-size: 13px; line-height: 1.6; }
 .project-document-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0 12px; }
-.project-document-type { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0; padding: 18px; border: 1px solid var(--theme-border); border-radius: 12px; background: var(--theme-pink-50); color: var(--theme-pink-800); font: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.project-document-type { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0; padding: 18px; border: 1px solid var(--theme-pink-300); border-radius: 12px; background: #fdf2f8; color: var(--theme-pink-700); font: inherit; text-align: left; white-space: normal; cursor: pointer; }
 .project-document-type:hover { border-color: var(--theme-pink-400); background: var(--theme-pink-100); }
 .project-document-type:focus-visible { outline: 3px solid var(--theme-pink-500); outline-offset: 3px; }
 .project-document-type-title { font-size: 16px; font-weight: 600; line-height: 1.5; }
-.project-document-type-description { color: var(--theme-pink-800); font-size: 13px; line-height: 1.6; }
+.project-document-type-description { color: var(--theme-pink-700); font-size: 13px; line-height: 1.6; }
 .project-document-type-action { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; color: var(--theme-pink-700); font-size: 13px; font-weight: 500; }
-.project-document-types [aria-pressed="true"] { color: #fff; border-color: var(--theme-pink-700); background: var(--theme-pink-700); box-shadow: 0 2px 6px var(--theme-focus); }
+.project-document-types [aria-pressed="true"] { color: var(--theme-pink-700); border-color: var(--theme-pink-300); background: var(--theme-pink-100); box-shadow: none; }
 .project-document-types [aria-pressed="true"] .project-document-type-description,
 .project-document-types [aria-pressed="true"] .project-document-type-action { color: inherit; }
 .project-document-mobile-description { display: none; }
@@ -52,11 +52,11 @@
 @media (max-width: 600px) {
   .project-document-panel { padding: 12px; }
   .project-document-grid { grid-template-columns: minmax(0, 1fr); }
-  .project-document-types { gap: 4px; margin: 16px 0 8px; padding: 4px; border: 1px solid var(--theme-border); border-radius: 24px; background: var(--theme-pink-50); }
-  .project-document-types > button { width: 100%; min-height: 48px; justify-content: center; padding: 10px 8px; border-color: transparent; border-radius: 20px; background: transparent; color: var(--theme-pink-800); text-align: center; }
+  .project-document-types { gap: 4px; margin: 16px 0 8px; padding: 4px; border: 1px solid var(--theme-pink-300); border-radius: 24px; background: #fdf2f8; }
+  .project-document-types > button { width: 100%; min-height: 48px; justify-content: center; padding: 10px 8px; border-color: transparent; border-radius: 20px; background: transparent; color: var(--theme-pink-700); text-align: center; opacity: .75; }
   .project-document-types > button:hover { background: var(--theme-pink-100); }
   .project-document-type-title { font-size: 13px; overflow-wrap: anywhere; }
   .project-document-type-description, .project-document-type-action { display: none; }
-  .project-document-types > button[aria-pressed="true"] { border-color: var(--theme-pink-700); background: var(--theme-pink-700); color: #fff; box-shadow: 0 2px 6px var(--theme-focus); }
+  .project-document-types > button[aria-pressed="true"] { border-color: transparent; background: var(--theme-pink-100); color: var(--theme-pink-700); box-shadow: none; opacity: 1; }
   .project-document-mobile-description { display: block; margin: 0 0 12px; color: #475569; font-size: 13px; line-height: 1.6; }
 }

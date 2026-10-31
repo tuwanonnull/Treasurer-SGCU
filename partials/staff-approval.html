@@ -6,115 +6,34 @@
               <h1 class="page-title">ทำเนียบรุ่น</h1>
               <p class="page-subtitle">จัดการรายชื่อและข้อมูลที่ใช้แสดงในแผนผังทีมเหรัญญิก</p>
             </div>
+            <button id="orgStructureAddBtn" class="btn-primary" type="button" aria-controls="orgStructureEditor" aria-expanded="false">เพิ่มรายชื่อ</button>
           </div>
           <div id="staffStructurePanel" class="staff-approval-main-panel">
-          <section class="panel panel-hover staff-access-panel org-structure-admin-panel section-appear section-delay-1">
-            <div class="panel-header">
-              <div>
-                <h3 class="panel-title">เพิ่มหรือแก้ไขรายชื่อทำเนียบรุ่น</h3>
-                <p class="panel-caption">ข้อมูลส่วนนี้บันทึกเข้า Firestore และใช้แสดงแผนผังทีมเหรัญญิกหน้าแรก</p>
+
+
+          <div class="filter-bar org-directory-filters" aria-label="ตัวกรองทำเนียบรุ่น">
+            <div class="filter-group">
+              <label for="orgStructureTermFilter">รุ่น</label>
+              <select id="orgStructureTermFilter"><option value="all">ทุกรุ่น</option></select>
+            </div>
+            <div class="filter-group">
+              <label for="orgStructureStatusFilter">สถานะ</label>
+              <select id="orgStructureStatusFilter">
+                <option value="all">ทุกสถานะ</option>
+                <option value="published">เผยแพร่แล้ว</option>
+                <option value="draft">ฉบับร่าง</option>
+                <option value="archived">เก็บถาวร</option>
+              </select>
+            </div>
+            <div class="filter-group org-directory-search-filter">
+              <label for="orgStructureSearchInput">ค้นหารายชื่อ</label>
+              <div class="search-box">
+                <input id="orgStructureSearchInput" type="search" placeholder="ค้นหาชื่อ ตำแหน่ง รหัส หรืออีเมล" />
+                <button id="orgStructureFilterReset" class="search-clear" type="button" aria-label="ล้างตัวกรอง">✕</button>
               </div>
             </div>
-            <form id="orgStructureMemberForm" class="staff-access-form content-admin-form" autocomplete="off">
-              <input id="orgStructureMemberId" type="hidden" />
-              <div class="org-structure-code-guide">
-                <div>
-                  <strong>รหัสตำแหน่ง</strong>
-                  <span>ใช้จัดรุ่น ลำดับ และตำแหน่งในแผนผัง</span>
-                </div>
-                <code>SGCUXX.10.YY.ZZ-AAA</code>
-                <div class="org-structure-code-guide-grid">
-                  <span><b>XX</b> รุ่น</span>
-                  <span><b>YY</b> ฝ่าย</span>
-                  <span><b>ZZ</b> ระดับตำแหน่ง</span>
-                  <span><b>AAA</b> ลำดับ</span>
-                </div>
-              </div>
-              <div class="staff-application-position-grid budget-staff-form-grid">
-                <div class="borrow-form-field budget-staff-form-field-full">
-                  <label class="login-label" for="orgStructurePositionCode">รหัสตำแหน่ง</label>
-                  <input id="orgStructurePositionCode" class="login-input" type="text" placeholder="SGCU69.10.00.01-001" required />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructurePosition">ตำแหน่ง</label>
-                  <input id="orgStructurePosition" class="login-input" type="text" placeholder="เหรัญญิก" required />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructurePrefix">คำนำ</label>
-                  <input id="orgStructurePrefix" class="login-input" type="text" placeholder="นาย / นางสาว" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureFirstName">ชื่อ</label>
-                  <input id="orgStructureFirstName" class="login-input" type="text" required />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureLastName">สกุล</label>
-                  <input id="orgStructureLastName" class="login-input" type="text" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureNick">ชื่อเล่น</label>
-                  <input id="orgStructureNick" class="login-input" type="text" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureStudentId">รหัสนิสิต</label>
-                  <input id="orgStructureStudentId" class="login-input" type="text" inputmode="numeric" placeholder="เช่น 67xxxxxxxx" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureYear">ชั้นปี</label>
-                  <input id="orgStructureYear" class="login-input" type="text" placeholder="ระบบจะแสดงจากรหัสนิสิต" readonly />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureFaculty">คณะ</label>
-                  <input id="orgStructureFaculty" class="login-input" type="text" placeholder="ระบบจะแสดงจากรหัสนิสิต" readonly />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureEmail">อีเมล</label>
-                  <input id="orgStructureEmail" class="login-input" type="email" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureLineId">Line ID</label>
-                  <input id="orgStructureLineId" class="login-input" type="text" />
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructurePhone">เบอร์โทรศัพท์</label>
-                  <input id="orgStructurePhone" class="login-input" type="tel" />
-                </div>
-                <div class="borrow-form-field budget-staff-form-field-full">
-                  <label class="login-label" for="orgStructurePhotoUrl">รูปโปรไฟล์</label>
-                  <div class="org-structure-photo-control">
-                    <input id="orgStructurePhotoUrl" class="login-input" type="text" placeholder="ลิงก์ Google Drive / URL / ชื่อไฟล์" />
-                    <a
-                      class="btn-ghost org-structure-drive-link"
-                      href="https://drive.google.com/drive/folders/1ySGUUoYf6ENJIF9eY67Y7gBcIBEi5M-v?usp=drive_link"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      เปิดโฟลเดอร์รูป
-                    </a>
-                  </div>
-                  <div id="orgStructurePhotoPreview" class="org-structure-photo-preview" aria-live="polite">
-                    <span>ยังไม่ได้แนบรูป</span>
-                  </div>
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureStatus">สถานะ</label>
-                  <select id="orgStructureStatus" class="login-input">
-                    <option value="published">published</option>
-                    <option value="draft">draft</option>
-                    <option value="archived">archived</option>
-                  </select>
-                </div>
-              </div>
-              <div class="staff-access-actions budget-staff-form-actions">
-                <button class="btn-primary" type="submit">บันทึกรายชื่อ</button>
-                <button id="orgStructureArchiveBtn" class="btn-ghost" type="button">Archive</button>
-                <button id="orgStructureResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
-              </div>
-              <div id="orgStructureFormMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
-            </form>
-          </section>
-
-          <section class="panel panel-hover staff-access-panel org-structure-admin-panel section-appear section-delay-1">
+          </div>
+          <section class="panel panel-hover staff-access-panel org-structure-admin-panel org-directory-list-panel section-appear section-delay-1">
             <div class="panel-header">
               <div>
                 <h3 class="panel-title">รายการทำเนียบรุ่น</h3>
@@ -122,39 +41,14 @@
               </div>
               <div class="content-admin-actions">
                 <button id="orgStructureRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
-                <button id="orgStructureExportBtn" class="btn-ghost" type="button">Export CSV</button>
+                <button id="orgStructureExportBtn" class="btn-ghost" type="button">ส่งออก CSV</button>
               </div>
             </div>
-            <div class="content-news-filters" aria-label="ตัวกรองทำเนียบรุ่น">
-              <div class="content-news-filter-row content-news-filter-row-top">
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureTermFilter">รุ่น</label>
-                  <select id="orgStructureTermFilter" class="login-input">
-                    <option value="all">ทุกรุ่น</option>
-                  </select>
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="orgStructureStatusFilter">สถานะ</label>
-                  <select id="orgStructureStatusFilter" class="login-input">
-                    <option value="all">ทุกสถานะ</option>
-                    <option value="published">published</option>
-                    <option value="draft">draft</option>
-                    <option value="archived">archived</option>
-                  </select>
-                </div>
-              </div>
-              <div class="content-news-filter-row content-news-filter-row-search">
-                <div class="borrow-form-field content-news-search-field">
-                  <label class="login-label" for="orgStructureSearchInput">ค้นหา</label>
-                  <div class="content-news-search-control">
-                    <input id="orgStructureSearchInput" class="login-input" type="search" placeholder="ชื่อ / ตำแหน่ง / รหัส / รุ่น" />
-                    <button id="orgStructureFilterReset" class="content-news-clear-filter-btn" type="button" aria-label="ล้างตัวกรอง">X</button>
-                  </div>
-                </div>
-              </div>
+            <div id="orgStructureMobileList" class="org-directory-mobile-list" aria-label="รายการทำเนียบรุ่น">
+              <p class="panel-caption">กำลังโหลดรายชื่อ...</p>
             </div>
-            <div class="project-table-wrapper budget-staff-table-wrapper org-structure-admin-table-wrapper">
-              <table class="budget-staff-requests-table content-admin-table org-structure-admin-table">
+            <div class="project-table-wrapper org-directory-table-wrapper">
+              <table class="org-directory-table" aria-label="รายการทำเนียบรุ่น">
                 <thead>
                   <tr>
                     <th>รายชื่อ</th>
@@ -169,6 +63,159 @@
               </table>
             </div>
           </section>
+
+          <section id="orgStructureEditor" class="panel staff-access-panel org-directory-editor" aria-labelledby="orgStructureEditorTitle" hidden>
+            <div class="panel-header">
+              <div>
+                <h3 id="orgStructureEditorTitle" class="panel-title">เพิ่มรายชื่อ</h3>
+                <p class="panel-caption">กรอกข้อมูลสมาชิกเพื่อแสดงในทำเนียบรุ่นและแผนผังทีมเหรัญญิก</p>
+              </div>
+              <button id="orgStructureEditorClose" class="btn-ghost" type="button">ปิดฟอร์ม</button>
+            </div>
+            <form id="orgStructureMemberForm" class="org-directory-form" autocomplete="off">
+              <input id="orgStructureMemberId" type="hidden" />
+              <div class="org-directory-editor-layout">
+                <section class="org-directory-form-section" aria-labelledby="orgDirectoryIdentityHeading">
+                  <div class="org-directory-section-heading">
+                    <span class="org-directory-step" aria-hidden="true">01</span>
+                    <h4 id="orgDirectoryIdentityHeading">ข้อมูลสมาชิก</h4>
+                    <p class="org-directory-section-hint">ระบุชื่อและรหัสนิสิต ระบบจะเติมชั้นปีและคณะให้</p>
+                  </div>
+                  <div class="org-directory-section-body">
+                    <div class="org-directory-fields">
+                      <div class="borrow-form-field org-directory-span-2">
+                        <label class="login-label" for="orgStructurePrefix">คำนำหน้า</label>
+                        <input id="orgStructurePrefix" class="login-input" type="text" placeholder="นาย / นางสาว" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-5">
+                        <label class="login-label" for="orgStructureFirstName">ชื่อ</label>
+                        <input id="orgStructureFirstName" class="login-input" type="text" required />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-5">
+                        <label class="login-label" for="orgStructureLastName">นามสกุล</label>
+                        <input id="orgStructureLastName" class="login-input" type="text" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-4">
+                        <label class="login-label" for="orgStructureNick">ชื่อเล่น</label>
+                        <input id="orgStructureNick" class="login-input" type="text" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-5">
+                        <label class="login-label" for="orgStructureStudentId">รหัสนิสิต</label>
+                        <input id="orgStructureStudentId" class="login-input" type="text" inputmode="numeric" placeholder="เช่น 67xxxxxxxx" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-3">
+                        <label class="login-label" for="orgStructureYear">ชั้นปี</label>
+                        <input id="orgStructureYear" class="login-input" type="text" placeholder="อัตโนมัติ" readonly />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-12">
+                        <label class="login-label" for="orgStructureFaculty">คณะ</label>
+                        <input id="orgStructureFaculty" class="login-input" type="text" placeholder="อัตโนมัติ" readonly />
+                      </div>
+                    </div>
+                    <div class="org-directory-photo-section">
+                      <div class="org-directory-fields">
+                        <div class="borrow-form-field org-directory-span-12">
+                          <label class="login-label" for="orgStructurePhotoUrl">รูปโปรไฟล์</label>
+                          <div class="org-structure-photo-control">
+                            <input id="orgStructurePhotoUrl" class="login-input" type="text" placeholder="ลิงก์ Google Drive / URL / ชื่อไฟล์" />
+                            <a
+                            class="btn-ghost org-structure-drive-link"
+                            href="https://drive.google.com/drive/folders/1ySGUUoYf6ENJIF9eY67Y7gBcIBEi5M-v?usp=drive_link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >
+                            เปิดโฟลเดอร์รูป
+                            </a>
+                          </div>
+                          <div id="orgStructurePhotoPreview" class="org-structure-photo-preview" aria-live="polite">
+                            <span>ยังไม่ได้แนบรูป</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section class="org-directory-form-section" aria-labelledby="orgDirectoryPlacementHeading">
+                  <div class="org-directory-section-heading">
+                    <span class="org-directory-step" aria-hidden="true">02</span>
+                    <h4 id="orgDirectoryPlacementHeading">ตำแหน่งในทำเนียบ</h4>
+                    <p class="org-directory-section-hint">เลือกรุ่นและตำแหน่ง เพื่อจัดสมาชิกเข้ากลุ่มที่ถูกต้อง</p>
+                  </div>
+                  <div class="org-directory-section-body">
+                    <div class="org-directory-fields">
+                      <div class="borrow-form-field org-directory-span-3">
+                        <label class="login-label" for="orgStructureTermInput">รุ่น SGCU</label>
+                        <input id="orgStructureTermInput" class="login-input" type="number" min="0" max="99" step="1" placeholder="เช่น 69" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-6">
+                        <label class="login-label" for="orgStructurePositionSelect">ตำแหน่ง</label>
+                        <select id="orgStructurePositionSelect" class="login-input" aria-describedby="orgStructurePlacementHint">
+                          <option value="">เลือกตำแหน่ง</option>
+                        </select>
+                      </div>
+                      <div class="borrow-form-field org-directory-span-3">
+                        <label class="login-label" for="orgStructureStatus">สถานะการเผยแพร่</label>
+                        <select id="orgStructureStatus" class="login-input">
+                          <option value="published">เผยแพร่แล้ว</option>
+                          <option value="draft">ฉบับร่าง</option>
+                          <option value="archived">เก็บถาวร</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p id="orgStructurePlacementHint" class="org-directory-field-hint org-directory-span-12" aria-live="polite">เลือกตำแหน่งเพื่อกำหนดการแสดงผลในทำเนียบ</p>
+                    <details id="orgStructureAdvanced" class="org-directory-advanced">
+                      <summary>ปรับชื่อที่แสดง ลำดับ และรหัสเพิ่มเติม</summary>
+                      <p class="org-directory-section-hint">ระบบกำหนดค่าให้แล้ว ปรับส่วนนี้เฉพาะเมื่อต้องการเปลี่ยนชื่อหรือลำดับการแสดงผล</p>
+                      <div class="org-directory-fields">
+                        <div class="borrow-form-field org-directory-span-8">
+                          <label class="login-label" for="orgStructurePosition">ชื่อตำแหน่งที่แสดง</label>
+                          <input id="orgStructurePosition" class="login-input" type="text" placeholder="ระบบจะเติมจากตำแหน่งที่เลือก สามารถปรับข้อความได้" required />
+                        </div>
+                        <div class="borrow-form-field org-directory-span-4">
+                          <label class="login-label" for="orgStructureOrderInput">ลำดับในตำแหน่งเดียวกัน</label>
+                          <input id="orgStructureOrderInput" class="login-input" type="number" min="1" max="999" step="1" aria-describedby="orgStructurePlacementHint" />
+                        </div>
+                        <div class="borrow-form-field org-directory-span-12">
+                          <label class="login-label" for="orgStructurePositionCode">รหัสตำแหน่ง</label>
+                          <input id="orgStructurePositionCode" class="login-input" type="text" placeholder="SGCU69.10.00.01-001" aria-describedby="orgStructureCodeHint" />
+                          <p id="orgStructureCodeHint" class="org-directory-field-hint">ระบบสร้างรหัสจากตัวเลือกด้านบน แก้ไขโดยตรงได้เมื่อต้องการใช้รหัสเฉพาะหรือรักษารูปแบบเดิม</p>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </section>
+                <section class="org-directory-form-section" aria-labelledby="orgDirectoryContactHeading">
+                  <div class="org-directory-section-heading">
+                    <span class="org-directory-step" aria-hidden="true">03</span>
+                    <h4 id="orgDirectoryContactHeading">ช่องทางติดต่อ</h4>
+                    <p class="org-directory-section-hint">เพิ่มช่องทางที่สะดวกสำหรับติดต่อสมาชิก</p>
+                  </div>
+                  <div class="org-directory-section-body">
+                    <div class="org-directory-fields">
+                      <div class="borrow-form-field org-directory-span-12">
+                        <label class="login-label" for="orgStructureEmail">อีเมล</label>
+                        <input id="orgStructureEmail" class="login-input" type="email" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-6">
+                        <label class="login-label" for="orgStructurePhone">เบอร์โทรศัพท์</label>
+                        <input id="orgStructurePhone" class="login-input" type="tel" />
+                      </div>
+                      <div class="borrow-form-field org-directory-span-6">
+                        <label class="login-label" for="orgStructureLineId">Line ID</label>
+                        <input id="orgStructureLineId" class="login-input" type="text" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <div class="org-directory-form-actions">
+                <button id="orgStructureArchiveBtn" class="btn-ghost" type="button">เก็บถาวร</button>
+                <button id="orgStructureResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
+                <button class="btn-primary" type="submit">บันทึกรายชื่อ</button>
+              </div>
+              <div id="orgStructureFormMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
+            </form>
+          </section>
           </div>
 
         </div>
@@ -182,53 +229,12 @@
               <h1 class="page-title">สิทธิ์เข้าใช้ชั่วคราว</h1>
               <p class="page-subtitle">กำหนดช่วงเวลาเข้าใช้สำหรับบัญชีภายนอกหรือบัญชีที่ยังไม่มีอีเมลจุฬา</p>
             </div>
+            <button id="staffAuthAccessAddBtn" class="btn-primary" type="button">เพิ่มสิทธิ์ชั่วคราว</button>
           </div>
           <div id="staffAuthAccessPanel" class="staff-approval-main-panel">
-            <section class="panel panel-hover staff-access-panel section-appear section-delay-1">
-              <div class="panel-header">
-                <div>
-                  <h3 class="panel-title">เพิ่มสิทธิ์เข้าใช้ชั่วคราว</h3>
-                  <p class="panel-caption">ใช้สำหรับบัญชีที่ยังไม่มีอีเมลจุฬา หรือผู้เยี่ยมชมจากหน่วยงานอื่น โดยต้องกำหนดวันเริ่มและวันหมดอายุ</p>
-                </div>
-              </div>
-              <form id="staffAuthAccessForm" class="staff-access-form content-admin-form" autocomplete="off">
-                <input id="staffAuthAccessId" type="hidden" />
-                <div class="staff-application-position-grid budget-staff-form-grid">
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="staffAuthAccessEmail">อีเมล</label>
-                    <input id="staffAuthAccessEmail" class="login-input" type="email" placeholder="name@example.com" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="staffAuthAccessStartsAt">เริ่มใช้สิทธิ์</label>
-                    <input id="staffAuthAccessStartsAt" class="login-input" type="datetime-local" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="staffAuthAccessEndsAt">หมดอายุ</label>
-                    <input id="staffAuthAccessEndsAt" class="login-input" type="datetime-local" required />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="staffAuthAccessActive">สถานะ</label>
-                    <select id="staffAuthAccessActive" class="login-input">
-                      <option value="true">active</option>
-                      <option value="false">inactive</option>
-                    </select>
-                  </div>
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="staffAuthAccessReason">เหตุผล</label>
-                    <input id="staffAuthAccessReason" class="login-input" type="text" maxlength="240" placeholder="นิสิตใหม่รออีเมลจุฬา / ดูงานจากมหาวิทยาลัยอื่น" required />
-                  </div>
-                </div>
-                <div id="staffAuthAccessProfilePreview" class="section-text-sm staff-access-status" aria-live="polite">กรอกอีเมลเพื่อดูข้อมูลโปรไฟล์ที่เคยบันทึกไว้</div>
-                <div class="staff-access-actions budget-staff-form-actions">
-                  <button id="staffAuthAccessSubmitBtn" class="btn-primary" type="submit">บันทึกสิทธิ์</button>
-                  <button id="staffAuthAccessDeleteBtn" class="btn-ghost" type="button" hidden>ลบรายการนี้</button>
-                  <button id="staffAuthAccessResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
-                </div>
-                <div id="staffAuthAccessMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
-              </form>
-            </section>
 
-            <section class="panel panel-hover staff-access-panel section-appear section-delay-1">
+
+            <section id="staffAuthAccessListPanel" class="panel staff-access-panel staff-auth-list-panel">
               <div class="panel-header">
                 <div>
                   <h3 class="panel-title">รายการสิทธิ์เข้าใช้ชั่วคราว</h3>
@@ -238,8 +244,9 @@
                   <button id="staffAuthAccessRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
                 </div>
               </div>
-              <div class="project-table-wrapper budget-staff-table-wrapper staff-auth-access-table-wrapper">
-                <table id="staffAuthAccessTable" class="budget-staff-requests-table content-admin-table staff-auth-access-table">
+              <div id="staffAuthAccessMobileList" class="staff-auth-mobile-list"><p class="panel-caption">กำลังโหลดรายการ...</p></div>
+              <div class="project-table-wrapper staff-auth-access-table-wrapper">
+                <table id="staffAuthAccessTable" class="staff-auth-access-table">
                   <thead>
                     <tr>
                       <th>บัญชี</th>
@@ -252,6 +259,54 @@
                   </tbody>
                 </table>
               </div>
+            </section>
+
+            <section id="staffAuthAccessEditor" class="panel staff-access-panel staff-auth-editor">
+              <div class="panel-header">
+                <div>
+                  <h3 id="staffAuthAccessEditorTitle" class="panel-title">เพิ่มสิทธิ์เข้าใช้ชั่วคราว</h3>
+                  <p class="panel-caption">ใช้สำหรับบัญชีที่ยังไม่มีอีเมลจุฬา หรือผู้เยี่ยมชมจากหน่วยงานอื่น โดยต้องกำหนดวันเริ่มและวันหมดอายุ</p>
+                </div>
+              </div>
+              <form id="staffAuthAccessForm" class="staff-auth-form" autocomplete="off">
+                <input id="staffAuthAccessId" type="hidden" />
+                <div class="staff-auth-form-grid">
+                  <h4 class="staff-auth-form-heading">บัญชีผู้ใช้งาน</h4>
+                  <div class="borrow-form-field staff-auth-field-full">
+                    <label class="login-label" for="staffAuthAccessEmail">อีเมล</label>
+                    <input id="staffAuthAccessEmail" class="login-input" type="email" placeholder="name@example.com" required />
+                  </div>
+                <div id="staffAuthAccessProfilePreview" class="staff-auth-profile-preview staff-auth-field-full" aria-live="polite">กรอกอีเมลเพื่อดูข้อมูลโปรไฟล์ที่เคยบันทึกไว้</div>
+                  <h4 class="staff-auth-form-heading">ช่วงเวลาและการเปิดใช้สิทธิ์</h4>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="staffAuthAccessStartsAt">เริ่มใช้สิทธิ์</label>
+                    <input id="staffAuthAccessStartsAt" class="login-input" type="datetime-local" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="staffAuthAccessEndsAt">หมดอายุ</label>
+                    <input id="staffAuthAccessEndsAt" class="login-input" type="datetime-local" required />
+                  </div>
+                  <div class="borrow-form-field">
+                    <label class="login-label" for="staffAuthAccessActive">การเปิดใช้สิทธิ์</label>
+                    <select id="staffAuthAccessActive" class="login-input">
+                      <option value="true">เปิดใช้งาน</option>
+                      <option value="false">ปิดใช้งาน</option>
+                    </select>
+                  </div>
+                  <h4 class="staff-auth-form-heading">เหตุผลการให้สิทธิ์</h4>
+                  <div class="borrow-form-field staff-auth-field-full">
+                    <label class="login-label" for="staffAuthAccessReason">เหตุผล</label>
+                    <textarea id="staffAuthAccessReason" class="login-input" rows="3" maxlength="240" placeholder="เช่น นิสิตใหม่รออีเมลจุฬา หรือผู้เยี่ยมชมจากหน่วยงานอื่น" required></textarea>
+                  </div>
+                </div>
+
+                <div class="staff-auth-form-actions">
+                  <button id="staffAuthAccessDeleteBtn" class="btn-ghost" type="button" hidden>ลบรายการนี้</button>
+                  <button id="staffAuthAccessResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
+                  <button id="staffAuthAccessSubmitBtn" class="btn-primary" type="submit">บันทึกสิทธิ์</button>
+                </div>
+                <div id="staffAuthAccessMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
+              </form>
             </section>
           </div>
 
