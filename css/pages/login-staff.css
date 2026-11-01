@@ -2833,3 +2833,9 @@ body.directory-filter-open { overflow: hidden; }
   .org-directory-list-panel { scroll-margin-top: 90px; }
   .mobile-directory-action-bar .mobile-meeting-action { min-height: 44px; }
 }
+
+#loginProfileTemporaryInfo[hidden],
+#loginProfileTypeSection[hidden],
+#loginProfileOrganizationField[hidden] {
+  display: none;
+}

@@ -6333,8 +6333,8 @@ function initStaffAccessPages() {
   const renderAuthEmailAccessRows = async () => {
     if (!staffAuthAccessTableBodyEl) return;
     if (!currentAuthEmailAccessEntries.length) {
-      staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3" class="list-empty-cell">${renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กดเพิ่มสิทธิ์ชั่วคราวเพื่อเริ่มต้น", "document")}</td></tr>`;
-      if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กดเพิ่มสิทธิ์ชั่วคราวเพื่อเริ่มต้น", "document");
+      staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3" class="list-empty-cell">${renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กรอกแบบฟอร์มด้านบนเพื่อเพิ่มสิทธิ์เข้าใช้ชั่วคราว", "document")}</td></tr>`;
+      if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กรอกแบบฟอร์มด้านบนเพื่อเพิ่มสิทธิ์เข้าใช้ชั่วคราว", "document");
       if (staffAuthAccessListCaptionEl) staffAuthAccessListCaptionEl.textContent = "แสดงผล 0 รายการ";
       return;
     }
@@ -8285,11 +8285,6 @@ function initStaffAccessPages() {
   });
   staffAuthAccessFields.email?.addEventListener("blur", () => {
     void refreshAuthAccessProfilePreview();
-  });
-  document.getElementById("staffAuthAccessAddBtn")?.addEventListener("click", () => {
-    resetAuthAccessForm();
-    document.getElementById("staffAuthAccessEditor")?.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-    staffAuthAccessFields.email?.focus({ preventScroll: true });
   });
   const staffAuthAccessListPanelEl = document.getElementById("staffAuthAccessListPanel");
   staffAuthAccessListPanelEl?.addEventListener("click", (event) => {

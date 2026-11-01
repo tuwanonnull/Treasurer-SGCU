@@ -97,14 +97,28 @@ function isTemporaryAuthAccessActive(data, email, nowMs = Date.now()) {
   );
 }
 
+// Only successful access checks populate this session-local display context.
+const temporaryAuthAccessByEmail = new Map();
+function getTemporaryAuthAccess(email) {
+  const normalized = normalizeAuthEmail(email);
+  if (isAllowedAuthEmail(normalized)) return null;
+  const data = temporaryAuthAccessByEmail.get(normalized);
+  return isTemporaryAuthAccessActive(data, normalized) ? { ...data } : null;
+}
+
 async function isAllowedAuthEmailAsync(email) {
   const normalized = normalizeAuthEmail(email);
   if (isAllowedAuthEmail(normalized)) return true;
   if (!normalized) return false;
   try {
     const snap = await getDoc(doc(db, AUTH_EMAIL_ACCESS_COLLECTION, normalized));
-    return snap.exists() && isTemporaryAuthAccessActive(snap.data(), normalized);
+    const data = snap.exists() ? snap.data() : null;
+    const allowed = isTemporaryAuthAccessActive(data, normalized);
+    if (allowed) temporaryAuthAccessByEmail.set(normalized, data);
+    else temporaryAuthAccessByEmail.delete(normalized);
+    return allowed;
   } catch (error) {
+    temporaryAuthAccessByEmail.delete(normalized);
     console.warn("temporary auth email access check failed", error);
     return false;
   }
@@ -153,6 +167,7 @@ window.sgcuAuth = {
   isAllowedAuthEmail,
   isAllowedAuthEmailAsync,
   isTemporaryAuthAccessActive,
+  getTemporaryAuthAccess,
   getAuthEmailRequirementMessage
 };
 

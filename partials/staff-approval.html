@@ -229,45 +229,17 @@
           <div class="page-header-flex">
             <div>
               <h1 class="page-title">สิทธิ์เข้าใช้ชั่วคราว</h1>
-              <p class="page-subtitle">กำหนดช่วงเวลาเข้าใช้สำหรับบัญชีภายนอกหรือบัญชีที่ยังไม่มีอีเมลจุฬา</p>
+              <p class="page-subtitle">กำหนดช่วงเวลาเข้าใช้สำหรับบัญชีผู้ใช้งานภายนอก</p>
             </div>
-            <button id="staffAuthAccessAddBtn" class="btn-primary" type="button">เพิ่มสิทธิ์ชั่วคราว</button>
           </div>
           <div id="staffAuthAccessPanel" class="staff-approval-main-panel">
 
-
-            <section id="staffAuthAccessListPanel" class="panel staff-access-panel staff-auth-list-panel">
-              <div class="panel-header">
-                <div>
-                  <h3 class="panel-title">รายการสิทธิ์เข้าใช้ชั่วคราว</h3>
-                  <p id="staffAuthAccessListCaption" class="panel-caption">กำลังโหลดรายการ...</p>
-                </div>
-                <div class="content-admin-actions">
-                  <button id="staffAuthAccessRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
-                </div>
-              </div>
-              <div id="staffAuthAccessMobileList" class="staff-auth-mobile-list"><p class="panel-caption">กำลังโหลดรายการ...</p></div>
-              <div class="project-table-wrapper staff-auth-access-table-wrapper">
-                <table id="staffAuthAccessTable" class="staff-auth-access-table">
-                  <thead>
-                    <tr>
-                      <th>บัญชี</th>
-                      <th>ช่วงเวลา</th>
-                      <th>เหตุผล</th>
-                    </tr>
-                  </thead>
-                  <tbody id="staffAuthAccessTableBody">
-                    <tr><td colspan="3">กำลังโหลดรายการ...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
 
             <section id="staffAuthAccessEditor" class="panel staff-access-panel staff-auth-editor">
               <div class="panel-header">
                 <div>
                   <h3 id="staffAuthAccessEditorTitle" class="panel-title">เพิ่มสิทธิ์เข้าใช้ชั่วคราว</h3>
-                  <p class="panel-caption">ใช้สำหรับบัญชีที่ยังไม่มีอีเมลจุฬา หรือผู้เยี่ยมชมจากหน่วยงานอื่น โดยต้องกำหนดวันเริ่มและวันหมดอายุ</p>
+                  <p class="panel-caption">ใช้สำหรับบัญชีผู้ใช้งานภายนอกหรือผู้เยี่ยมชมจากหน่วยงานอื่น โดยต้องกำหนดวันเริ่มและวันหมดอายุ</p>
                 </div>
               </div>
               <form id="staffAuthAccessForm" class="staff-auth-form" autocomplete="off">
@@ -298,7 +270,7 @@
                   <h4 class="staff-auth-form-heading">เหตุผลการให้สิทธิ์</h4>
                   <div class="borrow-form-field staff-auth-field-full">
                     <label class="login-label" for="staffAuthAccessReason">เหตุผล</label>
-                    <textarea id="staffAuthAccessReason" class="login-input" rows="3" maxlength="240" placeholder="เช่น นิสิตใหม่รออีเมลจุฬา หรือผู้เยี่ยมชมจากหน่วยงานอื่น" required></textarea>
+                    <textarea id="staffAuthAccessReason" class="login-input" rows="3" maxlength="240" placeholder="เช่น วิทยากร ผู้ประสานงานภายนอก หรือผู้เยี่ยมชมจากหน่วยงานอื่น" required></textarea>
                   </div>
                 </div>
 
@@ -309,6 +281,33 @@
                 </div>
                 <div id="staffAuthAccessMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
               </form>
+            </section>
+
+            <section id="staffAuthAccessListPanel" class="panel staff-access-panel staff-auth-list-panel">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">รายการสิทธิ์เข้าใช้ชั่วคราว</h3>
+                  <p id="staffAuthAccessListCaption" class="panel-caption">กำลังโหลดรายการ...</p>
+                </div>
+                <div class="content-admin-actions">
+                  <button id="staffAuthAccessRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
+                </div>
+              </div>
+              <div id="staffAuthAccessMobileList" class="staff-auth-mobile-list"><p class="panel-caption">กำลังโหลดรายการ...</p></div>
+              <div class="project-table-wrapper staff-auth-access-table-wrapper">
+                <table id="staffAuthAccessTable" class="staff-auth-access-table">
+                  <thead>
+                    <tr>
+                      <th>บัญชี</th>
+                      <th>ช่วงเวลา</th>
+                      <th>เหตุผล</th>
+                    </tr>
+                  </thead>
+                  <tbody id="staffAuthAccessTableBody">
+                    <tr><td colspan="3">กำลังโหลดรายการ...</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
           </div>
 

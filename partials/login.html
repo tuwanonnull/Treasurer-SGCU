@@ -52,6 +52,7 @@
                     <h3 class="login-title">เข้าสู่ระบบด้วย Mail CHULA</h3>
                     <button id="loginPageGoogleBtn" type="button" class="btn-primary w-full">เข้าสู่ระบบด้วย Mail CHULA</button>
                     <button id="loginPageLogoutBtn" type="button" class="login-logout-btn" style="display:none;">ออกจากระบบ</button>
+                    <p class="section-text-sm">ผู้ได้รับสิทธิ์ชั่วคราวใช้บัญชี Google ที่ตรงกับอีเมลที่ได้รับอนุญาตได้</p>
                     <div class="login-status login-greeting" id="loginPageStatus"></div>
                     <div class="login-notification-controls">
                       <button id="loginNotificationEnableBtn" class="btn-ghost" type="button">ตรวจสอบสถานะแจ้งเตือน</button>
@@ -62,9 +63,14 @@
                   </div>
 
                   <div id="loginProfileCard" class="panel panel-hover login-card login-profile-card" hidden>
-                    <h3 class="login-title">ข้อมูลบัญชีผู้ใช้</h3>
+                    <h3 id="loginProfileTitle" class="login-title">ข้อมูลบัญชีผู้ใช้</h3>
+                    <div id="loginProfileTemporaryInfo" class="login-profile-block" hidden>
+                      <p id="loginProfileTemporaryExpiry" class="section-text-sm" aria-live="polite"></p>
+                      <label class="login-label" for="loginProfileTemporaryEmail">อีเมลที่ได้รับสิทธิ์</label>
+                      <input id="loginProfileTemporaryEmail" class="login-input" type="email" readonly />
+                    </div>
                     <div id="loginProfileForm" class="login-profile-form">
-                      <section class="login-profile-block">
+                      <section id="loginProfileTypeSection" class="login-profile-block">
                         <div class="borrow-form-row login-profile-type-row">
                           <div class="borrow-form-field">
                             <label class="login-label">ประเภทผู้ใช้งาน</label>
@@ -132,6 +138,11 @@
                               </div>
                             </div>
                           </div>
+                        </div>
+
+                        <div id="loginProfileOrganizationField" class="borrow-form-field" hidden>
+                          <label class="login-label" for="loginProfileOrganization">หน่วยงาน / สถานะ *</label>
+                          <input id="loginProfileOrganization" class="login-input" type="text" maxlength="160" placeholder="เช่น วิทยากร บริษัท ABC หรือผู้ประสานงานภายนอก" />
                         </div>
 
                         <div id="loginProfileContactRow" class="borrow-form-row">
