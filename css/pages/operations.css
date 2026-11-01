@@ -11363,7 +11363,7 @@ body.has-dashboard-floating-filter {
 /* Organization comparison: quiet desktop table and readable mobile cards. */
 .project-org-comparison-card { margin-bottom: 16px; min-width: 0; }
 .project-comparison-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
-.project-comparison-header .chart-title { margin: 0 0 6px; font-size: 16px; }
+.project-comparison-header .chart-title { margin: 0 0 6px; }
 .project-comparison-header .chart-caption { margin: 0; color: #94a3b8; }
 .project-comparison-sort { flex: 0 0 210px; }
 .project-org-comparison-card .project-org-comparison-scroll { border: 1px solid #e5e7eb; border-radius: 12px; }
@@ -11393,4 +11393,48 @@ body.has-dashboard-floating-filter {
   .project-comparison-mobile-row dd { color: #334155; font-size: 16px; font-weight: 600; margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
   .project-comparison-mobile-budget { grid-column: 1 / -1; padding-bottom: 14px; border-bottom: 1px solid #e5e7eb; }
   .project-comparison-mobile-row .project-comparison-mobile-budget dd { font-size: 22px; color: #111827; }
+}
+
+/* Native month controls need room for the localized month, year and picker. */
+#filterBarStaff input[type="month"] {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  box-sizing: border-box;
+}
+#filterBarStaff input[type="month"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+#filterBarStaff input[type="month"]::-webkit-datetime-edit {
+  min-width: 0;
+  padding: 0;
+}
+@media (max-width: 600px) {
+  #filterBarStaff .project-filter-fields-three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #filterBarStaff .project-filter-fields-three > .filter-group {
+    grid-column: 1 / -1;
+  }
+  #filterBarStaff input[type="month"] {
+    font-size: 16px;
+    min-height: 46px;
+  }
+}
+
+/* Analysis cards share the same title style, spacing and header alignment. */
+.dashboard-analysis-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .chart-card { margin: 0; padding: 18px; }
+#dashboardAnalysisSectionStaff .chart-header { align-items: flex-start; gap: 16px; margin: 0 0 16px; }
+#dashboardAnalysisSectionStaff .chart-title { margin: 0; line-height: 1.5; }
+#dashboardAnalysisSectionStaff .chart-header .chart-caption { margin: 5px 0 0; }
+#dashboardAnalysisSectionStaff .project-comparison-sort label { margin-bottom: 4px; }
+#dashboardAnalysisSectionStaff .heatmap-year { max-width: 100%; overflow-x: auto; }
+@media (max-width: 840px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { gap: 12px; }
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > .chart-card { padding: 14px; }
+  #dashboardAnalysisSectionStaff .chart-header { flex-direction: column; align-items: stretch; gap: 12px; }
+  #dashboardAnalysisSectionStaff .dashboard-budget-comparison-toggle { align-self: flex-start; }
 }
