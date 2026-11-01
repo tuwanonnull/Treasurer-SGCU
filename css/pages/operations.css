@@ -11395,8 +11395,11 @@ body.has-dashboard-floating-filter {
   .project-comparison-mobile-row .project-comparison-mobile-budget dd { font-size: 22px; color: #111827; }
 }
 
-/* Native month controls need room for the localized month, year and picker. */
+/* Disable iOS's native date-field bezel: its intrinsic width can extend
+   beyond the CSS box in an installed web app, even when width is 100%. */
 #filterBarStaff input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
   display: block;
   min-inline-size: 0;
   max-inline-size: 100%;
@@ -11405,6 +11408,9 @@ body.has-dashboard-floating-filter {
 }
 #filterBarStaff input[type="month"]::-webkit-date-and-time-value {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   text-align: left;
 }
 #filterBarStaff input[type="month"]::-webkit-datetime-edit {
