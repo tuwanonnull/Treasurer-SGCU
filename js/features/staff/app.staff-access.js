@@ -2162,89 +2162,64 @@ function initStaffAccessPages() {
     syncOrgStructurePlacementFromCode();
   };
 
-  let orgStructureEditorAnimation = null;
   let orgStructureEditorReturnFocus = null;
+  let orgStructureEditorSnapshot = "";
+  let orgStructureEditorClosing = false;
+  let orgStructureSaving = false;
+  const readOrgStructureEditorSnapshot = () => JSON.stringify(
+    Array.from(orgStructureMemberFormEl?.elements || [])
+      .filter((field) => field.matches("input, select, textarea"))
+      .map((field) => [field.id, field.value])
+  );
   const setOrgStructureEditorOpen = (open) => {
     const editor = document.getElementById("orgStructureEditor");
     const addButton = document.getElementById("orgStructureAddBtn");
-    if (!editor || (!open && (editor.hidden || editor.inert))) return;
-    const properties = ["height", "paddingTop", "paddingBottom", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth"];
-    const measure = () => {
-      const style = window.getComputedStyle(editor);
-      return Object.fromEntries(properties.map((key) => [key,
-        key === "height" ? editor.getBoundingClientRect().height : parseFloat(style[key]) || 0
-      ]));
-    };
-    const wasHidden = editor.hidden;
-    const from = wasHidden ? Object.fromEntries(properties.map((key) => [key, 0])) : measure();
-    const fromOpacity = wasHidden ? 0 : Number(window.getComputedStyle(editor).opacity);
-    orgStructureEditorAnimation?.cancel();
-    orgStructureEditorAnimation = null;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (open && !editor.contains(document.activeElement)) orgStructureEditorReturnFocus = document.activeElement;
-    const returnTarget = orgStructureEditorReturnFocus?.isConnected ? orgStructureEditorReturnFocus : addButton;
-    const target = open ? editor : returnTarget;
-    const scrollRoot = document.scrollingElement || document.documentElement;
-    const scrollStart = scrollRoot.scrollTop;
-    editor.hidden = false;
-    editor.inert = !open;
-    addButton?.setAttribute("aria-expanded", String(open));
-    const natural = measure();
-    const to = open ? natural : Object.fromEntries(properties.map((key) => [key, 0]));
-    const savedStyle = editor.style.cssText;
-    const savedScrollBehavior = scrollRoot.style.scrollBehavior;
-    const savedAnchor = scrollRoot.style.overflowAnchor;
-    const outerHeight = natural.height + natural.marginTop + natural.marginBottom;
-    const finalMaxScroll = Math.max(0, scrollRoot.scrollHeight - (open ? 0 : outerHeight) - window.innerHeight);
-    const targetTop = target ? target.getBoundingClientRect().top + scrollRoot.scrollTop - 90 : scrollStart;
-    const scrollEnd = Math.max(0, Math.min(finalMaxScroll, targetTop));
-    let frame = 0;
-    let stopped = false;
-    const restore = () => {
-      editor.style.cssText = savedStyle;
-      scrollRoot.style.scrollBehavior = savedScrollBehavior;
-      scrollRoot.style.overflowAnchor = savedAnchor;
-    };
-    const finish = () => {
-      stopped = true;
-      editor.hidden = !open;
-      restore();
-      orgStructureEditorAnimation = null;
-      (open ? orgStructureFields.firstName : returnTarget)?.focus({ preventScroll: true });
-    };
-    scrollRoot.style.scrollBehavior = "auto";
-    scrollRoot.style.overflowAnchor = "none";
-    Object.assign(editor.style, { boxSizing: "border-box", minHeight: "0", overflow: "hidden" });
-    const apply = (progress) => {
-      for (const key of properties) editor.style[key] = `${from[key] + (to[key] - from[key]) * progress}px`;
-      editor.style.opacity = String(fromOpacity + ((open ? 1 : 0) - fromOpacity) * progress);
-      // One frame loop owns layout and scroll; native smooth scrolling must not compete.
-      scrollRoot.scrollTop = scrollStart + (scrollEnd - scrollStart) * progress;
-    };
-    if (reducedMotion) {
-      apply(1);
-      finish();
+    if (!editor || orgStructureEditorClosing || editor.open === open) return;
+    if (open) {
+      orgStructureEditorReturnFocus = document.activeElement;
+      orgStructureEditorSnapshot = readOrgStructureEditorSnapshot();
+      editor.showModal();
+      document.body.classList.add("has-org-directory-modal");
+      editor.scrollTop = 0;
+      const formScroller = editor.querySelector?.(".org-directory-editor-layout");
+      if (formScroller) formScroller.scrollTop = 0;
+      const initialFocus = window.matchMedia?.("(max-width: 640px)").matches
+        ? document.getElementById("orgStructureEditorTitle") : orgStructureFields.firstName;
+      initialFocus?.focus({ preventScroll: true });
+    } else {
+      if (orgStructureSaving) return;
+      if (readOrgStructureEditorSnapshot() !== orgStructureEditorSnapshot
+        && !window.confirm("มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดฟอร์มและทิ้งการแก้ไขหรือไม่?")) return;
+      const finishClose = () => {
+        editor.close();
+        editor.classList.remove("is-closing");
+        editor.inert = false;
+        orgStructureEditorClosing = false;
+        document.body.classList.remove("has-org-directory-modal");
+        addButton?.setAttribute("aria-expanded", "false");
+        const returnTarget = orgStructureEditorReturnFocus?.isConnected ? orgStructureEditorReturnFocus : addButton;
+        returnTarget?.focus({ preventScroll: true });
+      };
+      if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+        finishClose();
+      } else {
+        orgStructureEditorClosing = true;
+        editor.inert = true;
+        editor.classList.add("is-closing");
+        // Keep the native dialog and backdrop open until the exit animation finishes.
+        let timer;
+        const onEnd = (event) => {
+          if (event && (event.target !== editor || event.animationName !== "org-directory-modal-out")) return;
+          window.clearTimeout(timer);
+          editor.removeEventListener("animationend", onEnd);
+          finishClose();
+        };
+        editor.addEventListener("animationend", onEnd);
+        timer = window.setTimeout(() => onEnd(), 240);
+      }
       return;
     }
-    const animation = {
-      cancel() {
-        stopped = true;
-        cancelAnimationFrame(frame);
-        restore();
-      }
-    };
-    orgStructureEditorAnimation = animation;
-    apply(0);
-    const start = performance.now();
-    const tick = (now) => {
-      if (stopped) return;
-      const elapsed = Math.min(1, (now - start) / 360);
-      const progress = elapsed < 0.5 ? 4 * elapsed ** 3 : 1 - (-2 * elapsed + 2) ** 3 / 2;
-      apply(progress);
-      if (elapsed < 1) frame = requestAnimationFrame(tick);
-      else finish();
-    };
-    frame = requestAnimationFrame(tick);
+    addButton?.setAttribute("aria-expanded", String(open));
   };
 
   const fillOrgStructureForm = (item) => {
@@ -2338,6 +2313,8 @@ function initStaffAccessPages() {
       setMessage(orgStructureFormMessageEl, "ระบบ Firestore ยังไม่พร้อม", "#b91c1c");
       return;
     }
+    if (orgStructureSaving) return;
+    orgStructureSaving = true;
     const controls = Array.from(orgStructureMemberFormEl?.elements || []);
     controls.forEach((control) => {
       if ("disabled" in control) control.disabled = true;
@@ -2368,11 +2345,13 @@ function initStaffAccessPages() {
       });
       await syncPublicOrgStructureCache(nextMembers);
       resetOrgStructureForm();
+      orgStructureEditorSnapshot = readOrgStructureEditorSnapshot();
       setMessage(orgStructureFormMessageEl, "บันทึกรายชื่อทำเนียบรุ่นแล้ว และอัปเดต public cache แล้ว", "#047857");
     } catch (error) {
       console.error("save org structure member failed - app.staff-access.js:2167", error);
       setMessage(orgStructureFormMessageEl, error.message || "บันทึกทำเนียบรุ่นไม่สำเร็จ", "#b91c1c");
     } finally {
+      orgStructureSaving = false;
       controls.forEach((control) => {
         if ("disabled" in control) control.disabled = false;
       });
@@ -8339,6 +8318,18 @@ function initStaffAccessPages() {
       fillAuthAccessForm(entry);
       staffAuthAccessFormEl?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  });
+
+  const orgStructureEditorEl = document.getElementById("orgStructureEditor");
+  orgStructureEditorEl?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    setOrgStructureEditorOpen(false);
+  });
+  orgStructureEditorEl?.addEventListener("click", (event) => {
+    if (event.target !== orgStructureEditorEl) return;
+    const bounds = orgStructureEditorEl.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right
+      || event.clientY < bounds.top || event.clientY > bounds.bottom) setOrgStructureEditorOpen(false);
   });
 
   document.getElementById("orgStructureEditorClose")?.addEventListener("click", () => {

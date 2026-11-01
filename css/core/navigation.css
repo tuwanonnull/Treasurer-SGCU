@@ -464,7 +464,7 @@
 
 .mobile-project-action-bar,
 .mobile-dashboard-action-bar,
-.mobile-meeting-action-bar,
+:is(.mobile-meeting-action-bar, .mobile-directory-action-bar),
 .mobile-budget-action-bar,
 .mobile-borrow-action-bar {
   display: none;
@@ -494,7 +494,7 @@
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 
-  body.has-mobile-context-actions {
+  body:is(.has-mobile-context-actions, .has-mobile-directory-actions) {
     padding-bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap) + var(--mobile-fixed-gap)
@@ -523,14 +523,14 @@
     transform: translateY(16px) scale(0.98);
   }
 
-  body.has-mobile-context-actions .mobile-menu {
+  body:is(.has-mobile-context-actions, .has-mobile-directory-actions) .mobile-menu {
     bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap)
     );
   }
 
-  body.mobile-menu-open.has-mobile-context-actions .mobile-menu {
+  body.mobile-menu-open:is(.has-mobile-context-actions, .has-mobile-directory-actions) .mobile-menu {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
   }
 
@@ -847,7 +847,7 @@
 
   .mobile-project-action-bar.is-visible,
   .mobile-dashboard-action-bar.is-visible,
-  .mobile-meeting-action-bar.is-visible,
+  :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   .mobile-budget-action-bar.is-visible,
   .mobile-borrow-action-bar.is-visible {
     position: fixed;
@@ -885,7 +885,7 @@
 
   body.mobile-menu-open .mobile-project-action-bar.is-visible,
   body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
-  body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
+  body.mobile-menu-open :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   body.mobile-menu-open .mobile-budget-action-bar.is-visible,
   body.mobile-menu-open .mobile-borrow-action-bar.is-visible {
     display: none;
@@ -1191,7 +1191,7 @@
     padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
   }
 
-  body.has-mobile-context-actions {
+  body:is(.has-mobile-context-actions, .has-mobile-directory-actions) {
     padding-bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap) +
@@ -1203,7 +1203,7 @@
     bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
-  body.has-mobile-context-actions .mobile-menu {
+  body:is(.has-mobile-context-actions, .has-mobile-directory-actions) .mobile-menu {
     bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap) + var(--mobile-fixed-gap)
@@ -1222,7 +1222,7 @@
 
   .mobile-project-action-bar.is-visible,
   .mobile-dashboard-action-bar.is-visible,
-  .mobile-meeting-action-bar.is-visible,
+  :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   .mobile-budget-action-bar.is-visible,
   .mobile-borrow-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
@@ -1251,7 +1251,7 @@
     padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
   }
 
-  html.sgcu-standalone body.has-mobile-context-actions {
+  html.sgcu-standalone body:is(.has-mobile-context-actions, .has-mobile-directory-actions) {
     padding-bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap) +
@@ -1273,14 +1273,14 @@
     transform: translateY(16px) scale(0.98);
   }
 
-  html.sgcu-standalone body.has-mobile-context-actions .mobile-menu {
+  html.sgcu-standalone body:is(.has-mobile-context-actions, .has-mobile-directory-actions) .mobile-menu {
     bottom: calc(
       var(--mobile-bottom-nav-height) + var(--mobile-context-action-height) +
         var(--mobile-fixed-gap) + var(--mobile-fixed-gap) + var(--mobile-fixed-gap)
     );
   }
 
-  html.sgcu-standalone body.mobile-menu-open.has-mobile-context-actions .mobile-menu {
+  html.sgcu-standalone body.mobile-menu-open:is(.has-mobile-context-actions, .has-mobile-directory-actions) .mobile-menu {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
   }
 
@@ -1364,7 +1364,7 @@
 
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
   html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
-  html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
+  html.sgcu-standalone :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   html.sgcu-standalone .mobile-budget-action-bar.is-visible,
   html.sgcu-standalone .mobile-borrow-action-bar.is-visible {
     position: fixed;
@@ -1519,7 +1519,7 @@
 
   html.sgcu-standalone .mobile-project-action-bar.is-visible,
   html.sgcu-standalone .mobile-dashboard-action-bar.is-visible,
-  html.sgcu-standalone .mobile-meeting-action-bar.is-visible,
+  html.sgcu-standalone :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   html.sgcu-standalone .mobile-budget-action-bar.is-visible,
   html.sgcu-standalone .mobile-borrow-action-bar.is-visible {
     bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-fixed-gap));
@@ -1527,7 +1527,7 @@
 
   html.sgcu-standalone body.mobile-menu-open .mobile-project-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-dashboard-action-bar.is-visible,
-  html.sgcu-standalone body.mobile-menu-open .mobile-meeting-action-bar.is-visible,
+  html.sgcu-standalone body.mobile-menu-open :is(.mobile-meeting-action-bar, .mobile-directory-action-bar).is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-budget-action-bar.is-visible,
   html.sgcu-standalone body.mobile-menu-open .mobile-borrow-action-bar.is-visible {
     display: none;

@@ -6,7 +6,7 @@
               <h1 class="page-title">ทำเนียบรุ่น</h1>
               <p class="page-subtitle">จัดการรายชื่อและข้อมูลที่ใช้แสดงในแผนผังทีมเหรัญญิก</p>
             </div>
-            <button id="orgStructureAddBtn" class="btn-primary" type="button" aria-controls="orgStructureEditor" aria-expanded="false">เพิ่มรายชื่อ</button>
+            <button id="orgStructureAddBtn" class="btn-primary" type="button" aria-controls="orgStructureEditor" aria-haspopup="dialog" aria-expanded="false">เพิ่มรายชื่อ</button>
           </div>
           <div id="staffStructurePanel" class="staff-approval-main-panel">
 
@@ -25,7 +25,7 @@
                 <option value="archived">เก็บถาวร</option>
               </select>
             </div>
-            <div class="filter-group org-directory-search-filter">
+            <div class="filter-group filter-search org-directory-search-filter">
               <label for="orgStructureSearchInput">ค้นหารายชื่อ</label>
               <div class="search-box">
                 <input id="orgStructureSearchInput" type="search" placeholder="ค้นหาชื่อ ตำแหน่ง รหัส หรืออีเมล" />
@@ -64,13 +64,13 @@
             </div>
           </section>
 
-          <section id="orgStructureEditor" class="panel staff-access-panel org-directory-editor" aria-labelledby="orgStructureEditorTitle" hidden>
+          <dialog id="orgStructureEditor" class="panel staff-access-panel org-directory-editor" aria-labelledby="orgStructureEditorTitle">
             <div class="panel-header">
               <div>
-                <h3 id="orgStructureEditorTitle" class="panel-title">เพิ่มรายชื่อ</h3>
+                <h3 id="orgStructureEditorTitle" class="panel-title" tabindex="-1">เพิ่มรายชื่อ</h3>
                 <p class="panel-caption">กรอกข้อมูลสมาชิกเพื่อแสดงในทำเนียบรุ่นและแผนผังทีมเหรัญญิก</p>
               </div>
-              <button id="orgStructureEditorClose" class="btn-ghost" type="button">ปิดฟอร์ม</button>
+              <button id="orgStructureEditorClose" class="modal-close" type="button" aria-label="ปิดฟอร์ม">✕</button>
             </div>
             <form id="orgStructureMemberForm" class="org-directory-form" autocomplete="off">
               <input id="orgStructureMemberId" type="hidden" />
@@ -208,14 +208,16 @@
                   </div>
                 </section>
               </div>
+              <div class="org-directory-form-footer">
               <div class="org-directory-form-actions">
                 <button id="orgStructureArchiveBtn" class="btn-ghost" type="button">เก็บถาวร</button>
                 <button id="orgStructureResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
                 <button class="btn-primary" type="submit">บันทึกรายชื่อ</button>
               </div>
               <div id="orgStructureFormMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
+              </div>
             </form>
-          </section>
+          </dialog>
           </div>
 
         </div>

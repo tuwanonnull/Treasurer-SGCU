@@ -1844,30 +1844,172 @@
 }
 
 /* Staff directory uses the shared filters and list panel, with an optional editor. */
-.org-directory-filters .search-box,
-.org-directory-filters .search-box input {
+.org-directory-filters:not([data-mobile-filter-mounted]) .search-box,
+.org-directory-filters:not([data-mobile-filter-mounted]) .search-box input {
   width: 100%;
 }
 
-#orgStructureEditor[hidden] {
+body.has-org-directory-modal {
+  overflow: hidden;
+}
+
+#orgStructureEditor {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(960px, calc(100% - 48px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 24px;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  color: inherit;
+  box-shadow: 0 24px 80px rgb(15 23 42 / 24%);
+}
+
+#orgStructureEditor:not([open]) {
   display: none;
 }
 
-.org-directory-editor .panel-header {
+#orgStructureEditor::backdrop {
+  background: rgb(15 23 42 / 48%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#orgStructureEditor[open] {
+  display: flex;
+  flex-direction: column;
+  animation: org-directory-modal-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+#orgStructureEditor[open]::backdrop {
+  animation: org-directory-backdrop-in 240ms ease-out both;
+}
+
+#orgStructureEditor.is-closing {
+  animation: org-directory-modal-out 180ms ease-in both;
+  pointer-events: none;
+}
+
+#orgStructureEditor.is-closing::backdrop {
+  animation: org-directory-backdrop-out 180ms ease-in both;
+}
+
+@keyframes org-directory-modal-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes org-directory-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
+
+@keyframes org-directory-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes org-directory-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #orgStructureEditor[open],
+  #orgStructureEditor[open]::backdrop {
+    animation: none;
+  }
+}
+
+#orgStructureEditor > .panel-header {
+  position: relative;
+  flex: 0 0 auto;
+  top: auto;
+  z-index: 2;
   align-items: center;
+  margin: 0;
+  padding-top: 0;
   padding-bottom: 16px;
+  background: #fff;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.org-directory-editor {
-  scroll-margin-top: 90px;
-}
-
-.org-directory-editor[inert] {
-  box-sizing: border-box;
+#orgStructureMemberForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  overflow-anchor: none;
+}
+
+#orgStructureEditor .org-directory-editor-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  padding: 16px 12px 16px 2px;
+  scroll-padding-block: 16px;
+}
+
+#orgStructureEditor .org-directory-form-footer {
+  flex: 0 0 auto;
+  background: #fff;
+}
+
+.org-directory-editor > .panel-header > button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  #orgStructureEditor {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 16px;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .org-directory-editor > .panel-header {
+    top: -16px;
+    margin-top: -16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: start;
+    gap: 12px;
+  }
+
+  #orgStructureEditorClose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    color: #475569;
+    background: #f8fafc;
+    box-shadow: inset 0 0 0 1px #e2e8f0;
+    touch-action: manipulation;
+  }
+
+  #orgStructureEditorClose:active {
+    background: #e2e8f0;
+  }
 }
 
 .org-directory-editor-layout {
@@ -1881,23 +2023,23 @@
   grid-column: 1 / -1;
 }
 
-.filter-bar.org-directory-filters {
+.filter-bar.org-directory-filters:not([data-mobile-filter-mounted]) {
   grid-template-columns: minmax(130px, 1fr) minmax(150px, 1fr) minmax(240px, 2fr);
   gap: 16px;
   align-items: end;
 }
 
-.org-directory-filters > .filter-group {
+.org-directory-filters:not([data-mobile-filter-mounted]) > .filter-group {
   grid-column: auto;
   min-width: 0;
 }
 
 @media (max-width: 840px) {
-  .filter-bar.org-directory-filters {
+  .filter-bar.org-directory-filters:not([data-mobile-filter-mounted]) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .org-directory-filters > .org-directory-search-filter {
+  .org-directory-filters:not([data-mobile-filter-mounted]) > .org-directory-search-filter {
     grid-column: 1 / -1;
   }
 }
@@ -2281,6 +2423,155 @@
 
 }
 
+/* Directory phone layout: one page scroll and a persistent form action bar. */
+@media (max-width: 640px) {
+  .page-view[data-page="staff-directory-staff"] .page-header-flex {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  #orgStructureAddBtn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .filter-bar.org-directory-filters:not([data-mobile-filter-mounted]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .org-directory-filters:not([data-mobile-filter-mounted]) .org-directory-search-filter {
+    grid-row: 1;
+  }
+
+  .org-directory-filters:not([data-mobile-filter-mounted]) select,
+  .org-directory-filters:not([data-mobile-filter-mounted]) input,
+  #orgStructureEditor .login-input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .org-directory-filters:not([data-mobile-filter-mounted]) .search-clear {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .org-directory-list-panel .content-admin-actions {
+    width: 100%;
+  }
+
+  .org-directory-list-panel .content-admin-actions > button {
+    min-height: 44px;
+  }
+
+  .org-directory-mobile-list {
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+
+  .org-directory-mobile-name { font-size: 16px; }
+  .org-directory-mobile-position { font-size: 14px; }
+  .org-directory-mobile-code { font-size: 12px; }
+
+  .org-directory-mobile-card:active { background: #fff1f2; }
+
+  #orgStructureEditor[open] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  #orgStructureEditor > .panel-header {
+    position: relative;
+    top: auto;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    padding-bottom: 12px;
+  }
+
+  #orgStructureEditorTitle {
+    font-size: 18px;
+    line-height: 1.5;
+    outline: none;
+  }
+
+  #orgStructureEditor > .panel-header .panel-caption {
+    display: none;
+  }
+
+  #orgStructureMemberForm {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #orgStructureEditor .org-directory-editor-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 16px 2px;
+    scroll-padding-block: 16px;
+    gap: 20px;
+  }
+
+  #orgStructureEditor .org-directory-form-section {
+    display: block;
+  }
+
+  #orgStructureEditor .org-directory-section-heading h4 {
+    display: inline;
+    margin-left: 8px;
+    font-size: 16px;
+  }
+
+  #orgStructureEditor .org-directory-section-hint {
+    margin-top: 8px;
+  }
+
+  .org-directory-form-footer {
+    flex: 0 0 auto;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  }
+
+  #orgStructureEditor .org-directory-form-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+    margin: 0;
+    border: 0;
+    gap: 8px;
+  }
+
+  #orgStructureEditor .org-directory-form-actions > button {
+    min-height: 44px;
+    margin: 0;
+  }
+
+  #orgStructureEditor .org-directory-form-actions > [type="submit"] {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-height: 48px;
+  }
+
+  #orgStructureFormMessage:empty { display: none; }
+  #orgStructureFormMessage { margin-top: 8px; }
+
+  #orgStructureEditor .org-directory-advanced summary {
+    min-height: 44px;
+    align-content: center;
+  }
+}
+
 /* Temporary access: shared theme, dedicated form and mobile list. */
 .staff-auth-editor {
   scroll-margin-top: 90px;
@@ -2497,4 +2788,48 @@
     outline: 2px solid var(--theme-pink-300);
     outline-offset: -2px;
   }
+}
+
+body.directory-filter-open { overflow: hidden; }
+/* Reuse the shared filter sheet geometry, adapting only native dialog defaults. */
+.directory-mobile-filter-dialog {
+  position: fixed;
+  top: auto;
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  overflow: hidden;
+  grid-template-rows: max-content max-content minmax(0, 1fr) max-content;
+}
+.directory-mobile-filter-dialog:not([open]) { display: none; }
+.directory-mobile-filter-dialog::backdrop {
+  background: rgb(15 23 42 / 38%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.directory-mobile-filter-dialog .mobile-filter-body {
+  /* Keep the scroll track inside the rounded sheet, away from its frame. */
+  min-height: 0;
+  margin-inline: 8px;
+  padding-inline: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+@media (max-width: 840px) {
+  .page-view[data-page="staff-directory-staff"] .org-directory-filters:not([data-mobile-filter-mounted]),
+  .page-view[data-page="staff-directory-staff"] #orgStructureAddBtn,
+  .page-view[data-page="staff-directory-staff"] .org-directory-list-panel .content-admin-actions {
+    display: none;
+  }
+  .page-view[data-page="staff-directory-staff"] .page {
+    padding-bottom: calc(var(--mobile-context-action-height, 52px) + 24px);
+  }
+  .org-directory-list-panel { scroll-margin-top: 90px; }
+  .mobile-directory-action-bar .mobile-meeting-action { min-height: 44px; }
 }
