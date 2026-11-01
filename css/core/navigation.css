@@ -1533,3 +1533,16 @@
     display: none;
   }
 }
+
+/* Explicit columns also override the standalone navigation defaults. */
+@media (max-width: 840px) {
+  .mobile-org-action-bar.is-visible,
+  html.sgcu-standalone .mobile-org-action-bar.is-visible {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .mobile-directory-action-bar.is-visible,
+  html.sgcu-standalone .mobile-directory-action-bar.is-visible {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

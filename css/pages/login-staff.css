@@ -2790,39 +2790,15 @@ body.has-org-directory-modal {
   }
 }
 
-body.directory-filter-open { overflow: hidden; }
-/* Reuse the shared filter sheet geometry, adapting only native dialog defaults. */
-.directory-mobile-filter-dialog {
-  position: fixed;
-  top: auto;
-  box-sizing: border-box;
-  width: auto;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  color: inherit;
-  overflow: hidden;
-  grid-template-rows: max-content max-content minmax(0, 1fr) max-content;
-}
-.directory-mobile-filter-dialog:not([open]) { display: none; }
-.directory-mobile-filter-dialog::backdrop {
-  background: rgb(15 23 42 / 38%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.directory-mobile-filter-dialog .mobile-filter-body {
-  /* Keep the scroll track inside the rounded sheet, away from its frame. */
-  min-height: 0;
-  margin-inline: 8px;
-  padding-inline: 8px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
+/* Keep directory filters visible above the member list while scrolling. */
+.filter-bar.org-directory-filters {
+  position: sticky;
+  top: var(--directory-header-height, 72px);
+  z-index: 30;
+  background: #fff;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 6%);
 }
 @media (max-width: 840px) {
-  .page-view[data-page="staff-directory-staff"] .org-directory-filters:not([data-mobile-filter-mounted]),
   .page-view[data-page="staff-directory-staff"] #orgStructureAddBtn,
   .page-view[data-page="staff-directory-staff"] .org-directory-list-panel .content-admin-actions {
     display: none;
