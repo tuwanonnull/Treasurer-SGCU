@@ -4,7 +4,7 @@
           <div class="page-header-flex">
             <div>
               <h1 class="page-title">ตัวแทนและทะเบียนองค์กร</h1>
-              <p class="page-subtitle">อนุมัติตัวแทนฝ่าย/ชมรม และดูคู่มือการดูแลทะเบียนองค์กร</p>
+              <p class="page-subtitle">จัดการตัวแทนฝ่าย/ชมรม และข้อมูลองค์กรในแต่ละปีการศึกษา</p>
             </div>
             <div class="tabs org-representative-main-tabs" role="tablist" aria-label="เลือกส่วนงานตัวแทนองค์กร">
               <button
@@ -33,61 +33,83 @@
           <div id="orgRepresentativeApprovalSection">
             <div id="orgRepresentativeFilterPanel" class="org-representative-main-panel" role="tabpanel" aria-labelledby="orgRepresentativeMainFilterTab" hidden>
               <section class="organization-catalog-workspace" aria-label="จัดการทะเบียนองค์กร">
-                <div class="organization-catalog-filter-bar organization-catalog-top-filters" aria-label="ตัวกรองทะเบียนองค์กร">
-                  <div class="borrow-form-field organization-catalog-filter-field">
-                    <label class="login-label" for="organizationCatalogTableAcademicYearFilter">ปีการศึกษาที่แสดง</label>
-                    <select id="organizationCatalogTableAcademicYearFilter" class="login-input">
-                      <option value="">กำลังโหลดปีการศึกษา</option>
+                <div class="filter-bar organization-catalog-filters" aria-label="ตัวกรองทะเบียนองค์กร">
+                  <div class="filter-group">
+                    <label for="organizationCatalogTableAcademicYearFilter">ปีการศึกษา</label>
+                    <select id="organizationCatalogTableAcademicYearFilter"><option value="">กำลังโหลดปีการศึกษา</option></select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="organizationCatalogGroupFilter">ประเภทองค์กร</label>
+                    <select id="organizationCatalogGroupFilter"><option value="all">ทุกประเภทองค์กร</option></select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="organizationCatalogAccountFilter">ข้อมูลบัญชี</label>
+                    <select id="organizationCatalogAccountFilter">
+                      <option value="all">ทุกองค์กร</option>
+                      <option value="with">มีเลขบัญชีแล้ว</option>
+                      <option value="without">ยังไม่มีเลขบัญชี</option>
                     </select>
                   </div>
-                  <div class="borrow-form-field organization-catalog-filter-field">
-                    <label class="login-label" for="organizationCatalogGroupFilter">ประเภทองค์กร</label>
-                    <select id="organizationCatalogGroupFilter" class="login-input">
-                      <option value="all">ทุกประเภทองค์กร</option>
-                    </select>
-                  </div>
-                  <button id="organizationCatalogCopyYearBtn" class="btn-ghost organization-catalog-filter-reset organization-catalog-copy-year-btn" type="button">ทำสำเนาเป็นองค์กรปีที่เลือก</button>
-                  <div class="borrow-form-field organization-catalog-filter-field organization-catalog-search">
-                    <label class="login-label" for="organizationCatalogSearchInput">ค้นหา</label>
+                  <div class="filter-group filter-search">
+                    <label for="organizationCatalogSearchInput">ค้นหาองค์กร</label>
                     <div class="search-box">
-                      <input id="organizationCatalogSearchInput" class="login-input" type="search" placeholder="ชื่อองค์กร / รหัส / เลขบัญชี">
-                      <button id="organizationCatalogFilterResetBtn" class="search-clear" type="button" aria-label="ล้างตัวกรอง" title="ล้างตัวกรอง">✕</button>
+                      <input id="organizationCatalogSearchInput" type="search" placeholder="ชื่อองค์กร รหัส เลขที่หนังสือ หรือเลขบัญชี" autocomplete="off">
+                      <button id="organizationCatalogFilterResetBtn" class="search-clear" type="button" aria-label="ล้างตัวกรองทั้งหมด" title="ล้างตัวกรองทั้งหมด">✕</button>
                     </div>
                   </div>
                 </div>
+                <div class="cards organization-catalog-metrics" aria-label="สรุปทะเบียนองค์กร">
+                  <article class="card card-hover"><div class="card-title">องค์กรทั้งหมด</div><div id="organizationCatalogTotalCount" class="card-value">0</div></article>
+                  <article class="card card-hover"><div class="card-title">ประเภทองค์กร</div><div id="organizationCatalogGroupCount" class="card-value">0</div></article>
+                  <article class="card card-hover"><div class="card-title">ผลลัพธ์ตามตัวกรอง</div><div id="organizationCatalogFilteredCount" class="card-value">0</div></article>
+                </div>
+                <div id="organizationCatalogImportMessage" class="organization-catalog-notice" role="status" aria-live="polite"></div>
 
-                <div class="budget-org-overview-panel organization-catalog-overview-panel">
-                  <div class="budget-org-overview">
-                    <div class="cards budget-org-floating-cards organization-catalog-summary-cards" aria-label="สรุปทะเบียนองค์กร">
-                      <article class="card card-hover budget-org-floating-card organization-catalog-summary-card">
-                        <div class="card-title">องค์กรทั้งหมด</div>
-                        <div id="organizationCatalogTotalCount" class="card-value budget-org-floating-value">0</div>
-                      </article>
-                      <article class="card card-hover budget-org-floating-card organization-catalog-summary-card">
-                        <div class="card-title">ประเภทองค์กร</div>
-                        <div id="organizationCatalogGroupCount" class="card-value budget-org-floating-value">0</div>
-                      </article>
-                      <article class="card card-hover budget-org-floating-card organization-catalog-summary-card">
-                        <div class="card-title">ผลลัพธ์ตามตัวกรอง</div>
-                        <div id="organizationCatalogFilteredCount" class="card-value budget-org-floating-value">0</div>
-                      </article>
-                      <article class="card card-hover budget-org-floating-card organization-catalog-summary-card">
-                        <div class="card-title">กำลังแสดง</div>
-                        <div id="organizationCatalogVisibleCount" class="card-value budget-org-floating-value">0</div>
-                      </article>
+                <div class="panel panel-hover staff-access-panel organization-catalog-list-card">
+                  <div class="panel-header">
+                    <div>
+                      <div class="panel-title">รายชื่อองค์กร</div>
+                      <div class="panel-caption" id="organizationCatalogTableCaption">กำลังโหลดข้อมูล</div>
+                    </div>
+                    <div class="content-admin-actions organization-catalog-list-tools">
+                      <button id="organizationCatalogCopyYearBtn" class="btn-ghost" type="button">ทำสำเนาข้ามปี</button>
+                      <button id="organizationCatalogAddBtn" class="btn-primary" type="button">เพิ่มองค์กร</button>
+                    </div>
+                  </div>
+                  <div class="table-wrapper organization-catalog-table-wrapper" tabindex="0" role="region" aria-label="รายชื่อองค์กร เลื่อนดูรายการเพิ่มเติม">
+                    <table id="organizationCatalogTable" class="organization-catalog-table">
+                      <thead>
+                        <tr>
+                          <th>ประเภทองค์กร</th>
+                          <th>ชื่อองค์กร</th>
+                          <th>รหัส</th>
+                          <th>เลขรันเอกสาร</th>
+                          <th>เลขที่บัญชี</th>
+                        </tr>
+                      </thead>
+                      <tbody id="organizationCatalogTableBody">
+                        <tr><td colspan="5" data-label="ทะเบียนองค์กร">กำลังโหลดทะเบียนองค์กร...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="organization-catalog-list-footer">
+                    <span>แสดงอยู่ <strong id="organizationCatalogVisibleCount">0</strong> องค์กร · กดชื่อองค์กรเพื่อแก้ไข</span>
+                    <div id="organizationCatalogTableActions" class="organization-catalog-table-actions" hidden>
+                      <button id="organizationCatalogShowMoreBtn" class="btn-ghost" type="button" hidden>แสดงเพิ่ม</button>
                     </div>
                   </div>
                 </div>
-
-                <form id="organizationCatalogForm" class="borrow-request-form budget-request-form organization-catalog-form" aria-label="แบบฟอร์มทะเบียนองค์กร">
-                  <div class="panel panel-hover">
-                    <div class="panel-header">
+              </section>
+              <div id="organizationCatalogEditorModal" class="modal organization-catalog-editor" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="organizationCatalogFormTitle">
+                <form id="organizationCatalogForm" class="borrow-request-form budget-request-form organization-catalog-form modal-dialog" aria-label="แบบฟอร์มทะเบียนองค์กร">
+                  <div class="modal-header">
                       <div>
-                        <div id="organizationCatalogFormTitle" class="panel-title">เพิ่ม / แก้ไของค์กร</div>
-                        <div class="panel-caption">กรอกข้อมูลหลักขององค์กรเพื่อใช้กับฟอร์มและตัวกรองทั้งระบบ</div>
+                        <div id="organizationCatalogFormTitle" class="modal-title">เพิ่มองค์กรใหม่</div>
+                        <div class="modal-subtitle">เลือกปีการศึกษาที่ต้องการบันทึก แล้วกรอกข้อมูลขององค์กร</div>
                       </div>
+                      <button id="organizationCatalogEditorClose" class="modal-close" type="button" aria-label="ปิดแบบฟอร์ม">✕</button>
                     </div>
-                    <div class="panel-body budget-request-panel-body organization-catalog-form-body">
+                    <div class="modal-body organization-catalog-form-body">
                       <input id="organizationCatalogId" type="hidden">
                       <div class="budget-request-form-main">
                         <div class="budget-request-form-section">
@@ -150,48 +172,21 @@
                           </div>
                         </div>
                       </div>
-                      <div class="meeting-form-actions budget-request-actions organization-catalog-form-actions">
-                        <div class="budget-request-actions-message">
-                          <span id="organizationCatalogFormMessage" class="section-text-sm" aria-live="polite"></span>
-                        </div>
-                        <div class="budget-request-actions-group">
-                          <button id="organizationCatalogSaveBtn" class="btn-primary" type="submit">บันทึก</button>
-                          <button id="organizationCatalogResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
-                          <button id="organizationCatalogArchiveBtn" class="btn-ghost is-danger" type="button" disabled>ลบออกจากทะเบียน</button>
-                        </div>
+                    </div>
+                    <div class="modal-footer organization-catalog-form-actions">
+                      <div id="organizationCatalogFormMessage" class="section-text-sm" role="status" aria-live="polite"></div>
+                      <div class="organization-catalog-secondary-actions">
+                        <button id="organizationCatalogArchiveBtn" class="btn-ghost is-danger" type="button" disabled>ลบออกจากทะเบียน</button>
+                        <button id="organizationCatalogResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
+                      </div>
+                      <div class="organization-catalog-primary-actions">
+                        <button id="organizationCatalogEditorDone" class="btn-ghost" type="button">กลับไปรายชื่อ</button>
+                        <button id="organizationCatalogSaveBtn" class="btn-primary" type="submit">บันทึก</button>
                       </div>
                     </div>
-                  </div>
                 </form>
 
-                <div class="panel panel-hover organization-catalog-list-card">
-                  <div class="panel-header budget-org-totals-header">
-                    <div>
-                      <div class="panel-title">รายชื่อองค์กร</div>
-                      <div class="panel-caption" id="organizationCatalogTableCaption">กำลังโหลดข้อมูล</div>
-                    </div>
-                  </div>
-                  <div class="table-wrapper organization-catalog-table-wrapper">
-                    <table id="organizationCatalogTable" class="sheet-guide-table organization-catalog-table">
-                      <thead>
-                        <tr>
-                          <th>ประเภทองค์กร</th>
-                          <th>ชื่อองค์กร</th>
-                          <th>รหัส</th>
-                          <th>เลขรันเอกสาร</th>
-                          <th>เลขที่บัญชี</th>
-                        </tr>
-                      </thead>
-                      <tbody id="organizationCatalogTableBody">
-                        <tr><td colspan="5" data-label="ทะเบียนองค์กร">กำลังโหลดทะเบียนองค์กร...</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div id="organizationCatalogTableActions" class="organization-catalog-table-actions" hidden>
-                    <button id="organizationCatalogShowMoreBtn" class="btn-ghost" type="button" hidden>แสดงเพิ่ม</button>
-                  </div>
-                </div>
-              </section>
+              </div>
             </div>
 
             <div id="orgRepresentativeOverviewPanel" class="org-representative-main-panel" role="tabpanel" aria-labelledby="orgRepresentativeMainOverviewTab">
@@ -248,7 +243,7 @@
                 </div>
               </div>
 
-              <div class="panel panel-hover staff-access-panel">
+              <div class="panel panel-hover staff-access-panel org-representative-approval-panel">
                 <div class="panel-header">
                   <div>
                     <h3 id="orgRepresentativeApprovalPanelTitle" class="panel-title">อนุมัติตัวแทนองค์กร</h3>
@@ -263,7 +258,7 @@
                 <div id="orgRepresentativeApprovalMessage" class="section-text-sm staff-access-status" aria-live="polite"></div>
 
                 <div id="orgRepresentativeOverviewContent">
-                  <div class="project-table-wrapper">
+                  <div class="project-table-wrapper" tabindex="0" role="region" aria-label="รายชื่อตัวแทนองค์กร เลื่อนดูรายการเพิ่มเติม">
                     <table id="orgRepresentativeOverviewTable">
                       <thead>
                         <tr>

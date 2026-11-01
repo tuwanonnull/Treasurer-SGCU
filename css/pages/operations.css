@@ -5356,9 +5356,108 @@ body.has-dashboard-floating-filter {
   margin-top: 4px;
 }
 
+.organization-catalog-copy-dialog,
 .org-representative-delete-dialog {
   width: min(520px, calc(100vw - 32px));
   max-width: 520px;
+}
+
+.organization-catalog-copy-summary {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.organization-catalog-copy-years {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.organization-catalog-copy-year-card {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+  overflow-wrap: anywhere;
+}
+
+.organization-catalog-copy-arrow {
+  align-self: center;
+  color: #6b7280;
+  font-size: 22px;
+}
+
+.organization-catalog-copy-year-card select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+
+.organization-catalog-copy-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.organization-catalog-copy-summary dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.organization-catalog-copy-selection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.organization-catalog-copy-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.organization-catalog-copy-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.organization-catalog-copy-option > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.organization-catalog-copy-option input {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.organization-catalog-copy-data {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-left: 3px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
 }
 
 .org-representative-delete-confirm-body {
@@ -5591,11 +5690,6 @@ body.has-dashboard-floating-filter {
 
 .organization-catalog-row {
   cursor: pointer;
-}
-
-.organization-catalog-row:hover td,
-.organization-catalog-row.is-selected td {
-  background: #f0fdfa;
 }
 
 .sheet-guide-table th,
@@ -10424,7 +10518,7 @@ body.has-dashboard-floating-filter {
 
   .organization-catalog-table tbody tr:hover,
   .organization-catalog-table tbody tr.is-selected {
-    border-color: rgba(13, 148, 136, 0.42);
+    border-color: rgba(148, 163, 184, 0.55);
     background: #ffffff;
   }
 
