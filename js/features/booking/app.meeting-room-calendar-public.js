@@ -9,12 +9,8 @@
   const prevBtn = document.getElementById("meetingPublicCalendarPrevMonth");
   const nextBtn = document.getElementById("meetingPublicCalendarNextMonth");
   const todayBtn = document.getElementById("meetingPublicCalendarToday");
-  const monthViewBtn = document.getElementById("meetingPublicCalendarMonthView");
-  const weekViewBtn = document.getElementById("meetingPublicCalendarWeekView");
-  const roomFilterEl = document.getElementById("meetingPublicCalendarRoomFilter");
   const calendarDateJumpEl = document.getElementById("meetingPublicCalendarDateJump");
   const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
-  const calendarViewToggle = weekViewBtn?.closest(".meeting-calendar-view-toggle");
 
   const dayModalEl = document.getElementById("meetingPublicBookingDayModal");
   const dayModalTitleEl = document.getElementById("meetingPublicBookingDayTitle");
@@ -75,12 +71,8 @@
   let holidayLookup = new Map();
   let activeDayDate = "";
   let calendarCursor = new Date();
-  let calendarDisplayMode = "week";
-  let calendarRoomFilterValue = "all";
+  const calendarDisplayMode = "week";
   const isMobilePublicCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
-  if (calendarDateJumpLabel && nextBtn?.parentElement) {
-    nextBtn.parentElement.insertBefore(calendarDateJumpLabel, prevBtn);
-  }
   calendarDateJumpLabel?.addEventListener("click", (event) => {
     if (typeof calendarDateJumpEl.showPicker !== "function") return;
     try {
@@ -92,8 +84,6 @@
       // Preserve native activation when showPicker is unavailable in this context.
     }
   });
-  const publicCalendarHeader = calendarPanel.closest(".meeting-calendar-panel")?.querySelector(":scope > .panel-header");
-  if (calendarViewToggle && publicCalendarHeader) publicCalendarHeader.appendChild(calendarViewToggle);
   let unsubscribeBookings = null;
   let publicCalendarRefreshTimer = 0;
 
@@ -380,7 +370,6 @@
       .filter((item) => {
         if (!item.date || item.status === "rejected") return false;
         if (item.date < toDateKey(new Date()) && normalizeStatus(item.status) !== "approved") return false;
-        if (calendarRoomFilterValue !== "all" && item.roomId !== calendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;
         return date >= periodStart && date <= periodEnd;
@@ -408,7 +397,7 @@
         date.setDate(date.getDate() + offset);
         return date;
       });
-      const visibleRooms = meetingRooms.filter((room) => calendarRoomFilterValue === "all" || room.id === calendarRoomFilterValue);
+      const visibleRooms = meetingRooms;
       cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
       comparisonDates.forEach((date) => {
         const dateKey = toDateKey(date);
@@ -491,7 +480,7 @@
       ? `${formatDate(latestBooking.date)} ${latestBooking.startTime || "-"}-${latestBooking.endTime || "-"}`
       : "-";
     setState(
-      `เดือนนี้ ${monthVisibleCount} รายการ • ทั้งหมด ${visibleCount} รายการ • อัปเดตล่าสุด ${latestText}`,
+      `${isMobileDayView ? "วันนี้" : "สัปดาห์นี้"} ${monthVisibleCount} รายการ • ทั้งหมด ${visibleCount} รายการ • อัปเดตล่าสุด ${latestText}`,
       "#6b7280"
     );
   };
@@ -518,15 +507,6 @@
       meetingRooms = loadedRooms.length ? loadedRooms : [...DEFAULT_MEETING_ROOMS];
     } catch (_) {
       meetingRooms = [...DEFAULT_MEETING_ROOMS];
-    }
-    if (roomFilterEl) {
-      roomFilterEl.innerHTML = '<option value="all">ห้องประชุม: ทุกห้อง</option>';
-      meetingRooms.forEach((room) => {
-        const option = document.createElement("option");
-        option.value = room.id;
-        option.textContent = room.name;
-        roomFilterEl.appendChild(option);
-      });
     }
     renderCalendar();
     if (activeDayDate) setDayModalBody(activeDayDate);
@@ -658,34 +638,24 @@
     });
   }
 
-  const setCalendarDisplayMode = (mode) => {
-    const nextMode = mode === "week" ? "week" : "month";
-    if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
-    calendarDisplayMode = nextMode;
-    if (calendarDateJumpLabel) calendarDateJumpLabel.hidden = calendarDisplayMode === "month";
-    calendarDateJumpLabel?.parentElement?.classList.toggle("is-month-view", calendarDisplayMode === "month");
-    monthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
-    weekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
-    renderCalendar();
-  };
   const syncPublicCalendarResponsiveMode = () => {
-    if (weekViewBtn) weekViewBtn.textContent = isMobilePublicCalendar() ? "รายวัน" : "เปรียบเทียบห้อง";
-    if (isMobilePublicCalendar() && calendarDisplayMode !== "week") {
-      setCalendarDisplayMode("week");
-      return;
-    }
-    if (calendarDisplayMode === "week") renderCalendar();
+    const previousLabel = isMobilePublicCalendar() ? "วันก่อน" : "สัปดาห์ก่อน";
+    const nextLabel = isMobilePublicCalendar() ? "วันถัดไป" : "สัปดาห์ถัดไป";
+    const previousText = prevBtn?.querySelector(".meeting-calendar-nav-text");
+    const nextText = nextBtn?.querySelector(".meeting-calendar-nav-text");
+    if (previousText) previousText.textContent = previousLabel;
+    if (nextText) nextText.textContent = nextLabel;
+    prevBtn?.setAttribute("aria-label", previousLabel);
+    nextBtn?.setAttribute("aria-label", nextLabel);
+    renderCalendar();
   };
   window.matchMedia?.("(max-width: 720px)").addEventListener?.("change", syncPublicCalendarResponsiveMode);
   syncPublicCalendarResponsiveMode();
-  monthViewBtn?.addEventListener("click", () => setCalendarDisplayMode("month"));
-  weekViewBtn?.addEventListener("click", () => setCalendarDisplayMode("week"));
-  roomFilterEl?.addEventListener("change", () => { calendarRoomFilterValue = roomFilterEl.value || "all"; renderCalendar(); });
   calendarDateJumpEl?.addEventListener("change", () => {
     const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
-    if (isMobilePublicCalendar()) calendarDisplayMode = "week";
+    subscribeBookings();
     renderCalendar();
   });
 

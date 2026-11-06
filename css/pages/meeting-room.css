@@ -2412,3 +2412,28 @@
   line-clamp: unset;
   overflow: visible;
 }
+
+/* Keep calendar navigation beside its heading, wrapping on narrow screens. */
+.meeting-calendar-panel > .meeting-calendar-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+}
+
+.meeting-calendar-header > .meeting-calendar-navigation-controls {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .meeting-calendar-panel > .meeting-calendar-header {
+    align-items: stretch;
+  }
+
+  .meeting-calendar-header > .meeting-calendar-navigation-controls {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}

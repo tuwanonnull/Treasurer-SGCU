@@ -63,12 +63,8 @@ function initMeetingRoomBookingApp() {
   const calendarPrevBtn = document.getElementById("meetingCalendarPrevMonth");
   const calendarNextBtn = document.getElementById("meetingCalendarNextMonth");
   const calendarTodayBtn = document.getElementById("meetingCalendarToday");
-  const calendarMonthViewBtn = document.getElementById("meetingCalendarMonthView");
-  const calendarWeekViewBtn = document.getElementById("meetingCalendarWeekView");
-  const calendarRoomFilter = document.getElementById("meetingCalendarRoomFilter");
   const calendarDateJumpEl = document.getElementById("meetingCalendarDateJump");
   const calendarDateJumpLabel = calendarDateJumpEl?.closest(".meeting-calendar-date-jump");
-  const calendarViewToggle = calendarWeekViewBtn?.closest(".meeting-calendar-view-toggle");
   let bookingCountEl = document.getElementById("meetingRoomBookingCount");
   let pendingCountEl = document.getElementById("meetingRoomPendingCount");
   let latestDateEl = document.getElementById("meetingRoomLatestDate");
@@ -244,12 +240,8 @@ function initMeetingRoomBookingApp() {
     normalizeProjectCode(value).replace(/[^A-Z0-9]/g, "");
 
   let calendarCursor = new Date();
-  let calendarDisplayMode = "week";
-  let calendarRoomFilterValue = "all";
+  const calendarDisplayMode = "week";
   const isMobileBookingCalendar = () => !!window.matchMedia?.("(max-width: 720px)").matches;
-  if (calendarDateJumpLabel && calendarNextBtn?.parentElement) {
-    calendarNextBtn.parentElement.insertBefore(calendarDateJumpLabel, calendarPrevBtn);
-  }
   calendarDateJumpLabel?.addEventListener("click", (event) => {
     if (typeof calendarDateJumpEl.showPicker !== "function") return;
     try {
@@ -261,9 +253,6 @@ function initMeetingRoomBookingApp() {
       // Preserve native activation when showPicker is unavailable in this context.
     }
   });
-  if (calendarViewToggle && calendarPanelWrap?.querySelector(":scope > .panel-header")) {
-    calendarPanelWrap.querySelector(":scope > .panel-header").appendChild(calendarViewToggle);
-  }
 
   const toDateKeyForQuery = (date) => {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
@@ -2458,7 +2447,6 @@ function initMeetingRoomBookingApp() {
       .filter((item) => {
         if (!item.date || item.status === "rejected") return false;
         if (item.date < toDateKey(new Date()) && normalizeStatus(item.status) !== "approved") return false;
-        if (calendarRoomFilterValue !== "all" && item.roomId !== calendarRoomFilterValue) return false;
         const date = new Date(`${item.date}T00:00:00`);
         if (Number.isNaN(date.getTime())) return false;
         return date >= periodStart && date <= periodEnd;
@@ -2494,12 +2482,9 @@ function initMeetingRoomBookingApp() {
         date.setDate(date.getDate() + offset);
         return date;
       });
-      const selectableRoomIds = calendarRoomFilter
-        ? Array.from(calendarRoomFilter.options).map((option) => option.value).filter((value) => value !== "all")
-        : meetingRooms.map((room) => room.id);
       const visibleRooms = meetingRooms.filter((room) =>
-        selectableRoomIds.includes(room.id) &&
-        (calendarRoomFilterValue === "all" || room.id === calendarRoomFilterValue)
+        normalizeRoomBookingAccess(room.bookingAccess) !== "staff_only" ||
+        hasVerifiedMeetingRoomStaffAccess === true
       );
 
       cells.push('<div class="meeting-week-corner">ห้อง / วัน</div>');
@@ -2742,20 +2727,7 @@ function initMeetingRoomBookingApp() {
         rescheduleRoomSelect.value = "";
       }
     }
-    if (calendarRoomFilter) {
-      const previousFilter = calendarRoomFilterValue;
-      calendarRoomFilter.innerHTML = '<option value="all">ห้องประชุม: ทุกห้อง</option>';
-      selectableRooms.forEach((room) => {
-        const option = document.createElement("option");
-        option.value = room.id;
-        option.textContent = room.name;
-        calendarRoomFilter.appendChild(option);
-      });
-      calendarRoomFilterValue = selectableRooms.some((room) => room.id === previousFilter)
-        ? previousFilter
-        : "all";
-      calendarRoomFilter.value = calendarRoomFilterValue;
-    }
+
   };
 
   const subscribeRooms = () => {
@@ -3668,18 +3640,9 @@ function initMeetingRoomBookingApp() {
     });
   }
 
-  const setCalendarDisplayMode = (mode) => {
-    const nextMode = mode === "week" ? "week" : "month";
-    if (nextMode === "week" && calendarDisplayMode !== "week") calendarCursor = new Date();
-    calendarDisplayMode = nextMode;
-    if (calendarDateJumpLabel) calendarDateJumpLabel.hidden = calendarDisplayMode === "month";
-    calendarDateJumpLabel?.parentElement?.classList.toggle("is-month-view", calendarDisplayMode === "month");
-    calendarMonthViewBtn?.classList.toggle("is-active", calendarDisplayMode === "month");
-    calendarWeekViewBtn?.classList.toggle("is-active", calendarDisplayMode === "week");
-    calendarMonthViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "month" ? "true" : "false");
-    calendarWeekViewBtn?.setAttribute("aria-pressed", calendarDisplayMode === "week" ? "true" : "false");
-    const previousLabel = calendarDisplayMode === "week" ? "สัปดาห์ก่อน" : "เดือนก่อน";
-    const nextLabel = calendarDisplayMode === "week" ? "สัปดาห์ถัดไป" : "เดือนถัดไป";
+  const syncBookingCalendarResponsiveMode = () => {
+    const previousLabel = isMobileBookingCalendar() ? "วันก่อน" : "สัปดาห์ก่อน";
+    const nextLabel = isMobileBookingCalendar() ? "วันถัดไป" : "สัปดาห์ถัดไป";
     const previousText = calendarPrevBtn?.querySelector(".meeting-calendar-nav-text");
     const nextText = calendarNextBtn?.querySelector(".meeting-calendar-nav-text");
     if (previousText) previousText.textContent = previousLabel;
@@ -3688,34 +3651,18 @@ function initMeetingRoomBookingApp() {
     calendarNextBtn?.setAttribute("aria-label", nextLabel);
     renderCalendarOverview();
   };
-
-  const syncBookingCalendarResponsiveMode = () => {
-    if (calendarWeekViewBtn) calendarWeekViewBtn.textContent = isMobileBookingCalendar() ? "รายวัน" : "เปรียบเทียบห้อง";
-    if (isMobileBookingCalendar() && calendarDisplayMode !== "week") {
-      setCalendarDisplayMode("week");
-      return;
-    }
-    if (calendarDisplayMode === "week") renderCalendarOverview();
-  };
   window.matchMedia?.("(max-width: 720px)").addEventListener?.("change", syncBookingCalendarResponsiveMode);
   syncBookingCalendarResponsiveMode();
 
-  calendarMonthViewBtn?.addEventListener("click", () => setCalendarDisplayMode("month"));
-  calendarWeekViewBtn?.addEventListener("click", () => setCalendarDisplayMode("week"));
   calendarTodayBtn?.addEventListener("click", () => {
     calendarCursor = new Date();
     subscribeBookings();
-    renderCalendarOverview();
-  });
-  calendarRoomFilter?.addEventListener("change", () => {
-    calendarRoomFilterValue = calendarRoomFilter.value || "all";
     renderCalendarOverview();
   });
   calendarDateJumpEl?.addEventListener("change", () => {
     const nextDate = new Date(`${calendarDateJumpEl.value}T00:00:00`);
     if (Number.isNaN(nextDate.getTime())) return;
     calendarCursor = nextDate;
-    if (isMobileBookingCalendar()) calendarDisplayMode = "week";
     subscribeBookings();
     renderCalendarOverview();
   });
