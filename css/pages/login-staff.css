@@ -2798,12 +2798,22 @@ body.directory-filter-open { overflow: hidden; }
   top: auto;
   box-sizing: border-box;
   width: auto;
+  height: fit-content;
   max-width: none;
   margin: 0;
   padding: 0;
   color: inherit;
   overflow: hidden;
-  grid-template-rows: max-content max-content minmax(0, 1fr) max-content;
+  display: flex;
+  flex-direction: column;
+}
+.directory-mobile-filter-dialog::before,
+.directory-mobile-filter-dialog .mobile-filter-header,
+.directory-mobile-filter-dialog .mobile-filter-footer {
+  flex-shrink: 0;
+}
+.directory-mobile-filter-dialog::before {
+  align-self: center;
 }
 .directory-mobile-filter-dialog:not([open]) { display: none; }
 .directory-mobile-filter-dialog::backdrop {
