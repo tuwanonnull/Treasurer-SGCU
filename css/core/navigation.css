@@ -1543,6 +1543,6 @@
 
   .mobile-directory-action-bar.is-visible,
   html.sgcu-standalone .mobile-directory-action-bar.is-visible {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
