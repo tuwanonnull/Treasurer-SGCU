@@ -48,6 +48,7 @@ const textFileExtensions = new Set([
 
 const textTransforms = new Map([
   ["index.html", transformIndexHtml],
+  ["meeting-room-calendar.html", withVersionedLocalAssets],
   ["css/style.css", transformCssEntrypoint],
   ["sw.js", transformServiceWorker]
 ]);
