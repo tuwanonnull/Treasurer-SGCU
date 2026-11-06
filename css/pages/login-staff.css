@@ -2791,8 +2791,9 @@ body.has-org-directory-modal {
 }
 
 body.directory-filter-open { overflow: hidden; }
-/* Reuse the shared filter sheet geometry, adapting only native dialog defaults. */
-.directory-mobile-filter-dialog {
+/* Native dialogs live in the top layer, without the shared fixed sheet wrapper.
+   Keep this more specific than the shared .mobile-filter-dialog rules. */
+.mobile-filter-dialog.directory-mobile-filter-dialog {
   position: fixed;
   top: auto;
   box-sizing: border-box;
