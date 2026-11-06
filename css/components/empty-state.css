@@ -32,11 +32,39 @@
 .list-empty-state strong { max-width: 100%; color: #475569; font-size: 15px; font-weight: 600; line-height: 1.6; }
 .list-empty-state p { max-width: 440px; margin: 0; color: #64748b; font-size: 13px; line-height: 1.8; }
 .borrow-my-request-card-empty:has(> .list-empty-state) { padding: 0; border: 0; background: transparent; }
-table tbody tr:has(> .list-empty-cell) { height: auto; background: transparent; box-shadow: none; }
-table tbody td.list-empty-cell { padding: 16px; text-align: center; border-bottom: 0; }
-table tbody td.list-empty-cell::before { display: none; }
+/* Empty tables become a single full-width panel. These overrides also undo
+   per-page fixed column widths and mobile card layouts, only while empty. */
+table:has(> tbody > tr > td.list-empty-cell) > :is(thead, colgroup) {
+  display: none !important;
+}
+table:has(> tbody > tr > td.list-empty-cell),
+table > tbody:has(> tr > td.list-empty-cell),
+table > tbody > tr:has(> td.list-empty-cell),
+table > tbody > tr > td.list-empty-cell {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+table > tbody > tr > td.list-empty-cell {
+  text-align: center;
+  white-space: normal !important;
+}
+table > tbody > tr > td.list-empty-cell::before,
+table > tbody > tr > td.list-empty-cell::after {
+  display: none !important;
+}
 @media (max-width: 840px) {
   .list-empty-state { min-height: 220px; padding: 24px 16px; }
-  /* Keep native table row/cell display so colspan continues to span columns. */
-  table tbody td.list-empty-cell { padding: 12px; box-sizing: border-box; }
 }
+
+/* Empty content spans the full list/grid, matching the public booking list. */
+.list-empty-state { grid-column: 1 / -1; }
+.list-empty-item { list-style: none; width: 100%; padding: 0; }

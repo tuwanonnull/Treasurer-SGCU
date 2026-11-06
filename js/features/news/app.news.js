@@ -368,12 +368,7 @@ function renderNewsList() {
 
   if (!visibleNewsItems.length) {
     updateNewsFilterSummary(0, 0);
-    newsListEl.innerHTML = `
-      <div class="panel" style="background:#0f172a; color:#e5e7eb;">
-        <div class="panel-title" style="margin-bottom:6px;">ยังไม่มีข่าวหรือประกาศ</div>
-        <div class="panel-caption">เมื่อมีการเพิ่มประกาศจากชีตจะแสดงที่นี่อัตโนมัติ</div>
-      </div>
-    `;
+    newsListEl.innerHTML = renderListEmptyState("ยังไม่มีข่าวหรือประกาศ", "เมื่อมีข่าวหรือประกาศใหม่จะแสดงที่นี่", "document");
     renderHomeNewsPreview();
     return;
   }
@@ -383,12 +378,7 @@ function renderNewsList() {
   updateNewsFilterSummary(filteredItems.length, processedItems.length, visibleNewsItems.length);
 
   if (!processedItems.length) {
-    newsListEl.innerHTML = `
-      <div class="news-empty-state">
-        <strong>ไม่พบข่าวที่ตรงกับตัวกรอง</strong>
-        <span>ลองเปลี่ยนคำค้นหรือกดล้างตัวกรองเพื่อดูรายการทั้งหมด</span>
-      </div>
-    `;
+    newsListEl.innerHTML = renderListEmptyState("ไม่พบข่าวที่ตรงกับตัวกรอง", "ลองเปลี่ยนคำค้นหรือกดล้างตัวกรองเพื่อดูรายการทั้งหมด", "search");
     renderHomeNewsPreview();
     return;
   }
@@ -729,13 +719,7 @@ function renderHomeNewsPreview() {
   const visibleNewsItems = getVisibleNewsItems();
 
   if (!visibleNewsItems.length) {
-    container.innerHTML = `
-      <article class="home-news-card">
-        <div class="home-news-tag news-info">ประกาศ</div>
-        <h3>ยังไม่มีข่าวใหม่</h3>
-        <p>เมื่อมีข่าวหรือประกาศใหม่จะแสดงที่นี่</p>
-      </article>
-    `;
+    container.innerHTML = renderListEmptyState("ยังไม่มีข่าวใหม่", "เมื่อมีข่าวหรือประกาศใหม่จะแสดงที่นี่", "document");
     return;
   }
 

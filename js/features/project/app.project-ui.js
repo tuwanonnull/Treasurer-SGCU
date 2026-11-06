@@ -310,7 +310,7 @@ function updateProjectOrgComparison(filtered) {
       <td class="project-comparison-number">${row.closed.toLocaleString("th-TH")}</td>
       <td><span class="project-comparison-percent">${percent === null ? '<span title="ไม่มีโครงการที่นำมาคำนวณอัตราปิด">—</span>' : `${percent}%`}</span></td>
     </tr>`;
-  }).join("") : '<tr><td class="project-comparison-empty" colspan="5">ไม่พบโครงการที่ตรงกับตัวกรอง</td></tr>';
+  }).join("") : `<tr><td class="list-empty-cell" colspan="5">${renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
 
   const cards = document.getElementById("projectOrgComparisonCardsStaff");
   if (cards) cards.innerHTML = rows.length ? rows.map((row) => {
@@ -324,7 +324,7 @@ function updateProjectOrgComparison(filtered) {
         <div><dt>อัตราปิด</dt><dd>${percent}</dd></div>
       </dl>
     </article>`;
-  }).join("") : '<p class="project-comparison-empty">ไม่พบโครงการที่ตรงกับตัวกรอง</p>';
+  }).join("") : renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search");
 
 }
 
@@ -1022,8 +1022,8 @@ function updateDashboardInsights(filtered, summary) {
     listEl.innerHTML = "";
     if (!items.length) {
       const li = document.createElement("li");
-      li.className = "rank-list-empty";
-      li.textContent = emptyText;
+      li.className = "list-empty-item";
+      li.innerHTML = renderListEmptyState(emptyText, "รายการโครงการจะแสดงที่นี่เมื่อมีข้อมูล");
       listEl.appendChild(li);
       return;
     }
@@ -1188,7 +1188,7 @@ function updateDashboardInsights(filtered, summary) {
     if (!openItems.length) {
       const tr = document.createElement("tr");
       const emptyText = activeLongestOpenTab === "waiting" ? "ยังไม่มีโครงการรอปิด" : "ยังไม่มีโครงการที่ค้างปิด";
-      tr.innerHTML = `<td colspan="5" class="table-empty" style="text-align:center; color:#9ca3af;">${emptyText}</td>`;
+      tr.innerHTML = `<td colspan="5" class="list-empty-cell">${renderListEmptyState(emptyText, "รายการโครงการจะแสดงที่นี่เมื่อมีข้อมูล")}</td>`;
       longestOpenTableBodyEl.appendChild(tr);
     } else {
       openItems.forEach((item, idx) => {
@@ -1463,6 +1463,7 @@ function renderHomeHeatmap(sourceProjects = projects, container = homeHeatmapEl,
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       if (!eventsByDate[key]) eventsByDate[key] = [];
       eventsByDate[key].push({
+        project: p,
         title: p.name || "(ไม่ระบุชื่อโครงการ)",
         code: p.code || "-",
         start: date,
@@ -1980,7 +1981,7 @@ function updateTable(filteredProjects) {
     `;
   });
 
-  tbody.innerHTML = html;
+  tbody.innerHTML = html || `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
   lastTableProjects = filteredProjects;
 
   if (!tbody.dataset.boundClick) {

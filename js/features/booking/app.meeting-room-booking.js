@@ -2279,7 +2279,7 @@ function initMeetingRoomBookingApp() {
     activeDetailBookingId = "";
     activeDetailOptions = {};
     if (!dayBookings.length) {
-      bookingDetailBodyEl.innerHTML = '<div class="section-text-sm">ยังไม่มีรายการจองในวันนี้</div>';
+      bookingDetailBodyEl.innerHTML = renderListEmptyState("ยังไม่มีรายการจองในวันนี้", "เลือกห้องประชุมและช่วงเวลาที่ต้องการเพื่อส่งคำขอจอง", "calendar");
     } else {
       bookingDetailBodyEl.innerHTML = `
         <div class="meeting-day-list-summary">

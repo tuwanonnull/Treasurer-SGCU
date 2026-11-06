@@ -296,10 +296,10 @@
   #orgRepresentativeApprovalSection .panel,
   #orgRepresentativeApprovalSection .project-table-wrapper,
   #orgRepresentativeOverviewContent,
-  #orgRepresentativeOverviewTable,
-  #orgRepresentativeOverviewTable tbody,
-  #orgRepresentativeOverviewTable tr,
-  #orgRepresentativeOverviewTable td {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)),
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) tbody,
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) tr,
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) td {
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -316,28 +316,28 @@
     overscroll-behavior-x: contain;
   }
 
-  #orgRepresentativeOverviewTable {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) {
     display: block !important;
     table-layout: fixed !important;
     border-collapse: separate;
   }
 
-  #orgRepresentativeOverviewTable thead {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) thead {
     display: none !important;
   }
 
-  #orgRepresentativeOverviewTable tbody {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) tbody {
     display: grid !important;
     gap: 10px !important;
   }
 
-  #orgRepresentativeOverviewTable tr {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) tr {
     display: block !important;
     padding: 12px !important;
     overflow: hidden;
   }
 
-  #orgRepresentativeOverviewTable td {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) td {
     display: block !important;
     padding: 8px 0 !important;
     white-space: normal !important;
@@ -345,15 +345,15 @@
     word-break: break-word !important;
   }
 
-  #orgRepresentativeOverviewTable td::before {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) td::before {
     display: block !important;
     margin-bottom: 4px;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
-  #orgRepresentativeOverviewTable td > *,
-  #orgRepresentativeOverviewTable .badge {
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) td > *,
+  #orgRepresentativeOverviewTable:not(:has(> tbody > tr > td.list-empty-cell)) .badge {
     max-width: 100% !important;
     white-space: normal !important;
     overflow-wrap: anywhere !important;

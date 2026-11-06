@@ -483,7 +483,7 @@ function initMeetingRoomStaffApproval() {
     const items = getStaffDayBookings(dateText, sourceRows);
     bookingDayModalTitleEl.textContent = `รายการคำขอ${formatLongDate(dateText)} (${items.length} รายการ)`;
     if (!items.length) {
-      bookingDayModalBodyEl.innerHTML = '<div class="section-text-sm">ไม่มีรายการคำขอในวันที่เลือก</div>';
+      bookingDayModalBodyEl.innerHTML = renderListEmptyState("ไม่มีรายการคำขอในวันที่เลือก", "เลือกวันอื่นเพื่อดูรายการคำขอ", "calendar");
       return;
     }
     bookingDayModalBodyEl.innerHTML = `
@@ -1233,7 +1233,7 @@ function initMeetingRoomStaffApproval() {
       roomManageCountEl.textContent = `พบ ${rooms.length} ห้อง`;
     }
     if (!rooms.length) {
-      roomManageList.innerHTML = '<div class="meeting-room-manage-empty">ยังไม่มีห้องประชุม</div>';
+      roomManageList.innerHTML = renderListEmptyState("ยังไม่มีห้องประชุม", "เพิ่มห้องประชุมเพื่อเปิดให้ใช้งาน", "calendar");
       return;
     }
     roomManageList.innerHTML = rooms
@@ -2074,7 +2074,7 @@ function initMeetingRoomStaffApproval() {
         });
       });
 
-      if (!visibleRooms.length) cells.push('<div class="meeting-week-empty">ไม่พบห้องประชุมสำหรับเปรียบเทียบ</div>');
+      if (!visibleRooms.length) cells.push(renderListEmptyState("ไม่พบห้องประชุมสำหรับเปรียบเทียบ", "ลองเลือกห้องประชุมอื่นหรือเพิ่มห้องประชุม", "calendar"));
       staffCalendarPanel.classList.add("is-week-view", "meeting-week-matrix");
       staffCalendarPanel.closest(".calendar-grid-scroll")?.classList.add("is-week-matrix");
       staffCalendarPanel.innerHTML = cells.join("");

@@ -760,7 +760,7 @@
     if (exportBtn) exportBtn.disabled = rows.length === 0 && !hasExportDateRange();
     renderPagination(rows.length);
     if (!rows.length) {
-      body.innerHTML = `<tr class="dashboard-audit-empty-row"><td colspan="4">ยังไม่มี Activity Log</td></tr>`;
+      body.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState(state.rows.length ? "ไม่พบ Activity Log ตามตัวกรอง" : "ยังไม่มี Activity Log", state.rows.length ? "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น" : "ประวัติกิจกรรมจะแสดงที่นี่เมื่อมีรายการ", state.rows.length ? "search" : "document")}</td></tr>`;
       return;
     }
     hydrateActorNames(rows);

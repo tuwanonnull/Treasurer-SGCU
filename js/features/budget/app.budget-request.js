@@ -1526,7 +1526,7 @@ function initBudgetApprovalRequestPage() {
     if (orgTotalsTableBodyEl) {
       orgTotalsTableBodyEl.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState(message, "ยอดคำของบจะแสดงเมื่อมีข้อมูลและได้รับสิทธิ์เข้าถึง")}</td>
         </tr>
       `;
     }

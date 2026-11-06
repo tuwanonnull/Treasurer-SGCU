@@ -31,6 +31,7 @@ const context = vm.createContext({
   },
   borrowRequestForm: { reportValidity() { validations++; return false; } }, borrowSubmitBtn: {}
 });
+vm.runInContext(await readFile(new URL('../js/core/app.helpers.js', import.meta.url), 'utf8'), context);
 vm.runInContext(slice('  const projectWeekdays =', '  const normalizeAllowedPickupDays =') +
   slice('    const dayKeyBangkok =', '  const renderStaffSummary =') +
   slice('  const submitBorrowRequest =', '  const updateBorrowRequestStatus =') +

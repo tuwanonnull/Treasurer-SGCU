@@ -457,14 +457,7 @@
   const renderActiveRoundList = () => {
     const currentYear = getCurrentBudgetAcademicYear();
     if (!budgetActiveRounds.length) {
-      activeRoundListEl.innerHTML = `
-        <div class="budget-active-round-item is-empty">
-          <div>
-            <div class="budget-active-round-title">ยังไม่มีรอบที่เปิดรับ</div>
-            <div class="budget-active-round-meta">ระบบจะสร้างรอบสำหรับปีการศึกษา ${escapeHtml(currentYear)} เท่านั้น</div>
-          </div>
-        </div>
-      `;
+      activeRoundListEl.innerHTML = renderListEmptyState("ยังไม่มีรอบที่เปิดรับ", `สร้างรอบรับคำขอสำหรับปีการศึกษา ${currentYear} เพื่อเริ่มรับคำของบ`, "calendar");
       return;
     }
     activeRoundListEl.innerHTML = budgetActiveRounds.map((round) => {

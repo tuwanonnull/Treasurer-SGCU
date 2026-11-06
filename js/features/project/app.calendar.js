@@ -58,6 +58,7 @@ function buildCalendarEventsFromProjects() {
       const status = mapProjectStatusToCalendarStatus(p);
 
       return {
+        project: p,
         title: p.name || "(ไม่ระบุชื่อโครงการ)",
         start: parsedDate,
         end: parsedDate,
@@ -213,8 +214,7 @@ function renderSelectedCalendarDay() {
 
   if (!events.length) {
     const empty = document.createElement("div");
-    empty.className = "calendar-selected-empty";
-    empty.textContent = "ไม่มีรายการโครงการในวันนี้";
+    empty.innerHTML = renderListEmptyState("ไม่มีรายการโครงการในวันนี้", "เลือกวันอื่นเพื่อดูรายการโครงการ", "calendar");
     list.appendChild(empty);
     return;
   }
@@ -467,65 +467,9 @@ function generateCalendar() {
  * เปิด Modal รายละเอียดกิจกรรม
  */
 function openCalendarModal(ev) {
-  const modal = document.getElementById("calendarModal");
-  const titleEl = document.getElementById("calendarModalTitle");
-  const bodyEl = document.getElementById("calendarModalBody");
-  if (!modal || !titleEl || !bodyEl) return;
-
-  titleEl.textContent = ev.title;
-
-  const fmt = (d) =>
-    d && d instanceof Date && !isNaN(d.getTime())
-      ? d.toLocaleDateString("th-TH")
-      : "-";
-
-  const statusText =
-    getCalendarStatusText(ev.status);
-
-  bodyEl.innerHTML = `
-    <div class="modal-section">
-      <div class="modal-section-title">
-        <span class="icon">📅</span> รายละเอียดกิจกรรม
-      </div>
-      <div class="modal-section-grid">
-        <div>
-          <div class="modal-item-label">ชื่อโครงการ / กิจกรรม</div>
-          <div class="modal-item-value">${ev.title}</div>
-        </div>
-        <div>
-          <div class="modal-item-label">วันที่</div>
-          <div class="modal-item-value">${fmt(ev.start)}</div>
-        </div>
-        <div>
-          <div class="modal-item-label">ฝ่าย / ชมรม</div>
-          <div class="modal-item-value">${ev.org}</div>
-        </div>
-        <div>
-          <div class="modal-item-label">แหล่งงบประมาณ</div>
-          <div class="modal-item-value">${ev.budgetSource || "-"}</div>
-        </div>
-        <div>
-          <div class="modal-item-label">ปีการศึกษา</div>
-          <div class="modal-item-value">${ev.year}</div>
-        </div>
-        <div>
-          <div class="modal-item-label">สถานะ</div>
-          <div class="modal-item-value">${statusText}</div>
-        </div>
-        ${
-          ev.note
-            ? `
-        <div>
-          <div class="modal-item-label">หมายเหตุ</div>
-          <div class="modal-item-value">${ev.note}</div>
-        </div>`
-            : ""
-        }
-      </div>
-    </div>
-  `;
-
-  openDialog(modal, { focusSelector: "#calendarModalClose" });
+  if (!ev?.project) return;
+  closeCalendarModal();
+  openProjectModal(ev.project);
 }
 
 function openCalendarDayModal(dateObj, events) {
@@ -548,9 +492,7 @@ function openCalendarDayModal(dateObj, events) {
       const statusText = getCalendarStatusText(ev.status);
       return `
         <tr data-day-idx="${idx}">
-          <td>
-            ${ev.code || "-"}
-          </td>
+          <td>${ev.code || "-"}</td>
           <td>
             <div class="modal-table-title">${ev.title}</div>
             <div class="modal-table-caption">${ev.org || "-"}</div>

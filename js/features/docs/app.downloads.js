@@ -381,6 +381,10 @@ function setDownloadListState(listEl, type, message, options = {}) {
   const safeType = (type || "").toString().trim();
   const text = (message || "").toString().trim();
   if (!safeType || !text) return;
+  if (safeType === "empty") {
+    listEl.innerHTML = renderListEmptyState(text, "เอกสารดาวน์โหลดจะแสดงที่นี่เมื่อมีรายการ");
+    return;
+  }
   renderLoadState(listEl, safeType, text, {
     className: "panel load-state",
     captionClassName: "panel-caption",

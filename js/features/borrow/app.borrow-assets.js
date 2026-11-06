@@ -1243,7 +1243,7 @@ function initBorrowAssetsApp() {
         <button type="button" class="borrow-project-edit-link" data-borrow-project-edit="${safeEscape(project.id)}" aria-pressed="${project.id === editingBorrowProjectId}" aria-label="แก้ไขโครงการ ${safeEscape(borrowProjectDisplayCode(project))}">แก้ไขโครงการ <span aria-hidden="true">→</span></button>
         <div class="borrow-manager-card-footer"><span>ประวัติคำขอยืมคืนยังคงอยู่</span><div class="borrow-manager-card-actions"><button type="button" class="btn-ghost" data-borrow-project-toggle="${safeEscape(project.id)}" aria-label="ปิดใช้งาน ${safeEscape(borrowProjectDisplayCode(project))}">ปิดใช้งาน</button><button type="button" class="btn-ghost" data-borrow-project-delete="${safeEscape(project.id)}" aria-label="ลบโครงการ ${safeEscape(borrowProjectDisplayCode(project))}">ลบโครงการ</button></div></div>
       </article>`;
-    }).join("") : '<div class="borrow-manager-empty"><span class="borrow-plus-icon" aria-hidden="true"></span><strong>ยังไม่มีโครงการที่เปิดใช้งาน</strong><p>เลือกรหัสโครงการและช่วงวันที่<br />แล้วกด “เปิดใช้งานโครงการ” เพื่อเริ่มรับคำขอ</p></div>';
+    }).join("") : renderListEmptyState("ยังไม่มีโครงการที่เปิดใช้งาน", "เลือกรหัสโครงการและช่วงวันที่ แล้วกด “เปิดใช้งานโครงการ” เพื่อเริ่มรับคำขอ", "box");
     renderManagedBorrowProjectFilter();
     renderStaffBorrowProjectOptions();
     renderBorrowSubmissionWindow();
@@ -3245,7 +3245,7 @@ function initBorrowAssetsApp() {
   const renderAssetsCell = (assets = [], staffNote = "") => {
     const list = Array.isArray(assets) ? assets : [];
     if (!list.length) {
-      return `<div class="borrow-staff-items-empty">ไม่มีรายการพัสดุ</div>`;
+      return renderListEmptyState("ไม่มีรายการพัสดุ", "รายการพัสดุจะแสดงที่นี่เมื่อมีข้อมูล", "box");
     }
     const totalQty = list.reduce((sum, asset) => {
       const qty = Number(asset?.qty || 0);
@@ -3864,7 +3864,7 @@ function initBorrowAssetsApp() {
       }).join("")
       : `
         <tr>
-          <td colspan="5" class="borrow-request-assets-empty" data-label="รายการพัสดุ">ไม่มีรายการพัสดุ</td>
+          <td colspan="5" class="list-empty-cell">${renderListEmptyState("ไม่มีรายการพัสดุ", "รายการพัสดุจะแสดงที่นี่เมื่อมีข้อมูล", "box")}</td>
         </tr>
       `;
     const safeMessage = safeEscape(statusMessage || "");

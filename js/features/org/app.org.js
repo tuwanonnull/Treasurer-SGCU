@@ -185,7 +185,7 @@ function renderOrgStructure(rows, staffProfileDocs = null) {
           .replaceAll("'", "&#39;");
 
   if (!rows || rows.length < 2) {
-    container.innerHTML = `<p>ไม่พบข้อมูลทำเนียบ</p>`;
+    container.innerHTML = renderListEmptyState("ไม่พบข้อมูลทำเนียบ", "รายชื่อจะแสดงที่นี่เมื่อมีข้อมูล", "document");
     return;
   }
 

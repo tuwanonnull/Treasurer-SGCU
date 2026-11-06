@@ -58,6 +58,31 @@ function toggleProjectDocumentPanel(panel, button) {
 
 function openProjectModal(project) {
   if (!projectModalEl) return;
+  projectModalEl.classList.toggle("project-login-prompt", !isUserAuthenticated);
+
+  if (!isUserAuthenticated) {
+    projectModalTitleEl.textContent = "เข้าสู่ระบบเพื่อดูรายละเอียด";
+    projectModalTitleBadgeEl.textContent = "";
+    projectModalHeaderRowEl.innerHTML = "";
+    projectModalBodyEl.innerHTML = `
+      <div class="project-login-content">
+        <p>ดูข้อมูลโครงการ งบประมาณ และความคืบหน้าได้เมื่อเข้าสู่ระบบ</p>
+        <div class="project-login-actions">
+          <button class="btn-ghost" type="button" data-project-login-dismiss>ไว้ภายหลัง</button>
+          <button class="btn-primary" type="button" data-project-login>เข้าสู่ระบบ</button>
+        </div>
+      </div>
+    `;
+    projectModalBodyEl.querySelector("[data-project-login-dismiss]").addEventListener("click", () => {
+      closeDialog(projectModalEl);
+    });
+    projectModalBodyEl.querySelector("[data-project-login]").addEventListener("click", () => {
+      closeDialog(projectModalEl);
+      window.location.hash = "login";
+    });
+    openDialog(projectModalEl, { focusSelector: "[data-project-login]" });
+    return;
+  }
 
   const code = project.code || "-";
   const name = project.name || "-";

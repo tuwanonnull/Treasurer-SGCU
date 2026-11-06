@@ -441,7 +441,7 @@ function renderProjectOpsTable(tbody, rows) {
   if (!tbody) return;
   const colSpan = 3;
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="project-staff-alert-empty">ยังไม่มีรายการที่ต้องตรวจ</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการที่ต้องตรวจ", "รายการที่ต้องตรวจจะแสดงที่นี่เมื่อมีข้อมูล")}</td></tr>`;
     return;
   }
 

@@ -319,7 +319,7 @@
     dayModalTitleEl.textContent = `รายการจอง${formatLongDate(dateText)} (${items.length} รายการ)`;
 
     if (!items.length) {
-      dayModalBodyEl.innerHTML = '<div class="section-text-sm">ไม่มีรายการจองในวันที่เลือก</div>';
+      dayModalBodyEl.innerHTML = renderListEmptyState("ไม่มีรายการจองในวันที่เลือก", "เลือกวันอื่นเพื่อดูรายการจอง", "calendar");
       return;
     }
 
@@ -476,7 +476,8 @@
     calendarPanel.innerHTML = cells.join("");
 
     if (!bookings.length) {
-      setState("ยังไม่มีรายการจองห้องประชุม", "#6b7280");
+      setState("");
+      stateEl.innerHTML = renderListEmptyState("ยังไม่มีรายการจองห้องประชุม", "รายการจองจะแสดงที่นี่เมื่อมีการจองห้องประชุม", "calendar");
       return;
     }
 

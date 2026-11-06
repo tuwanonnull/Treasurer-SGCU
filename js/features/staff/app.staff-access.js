@@ -4003,7 +4003,7 @@ function initStaffAccessPages() {
     }
     if (!organizationCatalogTableBodyEl) return;
     if (!rows.length) {
-      organizationCatalogTableBodyEl.innerHTML = '<tr><td colspan="5" data-label="ทะเบียนองค์กร">ยังไม่มีทะเบียนองค์กรในระบบ หรือยังโหลดข้อมูลไม่สำเร็จ</td></tr>';
+      organizationCatalogTableBodyEl.innerHTML = `<tr><td colspan="5" class="list-empty-cell">${renderListEmptyState("ยังไม่มีทะเบียนองค์กรในระบบ หรือยังโหลดข้อมูลไม่สำเร็จ", "ลองรีเฟรชข้อมูล หรือเพิ่มทะเบียนองค์กรเมื่อข้อมูลพร้อมใช้งาน")}</td></tr>`;
       return;
     }
     if (!visibleRows.length) {

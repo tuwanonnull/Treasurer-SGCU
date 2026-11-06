@@ -44,6 +44,46 @@
   transform: translateY(0) scale(1);
 }
 
+#projectModal.project-login-prompt .modal-dialog {
+  width: min(100% - 32px, 440px);
+  max-width: 440px;
+  padding: 24px;
+  border-radius: 22px;
+  background: #fff;
+}
+
+#projectModal.project-login-prompt .modal-header {
+  border: 0;
+  margin-bottom: 4px;
+  padding-bottom: 0;
+}
+
+#projectModal.project-login-prompt .modal-body {
+  padding: 0;
+}
+
+.project-login-content p {
+  margin: 12px 0 24px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.project-login-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#projectModal .project-login-actions button {
+  width: auto;
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 10px 18px;
+  box-shadow: none;
+}
+
 #staffApprovalDetailModal {
   position: fixed;
   inset: 0;
@@ -461,6 +501,25 @@
   font-size: 11px;
   color: #9ca3af;
   margin-top: 2px;
+}
+
+#calendarModal .modal-table th,
+#calendarModal .modal-table td {
+  white-space: normal;
+}
+
+#calendarModal .modal-table-title,
+#calendarModal .modal-table-caption {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#calendarModal .modal-table th:first-child,
+#calendarModal .modal-table td:first-child,
+#calendarModal .modal-table th:last-child,
+#calendarModal .modal-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .status-pill {
