@@ -23,6 +23,7 @@ async function loadOrgStructure() {
     }
   } catch (err) {
     console.error("ERROR: โหลดข้อมูลโครงสร้างองค์กรไม่ได้  app.js:3688 - app.org.js:32", err);
+    renderHomeTreasurerContact(null);
     recordLoadError("orgStructure", "โหลดโครงสร้างองค์กรไม่สำเร็จ", { showRetry: true });
     setInlineError(el, "ไม่สามารถโหลดข้อมูลทำเนียบจาก Firestore ได้");
   } finally {
@@ -185,7 +186,50 @@ async function loadOrgStaffProfilesFromFirestore() {
   });
 }
 
+// Use only explicitly dated, published directory rows for the current year's treasurer.
+function getHomeTreasurerContacts(rows, academicYear) {
+  const term = String(academicYear).slice(-2);
+  if (!/^\d{4}$/.test(String(academicYear))) return [];
+  return (Array.isArray(rows) ? rows.slice(1) : []).filter((row) => {
+    const code = String(row?.[0] || "").trim();
+    const match = code.match(/^SGCU\s*(\d{2,4})(?=\.|$)/i);
+    const role = String(row?.[1] || "").trim();
+    return match && match[1].slice(-2) === term &&
+      /^เหรัญญิก(?:$|\s|องค์การ|อบจ\.?)/u.test(role) &&
+      String(row?.[10] || "").trim();
+  }).map((row) => ({
+    name: [row[2], row[3], row[4]].map((value) => String(value || "").trim()).filter(Boolean).join(" "),
+    lineId: String(row[10]).trim()
+  }));
+}
+
+function renderHomeTreasurerContact(rows) {
+  const container = document.getElementById("homeTreasurerLine");
+  if (!container) return;
+  container.replaceChildren();
+  const year = typeof getCurrentAcademicYearBE === "function" ? getCurrentAcademicYearBE() : "";
+  const contacts = getHomeTreasurerContacts(rows, year);
+  for (const contact of contacts) {
+    const info = document.createElement("p");
+    info.textContent = `เหรัญญิกปีการศึกษา ${year}${contact.name ? ` · ${contact.name}` : ""}`;
+    const link = document.createElement("a");
+    link.className = "btn-secondary home-contact-line";
+    link.textContent = `LINE · ${contact.lineId}`;
+    link.href = `https://line.me/ti/p/~${encodeURIComponent(contact.lineId)}`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.setAttribute("aria-label", `ติดต่อ LINE ${contact.lineId} (เปิดแท็บใหม่)`);
+    container.append(info, link);
+  }
+  if (!contacts.length) {
+    const info = document.createElement("p");
+    info.textContent = "ยังไม่มีข้อมูล LINE ของเหรัญญิกปีปัจจุบัน ติดต่อผ่าน Instagram ได้";
+    container.append(info);
+  }
+}
+
 function renderOrgStructure(rows, staffProfileDocs = null) {
+  renderHomeTreasurerContact(rows);
   const container = document.getElementById("org-structure-content");
   if (!container) return;
   const esc = (value) =>

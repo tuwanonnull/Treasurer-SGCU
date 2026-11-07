@@ -2332,6 +2332,65 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  // Keep native details semantics while animating both opening and closing.
+  const homeFaqControllers = new Map();
+  document.querySelectorAll(".home-faq-item").forEach((details) => {
+    const summary = details.querySelector("summary");
+    if (!summary) return;
+    // Match the home desktop layout; apply once so resizing does not override user choices.
+    if (details.hasAttribute("data-home-faq-desktop-open")) {
+      details.open = window.matchMedia("(min-width: 821px)").matches;
+    }
+    let animation = null;
+    let expanded = details.open;
+    const setExpanded = (nextExpanded) => {
+      const startHeight = details.getBoundingClientRect().height;
+      expanded = nextExpanded;
+      if (animation) {
+        animation.onfinish = null;
+        animation.cancel();
+        animation = null;
+      }
+      details.style.height = "";
+      details.style.overflow = "";
+      details.classList.toggle("is-closing", !expanded);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !details.animate) {
+        details.open = expanded;
+        details.classList.remove("is-closing");
+        return;
+      }
+      // Measure the target in normal flow, then keep content mounted during collapse.
+      details.open = expanded;
+      const endHeight = details.getBoundingClientRect().height;
+      details.open = true;
+      details.style.overflow = "hidden";
+      animation = details.animate(
+        [{ height: `${startHeight}px` }, { height: `${endHeight}px` }],
+        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
+      );
+      animation.onfinish = () => {
+        details.open = expanded;
+        details.style.overflow = "";
+        details.classList.remove("is-closing");
+        animation = null;
+      };
+    };
+    homeFaqControllers.set(details, {
+      isExpanded: () => animation ? expanded : details.open,
+      close: () => setExpanded(false)
+    });
+    summary.addEventListener("click", (event) => {
+      event.preventDefault();
+      const nextExpanded = !(animation ? expanded : details.open);
+      if (nextExpanded) {
+        homeFaqControllers.forEach((controller, otherDetails) => {
+          if (otherDetails !== details && controller.isExpanded()) controller.close();
+        });
+      }
+      setExpanded(nextExpanded);
+    });
+  });
+
   document.querySelectorAll("[data-home-scroll-next]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const newsPanel = document.querySelector('.page-view[data-page="home"] .home-snap-panel:nth-of-type(2)');
