@@ -31,15 +31,48 @@
       </section>
 
       <section class="page-view" data-page="content-news-staff">
-        <div class="page content-management-staff-page">
-          <div class="page-header-flex section-appear">
+        <div class="page content-news-page">
+          <div class="page-header-flex">
             <div>
               <h1 class="page-title">จัดการข่าวสาร</h1>
               <p class="page-subtitle">พิจารณารายการข่าว เพิ่มหรือแก้ไขข่าวที่แสดงบนหน้าแรกและหน้าข่าวสาร</p>
             </div>
+            <button id="contentNewsNewBtn" class="btn-primary" type="button" aria-haspopup="dialog" aria-controls="contentNewsEditor" aria-expanded="false">เพิ่มข่าวสาร</button>
           </div>
 
-          <div class="content-news-layout section-appear section-delay-1">
+          <div class="content-news-workspace">
+              <div class="filter-bar content-news-filters" aria-label="ตัวกรองรายการข่าว">
+                  <div class="filter-group">
+                    <label for="contentNewsStatusFilter">สถานะ</label>
+                    <select id="contentNewsStatusFilter">
+                      <option value="all">ทุกสถานะ</option>
+                      <option value="scheduled">ตั้งเวลาเผยแพร่</option>
+                      <option value="published">เผยแพร่แล้ว</option>
+                      <option value="draft">ฉบับร่าง</option>
+                      <option value="archived">เก็บถาวร</option>
+                    </select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="contentNewsCategoryFilter">หมวดข่าว</label>
+                    <select id="contentNewsCategoryFilter">
+                      <option value="all">ทุกหมวด</option>
+                    </select>
+                  </div>
+                  <div class="filter-group">
+                    <label for="contentNewsAudienceFilter">ฝ่ายที่รับผิดชอบ</label>
+                    <select id="contentNewsAudienceFilter">
+                      <option value="all">ทุกฝ่าย</option>
+                    </select>
+                  </div>
+                  <div class="filter-group filter-search">
+                    <label for="contentNewsSearchInput">ค้นหา</label>
+                    <div class="search-box">
+                      <input id="contentNewsSearchInput" type="search" placeholder="ชื่อข่าว / สรุป / หมวด / ฝ่าย" />
+                      <button id="contentNewsFilterReset" class="search-clear" type="button" aria-label="ล้างตัวกรอง">✕</button>
+                    </div>
+                  </div>
+              </div>
+
             <section class="panel panel-hover staff-access-panel content-news-list-panel">
               <div class="panel-header">
                 <div>
@@ -47,51 +80,15 @@
                   <p id="contentNewsTableCaption" class="panel-caption">กำลังโหลดข่าว...</p>
                 </div>
                 <div class="content-admin-actions">
-                  <button id="contentNewsNewBtn" class="btn-primary" type="button">ข่าวใหม่</button>
                   <button id="contentNewsRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
-                  <button id="contentNewsExportBtn" class="btn-ghost" type="button">Export CSV</button>
-                  <button id="contentNewsImportBtn" class="btn-ghost" type="button">Import CSV</button>
+                  <button id="contentNewsExportBtn" class="btn-ghost" type="button">ส่งออก CSV</button>
+                  <button id="contentNewsImportBtn" class="btn-ghost" type="button">นำเข้า CSV</button>
                   <input id="contentNewsImportFile" type="file" accept=".csv,text/csv" hidden />
                 </div>
               </div>
               <p id="contentNewsMessage" class="content-admin-message" role="status" aria-live="polite"></p>
-              <div class="content-news-filters" aria-label="ตัวกรองรายการข่าว">
-                <div class="content-news-filter-row content-news-filter-row-top">
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentNewsStatusFilter">สถานะ</label>
-                    <select id="contentNewsStatusFilter" class="login-input">
-                      <option value="all">ทุกสถานะ</option>
-                      <option value="scheduled">scheduled</option>
-                      <option value="published">published</option>
-                      <option value="draft">draft</option>
-                      <option value="archived">archived</option>
-                    </select>
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentNewsCategoryFilter">หมวดข่าว</label>
-                    <select id="contentNewsCategoryFilter" class="login-input">
-                      <option value="all">ทุกหมวด</option>
-                    </select>
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentNewsAudienceFilter">ฝ่ายที่รับผิดชอบ</label>
-                    <select id="contentNewsAudienceFilter" class="login-input">
-                      <option value="all">ทุกฝ่าย</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="content-news-filter-row content-news-filter-row-search">
-                  <div class="borrow-form-field content-news-search-field">
-                    <label class="login-label" for="contentNewsSearchInput">ค้นหา</label>
-                    <div class="content-news-search-control">
-                      <input id="contentNewsSearchInput" class="login-input" type="search" placeholder="ชื่อข่าว / สรุป / หมวด / ฝ่าย" />
-                      <button id="contentNewsFilterReset" class="content-news-clear-filter-btn" type="button" aria-label="ล้างตัวกรอง">X</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="project-table-wrapper budget-staff-table-wrapper content-news-table-wrapper">
-                <table class="budget-staff-requests-table content-admin-table">
+              <div class="project-table-wrapper content-news-table-wrapper">
+                <table class="content-admin-table content-news-table">
                   <thead>
                     <tr>
                       <th class="col-project">ข่าว</th>
@@ -109,46 +106,26 @@
               </div>
             </section>
 
-            <section class="panel panel-hover staff-access-panel content-news-form-panel">
+            <dialog id="contentNewsEditor" class="panel staff-access-panel content-news-editor" aria-labelledby="contentNewsEditorTitle">
               <div class="panel-header">
                 <div>
-                  <h3 class="panel-title">เพิ่มหรือแก้ไขข่าว</h3>
-                  <p class="panel-caption">บันทึกเป็น published เมื่อต้องการให้แสดงหน้าเว็บ</p>
+                  <h3 id="contentNewsEditorTitle" class="panel-title">เพิ่มข่าวสาร</h3>
+                  <p class="panel-caption">เลือกสถานะเผยแพร่แล้วเพื่อแสดงข่าวบนหน้าเว็บไซต์</p>
                 </div>
+                <button id="contentNewsEditorClose" class="modal-close" type="button" aria-label="ปิดหน้าต่าง"><span aria-hidden="true">✕</span></button>
               </div>
-              <form id="contentNewsForm" class="staff-access-form content-admin-form" autocomplete="off">
+              <form id="contentNewsForm" class="staff-auth-form content-admin-form" autocomplete="off">
                 <input id="contentNewsId" type="hidden" />
 
-                <div class="budget-staff-form-section">
-                  <div class="budget-staff-form-section-title">ข้อมูลข่าว</div>
-                  <div class="staff-application-position-grid budget-staff-form-grid">
-                    <div class="borrow-form-field budget-staff-form-field-full">
+                <div class="content-documents-editor-body">
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">เนื้อหาข่าว</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field staff-auth-field-full">
                       <label class="login-label" for="contentNewsTitle">ชื่อข่าว</label>
                       <input id="contentNewsTitle" class="login-input" type="text" required />
                     </div>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="contentNewsDate">วันที่และเวลาเผยแพร่</label>
-                      <input id="contentNewsDate" class="login-input" type="datetime-local" />
-                    </div>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="contentNewsAcademicYear">ปีการศึกษา</label>
-                      <input id="contentNewsAcademicYear" class="login-input" type="text" inputmode="numeric" placeholder="2568" />
-                    </div>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="contentNewsCategory">หมวดข่าว</label>
-                      <input id="contentNewsCategory" class="login-input" type="text" placeholder="ประกาศ" />
-                    </div>
-                    <div class="borrow-form-field">
-                      <label class="login-label" for="contentNewsAudience">ฝ่ายที่รับผิดชอบ</label>
-                      <input id="contentNewsAudience" class="login-input" type="text" placeholder="ฝ่ายการเงิน" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="budget-staff-form-section">
-                  <div class="budget-staff-form-section-title">เนื้อหาและลิงก์</div>
-                  <div class="staff-application-position-grid budget-staff-form-grid">
-                    <div class="borrow-form-field budget-staff-form-field-full">
+<div class="borrow-form-field staff-auth-field-full">
                       <div class="content-news-summary-label-row">
                         <label class="login-label" for="contentNewsSummary">สรุปข่าว</label>
                         <details class="content-news-summary-tip">
@@ -161,127 +138,112 @@
                       </div>
                       <textarea id="contentNewsSummary" class="login-input" rows="5"></textarea>
                     </div>
-                    <div class="borrow-form-field budget-staff-form-field-full">
+<div class="borrow-form-field staff-auth-field-full">
                       <label class="login-label" for="contentNewsPreviewUrl">ลิงก์แนบ</label>
                       <input id="contentNewsPreviewUrl" class="login-input" type="url" placeholder="https://..." />
                     </div>
-                  </div>
-                </div>
+</div>
+</div>
 
-                <div class="budget-staff-form-section">
-                  <div class="budget-staff-form-section-title">การเผยแพร่</div>
-                  <div class="staff-application-position-grid budget-staff-form-grid">
-                    <div class="borrow-form-field">
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">การจัดหมวดหมู่</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field">
+                      <label class="login-label" for="contentNewsCategory">หมวดข่าว</label>
+                      <input id="contentNewsCategory" class="login-input" type="text" placeholder="ประกาศ" />
+                    </div>
+<div class="borrow-form-field">
+                      <label class="login-label" for="contentNewsAudience">ฝ่ายที่รับผิดชอบ</label>
+                      <input id="contentNewsAudience" class="login-input" type="text" placeholder="ฝ่ายการเงิน" />
+                    </div>
+<div class="borrow-form-field">
+                      <label class="login-label" for="contentNewsAcademicYear">ปีการศึกษา</label>
+                      <input id="contentNewsAcademicYear" class="login-input" type="text" inputmode="numeric" placeholder="2568" />
+                    </div>
+</div>
+</div>
+
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">การเผยแพร่</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field">
                       <label class="login-label" for="contentNewsStatus">สถานะ</label>
                       <select id="contentNewsStatus" class="login-input">
-                        <option value="published">published</option>
-                        <option value="draft">draft</option>
-                        <option value="archived">archived</option>
+                        <option value="published">เผยแพร่แล้ว</option>
+                        <option value="draft">ฉบับร่าง</option>
+                        <option value="archived">เก็บถาวร</option>
                       </select>
                     </div>
-                    <div class="borrow-form-field">
+<div class="borrow-form-field">
+                      <label class="login-label" for="contentNewsDate">วันที่และเวลาเผยแพร่</label>
+                      <input id="contentNewsDate" class="login-input" type="datetime-local" />
+                    </div>
+<div class="borrow-form-field">
                       <label class="login-label" for="contentNewsExpireDate">วันหมดอายุ</label>
                       <input id="contentNewsExpireDate" class="login-input" type="date" />
                     </div>
-                    <label class="content-admin-checkbox content-news-pin-check">
+<label class="content-admin-checkbox content-news-pin-check">
                       <input id="contentNewsPinned" type="checkbox" />
                       <span>ปักหมุด</span>
                     </label>
-                  </div>
-                </div>
-
+</div>
+</div>
+</div>
+<div class="content-documents-editor-footer">
                 <div class="staff-access-actions budget-staff-form-actions">
-                  <button class="btn-primary" type="submit">บันทึกข่าว</button>
-                  <button id="contentNewsArchiveBtn" class="btn-ghost" type="button">Archive</button>
-                  <button id="contentNewsResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
-                </div>
+<button id="contentNewsArchiveBtn" class="btn-ghost" type="button">เก็บถาวร</button>
+<button id="contentNewsResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
+<button class="btn-primary" type="submit">บันทึกข่าว</button>
+</div>
                 <div id="contentNewsFormMessage" class="section-text-sm" aria-live="polite"></div>
+                </div>
               </form>
-            </section>
+            </dialog>
           </div>
         </div>
       </section>
 
       <section class="page-view" data-page="content-documents-staff">
-        <div class="page content-management-staff-page">
-          <div class="page-header-flex section-appear">
+        <div class="page content-documents-page">
+          <div class="page-header-flex">
             <div>
               <h1 class="page-title">จัดการเอกสารการเงิน</h1>
               <p class="page-subtitle">เพิ่ม แก้ไข หรือซ่อนเอกสารการเงินที่แสดงบนหน้าแบบฟอร์มการเงิน</p>
             </div>
+            <button id="contentDocumentsAddBtn" class="btn-primary" type="button" aria-haspopup="dialog" aria-controls="contentDocumentsEditor" aria-expanded="false">เพิ่มเอกสาร</button>
           </div>
 
-          <section class="panel panel-hover staff-access-panel content-documents-form-panel section-appear section-delay-1">
-            <div class="panel-header">
-              <div>
-                <h3 class="panel-title">เพิ่มหรือแก้ไขเอกสารการเงิน</h3>
-                <p class="panel-caption">บันทึกเป็น published เมื่อต้องการให้แสดงหน้าเว็บ</p>
+          <div class="filter-bar content-documents-filters" aria-label="ตัวกรองรายการเอกสารการเงิน">
+            <div class="filter-group">
+              <label for="contentDocumentsCategoryFilter">หมวดหมู่</label>
+              <select id="contentDocumentsCategoryFilter">
+                <option value="all">ทุกหมวด</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="contentDocumentsOrgFilter">องค์กร</label>
+              <select id="contentDocumentsOrgFilter">
+                <option value="all">ทุกองค์กร</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="contentDocumentsFormatFilter">ประเภทไฟล์</label>
+              <select id="contentDocumentsFormatFilter">
+                <option value="all">ทุกประเภท</option>
+                <option value="ex">EX</option>
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX</option>
+                <option value="xlsx">XLSX</option>
+              </select>
+            </div>
+            <div class="filter-group filter-search">
+              <label for="contentDocumentsSearchInput">ค้นหา</label>
+              <div class="search-box">
+                <input id="contentDocumentsSearchInput" type="search" placeholder="ชื่อเอกสาร / รายละเอียด / หมวด / องค์กร" />
+                <button id="contentDocumentsFilterReset" class="search-clear" type="button" aria-label="ล้างตัวกรอง">✕</button>
               </div>
             </div>
-            <form id="contentDocumentsForm" class="staff-access-form content-admin-form" autocomplete="off">
-              <input id="contentDocumentsId" type="hidden" />
-
-              <div class="budget-staff-form-section">
-                <div class="budget-staff-form-section-title">ข้อมูลเอกสาร</div>
-                <div class="staff-application-position-grid budget-staff-form-grid">
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsName">ชื่อเอกสาร</label>
-                    <input id="contentDocumentsName" class="login-input" type="text" required />
-                  </div>
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsDesc">รายละเอียด</label>
-                    <textarea id="contentDocumentsDesc" class="login-input" rows="4"></textarea>
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentDocumentsCategory">หมวดหมู่</label>
-                    <input id="contentDocumentsCategory" class="login-input" type="text" placeholder="เอกสารทั่วไป" />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentDocumentsOrg">องค์กร</label>
-                    <input id="contentDocumentsOrg" class="login-input" type="text" placeholder="อบจ. / สภานิสิต" />
-                  </div>
-                  <div class="borrow-form-field">
-                    <label class="login-label" for="contentDocumentsStatus">สถานะ</label>
-                    <select id="contentDocumentsStatus" class="login-input">
-                      <option value="published">published</option>
-                      <option value="draft">draft</option>
-                      <option value="archived">archived</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="budget-staff-form-section">
-                <div class="budget-staff-form-section-title">ลิงก์ไฟล์</div>
-                <div class="staff-application-position-grid budget-staff-form-grid">
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsExUrl">ลิงก์ EX</label>
-                    <input id="contentDocumentsExUrl" class="login-input" type="url" placeholder="https://..." />
-                  </div>
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsPdfUrl">ลิงก์ PDF</label>
-                    <input id="contentDocumentsPdfUrl" class="login-input" type="url" placeholder="https://..." />
-                  </div>
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsDocxUrl">ลิงก์ DOCX</label>
-                    <input id="contentDocumentsDocxUrl" class="login-input" type="url" placeholder="https://..." />
-                  </div>
-                  <div class="borrow-form-field budget-staff-form-field-full">
-                    <label class="login-label" for="contentDocumentsXlsxUrl">ลิงก์ XLSX</label>
-                    <input id="contentDocumentsXlsxUrl" class="login-input" type="url" placeholder="https://..." />
-                  </div>
-                </div>
-              </div>
-
-              <div class="staff-access-actions budget-staff-form-actions">
-                <button class="btn-primary" type="submit">บันทึกเอกสาร</button>
-                <button id="contentDocumentsArchiveBtn" class="btn-ghost" type="button">Archive</button>
-                <button id="contentDocumentsResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
-              </div>
-              <div id="contentDocumentsFormMessage" class="section-text-sm" aria-live="polite"></div>
-            </form>
-          </section>
-
+          </div>
           <section class="panel panel-hover staff-access-panel content-documents-list-panel section-appear section-delay-1">
             <div class="panel-header">
               <div>
@@ -291,7 +253,7 @@
               <div class="content-admin-actions content-documents-actions" aria-label="เครื่องมือรายการเอกสารการเงิน">
                 <div class="content-documents-actions-group" data-documents-normal-actions>
                   <button id="contentDocumentsRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
-                  <button id="contentDocumentsExportBtn" class="btn-ghost" type="button">Export CSV</button>
+                  <button id="contentDocumentsExportBtn" class="btn-ghost" type="button">ส่งออก CSV</button>
                   <button id="contentDocumentsReorderBtn" class="btn-ghost content-documents-reorder-start" type="button">จัดลำดับ</button>
                 </div>
                 <div class="content-documents-actions-group content-documents-reorder-actions" data-documents-reorder-actions hidden>
@@ -303,44 +265,9 @@
             </div>
 
             <p id="contentDocumentsMessage" class="content-admin-message" role="status" aria-live="polite"></p>
-            <div class="content-documents-filters" aria-label="ตัวกรองรายการเอกสารการเงิน">
-              <div class="content-documents-filter-row content-documents-filter-row-top">
-                <div class="borrow-form-field">
-                  <label class="login-label" for="contentDocumentsCategoryFilter">หมวดหมู่</label>
-                  <select id="contentDocumentsCategoryFilter" class="login-input">
-                    <option value="all">ทุกหมวด</option>
-                  </select>
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="contentDocumentsOrgFilter">องค์กร</label>
-                  <select id="contentDocumentsOrgFilter" class="login-input">
-                    <option value="all">ทุกองค์กร</option>
-                  </select>
-                </div>
-                <div class="borrow-form-field">
-                  <label class="login-label" for="contentDocumentsFormatFilter">ประเภทไฟล์</label>
-                  <select id="contentDocumentsFormatFilter" class="login-input">
-                    <option value="all">ทุกประเภท</option>
-                    <option value="ex">EX</option>
-                    <option value="pdf">PDF</option>
-                    <option value="docx">DOCX</option>
-                    <option value="xlsx">XLSX</option>
-                  </select>
-                </div>
-              </div>
-              <div class="content-documents-filter-row content-documents-filter-row-search">
-                <div class="borrow-form-field content-documents-search-field">
-                  <label class="login-label" for="contentDocumentsSearchInput">ค้นหา</label>
-                  <div class="content-documents-search-control">
-                    <input id="contentDocumentsSearchInput" class="login-input" type="search" placeholder="ชื่อเอกสาร / รายละเอียด / หมวด / องค์กร" />
-                    <button id="contentDocumentsFilterReset" class="content-documents-clear-filter-btn" type="button" aria-label="ล้างตัวกรอง">X</button>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div class="project-table-wrapper budget-staff-table-wrapper content-documents-table-wrapper">
-              <table class="budget-staff-requests-table content-admin-table content-documents-table">
+            <div class="project-table-wrapper content-documents-table-wrapper">
+              <table class="content-documents-table">
                 <thead>
                   <tr>
                     <th class="col-project">เอกสาร</th>
@@ -358,5 +285,85 @@
             </div>
           </section>
 
+          <dialog id="contentDocumentsEditor" class="panel staff-access-panel content-documents-editor" aria-labelledby="contentDocumentsEditorTitle">
+            <div class="panel-header">
+              <div>
+                <h3 id="contentDocumentsEditorTitle" class="panel-title">เพิ่มเอกสารการเงิน</h3>
+                <p class="panel-caption">เลือกสถานะเผยแพร่แล้วเพื่อแสดงเอกสารบนหน้าแบบฟอร์มการเงิน</p>
+              </div>
+              <button id="contentDocumentsEditorClose" class="modal-close" type="button" aria-label="ปิดหน้าต่าง" title="ปิดหน้าต่าง"><span aria-hidden="true">✕</span></button>
+            </div>
+            <form id="contentDocumentsForm" class="staff-auth-form content-admin-form" autocomplete="off">
+              <input id="contentDocumentsId" type="hidden" />
+
+              <div class="content-documents-editor-body">
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">ข้อมูลเอกสาร</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field staff-auth-field-full">
+                    <label class="login-label" for="contentDocumentsName">ชื่อเอกสาร</label>
+                    <input id="contentDocumentsName" class="login-input" type="text" required />
+                  </div>
+<div class="borrow-form-field staff-auth-field-full">
+                    <label class="login-label" for="contentDocumentsDesc">รายละเอียด</label>
+                    <textarea id="contentDocumentsDesc" class="login-input" rows="4"></textarea>
+                  </div>
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsCategory">หมวดหมู่</label>
+                    <input id="contentDocumentsCategory" class="login-input" type="text" placeholder="เอกสารทั่วไป" />
+                  </div>
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsOrg">องค์กร</label>
+                    <input id="contentDocumentsOrg" class="login-input" type="text" placeholder="อบจ. / สภานิสิต" />
+                  </div>
+</div>
+</div>
+
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">ลิงก์ไฟล์</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsExUrl">ลิงก์ EX</label>
+                    <input id="contentDocumentsExUrl" class="login-input" type="url" placeholder="https://..." />
+                  </div>
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsPdfUrl">ลิงก์ PDF</label>
+                    <input id="contentDocumentsPdfUrl" class="login-input" type="url" placeholder="https://..." />
+                  </div>
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsDocxUrl">ลิงก์ DOCX</label>
+                    <input id="contentDocumentsDocxUrl" class="login-input" type="url" placeholder="https://..." />
+                  </div>
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsXlsxUrl">ลิงก์ XLSX</label>
+                    <input id="contentDocumentsXlsxUrl" class="login-input" type="url" placeholder="https://..." />
+                  </div>
+</div>
+</div>
+
+<div class="content-documents-form-section ">
+<div class="content-documents-form-heading">การเผยแพร่</div>
+<div class="staff-auth-form-grid">
+<div class="borrow-form-field">
+                    <label class="login-label" for="contentDocumentsStatus">สถานะ</label>
+                    <select id="contentDocumentsStatus" class="login-input">
+                      <option value="published">เผยแพร่แล้ว</option>
+                      <option value="draft">ฉบับร่าง</option>
+                      <option value="archived">เก็บถาวร</option>
+                    </select>
+                  </div>
+</div>
+</div>
+</div>
+<div class="content-documents-editor-footer">
+              <div class="staff-access-actions budget-staff-form-actions">
+<button id="contentDocumentsArchiveBtn" class="btn-ghost" type="button">เก็บถาวร</button>
+<button id="contentDocumentsResetBtn" class="btn-ghost" type="button">ล้างฟอร์ม</button>
+<button class="btn-primary" type="submit">บันทึกเอกสาร</button>
+</div>
+              <div id="contentDocumentsFormMessage" class="section-text-sm" aria-live="polite"></div>
+              </div>
+            </form>
+          </dialog>
         </div>
       </section>

@@ -301,10 +301,70 @@ function initContentManagementStaffPage() {
     });
   };
 
+  const editor = document.getElementById("contentNewsEditor");
+  const addButton = document.getElementById("contentNewsNewBtn");
+  const editorTitle = document.getElementById("contentNewsEditorTitle");
+  let editorSnapshot = "";
+  let editorClosePromise = null;
+  let editorReturnFocus = null;
+  const readEditorSnapshot = () => JSON.stringify(Object.values(fields).map((field) => field?.type === "checkbox" ? field.checked : field?.value || ""));
+  const openEditor = () => {
+    if (!editor || editor.open || editorClosePromise) return;
+    editorReturnFocus = document.activeElement;
+    editorSnapshot = readEditorSnapshot();
+    if (editorTitle) editorTitle.textContent = fields.id.value ? "แก้ไขข่าวสาร" : "เพิ่มข่าวสาร";
+    if (buttons.archive) buttons.archive.hidden = !fields.id.value;
+    editor.showModal();
+    document.body.classList.add("has-content-news-modal");
+    addButton?.setAttribute("aria-expanded", "true");
+    fields.title.focus();
+  };
+  const dismissEditor = () => {
+    if (!editor?.open) return Promise.resolve();
+    if (editorClosePromise) return editorClosePromise;
+    editor.classList.add("is-closing");
+    editorClosePromise = new Promise((resolve) => {
+      let timer;
+      const finish = () => {
+        clearTimeout(timer);
+        editor.removeEventListener("animationend", onAnimationEnd);
+        editor.classList.remove("is-closing");
+        editor.close();
+        document.body.classList.remove("has-content-news-modal");
+        addButton?.setAttribute("aria-expanded", "false");
+        const target = editorReturnFocus?.isConnected ? editorReturnFocus : addButton;
+        target?.focus({ preventScroll: true });
+        resolve();
+      };
+      const onAnimationEnd = (event) => {
+        if (event.target === editor && event.animationName === "content-documents-modal-out") finish();
+      };
+      editor.addEventListener("animationend", onAnimationEnd);
+      timer = setTimeout(finish, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240);
+    }).finally(() => { editorClosePromise = null; });
+    return editorClosePromise;
+  };
+  const closeEditor = () => {
+    if (fields.title.disabled || editorClosePromise) return;
+    if (readEditorSnapshot() !== editorSnapshot && !window.confirm("มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดฟอร์มหรือไม่?")) return;
+    void dismissEditor();
+  };
+  editor?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeEditor();
+  });
+  editor?.addEventListener("close", () => {
+    document.body.classList.remove("has-content-news-modal");
+    addButton?.setAttribute("aria-expanded", "false");
+  });
+  document.getElementById("contentNewsEditorClose")?.addEventListener("click", closeEditor);
+
   const resetForm = () => {
     form.reset();
     if (fields.id) fields.id.value = "";
     if (fields.status) fields.status.value = "published";
+    if (editorTitle) editorTitle.textContent = "เพิ่มข่าวสาร";
+    if (buttons.archive) buttons.archive.hidden = true;
     if (fields.date && !fields.date.value) fields.date.value = toDatetimeLocalValue(new Date());
     setMessage("");
   };
@@ -322,9 +382,8 @@ function initContentManagementStaffPage() {
     fields.summary.value = item.summary || "";
     fields.status.value = item.status || "published";
     fields.pinned.checked = !!item.pinned;
-    setMessage(`กำลังแก้ข่าว: ${item.title}`, "info");
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
-    fields.title.focus();
+    setMessage("");
+    openEditor();
   };
 
   const readFormPayload = () => {
@@ -496,8 +555,7 @@ function initContentManagementStaffPage() {
 
   const renderRows = () => {
     const visibleItems = getFilteredItems();
-    const loadStatus = state.listStatus ? ` · ${state.listStatus}` : "";
-    tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} ข่าวจาก Firestore${loadStatus}`;
+    tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} รายการ`;
     if (!state.items.length) {
       tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีข่าวในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
@@ -513,13 +571,13 @@ function initContentManagementStaffPage() {
           <tr class="content-news-row" data-news-id="${esc(item.id)}" tabindex="0" role="button" aria-label="แก้ไขข่าว ${esc(item.title || "")}">
             <td>
               <strong>${esc(item.title || "-")}</strong>
-              ${item.pinned ? `<span class="content-admin-pill">PIN</span>` : ""}
+              ${item.pinned ? `<span class="content-admin-pill">ปักหมุด</span>` : ""}
               ${item.publishAtInput ? `<span class="content-admin-pill content-admin-schedule-pill">${esc(item.publishAtInput.replace("T", " "))}</span>` : ""}
               ${item.summary ? `<small>${esc(item.summary)}</small>` : ""}
             </td>
             <td>${esc(item.date || "-")}</td>
             <td>${esc(item.category || "-")}</td>
-            <td><span class="content-admin-status is-${esc(effectiveStatus)}">${esc(effectiveStatus)}</span></td>
+            <td><span class="content-admin-status is-${esc(effectiveStatus)}">${esc(({ published: "เผยแพร่แล้ว", scheduled: "ตั้งเวลาเผยแพร่", draft: "ฉบับร่าง", archived: "เก็บถาวร" })[effectiveStatus] || effectiveStatus)}</span></td>
           </tr>
         `;
       })
@@ -603,6 +661,7 @@ function initContentManagementStaffPage() {
         });
       }
       clearNewsCache();
+      await dismissEditor();
       resetForm();
       await loadNewsItems();
       await syncPublicNewsCache();
@@ -678,7 +737,7 @@ function initContentManagementStaffPage() {
   });
   buttons.createNew?.addEventListener("click", () => {
     resetForm();
-    fields.title.focus();
+    openEditor();
   });
   buttons.reset?.addEventListener("click", resetForm);
   buttons.archive?.addEventListener("click", () => void archiveCurrentItem());
@@ -911,10 +970,74 @@ function initContentDocumentsStaffPage() {
     });
   };
 
+  const editor = document.getElementById("contentDocumentsEditor");
+  const addButton = document.getElementById("contentDocumentsAddBtn");
+  const editorTitle = document.getElementById("contentDocumentsEditorTitle");
+  let editorSnapshot = "";
+  let editorClosePromise = null;
+  let editorReturnFocus = null;
+  const readEditorSnapshot = () => JSON.stringify(Object.values(fields).map((field) => field?.value || ""));
+  const openEditor = () => {
+    if (!editor || editor.open || editorClosePromise) return;
+    editorReturnFocus = document.activeElement;
+    editorSnapshot = readEditorSnapshot();
+    if (editorTitle) editorTitle.textContent = fields.id.value ? "แก้ไขเอกสารการเงิน" : "เพิ่มเอกสารการเงิน";
+    if (buttons.archive) buttons.archive.hidden = !fields.id.value;
+    editor.showModal();
+    document.body.classList.add("has-content-documents-modal");
+    addButton?.setAttribute("aria-expanded", "true");
+    fields.name.focus();
+  };
+  const dismissEditor = () => {
+    if (!editor?.open) return Promise.resolve();
+    if (editorClosePromise) return editorClosePromise;
+    editor.classList.add("is-closing");
+    editorClosePromise = new Promise((resolve) => {
+      let timer;
+      const finish = () => {
+        clearTimeout(timer);
+        editor.removeEventListener("animationend", onAnimationEnd);
+        editor.classList.remove("is-closing");
+        editor.close();
+        document.body.classList.remove("has-content-documents-modal");
+        addButton?.setAttribute("aria-expanded", "false");
+        const target = editorReturnFocus?.isConnected ? editorReturnFocus : addButton;
+        target?.focus({ preventScroll: true });
+        resolve();
+      };
+      const onAnimationEnd = (event) => {
+        if (event.target === editor && event.animationName === "content-documents-modal-out") finish();
+      };
+      editor.addEventListener("animationend", onAnimationEnd);
+      timer = setTimeout(finish, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240);
+    }).finally(() => { editorClosePromise = null; });
+    return editorClosePromise;
+  };
+  const closeEditor = () => {
+    if (fields.name.disabled || editorClosePromise) return;
+    if (readEditorSnapshot() !== editorSnapshot && !window.confirm("มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดฟอร์มหรือไม่?")) return;
+    void dismissEditor();
+  };
+  editor?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeEditor();
+  });
+  editor?.addEventListener("close", () => {
+    document.body.classList.remove("has-content-documents-modal");
+    addButton?.setAttribute("aria-expanded", "false");
+  });
+  document.getElementById("contentDocumentsEditorClose")?.addEventListener("click", closeEditor);
+  addButton?.addEventListener("click", () => {
+    resetForm();
+    openEditor();
+  });
+
   const resetForm = () => {
     form.reset();
     if (fields.id) fields.id.value = "";
     if (fields.status) fields.status.value = "published";
+    if (editorTitle) editorTitle.textContent = "เพิ่มเอกสารการเงิน";
+    if (buttons.archive) buttons.archive.hidden = true;
     setMessage("");
   };
 
@@ -930,9 +1053,8 @@ function initContentDocumentsStaffPage() {
     fields.pdfUrl.value = item.pdfUrl || "";
     fields.docxUrl.value = item.docxUrl || "";
     fields.xlsxUrl.value = item.xlsxUrl || "";
-    setMessage(`กำลังแก้เอกสาร: ${item.name}`, "info");
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
-    fields.name.focus();
+    setMessage("");
+    openEditor();
   };
 
   const readFormPayload = () => {
@@ -1017,10 +1139,8 @@ function initContentDocumentsStaffPage() {
 
   const renderRows = () => {
     const visibleItems = getFilteredItems();
-    const loadStatus = state.listStatus ? ` · ${state.listStatus}` : "";
-    const sourceLabel = state.source === "firestore" ? "Firestore" : "Google Sheet";
-    const reorderLabel = state.isReorderMode ? " · โหมดจัดลำดับ: ลากหัวหมวด หรือลากเอกสารไปวางในหมวดที่ต้องการ แล้วกดบันทึก" : "";
-    tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} เอกสารจาก ${sourceLabel}${loadStatus}${reorderLabel}`;
+    const reorderLabel = state.isReorderMode ? " · กำลังจัดลำดับ" : "";
+    tableCaption.textContent = `แสดง ${visibleItems.length.toLocaleString("th-TH")} จาก ${state.items.length.toLocaleString("th-TH")} รายการ${reorderLabel}`;
     if (!state.items.length) {
       tableBody.innerHTML = `<tr><td colspan="4" class="list-empty-cell">${renderListEmptyState("ยังไม่มีเอกสารในระบบ", "เมื่อมีรายการใหม่ รายการจะแสดงในส่วนนี้", "document")}</td></tr>`;
       return;
@@ -1092,6 +1212,7 @@ function initContentDocumentsStaffPage() {
   const syncReorderUi = () => {
     const inMode = state.isReorderMode;
     pageEl.dataset.documentsReorderMode = inMode ? "true" : "false";
+    if (addButton) addButton.disabled = inMode;
     if (actionGroups.normal) actionGroups.normal.hidden = inMode;
     if (actionGroups.reorder) actionGroups.reorder.hidden = !inMode;
     if (buttons.reorder) {
@@ -1371,6 +1492,7 @@ function initContentDocumentsStaffPage() {
         });
       }
       clearDownloadsCache();
+      await dismissEditor();
       resetForm();
       await loadDocuments();
       await syncPublicDownloadsCache();
