@@ -2757,6 +2757,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateBorrowFaculty();
   }
 
+  document.querySelectorAll("[data-about-org-term]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const container = document.getElementById("org-structure-content");
+      const heading = document.getElementById("about-org-heading");
+      const status = document.getElementById("aboutOrgJumpStatus");
+      if (!container || !heading) return;
+      const term = button.dataset.aboutOrgTerm;
+      const tab = Array.from(container.querySelectorAll("[data-org-term]"))
+        .find((item) => item.dataset.orgTerm === term);
+      if (tab) {
+        tab.click();
+        if (status) status.hidden = true;
+      } else {
+        // Keep the selection until the background directory load finishes.
+        container.dataset.requestedOrgTerm = term;
+        if (status) {
+          status.textContent = container.dataset.orgLoaded === "true"
+            ? "ยังไม่มีข้อมูลโครงสร้างทีมปี 68 ให้แสดงในขณะนี้"
+            : "กำลังโหลดโครงสร้างทีมเหรัญญิก ปี 68…";
+          status.hidden = false;
+        }
+      }
+      heading.focus({ preventScroll: true });
+      const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
+      window.scrollTo({
+        top: window.scrollY + heading.getBoundingClientRect().top - headerHeight - 20,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+      });
+    });
+  });
+
   // === Scope pills: คลิกแล้ว highlight การ์ดทีมที่เกี่ยวข้อง ===
   const scopePills = document.querySelectorAll(".scope-pill[data-scope-target]");
   const scopeCards = document.querySelectorAll(".scope-team-card[data-scope]");
@@ -2770,6 +2801,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     scopeCards.forEach((card) => {
       const isActive = card.dataset.scope === target;
+      if (card.closest(".about-page")) {
+        card.classList.remove("scope-team-exit");
+        card.classList.toggle("scope-team-active", isActive);
+        card.hidden = !isActive;
+        return;
+      }
       if (isActive) {
         card.classList.remove("scope-team-exit");
         card.classList.add("scope-team-active");
@@ -2806,7 +2843,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const activeCard = document.querySelector(
         `.scope-team-card[data-scope="${target}"]`
       );
-      if (activeCard && window.innerWidth < 900) {
+      if (activeCard && !activeCard.closest(".about-page") && window.innerWidth < 900) {
         const rect = activeCard.getBoundingClientRect();
         const headerEl = document.querySelector(".site-header");
         const headerOffset = headerEl ? headerEl.getBoundingClientRect().height + 12 : 0;

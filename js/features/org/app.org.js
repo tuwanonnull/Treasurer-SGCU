@@ -27,6 +27,21 @@ async function loadOrgStructure() {
     setInlineError(el, "ไม่สามารถโหลดข้อมูลทำเนียบจาก Firestore ได้");
   } finally {
     toggleOrgStructureLoading(false);
+    if (el) {
+      el.dataset.orgLoaded = "true";
+      const requestedTerm = el.dataset.requestedOrgTerm;
+      if (requestedTerm) {
+        const tab = Array.from(el.querySelectorAll("[data-org-term]"))
+          .find((item) => item.dataset.orgTerm === requestedTerm);
+        const status = document.getElementById("aboutOrgJumpStatus");
+        if (tab) tab.click();
+        if (status) {
+          status.hidden = !!tab;
+          if (!tab) status.textContent = "ยังไม่มีข้อมูลโครงสร้างทีมปี 68 ให้แสดงในขณะนี้";
+        }
+        delete el.dataset.requestedOrgTerm;
+      }
+    }
     if (typeof markLoaderStep === "function") {
       markLoaderStep("orgStructure");
     }

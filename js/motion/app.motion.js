@@ -136,6 +136,8 @@ function initPressMotion() {
     const control = target.closest(interactiveSelector);
     if (!(control instanceof HTMLElement) || control.hasAttribute("disabled")) return;
 
+    if (control.matches(".scope-pill") && control.closest(".about-page")) return;
+
     control.classList.add("is-pressing");
     window.setTimeout(() => control.classList.remove("is-pressing"), 180);
 

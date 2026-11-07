@@ -1,0 +1,481 @@
+/* Preserve the shared page theme while separating long-form content. */
+.about-page .about-grid {
+  gap: 18px;
+}
+
+.about-page .about-card-combined {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0;
+  background: none;
+}
+
+.about-page .about-combined-block {
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+  border-top-style: solid;
+}
+
+.about-page .about-block-story,
+.about-page .about-block-purpose,
+.about-page .about-block-principles,
+.about-page .about-block-systems,
+.about-page .about-block-timeline {
+  grid-column: 1 / -1;
+}
+
+.about-page .about-card-head {
+  margin-bottom: 8px;
+}
+
+.about-page .about-card p,
+.about-page .about-list-check li {
+  line-height: 1.85;
+}
+
+.about-page .about-card p + p {
+  margin-top: 12px;
+}
+
+.about-page .about-list-check li + li {
+  margin-top: 8px;
+}
+
+/* Principles use one continuous list instead of uneven nested cards. */
+.about-page .about-principle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 18px;
+}
+
+.about-page .about-principle-card {
+  display: grid;
+  grid-template-columns: 36px minmax(180px, .8fr) minmax(0, 1.5fr);
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid #f3f4f6;
+  border-radius: 0;
+  background: none;
+}
+
+.about-page .about-principle-card:first-child { padding-top: 0; }
+.about-page .about-principle-card:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.about-page .about-principle-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #fdf2f8;
+  color: var(--theme-pink-600);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.about-page .about-principle-title strong {
+  margin: 0 0 3px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.about-page .about-principle-title small {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.about-page .about-principle-card > span:last-child { line-height: 1.8; }
+
+/* A single connected timeline, with dates separated from event details. */
+.about-page .about-system-timeline {
+  gap: 0;
+  margin-top: 22px;
+}
+
+.about-page .about-system-timeline::before { display: none; }
+
+.about-page .about-system-timeline li {
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 32px;
+  margin: 0;
+  padding: 0 0 26px;
+}
+
+.about-page .about-system-timeline li::after {
+  content: "";
+  position: absolute;
+  left: 126px;
+  top: 13px;
+  bottom: -13px;
+  width: 1px;
+  background: var(--theme-pink-200);
+}
+
+.about-page .about-system-timeline li::before {
+  z-index: 1;
+  left: 122px;
+  top: 9px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #fff;
+  background: var(--theme-pink-400);
+  box-shadow: 0 0 0 1px var(--theme-pink-300);
+}
+
+.about-page .about-system-timeline time {
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fdf2f8;
+  color: var(--theme-pink-700);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.about-page .about-system-timeline div {
+  padding: 0 0 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.about-page .about-system-timeline strong {
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.8;
+  margin-bottom: 5px;
+}
+
+.about-page .about-system-timeline span { color: #6b7280; line-height: 1.8; }
+.about-page .about-system-timeline li:last-child { padding-bottom: 0; }
+.about-page .about-system-timeline li:last-child::after { display: none; }
+
+@media (max-width: 640px) {
+  .about-page .about-card-combined {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .about-page .about-combined-block { padding: 16px; }
+
+  .about-page .about-principle-card {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px 12px;
+    align-items: start;
+    padding: 16px 0;
+  }
+
+  .about-page .about-principle-number { width: 32px; height: 32px; border-radius: 10px; }
+  .about-page .about-principle-card > span:last-child { grid-column: 2; }
+
+  .about-page .about-system-timeline li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 0 0 24px 26px;
+  }
+
+  .about-page .about-system-timeline li::before { left: 2px; }
+  .about-page .about-system-timeline li::after { left: 6px; }
+  .about-page .about-system-timeline div { padding: 0; }
+}
+
+/* Keep headings neutral while retaining the existing pink accents. */
+.about-page .about-card h2,
+.about-page .home-section-header h2,
+.about-page .scope-team-card h3 {
+  color: #111827;
+}
+
+/* Team selection changes immediately, without movement or staged text. */
+.about-page .scope-pill,
+.about-page .scope-team-card,
+.about-page .scope-team-card * {
+  animation: none;
+  transition: none;
+  transform: none;
+}
+
+.about-page .scope-pill:hover,
+.about-page .scope-pill.is-pressing {
+  transform: none;
+  box-shadow: none;
+}
+
+.about-page .scope-pill::after,
+.about-page .scope-team-card::after {
+  display: none;
+}
+
+.about-page .scope-pill-active {
+  box-shadow: none;
+}
+
+/* Long-form text has distinct, indented paragraphs. */
+.about-page .about-block-story > p,
+.about-page .about-block-scope > p,
+.about-page .about-block-vision > p {
+  text-indent: 2em;
+}
+
+.about-page .about-card p + p { margin-top: 16px; }
+
+/* Keep each short heading beside its own explanation. */
+.about-page .about-purpose-list,
+.about-page .about-card .about-systems-list {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.about-page .about-purpose-list { counter-reset: purpose; }
+
+.about-page .about-purpose-list li,
+.about-page .about-systems-list li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 4px;
+  margin: 0;
+  padding: 16px 0;
+}
+
+.about-page .about-purpose-list li:first-child,
+.about-page .about-systems-list li:first-child { padding-top: 0; }
+.about-page .about-purpose-list li:last-child,
+.about-page .about-systems-list li:last-child { padding-bottom: 0; }
+
+.about-page .about-purpose-list li::before {
+  counter-increment: purpose;
+  content: counter(purpose, decimal-leading-zero);
+  grid-row: span 2;
+  padding-top: 2px;
+  color: var(--theme-pink-600);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.about-page .about-purpose-list h3,
+.about-page .about-systems-list h3 {
+  grid-column: 2;
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.about-page .about-purpose-list p,
+.about-page .about-systems-list p {
+  grid-column: 2;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.about-page .about-systems-list li + li { border-top: 1px solid #f3f4f6; }
+
+.about-page .about-system-icon {
+  grid-column: 1;
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.about-system-icon svg { width: 21px; height: 21px; }
+
+@media (max-width: 640px) {
+  .about-page .about-purpose-list li,
+  .about-page .about-systems-list li { column-gap: 12px; }
+}
+
+/* Shared surface and heading rhythm across all About sections. */
+.about-page .about-section-block {
+  margin: 0;
+  padding: 20px;
+}
+
+.about-page .home-section-header { margin-bottom: 18px; }
+.about-page .home-section-header h2 { margin: 0 0 8px; font-size: 18px; }
+.about-page .home-section-header p { line-height: 1.85; }
+.about-page .scope-team-card {
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border-color: #f3f4f6;
+  box-shadow: none;
+  line-height: 1.85;
+}
+.about-page .scope-team-card h3 { margin-top: 0; }
+.about-page .home-scope-pills { gap: 8px; }
+
+.about-org-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--theme-pink-300);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+.about-org-link:hover { text-decoration-color: var(--theme-pink-600); }
+#about-org-heading { scroll-margin-top: 90px; }
+#aboutOrgStructureTitleLabel {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .about-page .about-grid { gap: 16px; }
+  .about-page .about-section-block { padding: 16px; }
+}
+
+/* Related sections keep separate panels and a common list rhythm. */
+.about-page .about-framework {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+.about-page .about-framework > .about-combined-block {
+  grid-column: auto;
+  padding: 24px;
+}
+
+.about-page .about-framework > .about-block-systems {
+  grid-column: 1 / -1;
+}
+
+.about-page .about-framework-intro {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.about-page .about-framework .about-principle-card,
+.about-page .about-framework .about-purpose-list li {
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: start;
+  border: 0;
+  padding: 12px 0;
+}
+
+.about-page .about-framework .about-principle-card:first-child,
+.about-page .about-framework .about-purpose-list li:first-child { padding-top: 0; }
+.about-page .about-framework .about-principle-card:last-child,
+.about-page .about-framework .about-purpose-list li:last-child { padding-bottom: 0; }
+
+.about-page .about-framework .about-principle-number,
+.about-page .about-framework .about-purpose-list li::before {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  background: #fdf2f8;
+  font-size: 12px;
+}
+
+.about-page .about-framework .about-principle-card > span:last-child {
+  grid-column: 2;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+.about-page .about-framework .about-systems-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 28px;
+}
+
+.about-page .about-framework .about-systems-list li {
+  padding: 0;
+  border: 0;
+  align-content: start;
+  column-gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .about-page .about-framework,
+  .about-page .about-framework .about-systems-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about-page .about-framework > .about-combined-block { padding: 20px; }
+}
+
+@media (max-width: 640px) {
+  .about-page .about-framework { gap: 16px; }
+  .about-page .about-framework > .about-combined-block { padding: 16px; }
+}
+
+/* Wide screens balance dates and events around a central timeline. */
+@media (min-width: 960px) {
+  .about-page .about-system-timeline {
+    max-width: 920px;
+    margin: 28px auto 0;
+  }
+
+  .about-page .about-system-timeline li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    padding-bottom: 30px;
+  }
+
+  .about-page .about-system-timeline li::before {
+    left: calc(50% - 4px);
+  }
+
+  .about-page .about-system-timeline li::after {
+    left: 50%;
+  }
+
+  .about-page .about-system-timeline time {
+    justify-self: end;
+  }
+
+  .about-page .about-system-timeline div {
+    padding: 0;
+  }
+
+  .about-page .about-system-timeline li:nth-child(even) time {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .about-page .about-system-timeline li:nth-child(even) div {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: right;
+  }
+}

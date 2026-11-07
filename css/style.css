@@ -24,6 +24,7 @@
 @import url("./components/empty-state.css?v=20261106-full-width-empty-2");
 @import url("./pages/borrow-mobile.css?v=20261006-borrow-empty-width-1");
 @import url("./pages/organization-catalog.css");
+@import url("./pages/about.css?v=20261108-about-timeline-10");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {
