@@ -443,9 +443,9 @@
                     </select>
                   </div>
                 </div>
+                <div id="longestOpenTableCaptionStaff" class="table-caption" aria-live="polite">แสดงผล 0 โครงการ</div>
                 <div class="project-table-wrapper">
-                  <table id="longestOpenTableStaff">
-                    <caption id="longestOpenTableCaptionStaff">แสดงผล 0 โครงการ</caption>
+                  <table id="longestOpenTableStaff" aria-labelledby="longestOpenTableCaptionStaff">
                     <thead>
                       <tr>
                         <th style="text-align:center;">รหัสโครงการ</th>
@@ -469,36 +469,30 @@
                 <h3 class="dashboard-section-title">วิเคราะห์เพิ่มเติม</h3>
               </header>
             <div class="dashboard-analysis-grid">
-            <article class="chart-card project-org-comparison-card">
+            <section class="chart-card project-org-comparison-card" aria-labelledby="projectOrgComparisonTitleStaff">
               <header class="chart-header project-comparison-header">
                 <div>
-                  <h3 id="projectOrgComparisonTitleStaff" class="chart-title">เปรียบเทียบระหว่างองค์กรใหญ่</h3>
+                  <h3 id="projectOrgComparisonTitleStaff" class="chart-title">การปิดโครงการแยกตามองค์กรใหญ่</h3>
                   <p id="projectOrgComparisonCaptionStaff" class="chart-caption" aria-live="polite"></p>
                 </div>
-                <div class="filter-group project-comparison-sort">
-                  <label for="projectOrgComparisonSortStaff">เรียงตาม</label>
-                  <select id="projectOrgComparisonSortStaff">
-                    <option value="budget">วงเงินมาก → น้อย</option>
-                    <option value="count">จำนวนโครงการมาก → น้อย</option>
-                    <option value="rate">อัตราปิดสูง → ต่ำ</option>
-                    <option value="name">ชื่อองค์กร / ฝ่าย</option>
-                  </select>
-                </div>
+
               </header>
-              <div class="project-org-comparison-scroll" role="region" aria-labelledby="projectOrgComparisonTitleStaff" tabindex="0">
-                <table class="data-table" aria-describedby="projectComparisonNoteStaff">
-                  <thead><tr><th id="projectOrgComparisonNameStaff" scope="col">องค์กรใหญ่</th><th scope="col">โครงการ</th><th scope="col">วงเงินรวม (บาท)</th><th scope="col">ปิดแล้ว</th><th scope="col">อัตราปิดโครงการ</th></tr></thead>
-                  <tbody id="projectOrgComparisonBodyStaff"></tbody>
-                </table>
+              <div class="project-comparison-charts">
+                <article class="project-comparison-chart" aria-labelledby="projectOrgComparisonTitleStaff">
+                  <div id="projectOrgClosureChartStaff" class="project-closure-comparison-scroll project-closure-bar-chart" role="region" aria-labelledby="projectOrgComparisonTitleStaff" tabindex="0"></div>
+                  <div id="projectOrgClosureAxisStaff" class="project-closure-fixed-axis" aria-label="จำนวนโครงการ"></div>
+                  <div class="project-closure-toolbar">
+                    <div class="project-comparison-legend"><button type="button" data-closure-toggle="pending" aria-pressed="true"><i class="is-pending"></i>ยังไม่ปิด</button><button type="button" data-closure-toggle="closed" aria-pressed="true"><i class="is-closed"></i>ปิดแล้ว</button></div>
+                  </div>
+                </article>
               </div>
-              <div id="projectOrgComparisonCardsStaff" class="project-comparison-mobile" role="list" aria-labelledby="projectOrgComparisonTitleStaff"></div>
-              <p id="projectComparisonNoteStaff" class="project-comparison-note">อัตราปิดไม่นับโครงการยกเลิก / ไม่ปิดโครงการ</p>
-            </article>
-              <article class="chart-card dashboard-budget-comparison-card dashboard-card-wide">
+            </section>
+              <article class="chart-card dashboard-budget-comparison-card">
                 <header class="chart-header">
                   <div>
                     <h3 class="chart-title">เปรียบเทียบงบประมาณ</h3>
                     <p class="chart-caption" id="dashboardBudgetComparisonCaption">กำลังเตรียมข้อมูล</p>
+                    <p class="chart-caption dashboard-budget-view-caption" id="projectBudgetComparisonCaptionStaff" hidden></p>
                   </div>
                   <div class="tabs dashboard-budget-comparison-toggle" role="tablist" aria-label="เลือกมุมมองเปรียบเทียบงบประมาณ">
                     <button class="tab-btn view-toggle-btn is-active" type="button" data-dashboard-budget-view="monthly" role="tab" aria-selected="true">
@@ -510,12 +504,17 @@
                   </div>
                 </header>
                 <p class="chart-caption dashboard-budget-view-caption" id="kpiMonthlyCaption">กำลังเตรียมข้อมูล</p>
-                <p class="chart-caption dashboard-budget-view-caption" id="projectBudgetComparisonCaptionStaff" hidden></p>
                 <div class="chart-inner" data-dashboard-budget-panel="monthly">
                   <canvas id="homeKpiChart" height="140"></canvas>
                 </div>
-                <div class="chart-inner project-budget-comparison-chart-inner" data-dashboard-budget-panel="org" hidden>
-                  <canvas id="projectBudgetComparisonChartStaff"></canvas>
+                <div class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden>
+                  <div class="project-budget-comparison-scroll" role="region" aria-label="กราฟงบประมาณแยกองค์กร เลื่อนเพื่อดูรายการทั้งหมด" tabindex="0">
+                    <div class="chart-inner project-budget-comparison-chart-inner">
+                      <canvas id="projectBudgetComparisonChartStaff"></canvas>
+                    </div>
+                  </div>
+                  <div class="project-budget-comparison-axis" aria-label="แกนจำนวนเงิน หน่วยบาท"></div>
+                  <div class="project-budget-comparison-legend" aria-label="คำอธิบายสีกราฟ"></div>
                 </div>
               </article>
 

@@ -283,49 +283,187 @@ function buildProjectOrgComparisonRows(filtered, selectedOrgs = [], level = "org
 }
 
 function updateProjectOrgComparison(filtered) {
-  const body = document.getElementById("projectOrgComparisonBodyStaff");
   const caption = document.getElementById("projectOrgComparisonCaptionStaff");
-  if (!body || !caption) return;
+  if (!caption) return;
   const filters = getStaffProjectTrackingFilters();
-  const rows = buildProjectOrgComparisonRows(filtered, filters.orgs, filters.level);
-  const sort = document.getElementById("projectOrgComparisonSortStaff")?.value || "budget";
-  const rate = (row) => row.eligible ? row.closed / row.eligible : -1;
-  rows.sort((a, b) => {
-    const difference = sort === "name" ? 0 : sort === "count" ? b.count - a.count
-      : sort === "rate" ? rate(b) - rate(a) : b.budget - a.budget;
-    return difference || a.name.localeCompare(b.name, "th");
+  const grouped = new Map();
+  filtered.forEach((project) => {
+    const group = String(project.orgGroup || "").trim() || "ไม่ระบุองค์กรใหญ่";
+    const org = String(project.orgName || "").trim() || "ไม่ระบุฝ่าย / ชมรม";
+    const suborganization = filters.level === "orgName";
+    const key = suborganization ? JSON.stringify([group, org]) : group;
+    if (!grouped.has(key)) grouped.set(key, {
+      name: suborganization ? `${org} · ${group}` : group,
+      eligible: 0, closed: 0, approved: 0, pendingProjects: [], closedProjects: []
+    });
+    const row = grouped.get(key);
+    row.approved += getProjectComparisonApprovedBudget(project);
+    if (!isProjectTerminalWithoutClosure(project)) {
+      row.eligible++;
+      if (isProjectClosed(project)) {
+        row.closed++;
+        row.closedProjects.push(project);
+      } else row.pendingProjects.push(project);
+    }
   });
+  const rows = Array.from(grouped.values()).sort((a, b) => b.approved - a.approved || a.name.localeCompare(b.name, "th"));
   const unit = filters.level === "orgGroup" ? "องค์กรใหญ่" : "ฝ่าย / ชมรม";
   const title = document.getElementById("projectOrgComparisonTitleStaff");
-  const nameHeader = document.getElementById("projectOrgComparisonNameStaff");
-  if (title) title.textContent = `เปรียบเทียบระหว่าง${unit}`;
-  if (nameHeader) nameHeader.textContent = unit;
-  caption.textContent = `${rows.length} ${unit} · ${filtered.length} โครงการ ตามตัวกรอง`;
-  body.innerHTML = rows.length ? rows.map((row) => {
-    const percent = row.eligible ? Math.round(row.closed / row.eligible * 100) : null;
-    return `<tr>
-      <th scope="row"><span class="project-comparison-org-name">${escapeHtml(row.name)}</span></th>
-      <td class="project-comparison-number">${row.count.toLocaleString("th-TH")}</td>
-      <td><div class="project-comparison-budget"><strong>${formatMoney(row.budget)}</strong></div></td>
-      <td class="project-comparison-number">${row.closed.toLocaleString("th-TH")}</td>
-      <td><span class="project-comparison-percent">${percent === null ? '<span title="ไม่มีโครงการที่นำมาคำนวณอัตราปิด">—</span>' : `${percent}%`}</span></td>
-    </tr>`;
-  }).join("") : `<tr><td class="list-empty-cell" colspan="5">${renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search")}</td></tr>`;
+  if (title) title.textContent = `การปิดโครงการแยกตาม${unit}`;
+  caption.textContent = `${rows.length} ${unit} · ${filtered.length} โครงการ · กราฟไม่นับยกเลิก / ไม่ปิด`;
+  caption.title = "ข้อมูลตามตัวกรอง · ยังไม่ปิดไม่เท่ากับเกินกำหนด · กราฟไม่นับโครงการยกเลิก / ไม่ปิดโครงการ";
+  const pending = (row) => row.eligible - row.closed;
+  const closureChart = document.getElementById("projectOrgClosureChartStaff");
+  const largestCount = Math.max(1, ...rows.map((row) => Math.max(row.closed, pending(row))));
+  const step = Math.max(1, Math.ceil(largestCount / 4));
+  const maxProjects = step * 4;
+  const axis = document.getElementById("projectOrgClosureAxisStaff");
+  if (axis) {
+    axis.hidden = !rows.length;
+    axis.innerHTML = Array.from({ length: 5 }, (_, index) => `<span style="left:${index * 25}%">${(index * step).toLocaleString("th-TH")}</span>`).join("");
+  }
+  const emptyChart = () => renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรอง", "search");
+  if (closureChart) closureChart.innerHTML = rows.length ? rows.map((row, index) => `<div class="project-closure-chart-row">
+    <div class="project-closure-chart-name"><strong>${escapeHtml(row.name)}</strong></div>
+    <div class="project-closure-chart-plot">
+      <button type="button" class="project-closure-chart-series" data-closure-row="${index}" data-closure-status="pending" aria-expanded="false" aria-label="ยังไม่ปิด ${pending(row).toLocaleString("th-TH")} โครงการ ดูรายละเอียด"><span class="project-closure-chart-bar is-pending" style="width:${pending(row) / maxProjects * 100}%"><span>${pending(row).toLocaleString("th-TH")}</span></span></button>
+      <button type="button" class="project-closure-chart-series" data-closure-row="${index}" data-closure-status="closed" aria-expanded="false" aria-label="ปิดแล้ว ${row.closed.toLocaleString("th-TH")} โครงการ ดูรายละเอียด"><span class="project-closure-chart-bar is-closed" style="width:${row.closed / maxProjects * 100}%"><span>${row.closed.toLocaleString("th-TH")}</span></span></button>
+      ${row.eligible ? "" : '<span class="project-closure-no-projects">ไม่มีโครงการที่ต้องปิด</span>'}
+    </div>
+  </div>`).join("") : emptyChart();
+  bindProjectClosureDetails(closureChart, rows, filters.level);
+  bindProjectClosureLegend(closureChart);
+  syncProjectClosureSeries(closureChart);
+  if (typeof syncDashboardComparisonHeights === "function") syncDashboardComparisonHeights();
 
-  const cards = document.getElementById("projectOrgComparisonCardsStaff");
-  if (cards) cards.innerHTML = rows.length ? rows.map((row) => {
-    const percent = row.eligible ? `${Math.round(row.closed / row.eligible * 100)}%` : "—";
-    return `<article class="project-comparison-mobile-row" role="listitem">
-      <h4>${escapeHtml(row.name)}</h4>
-      <dl>
-        <div class="project-comparison-mobile-budget"><dt>วงเงินรวม (บาท)</dt><dd>${formatMoney(row.budget)}</dd></div>
-        <div><dt>โครงการ</dt><dd>${row.count.toLocaleString("th-TH")}</dd></div>
-        <div><dt>ปิดแล้ว</dt><dd>${row.closed.toLocaleString("th-TH")}</dd></div>
-        <div><dt>อัตราปิด</dt><dd>${percent}</dd></div>
-      </dl>
-    </article>`;
-  }).join("") : renderListEmptyState("ไม่พบโครงการที่ตรงกับตัวกรอง", "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูรายการอื่น", "search");
+}
 
+function renderProjectClosureDetails(row, status, level) {
+  const projects = status === "closed" ? row.closedProjects : row.pendingProjects;
+  const label = status === "closed" ? "ปิดแล้ว" : "ยังไม่ปิด";
+  let items;
+  if (level === "orgName") {
+    items = projects.map((project) => `<li>${escapeHtml([project.code, project.name || "ไม่ระบุชื่อโครงการ"].filter(Boolean).join(" · "))}</li>`);
+  } else {
+    const departments = new Map();
+    projects.forEach((project) => {
+      const name = String(project.orgName || "").trim() || "ไม่ระบุฝ่าย / ชมรม";
+      departments.set(name, (departments.get(name) || 0) + 1);
+    });
+    items = Array.from(departments).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "th"))
+      .map(([name, count]) => `<li><span>${escapeHtml(name)}</span><strong>${count.toLocaleString("th-TH")} โครงการ</strong></li>`);
+  }
+  return `<header class="project-closure-details-header"><strong>${escapeHtml(row.name)}</strong><p>${label} ${projects.length.toLocaleString("th-TH")} โครงการตามตัวกรอง</p></header><div class="project-closure-details-list" tabindex="0" aria-label="รายการโครงการ">${items.length ? `<ul>${items.join("")}</ul>` : '<p>ไม่มีโครงการในสถานะนี้</p>'}</div>`;
+}
+
+function syncProjectClosureSeries(container) {
+  if (!container?.querySelectorAll || !container.closureDetailsState) return;
+  const { rows } = container.closureDetailsState;
+  const pendingVisible = !container.classList.contains("hide-pending");
+  const closedVisible = !container.classList.contains("hide-closed");
+  const maximum = Math.max(1, ...rows.map((row) => Math.max(pendingVisible ? row.eligible - row.closed : 0, closedVisible ? row.closed : 0)));
+  const step = Math.max(1, Math.ceil(maximum / 4));
+  container.querySelectorAll("[data-closure-row]").forEach((button) => {
+    const row = rows[Number(button.dataset.closureRow)];
+    const value = button.dataset.closureStatus === "pending" ? row.eligible - row.closed : row.closed;
+    button.querySelector(".project-closure-chart-bar").style.width = `${value / (step * 4) * 100}%`;
+  });
+  const axis = document.getElementById("projectOrgClosureAxisStaff");
+  if (axis) axis.innerHTML = Array.from({ length: 5 }, (_, index) => `<span style="left:${index * 25}%">${(index * step).toLocaleString("th-TH")}</span>`).join("");
+}
+
+function bindProjectClosureLegend(container) {
+  if (!container?.classList) return;
+  document.querySelectorAll("[data-closure-toggle]").forEach((button) => {
+    if (button.dataset.bound) return;
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => {
+      const hidden = container.classList.toggle(`hide-${button.dataset.closureToggle}`);
+      button.setAttribute("aria-pressed", String(!hidden));
+      container.hideClosureDetails?.();
+      syncProjectClosureSeries(container);
+    });
+  });
+}
+
+function bindProjectClosureDetails(container, rows, level) {
+  if (!container?.addEventListener) return;
+  container.closureDetailsState = { rows, level };
+  container.hideClosureDetails?.();
+  if (container.dataset.detailsBound) return;
+  container.dataset.detailsBound = "true";
+  let popup, activeButton, hideTimer;
+  const cancelHide = () => clearTimeout(hideTimer);
+  const hide = () => {
+    cancelHide();
+    if (popup) popup.hidden = true;
+    activeButton?.setAttribute("aria-expanded", "false");
+    activeButton = null;
+  };
+  container.hideClosureDetails = hide;
+  const scheduleHide = () => { cancelHide(); hideTimer = setTimeout(hide, 750); };
+  const show = (button) => {
+    cancelHide();
+    const state = container.closureDetailsState;
+    const row = state.rows[Number(button.dataset.closureRow)];
+    if (!row) return;
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.className = "project-closure-details-popup";
+      popup.id = "projectClosureDetailsPopupStaff";
+      popup.setAttribute("role", "dialog");
+      popup.setAttribute("aria-label", "รายละเอียดโครงการ");
+      popup.addEventListener("mouseenter", cancelHide);
+      popup.addEventListener("mouseleave", scheduleHide);
+      popup.addEventListener("focusin", cancelHide);
+      popup.addEventListener("focusout", (event) => {
+        if (!popup.contains(event.relatedTarget)) scheduleHide();
+      });
+      document.body.appendChild(popup);
+    }
+    if (activeButton === button && !popup.hidden) return;
+    activeButton?.setAttribute("aria-expanded", "false");
+    activeButton = button;
+    button.setAttribute("aria-expanded", "true");
+    button.setAttribute("aria-controls", popup.id);
+    popup.innerHTML = renderProjectClosureDetails(row, button.dataset.closureStatus, state.level);
+    popup.hidden = false;
+    const rect = button.querySelector(".project-closure-chart-bar").getBoundingClientRect();
+    const width = popup.offsetWidth;
+    const height = popup.offsetHeight;
+    popup.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - width - 8))}px`;
+    popup.style.top = `${Math.max(8, rect.bottom + height + 8 < window.innerHeight ? rect.bottom + 8 : rect.top - height - 8)}px`;
+  };
+  const buttonFor = (event) => event.target.closest?.("[data-closure-row]");
+  const hoveredButtonFor = (event) => {
+    const bar = event.target.closest?.(".project-closure-chart-bar");
+    if (!bar) return null;
+    const rect = bar.getBoundingClientRect();
+    return rect.width > 0 && event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom
+      ? bar.closest("[data-closure-row]") : null;
+  };
+  container.addEventListener("mouseover", (event) => { const button = hoveredButtonFor(event); if (button) show(button); });
+  container.addEventListener("mouseout", (event) => {
+    const bar = event.target.closest?.(".project-closure-chart-bar");
+    if (bar && !bar.contains(event.relatedTarget)) scheduleHide();
+  });
+  container.addEventListener("mouseleave", scheduleHide);
+  container.addEventListener("focusout", (event) => {
+    if (!popup?.contains(event.relatedTarget)) scheduleHide();
+  });
+  container.addEventListener("focusin", (event) => {
+    const button = buttonFor(event);
+    if (button?.matches(":focus-visible")) show(button);
+  });
+  container.addEventListener("click", (event) => {
+    const button = event.detail === 0 ? buttonFor(event) : hoveredButtonFor(event);
+    if (button) show(button);
+  });
+  container.addEventListener("scroll", hide);
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") hide(); });
+  document.addEventListener("click", (event) => { if (!container.contains(event.target) && !popup?.contains(event.target)) hide(); });
+  window.addEventListener("resize", hide);
+  window.addEventListener("scroll", hide);
 }
 
 function matchesProjectTrackingFilters(project, filters) {
@@ -1384,23 +1522,27 @@ function initDashboardBudgetComparisonToggle() {
 
   const setView = (view) => {
     const nextView = view === "org" ? "org" : "monthly";
+    const isOrgView = nextView !== "monthly";
+    root.dataset.dashboardBudgetView = nextView;
     btns.forEach((btn) => {
       const isActive = btn.dataset.dashboardBudgetView === nextView;
       btn.classList.toggle("is-active", isActive);
       btn.setAttribute("aria-selected", isActive ? "true" : "false");
     });
     panels.forEach((panel) => {
-      panel.hidden = panel.dataset.dashboardBudgetPanel !== nextView;
+      panel.hidden = panel.dataset.dashboardBudgetPanel !== (isOrgView ? "org" : "monthly");
     });
     if (monthlyCaptionEl) monthlyCaptionEl.hidden = nextView !== "monthly";
-    if (orgCaptionEl) orgCaptionEl.hidden = nextView !== "org";
+    if (orgCaptionEl) orgCaptionEl.hidden = !isOrgView;
     if (summaryCaptionEl) {
-      summaryCaptionEl.textContent = nextView === "org"
-        ? "เปรียบเทียบงบที่อนุมัติและใช้จริงตามองค์กร"
+      summaryCaptionEl.hidden = isOrgView;
+      summaryCaptionEl.textContent = isOrgView
+        ? "เปรียบเทียบงบที่อนุมัติและใช้จริงตามตัวกรอง"
         : "เปรียบเทียบงบที่อนุมัติและใช้จริงตามเดือน";
     }
     window.requestAnimationFrame(() => {
-      if (nextView === "org") {
+      if (typeof syncDashboardComparisonHeights === "function") syncDashboardComparisonHeights();
+      if (isOrgView) {
         if (typeof setActiveProjectStatusContext === "function") {
           setActiveProjectStatusContext("staff");
         }

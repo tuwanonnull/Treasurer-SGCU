@@ -2413,9 +2413,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   ["projectStatusFilterStaff", "projectAdvanceFilterStaff", "projectMonthFromStaff", "projectMonthToStaff", "projectCompareOrgsStaff"].forEach((id) => {
     document.getElementById(id)?.addEventListener("change", () => refreshProjectStatus("staff"));
   });
-  document.getElementById("projectOrgComparisonSortStaff")?.addEventListener("change", () => {
-    updateProjectOrgComparison(getVisibleProjectsForContext("staff"));
-  });
   document.getElementById("projectCompareLevelStaff")?.addEventListener("change", () => {
     document.querySelectorAll("#projectCompareOrgsStaff input").forEach((el) => { el.checked = false; });
     document.getElementById("projectCompareSearchStaff").value = "";

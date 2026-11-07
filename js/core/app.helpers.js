@@ -629,6 +629,7 @@ function extractProjectsFromRows(dataRows, headerRow, sourceYear = "") {
         transferDiffAmount,
         transferDiffDisplay,
         transferNet: transferNetVal,
+        hasTransferNet: /\d/.test(String(row[COL_TRANSFER_NET] ?? "")),
 
         advanceStatus: advStatus,
         advanceDocNo: advDocNo,
@@ -640,7 +641,9 @@ function extractProjectsFromRows(dataRows, headerRow, sourceYear = "") {
         closeChecker,
         closeDueDate,
         actualBudget: actualBudgetVal,
+        hasActualBudget: /\d/.test(String(row[COL_ACTUAL_BUDGET] ?? "")),
         remainingBudget: remainBudgetVal,
+        hasRemainingBudget: /\d/.test(String(row[COL_REMAIN_BUDGET] ?? "")),
         usagePercent,
         closeDurationText,
         decreeNo,

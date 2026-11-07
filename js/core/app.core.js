@@ -655,6 +655,10 @@ function refreshVisibleChartsForPage(page = "") {
     }
   }
 
+  if (activePage === "dashboard-staff" && typeof syncDashboardComparisonHeights === "function") {
+    syncDashboardComparisonHeights();
+  }
+
   charts
     .filter((chart, index, list) => chart && list.indexOf(chart) === index)
     .forEach((chart) => {

@@ -73,3 +73,64 @@ assert.deepEqual(codes(), ['B', 'F']);
 context.activeProjectStatusContext = 'public';
 assert.deepEqual(codes(), ['A', 'C'], 'Public single-organization filters remain independent');
 console.log('Major organization comparison, aggregation and public isolation passed.');
+
+const chartsSource = fs.readFileSync(new URL('../js/features/project/app.charts.js', import.meta.url), 'utf8');
+vm.runInContext(chartsSource.slice(chartsSource.indexOf('function getProjectComparisonApprovedBudget('), chartsSource.indexOf('function updateProjectBudgetComparisonChart(')), context);
+context.projects.forEach(p => { p.approvedBudget100 = p.budget; });
+
+// Rendered comparisons distinguish unfinished work from cancelled projects.
+context.escapeHtml = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+context.formatMoney = value => String(value);
+context.renderListEmptyState = title => title;
+context.activeProjectStatusContext = 'staff';
+selected = [];
+vm.runInContext('updateProjectOrgComparison(projects.filter(p => p.year === "2569"))', context);
+const closureChart = element('projectOrgClosureChartStaff').innerHTML;
+assert.doesNotMatch(closureChart, /<small>/, 'Axis labels omit project totals');
+assert.ok(closureChart.indexOf('องค์กรสอง') < closureChart.indexOf('องค์กรหนึ่ง'));
+assert.match(closureChart, /ยังไม่ปิด 2/);
+assert.match(closureChart, /is-closed" style="width:25%/);
+assert.match(closureChart, /is-pending" style="width:50%/);
+vm.runInContext('updateProjectOrgComparison([{ orgGroup: "<องค์กร>", budget: 0, statusMain: "ยกเลิกโครงการ" }])', context);
+assert.match(element('projectOrgClosureChartStaff').innerHTML, /ไม่มีโครงการที่ต้องปิด/);
+assert.match(element('projectOrgClosureChartStaff').innerHTML, /&lt;องค์กร&gt;/);
+vm.runInContext('updateProjectOrgComparison([])', context);
+assert.match(element('projectOrgClosureChartStaff').innerHTML, /ไม่พบโครงการ/);
+console.log('Comparison rendering: approved-budget order, cancellation exclusion, progress and empty states passed.');
+vm.runInContext(`updateProjectOrgComparison([
+  {orgGroup: 'วงเงินสูง', budget: 9000, actualBudget: 10, remainingBudget: 0},
+  {orgGroup: 'อนุมัติสูง', budget: 1, transferNet: 500, hasActualBudget: false, hasTransferNet: true}
+])`, context);
+const orderedClosure = element('projectOrgClosureChartStaff').innerHTML;
+assert.ok(orderedClosure.indexOf('อนุมัติสูง') < orderedClosure.indexOf('วงเงินสูง'), 'Closure chart uses the same approved fallback and ordering as the budget chart');
+element('projectCompareLevelStaff').value = 'orgName';
+vm.runInContext(`updateProjectOrgComparison([
+  {orgGroup: 'A', orgName: 'ฝ่ายเดียวกัน', approvedBudget100: 50},
+  {orgGroup: 'B', orgName: 'ฝ่ายเดียวกัน', approvedBudget100: 100}
+])`, context);
+const departments = element('projectOrgClosureChartStaff').innerHTML;
+assert.ok(departments.indexOf('ฝ่ายเดียวกัน · B') < departments.indexOf('ฝ่ายเดียวกัน · A'), 'Departments remain distinct across major organizations');
+console.log('Paired chart ordering: approved fallback, grouped names and duplicate department names passed.');
+context.detailRow = {
+  name: 'องค์กร <ทดสอบ>',
+  pendingProjects: [
+    {orgName: 'ฝ่าย A', code: 'A-01', name: 'โครงการ <หนึ่ง>'},
+    {orgName: 'ฝ่าย A', code: 'A-02', name: 'โครงการสอง'},
+    {orgName: 'ฝ่าย B', code: 'B-01', name: 'โครงการสาม'}
+  ],
+  closedProjects: [{orgName: 'ฝ่าย C', code: 'C-01', name: 'ปิดแล้ว'}]
+};
+const majorDetails = vm.runInContext('renderProjectClosureDetails(detailRow, "pending", "orgGroup")', context);
+assert.match(majorDetails, /ยังไม่ปิด 3 โครงการ/);
+assert.match(majorDetails, /ฝ่าย A<\/span><strong>2 โครงการ/);
+assert.match(majorDetails, /ฝ่าย B<\/span><strong>1 โครงการ/);
+assert.doesNotMatch(majorDetails, /ฝ่าย C/);
+const subDetails = vm.runInContext('renderProjectClosureDetails(detailRow, "pending", "orgName")', context);
+assert.match(subDetails, /A-01 · โครงการ &lt;หนึ่ง&gt;/);
+assert.match(subDetails, /B-01 · โครงการสาม/);
+assert.doesNotMatch(subDetails, /C-01/);
+const closedDetails = vm.runInContext('renderProjectClosureDetails(detailRow, "closed", "orgName")', context);
+assert.match(closedDetails, /C-01 · ปิดแล้ว/);
+assert.doesNotMatch(closedDetails, /A-01/);
+assert.ok(closureChart.indexOf('data-closure-status="pending"') < closureChart.indexOf('data-closure-status="closed"'));
+console.log('Closure details: pending-first bars, departmental totals, project names, escaping and status isolation passed.');

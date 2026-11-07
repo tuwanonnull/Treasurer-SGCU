@@ -11572,3 +11572,182 @@ body.has-dashboard-floating-filter {
     font-size: 16px;
   }
 }
+
+/* Compare workload, budget share, and closure progress at a glance. */
+.project-comparison-org-name { white-space: normal; }
+.project-comparison-detail { display: block; margin-top: 5px; color: #64748b; font-size: 11px; font-weight: 400; white-space: normal; }
+.project-comparison-progress { min-width: 180px; text-align: left; }
+.project-comparison-progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; font-size: 12px; color: #475569; }
+.project-comparison-progress-label strong { color: var(--theme-pink-700); font-variant-numeric: tabular-nums; }
+.project-comparison-track { height: 7px; overflow: hidden; border-radius: 999px; background: var(--theme-pink-100); }
+.project-comparison-track > span { display: block; height: 100%; border-radius: inherit; background: var(--theme-pink-500); }
+.project-comparison-track-budget { height: 4px; margin-top: 8px; }
+.project-comparison-track-budget > span { background: var(--theme-pink-400); }
+.project-comparison-pending { display: inline-block; min-width: 38px; padding: 4px 10px; border-radius: 8px; font-weight: 600; color: #64748b; background: #f1f5f9; }
+.project-comparison-pending.has-pending { color: var(--theme-pink-700); background: var(--theme-pink-100); }
+.project-org-comparison-card .project-comparison-note { color: #64748b; line-height: 1.8; }
+@media (max-width: 840px) {
+  .project-comparison-mobile-row dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .project-comparison-mobile-row > .project-comparison-progress { margin-top: 20px; min-width: 0; }
+  .project-comparison-mobile-budget .project-comparison-budget strong { font-size: 22px; }
+}
+
+.project-comparison-charts { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 20px; margin-bottom: 16px; }
+.project-comparison-chart { min-width: 0; padding: 24px; }
+.project-comparison-chart h4 { margin: 0 0 6px; font-size: 16px; color: #1e293b; }
+.project-comparison-chart-subtitle { margin: 0; color: #64748b; font-size: 12px; }
+.project-comparison-legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0 24px; font-size: 12px; color: #475569; }
+.project-comparison-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.project-comparison-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.project-comparison-chart .is-closed { background: var(--theme-pink-500); }
+.project-comparison-chart .is-pending { background: var(--theme-pink-200); }
+.project-comparison-chart-row + .project-comparison-chart-row { margin-top: 24px; }
+.project-comparison-chart-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-size: 13px; color: #334155; }
+.project-comparison-chart-label strong { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.project-comparison-chart-label > span { flex-shrink: 0; font-variant-numeric: tabular-nums; font-size: 12px; }
+.project-comparison-bar-area { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: #fdf2f8; }
+.project-comparison-bar { height: 100%; }
+.project-comparison-chart-values { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 7px; color: #64748b; font-size: 11px; font-variant-numeric: tabular-nums; }
+@media (max-width: 840px) {
+  .project-comparison-charts { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .project-comparison-chart { padding: 18px 16px; }
+  .project-comparison-chart-label { flex-wrap: wrap; gap: 4px 12px; }
+}
+
+
+.project-org-comparison-card > .project-comparison-header { padding: 4px 2px; }
+
+.dashboard-budget-comparison-toggle { flex-wrap: wrap; }
+
+.project-budget-comparison-scroll { max-height: 520px; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; overscroll-behavior-y: contain; }
+.project-closure-comparison-scroll { max-height: 520px; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; overscroll-behavior-y: contain; padding-right: 12px; }
+.project-closure-comparison-scroll:focus-visible { outline: 2px solid var(--theme-pink-400); outline-offset: 2px; }
+.project-budget-comparison-scroll:focus-visible { outline: 2px solid var(--theme-pink-400); outline-offset: 2px; }
+.project-budget-comparison-axis { position: relative; height: 32px; max-width: 100%; color: #64748b; font: 11px 'Kanit', sans-serif; }
+.project-budget-comparison-axis span { position: absolute; top: 6px; transform: translateX(-50%); white-space: nowrap; }
+.project-budget-comparison-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 4px 0 8px; }
+.project-budget-comparison-legend button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: #475569; font: 12px 'Kanit', sans-serif; cursor: pointer; padding: 6px; }
+.project-budget-comparison-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.project-budget-comparison-legend button[aria-pressed="false"] { opacity: .5; text-decoration: line-through; }
+@media (max-width: 720px) {
+  .project-budget-comparison-scroll { max-height: 480px; }
+  .project-closure-comparison-scroll { max-height: 480px; }
+}
+
+/* Keep closure workload and spending alongside each other on wide screens. */
+#dashboardAnalysisSectionStaff .project-org-comparison-card .project-comparison-chart { padding: 0; }
+#dashboardAnalysisSectionStaff .project-org-comparison-card > .project-comparison-header { flex-direction: column; align-items: stretch; }
+#dashboardAnalysisSectionStaff .project-org-comparison-card .project-comparison-sort { flex: auto; width: 100%; }
+@media (min-width: 1280px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; }
+  #dashboardAnalysisSectionStaff .dashboard-budget-comparison-card > .chart-header { flex-wrap: wrap; }
+
+}
+
+/* Compact paired cards; the fixed axis sits directly below the chart. */
+.project-closure-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.project-closure-toolbar .project-comparison-legend { margin: 0; gap: 12px; }
+#dashboardAnalysisSectionStaff .project-closure-toolbar .project-comparison-sort { display: flex; align-items: center; gap: 8px; width: auto; flex: 0 1 auto; min-width: 0; }
+#dashboardAnalysisSectionStaff .project-closure-toolbar .project-comparison-sort label { margin: 0; white-space: nowrap; font-size: 11px; }
+.project-closure-toolbar select { width: auto; max-width: 220px; min-height: 36px; font-size: 12px; padding: 6px 28px 6px 12px; }
+.project-closure-comparison-scroll, .project-budget-comparison-scroll { max-height: 440px; }
+.project-closure-comparison-scroll .project-comparison-chart-row + .project-comparison-chart-row { margin-top: 18px; }
+#dashboardAnalysisSectionStaff .project-comparison-charts { margin-bottom: 8px; }
+@media (min-width: 1280px) {
+  #dashboardAnalysisSectionStaff .project-org-comparison-card > .chart-header,
+  #dashboardAnalysisSectionStaff .dashboard-budget-comparison-card > .chart-header { min-height: 48px; }
+}
+
+/* Grouped horizontal closure bars use the same layout as the budget chart. */
+.project-comparison-chart { --closure-label-width: 145px; --closure-value-space: 34px; }
+.project-closure-bar-chart { padding-right: var(--closure-value-space); }
+.project-closure-chart-row { display: grid; grid-template-columns: var(--closure-label-width) minmax(0, 1fr); min-height: 76px; }
+.project-closure-chart-name { display: flex; flex-direction: column; justify-content: center; text-align: right; padding-right: 12px; min-width: 0; }
+.project-closure-chart-name strong { font-size: 12px; line-height: 1.5; font-weight: 500; overflow-wrap: anywhere; color: #475569; }
+.project-closure-chart-name small { font-size: 10px; color: #64748b; margin-top: 3px; }
+.project-closure-chart-plot { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 6px; border-left: 1px solid #d1d5db; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #f1f5f9; background: repeating-linear-gradient(to right, transparent 0, transparent calc(25% - 1px), #e5e7eb calc(25% - 1px), #e5e7eb 25%); }
+.project-closure-chart-series { height: 18px; }
+.project-closure-chart-bar { position: relative; height: 100%; border-radius: 0 7px 7px 0; }
+.project-closure-chart-bar span { position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 500; color: #9d174d; }
+.project-closure-chart-bar.is-pending span { color: #64748b; }
+.project-closure-fixed-axis { position: relative; height: 32px; margin-left: var(--closure-label-width); margin-right: calc(var(--closure-value-space) + 15px); color: #64748b; font-size: 11px; }
+.project-closure-fixed-axis span { position: absolute; top: 6px; transform: translateX(-50%); }
+.project-closure-no-projects { font-size: 10px; color: #64748b; background: #fff; }
+@media (max-width: 720px) {
+  .project-comparison-chart { --closure-label-width: 110px; }
+}
+
+.project-closure-toolbar { justify-content: center; margin: 0; padding: 10px 0 8px; }
+.project-closure-toolbar .project-comparison-legend { justify-content: center; }
+
+button.project-closure-chart-series { display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; border-radius: 0; }
+.project-closure-chart-series > .project-closure-chart-bar { display: block; }
+.project-closure-chart-series:hover { filter: brightness(.96); }
+.project-closure-chart-series:focus-visible { outline: 2px solid var(--theme-pink-500); outline-offset: 2px; }
+.project-closure-details-popup { position: fixed; z-index: 1200; width: min(380px, calc(100vw - 16px)); max-height: min(360px, calc(100dvh - 24px)); overflow: hidden; padding: 14px; background: #fff; color: #334155; border: 1px solid var(--theme-pink-200); border-radius: 14px; box-shadow: 0 8px 28px rgba(157, 23, 77, .15); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.project-closure-details-header > strong { font-size: 13px; }
+.project-closure-details-popup p { margin: 5px 0 10px; color: #64748b; }
+.project-closure-details-popup ul { padding: 0; margin: 0; list-style: none; }
+.project-closure-details-popup li { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-top: 1px solid #fce7f3; }
+.project-closure-details-popup li strong { flex-shrink: 0; color: var(--theme-pink-700); }
+
+button.project-closure-chart-series { pointer-events: none; }
+.project-closure-chart-series > .project-closure-chart-bar { pointer-events: auto; }
+.project-closure-chart-bar > span { pointer-events: none; }
+.project-closure-details-popup:not([hidden]) { display: flex; flex-direction: column; }
+.project-closure-details-header { flex: 0 0 auto; position: sticky; top: 0; z-index: 1; background: #fff; padding: 0 4px 4px; border-bottom: 1px solid var(--theme-pink-100); }
+.project-closure-details-list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 0 8px 0 4px; }
+.project-closure-details-list:focus-visible { outline: 2px solid var(--theme-pink-400); outline-offset: -2px; }
+
+.project-closure-toolbar .project-comparison-legend button { display: inline-flex; align-items: center; gap: 7px; padding: 6px; border: 0; background: transparent; color: #475569; font: 12px 'Kanit', sans-serif; cursor: pointer; }
+.project-closure-toolbar .project-comparison-legend button[aria-pressed="false"] { opacity: .5; text-decoration: line-through; }
+.project-closure-bar-chart.hide-pending [data-closure-status="pending"],
+.project-closure-bar-chart.hide-closed [data-closure-status="closed"] { display: none; }
+#dashboardAnalysisSectionStaff .dashboard-budget-comparison-card > .chart-header > div:first-child { min-width: 0; flex: 1; }
+#dashboardAnalysisSectionStaff .dashboard-budget-comparison-toggle { flex-shrink: 0; }
+
+/* Match the budget chart palette, grouped bars, typography and legend. */
+.project-comparison-chart .is-pending { background: #f9a8d4; }
+.project-comparison-chart .is-closed { background: #34d399; }
+.project-closure-chart-bar.is-pending span { color: #9d174d; }
+.project-closure-chart-bar.is-closed span { color: #047857; }
+.project-closure-chart-series { height: 21px; }
+.project-closure-chart-bar { border-radius: 0 8px 8px 0; }
+.project-closure-chart-name strong { font-size: 11px; font-weight: 600; }
+.project-closure-bar-chart.hide-pending:not(.hide-closed) [data-closure-status="closed"],
+.project-closure-bar-chart.hide-closed:not(.hide-pending) [data-closure-status="pending"] { height: 42px; }
+.project-closure-toolbar { padding: 4px 0 8px; }
+.project-closure-toolbar .project-comparison-legend { gap: 16px; }
+.project-closure-details-popup { border-color: #e5e7eb; border-radius: 6px; color: #374151; box-shadow: 0 6px 18px rgba(148, 163, 184, .2); }
+
+/* Consistent captions and organization labels across the paired charts. */
+#dashboardAnalysisSectionStaff .project-org-comparison-card .chart-caption,
+#dashboardAnalysisSectionStaff .dashboard-budget-comparison-card .chart-caption { color: #6b7280; font-size: 11px; font-weight: 400; line-height: 1.6; margin: 5px 0 0; }
+.project-closure-chart-name { padding-right: 8px; }
+.project-closure-chart-name strong,
+.project-budget-comparison-chart-inner .chart-external-axis-labels { color: #6b7280; font-size: 11px; font-weight: 600; line-height: 1.25; }
+@media (max-width: 720px) {
+  #dashboardAnalysisSectionStaff .project-org-comparison-card,
+  #dashboardAnalysisSectionStaff .dashboard-budget-comparison-card { padding: 14px; }
+  .project-closure-chart-row { min-height: 72px; }
+  .project-closure-comparison-scroll,
+  .project-budget-comparison-scroll { max-height: 440px; }
+}
+
+#projectOrgComparisonCaptionStaff { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dashboardAnalysisSectionStaff .project-org-comparison-card > .chart-header > div { min-width: 0; max-width: 100%; }
+@media (min-width: 1280px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { align-items: stretch; }
+}
+
+.project-closure-chart-name strong,
+.project-budget-comparison-chart-inner .chart-external-axis-label span {
+  font-family: 'Kanit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+.project-budget-comparison-chart-inner .chart-external-axis-y .chart-external-axis-label { align-items: stretch; }

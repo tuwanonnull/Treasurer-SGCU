@@ -1,4 +1,76 @@
 /* Charts: status summary + trends (Chart.js) */
+const projectBudgetValueLabelsPlugin = {
+  id: "projectBudgetValueLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.font = "500 11px 'Kanit', sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+    [0, 1].forEach((datasetIndex) => {
+      if (!chart.isDatasetVisible(datasetIndex)) return;
+      ctx.fillStyle = datasetIndex === 0 ? "#9d174d" : "#047857";
+      chart.getDatasetMeta(datasetIndex).data.forEach((bar, index) => {
+        const value = Number(chart.data.datasets[datasetIndex].data[index]);
+        if (!Number.isFinite(value)) return;
+        const mobile = window.matchMedia("(max-width: 720px)").matches;
+        const label = mobile
+          ? new Intl.NumberFormat("th-TH", { notation: "compact", maximumFractionDigits: 1 }).format(value)
+          : `${formatMoney(value)} บาท`;
+        const x = Math.max(chartArea.left, Math.min(bar.x + 7, chart.width - ctx.measureText(label).width - 4));
+        ctx.fillText(label, x, bar.y);
+      });
+    });
+    ctx.restore();
+  }
+};
+
+const projectBudgetFixedAxisPlugin = {
+  id: "projectBudgetFixedAxis",
+  beforeDestroy(chart) {
+    const panel = chart.canvas?.closest(".project-budget-comparison-panel");
+    panel?.querySelector(".project-budget-comparison-axis")?.replaceChildren();
+    panel?.querySelector(".project-budget-comparison-legend")?.replaceChildren();
+  },
+  afterDraw(chart) {
+    const panel = chart.canvas?.closest(".project-budget-comparison-panel");
+    if (!panel) return;
+    const axis = panel.querySelector(".project-budget-comparison-axis");
+    const legend = panel.querySelector(".project-budget-comparison-legend");
+    const scale = chart.scales.x;
+    if (axis && scale) {
+      axis.replaceChildren();
+      axis.style.width = `${chart.width}px`;
+      scale.ticks.forEach((tick) => {
+        const label = document.createElement("span");
+        const value = Number(tick.value);
+        label.textContent = Math.abs(value) >= 1000000
+          ? `${(value / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน`
+          : value.toLocaleString("th-TH");
+        label.style.left = `${scale.getPixelForValue(tick.value)}px`;
+        axis.appendChild(label);
+      });
+    }
+    if (legend && !legend.childElementCount) {
+      chart.data.datasets.forEach((dataset, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        const swatch = document.createElement("i");
+        swatch.style.backgroundColor = dataset.backgroundColor;
+        button.append(swatch, document.createTextNode(dataset.label));
+        button.addEventListener("click", () => {
+          chart.setDatasetVisibility(index, !chart.isDatasetVisible(index));
+          chart.update("none");
+        });
+        legend.appendChild(button);
+      });
+    }
+    legend?.querySelectorAll("button").forEach((button, index) => {
+      button.setAttribute("aria-pressed", String(chart.isDatasetVisible(index)));
+    });
+  }
+};
+
 function wrapChartAxisLabel(label, maxChars = 22, maxLines = 3) {
   const text = (label || "").toString().replace(/\s+/g, " ").trim();
   if (!text) return "";
@@ -333,6 +405,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
   if (projectBudgetComparisonCtx) {
     projectBudgetComparisonChart = new Chart(projectBudgetComparisonCtx, {
       type: "bar",
+      plugins: [projectBudgetValueLabelsPlugin, projectBudgetFixedAxisPlugin],
       data: {
         labels: [],
         datasets: [
@@ -361,8 +434,10 @@ function initCharts(ctxKey = activeProjectStatusContext) {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
+        layout: { padding: { right: isMobileChart ? 62 : 110 } },
         plugins: {
           legend: {
+            display: false,
             position: "bottom",
             labels: {
               font: { size: 11 },
@@ -399,7 +474,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
           externalAxisLabels: {
             y: {
               enabled: true,
-              width: isMobileChart ? 118 : 210,
+              width: isMobileChart ? 110 : 145,
               gap: 8,
               formatter: (label) => getProjectBudgetAxisWrappedLabel(label)
             }
@@ -409,6 +484,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
           x: {
             beginAtZero: true,
             ticks: {
+              display: false,
               maxTicksLimit: isMobileChart ? 3 : 6,
               font: { size: isMobileChart ? 11 : 12 },
               callback: (value) => Number(value || 0).toLocaleString("th-TH")
@@ -416,7 +492,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
           },
           y: {
             afterFit(scale) {
-              scale.width = isMobileChart ? 118 : 210;
+              scale.width = window.matchMedia("(max-width: 720px)").matches ? 110 : 145;
             },
             ticks: {
               display: false,
@@ -457,8 +533,8 @@ function resizeClosureChart(numLabels) {
 }
 
 function getProjectBudgetAxisWrappedLabel(label) {
-  const isMobile = window.matchMedia("(max-width: 720px)").matches;
-  return wrapChartAxisLabel(label, isMobile ? 18 : 30, isMobile ? 3 : 2);
+  // Both charts use identical label widths and browser Thai word wrapping.
+  return String(label || "").replace(/\s+/g, " ").trim();
 }
 
 function getProjectBudgetStackRadius(ctx) {
@@ -482,6 +558,42 @@ function getProjectBudgetStackRadius(ctx) {
   };
 }
 
+function syncDashboardComparisonHeights() {
+  const closure = document.getElementById("projectOrgClosureChartStaff");
+  const card = document.querySelector(".dashboard-budget-comparison-card");
+  if (!closure || !card) return;
+  const count = closure.querySelectorAll(".project-closure-chart-row").length;
+  const rowHeight = window.matchMedia("(max-width: 720px)").matches ? 72 : 76;
+  const contentHeight = closure.scrollHeight || Math.max(120, count * rowHeight);
+  const viewportHeight = Math.min(440, Math.max(120, contentHeight));
+  const monthly = card.querySelector('[data-dashboard-budget-panel="monthly"]');
+  const scroll = card.querySelector(".project-budget-comparison-scroll");
+  const inner = card.querySelector(".project-budget-comparison-chart-inner");
+  const closureCard = closure.closest(".project-comparison-chart");
+  const closureAxis = document.getElementById("projectOrgClosureAxisStaff");
+  const closureLegend = closureCard?.querySelector(".project-closure-toolbar");
+  const footerHeight = (closureAxis?.offsetHeight || 32) + (closureLegend?.offsetHeight || 42);
+  // The monthly canvas contains its own axis and legend; include the entire
+  // closure chart block rather than just its scrollable plotting area.
+  let monthlyHeight = viewportHeight + footerHeight;
+  if (monthly && !monthly.hidden && closureCard && window.matchMedia("(min-width: 1280px)").matches) {
+    const closureRect = closureCard.getBoundingClientRect();
+    const monthlyRect = monthly.getBoundingClientRect();
+    if (closureRect.height > 0 && monthlyRect.width > 0) {
+      monthlyHeight = closureRect.bottom - monthlyRect.top;
+    }
+  }
+  if (monthly) monthly.style.height = `${Math.max(180, Math.round(monthlyHeight))}px`;
+  const chart = projectBudgetComparisonChart;
+  const plotHeight = chart?.chartArea ? chart.chartArea.bottom - chart.chartArea.top : 0;
+  const chartChrome = plotHeight > 0 ? Math.max(0, chart.height - plotHeight) : 10;
+  if (scroll) {
+    scroll.style.height = `${viewportHeight + chartChrome}px`;
+    scroll.style.maxHeight = `${440 + chartChrome}px`;
+  }
+  if (inner) inner.style.height = `${Math.max(120, contentHeight) + chartChrome}px`;
+}
+
 function resizeProjectBudgetComparisonChart(numLabels) {
   const canvas = projectStatusContexts[activeProjectStatusContext]?.projectBudgetComparisonCanvas;
   if (!canvas) return;
@@ -493,13 +605,31 @@ function resizeProjectBudgetComparisonChart(numLabels) {
   const maxWrappedLines = labels.reduce((max, label) => {
     return Math.max(max, getWrappedLineCount(getProjectBudgetAxisWrappedLabel(label)));
   }, 1);
-  const baseHeight = isMobile ? 360 : 300;
   const perLabel = isMobile
-    ? Math.max(38, 22 + maxWrappedLines * 14)
-    : Math.max(30, 16 + maxWrappedLines * 13);
-  container.style.height = `${Math.max(baseHeight, numLabels * perLabel)}px`;
+    ? Math.max(72, 22 + maxWrappedLines * 14)
+    : Math.max(76, 16 + maxWrappedLines * 13);
+  const closure = activeProjectStatusContext === "staff"
+    ? document.getElementById("projectOrgClosureChartStaff") : null;
+  const sameRows = closure?.querySelectorAll(".project-closure-chart-row").length === numLabels;
+  const closureHeight = sameRows ? closure.scrollHeight : 0;
+  container.style.height = `${Math.max(120, closureHeight || numLabels * perLabel)}px`;
 
-  if (projectBudgetComparisonChart) projectBudgetComparisonChart.resize();
+  if (projectBudgetComparisonChart) {
+    projectBudgetComparisonChart.options.layout.padding.right = isMobile ? 62 : 110;
+    projectBudgetComparisonChart.options.scales.x.ticks.maxTicksLimit = isMobile ? 3 : 6;
+    if (activeProjectStatusContext === "staff") syncDashboardComparisonHeights();
+    projectBudgetComparisonChart.resize();
+  }
+}
+
+function getProjectComparisonApprovedBudget(project) {
+  const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
+  const hasActual = project.hasActualBudget ?? hasValue(project.actualBudget);
+  if (hasActual) {
+    return (Number(project.actualBudget) || 0) + Math.max(Number(project.remainingBudget) || 0, 0);
+  }
+  if (project.hasTransferNet ?? hasValue(project.transferNet)) return Number(project.transferNet) || 0;
+  return Number(project.approvedBudget100) || 0;
 }
 
 function updateProjectBudgetComparisonChart(filtered) {
@@ -536,7 +666,7 @@ function updateProjectBudgetComparisonChart(filtered) {
     const remaining = Number.isFinite(remainingFromSheet) && remainingFromSheet > 0
       ? Math.max(remainingFromSheet, 0)
       : 0;
-    const approved = actual + remaining;
+    const approved = getProjectComparisonApprovedBudget(project);
     const over = Math.max(actual - approved, 0);
     const orgGroup = (project.orgGroup || "").toString().trim();
 
@@ -553,7 +683,19 @@ function updateProjectBudgetComparisonChart(filtered) {
   const isGlobalView = orgGroupFilter === "all" && orgFilter === "all";
   const grouped = new Map();
 
-  if (isGlobalView) {
+  const isStaffComparison = activeProjectStatusContext === "staff";
+  const comparisonLevel = isStaffComparison ? getStaffProjectTrackingFilters().level : "orgGroup";
+  if (isStaffComparison) {
+    filtered.forEach((project) => {
+      const groupName = String(project.orgGroup || "").trim() || "ไม่ระบุองค์กรใหญ่";
+      const orgName = String(project.orgName || "").trim() || "ไม่ระบุฝ่าย / ชมรม";
+      const isSuborganization = comparisonLevel === "orgName";
+      const key = isSuborganization ? JSON.stringify([groupName, orgName]) : groupName;
+      const name = isSuborganization ? `${orgName} · ${groupName}` : groupName;
+      if (!grouped.has(key)) grouped.set(key, createBudgetSummaryRow(name, groupName));
+      addProjectToBudgetSummary(grouped.get(key), project);
+    });
+  } else if (isGlobalView) {
     const baseGroups = getChartOrgGroups();
     baseGroups.forEach((group) => {
       grouped.set(group, createBudgetSummaryRow(group, group));
@@ -589,7 +731,7 @@ function updateProjectBudgetComparisonChart(filtered) {
       };
     });
 
-  const visibleRows = rows;
+  const visibleRows = rows.sort((a, b) => b.approved - a.approved || a.name.localeCompare(b.name, "th"));
   chart.$projectBudgetRows = visibleRows;
   chart.data.labels = visibleRows.map((row) => row.name);
   chart.data.datasets[0].data = visibleRows.map((row) => row.approved);
@@ -603,7 +745,9 @@ function updateProjectBudgetComparisonChart(filtered) {
   chart.options.scales.x.suggestedMax = maxValue > 0 ? maxValue * 1.08 : undefined;
 
   if (captionEl) {
-    captionEl.textContent = "";
+    captionEl.textContent = isStaffComparison
+      ? `${comparisonLevel === "orgName" ? "ฝ่าย / ชมรม" : "องค์กรใหญ่"}ตามตัวกรอง · หน่วยบาท · ยอดอนุมัติมาก → น้อย`
+      : "";
   }
 
   resizeProjectBudgetComparisonChart(visibleRows.length || 1);
