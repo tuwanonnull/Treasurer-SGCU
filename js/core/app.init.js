@@ -329,12 +329,14 @@ function initProjectMobileActionBar() {
     } else {
       if (calendarExtraAction) calendarExtraAction.hidden = true;
       if (exportAction) exportAction.hidden = true;
-      setMobileActionButton(filtersAction, "filters", "⌕", "ตัวกรอง", "เปิดตัวกรอง");
-      setMobileActionButton(statusAction, "status", "▦", "สรุป", "แสดงสรุปสถานะโครงการ");
-      setMobileActionButton(calendarAction, "calendar", "◷", "ปฏิทิน", "แสดงปฏิทินโครงการ");
+      setMobileActionButton(filtersAction, "calendar", "◷", "ปฏิทิน", "แสดงปฏิทินโครงการ");
+      setMobileActionButton(statusAction, "export", "↓", "Export CSV", "ส่งออกข้อมูลโครงการเป็น CSV");
+      setMobileActionButton(calendarAction, "filters", "⌕", "ตัวกรอง", "เปิดตัวกรอง");
       actionBtns.forEach((btn) => {
         const action = btn.dataset.projectMobileEffectiveAction;
         btn.classList.toggle("is-active", action === activeView);
+        btn.disabled = action === "export" && (!exportBtn || exportBtn.disabled);
+        btn.setAttribute("aria-disabled", String(btn.disabled));
       });
     }
 

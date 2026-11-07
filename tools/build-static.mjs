@@ -1,4 +1,5 @@
 import { constants as fsConstants } from "node:fs";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -181,7 +182,21 @@ function withVersionedLocalAssets(html) {
 
 async function transformIndexHtml(html) {
   const resolvedHtml = await resolveIncludes(html, rootDir);
-  return withVersionedLocalAssets(resolvedHtml);
+  const git = (...args) => execFileSync("git", args, { cwd: rootDir, encoding: "utf8" }).trim();
+  if (git("rev-parse", "--is-shallow-repository") === "true") {
+    throw new Error("Site revision needs full Git history. Fetch full history before building (checkout fetch-depth: 0).");
+  }
+  const revision = Number(git("rev-list", "--count", "HEAD"));
+  const commit = git("rev-parse", "--short=7", "HEAD");
+  const dirty = git("status", "--porcelain", "--untracked-files=no") !== "";
+  // Encode the Git revision in base 100: 547 -> 0.5.47, 10000 -> 1.0.0.
+  const version = `${Math.floor(revision / 10000)}.${Math.floor(revision / 100) % 100}.${revision % 100}`;
+  const detail = `Commit ${commit}${dirty ? " (มีการแก้ไขในเครื่อง)" : ""}`;
+  const versionedHtml = resolvedHtml.replace(
+    /<span data-site-version>[^<]*<\/span>/,
+    `<span data-site-version title="${detail}">เวอร์ชัน ${version}</span>`
+  );
+  return withVersionedLocalAssets(versionedHtml);
 }
 
 function transformServiceWorker(source) {

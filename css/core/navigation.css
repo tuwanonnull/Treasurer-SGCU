@@ -713,6 +713,10 @@
     margin-bottom: 12px;
   }
 
+  #projectExportCsv {
+    display: none;
+  }
+
   .page-view[data-page="project-status"].active .page-header-flex > .tabs {
     display: none;
   }
