@@ -132,11 +132,11 @@
             <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="metrics" data-project-workflow-target="dashboardMetricsSectionStaff">
               ภาพรวมตัวเลข
             </button>
-            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="followup" data-project-workflow-target="dashboardFollowupSectionStaff">
-              ติดตามงาน
+            <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="progress" data-project-workflow-target="dashboardProgressSectionStaff">
+              ติดตามโครงการ/งบ
             </button>
             <button type="button" class="tab-btn view-toggle-btn" data-project-workflow-toc="analysis" data-project-workflow-target="dashboardAnalysisSectionStaff">
-              วิเคราะห์
+              ข้อมูลเพิ่มเติม
             </button>
             </div>
             <button type="button" class="tab-btn view-toggle-btn dashboard-filter-sticky-trigger" data-project-workflow-toc="filters" data-project-workflow-target="filterBarHostDashboardStaff" aria-controls="filterBarHostDashboardStaff" aria-expanded="false" aria-label="เปิดตัวกรอง" title="ตัวกรอง">
@@ -287,6 +287,7 @@
                 </div>
               </div>
 
+              <p id="projectCodeCopyFeedbackStaff" class="project-code-copy-feedback" role="status" aria-live="polite">กดรหัสโครงการเพื่อคัดลอก</p>
               <div class="project-staff-check-group is-critical">
                 <div class="project-staff-alert-table-wrap">
                   <table class="project-staff-alert-table">
@@ -367,56 +368,73 @@
             </div>
             </section>
 
-            <section id="dashboardFollowupSectionStaff" class="dashboard-section">
+            <section id="dashboardProgressSectionStaff" class="dashboard-section">
               <header class="dashboard-section-header">
-                <h3 class="dashboard-section-title">งานที่ต้องติดตาม</h3>
+                <h3 class="dashboard-section-title">ติดตามโครงการและงบประมาณ</h3>
               </header>
-            <div class="dashboard-charts-grid section-appear section-delay-2" style="margin-top:12px;">
+              <div class="dashboard-progress-grid">
               <article class="chart-card dashboard-overdue-close-chart-card">
-                  <header class="chart-header">
-                    <h3 class="chart-title">โครงการครบกำหนดสิ้นสุดงาน แต่ยังไม่ปิดโครงการ</h3>
-                  </header>
-                <div class="chart-inner dashboard-overdue-close-chart-inner">
-                  <canvas id="trendLineChartStaff"></canvas>
+                <header class="chart-header project-comparison-header">
+                  <div class="dashboard-chart-heading">
+                    <h3 class="chart-title">สถานะการปิดโครงการ</h3>
+                    <p id="dashboardClosureCaptionStaff" class="chart-caption" aria-live="polite"></p>
+                  </div>
+                  <div class="tabs" role="tablist" aria-label="เลือกมุมมองสถานะการปิดโครงการ">
+                    <button id="closureMonthlyTabStaff" class="tab-btn view-toggle-btn is-active" type="button" data-dashboard-closure-view="monthly" role="tab" aria-selected="true" aria-controls="closureMonthlyPanelStaff">รายเดือน</button>
+                    <button id="closureOrgTabStaff" class="tab-btn view-toggle-btn" type="button" data-dashboard-closure-view="org" role="tab" aria-selected="false" aria-controls="closureOrgPanelStaff">รายองค์กร</button>
+                  </div>
+                </header>
+                <div id="closureMonthlyPanelStaff" data-dashboard-closure-panel="monthly" role="tabpanel" aria-labelledby="closureMonthlyTabStaff">
+                  <div class="chart-inner dashboard-overdue-close-chart-inner"><canvas id="trendLineChartStaff"></canvas></div>
+                  <div id="closureMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีสถานะการปิดโครงการ"></div>
                 </div>
-              </article>
-
-              <article class="dashboard-card dashboard-debt-summary-card dashboard-debt-combined-card">
-                <div class="dashboard-card-header">
-                  <div>
-                    <h4 class="dashboard-card-title">สรุปหนี้สโมสร</h4>
-                    <div class="dashboard-debt-summary-total">
-                      <span class="metric-label">ยอดหนี้ค้างส่งเอกสาร</span>
-                      <span id="clubDebtTotalStaff" class="metric-value dashboard-debt-amount">0</span>
-                      <span id="clubDebtCaptionStaff" class="metric-caption">-</span>
+                <div id="closureOrgPanelStaff" data-dashboard-closure-panel="org" role="tabpanel" aria-labelledby="closureOrgTabStaff" hidden>
+                  <p id="projectOrgComparisonCaptionStaff" class="chart-caption" hidden></p>
+                  <div class="project-comparison-chart">
+                    <div id="projectOrgClosureChartStaff" class="project-closure-comparison-scroll project-closure-bar-chart" role="region" aria-label="สถานะการปิดโครงการแยกตามองค์กร" tabindex="0"></div>
+                    <div id="projectOrgClosureAxisStaff" class="project-closure-fixed-axis" aria-label="จำนวนโครงการ"></div>
+                    <div class="project-closure-toolbar">
+                      <div class="project-comparison-legend dashboard-chart-legend"><button type="button" data-closure-toggle="pending" aria-pressed="true"><i class="is-pending"></i>ยังไม่ปิด</button><button type="button" data-closure-toggle="closed" aria-pressed="true"><i class="is-closed"></i>ปิดแล้ว</button></div>
                     </div>
                   </div>
-                  <div class="tabs dashboard-debt-toggle" role="tablist" aria-label="เลือกมุมมองหนี้สโมสร">
-                    <button class="tab-btn view-toggle-btn is-active" type="button" data-dashboard-debt-view="summary" role="tab" aria-selected="true">
-                      ตามองค์กร
-                    </button>
-                    <button class="tab-btn view-toggle-btn" type="button" data-dashboard-debt-view="age" role="tab" aria-selected="false">
-                      อายุหนี้
-                    </button>
-                  </div>
-                </div>
-                <div data-dashboard-debt-panel="summary">
-                  <p id="clubDebtSummaryChartCaptionStaff" class="chart-caption"></p>
-                  <div id="clubDebtSummaryChartInnerStaff" class="chart-inner club-debt-chart-inner">
-                    <canvas id="clubDebtSummaryChartStaff"></canvas>
-                  </div>
-                </div>
-                <div data-dashboard-debt-panel="age" hidden>
-                  <p id="clubDebtAgeCaptionStaff" class="metric-caption"></p>
-                  <div class="donut-wrap club-debt-age-donut-wrap">
-                    <canvas id="clubDebtAgeChartStaff"></canvas>
-                  </div>
-                  <div id="clubDebtAgeLegendStaff" class="club-debt-age-legend" aria-label="คำอธิบายสีอายุหนี้"></div>
                 </div>
               </article>
-            </div>
 
-            <div class="dashboard-lower" style="margin-top:12px;">
+              <article class="chart-card dashboard-budget-comparison-card">
+                <header class="chart-header">
+                  <div>
+                    <h3 class="chart-title">เปรียบเทียบงบประมาณ</h3>
+                    <p class="chart-caption" id="dashboardBudgetComparisonCaption">กำลังเตรียมข้อมูล</p>
+                    <p class="chart-caption dashboard-budget-view-caption" id="projectBudgetComparisonCaptionStaff" hidden></p>
+                    <p class="chart-caption dashboard-budget-view-caption" id="kpiMonthlyCaption">กำลังเตรียมข้อมูล</p>
+                  </div>
+                  <div class="tabs dashboard-budget-comparison-toggle" role="tablist" aria-label="เลือกมุมมองเปรียบเทียบงบประมาณ">
+                    <button class="tab-btn view-toggle-btn is-active" type="button" data-dashboard-budget-view="monthly" role="tab" aria-selected="true">
+                      รายเดือน
+                    </button>
+                    <button class="tab-btn view-toggle-btn" type="button" data-dashboard-budget-view="org" role="tab" aria-selected="false">
+                      รายองค์กร
+                    </button>
+                  </div>
+                </header>
+                <div data-dashboard-budget-panel="monthly">
+                  <div class="chart-inner dashboard-budget-monthly-chart"><canvas id="homeKpiChart" height="140"></canvas></div>
+                  <div id="budgetMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีงบประมาณ"></div>
+                </div>
+                <div class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden>
+                  <div class="project-budget-comparison-scroll" role="region" aria-label="กราฟงบประมาณแยกองค์กร เลื่อนเพื่อดูรายการทั้งหมด" tabindex="0">
+                    <div class="chart-inner project-budget-comparison-chart-inner">
+                      <canvas id="projectBudgetComparisonChartStaff"></canvas>
+                    </div>
+                  </div>
+                  <div class="project-budget-comparison-axis" aria-label="แกนจำนวนเงิน หน่วยบาท"></div>
+                  <div class="project-budget-comparison-legend dashboard-chart-legend" aria-label="คำอธิบายสีกราฟ"></div>
+                </div>
+              </article>
+
+              </div>
+            <div id="dashboardFollowupSectionStaff">
+            <div class="dashboard-lower">
               <article class="dashboard-card dashboard-card-wide">
                 <div class="dashboard-card-header">
                   <h4 class="dashboard-card-title">ติดตามการปิดโครงการ</h4>
@@ -462,63 +480,58 @@
                 </div>
               </article>
             </div>
+
+            </div>
             </section>
 
             <section id="dashboardAnalysisSectionStaff" class="dashboard-section">
               <header class="dashboard-section-header">
-                <h3 class="dashboard-section-title">วิเคราะห์เพิ่มเติม</h3>
+                <h3 class="dashboard-section-title">ข้อมูลเพิ่มเติม</h3>
               </header>
             <div class="dashboard-analysis-grid">
-            <section class="chart-card project-org-comparison-card" aria-labelledby="projectOrgComparisonTitleStaff">
-              <header class="chart-header project-comparison-header">
-                <div>
-                  <h3 id="projectOrgComparisonTitleStaff" class="chart-title">การปิดโครงการแยกตามองค์กรใหญ่</h3>
-                  <p id="projectOrgComparisonCaptionStaff" class="chart-caption" aria-live="polite"></p>
+              <article class="chart-card dashboard-debt-summary-card dashboard-debt-combined-card dashboard-debt-redesign">
+                <div class="dashboard-card-header">
+                  <div>
+                    <h3 class="chart-title">หนี้สโมสรตามองค์กร</h3>
+                    <p id="clubDebtCaptionStaff" class="chart-caption" aria-live="polite">-</p>
+                  </div>
+
+
+                </div>
+                <div class="dashboard-debt-content">
+                  <div class="dashboard-debt-metrics">
+                    <div class="dashboard-debt-kpi is-total">
+                      <span class="metric-label">ยอดหนี้ค้างส่งเอกสาร</span>
+                      <div><strong id="clubDebtTotalStaff">0</strong><span class="dashboard-debt-unit">บาท</span></div>
+                    </div>
+                    <div class="dashboard-debt-kpi">
+                      <span class="metric-label">โครงการที่ต้องติดตาม</span>
+                      <div><strong id="clubDebtProjectCountStaff">0</strong><span class="dashboard-debt-unit">โครงการ</span></div>
+                    </div>
+
+                  </div>
+                <div data-dashboard-debt-panel="summary">
+                  <div id="clubDebtCompactOrgsStaff" class="debt-compact-list" role="region" aria-label="ยอดหนี้ตามองค์กร" tabindex="0"></div>
                 </div>
 
-              </header>
-              <div class="project-comparison-charts">
-                <article class="project-comparison-chart" aria-labelledby="projectOrgComparisonTitleStaff">
-                  <div id="projectOrgClosureChartStaff" class="project-closure-comparison-scroll project-closure-bar-chart" role="region" aria-labelledby="projectOrgComparisonTitleStaff" tabindex="0"></div>
-                  <div id="projectOrgClosureAxisStaff" class="project-closure-fixed-axis" aria-label="จำนวนโครงการ"></div>
-                  <div class="project-closure-toolbar">
-                    <div class="project-comparison-legend"><button type="button" data-closure-toggle="pending" aria-pressed="true"><i class="is-pending"></i>ยังไม่ปิด</button><button type="button" data-closure-toggle="closed" aria-pressed="true"><i class="is-closed"></i>ปิดแล้ว</button></div>
-                  </div>
-                </article>
-              </div>
-            </section>
-              <article class="chart-card dashboard-budget-comparison-card">
-                <header class="chart-header">
-                  <div>
-                    <h3 class="chart-title">เปรียบเทียบงบประมาณ</h3>
-                    <p class="chart-caption" id="dashboardBudgetComparisonCaption">กำลังเตรียมข้อมูล</p>
-                    <p class="chart-caption dashboard-budget-view-caption" id="projectBudgetComparisonCaptionStaff" hidden></p>
-                  </div>
-                  <div class="tabs dashboard-budget-comparison-toggle" role="tablist" aria-label="เลือกมุมมองเปรียบเทียบงบประมาณ">
-                    <button class="tab-btn view-toggle-btn is-active" type="button" data-dashboard-budget-view="monthly" role="tab" aria-selected="true">
-                      รายเดือน
-                    </button>
-                    <button class="tab-btn view-toggle-btn" type="button" data-dashboard-budget-view="org" role="tab" aria-selected="false">
-                      องค์กร
-                    </button>
-                  </div>
-                </header>
-                <p class="chart-caption dashboard-budget-view-caption" id="kpiMonthlyCaption">กำลังเตรียมข้อมูล</p>
-                <div class="chart-inner" data-dashboard-budget-panel="monthly">
-                  <canvas id="homeKpiChart" height="140"></canvas>
-                </div>
-                <div class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden>
-                  <div class="project-budget-comparison-scroll" role="region" aria-label="กราฟงบประมาณแยกองค์กร เลื่อนเพื่อดูรายการทั้งหมด" tabindex="0">
-                    <div class="chart-inner project-budget-comparison-chart-inner">
-                      <canvas id="projectBudgetComparisonChartStaff"></canvas>
-                    </div>
-                  </div>
-                  <div class="project-budget-comparison-axis" aria-label="แกนจำนวนเงิน หน่วยบาท"></div>
-                  <div class="project-budget-comparison-legend" aria-label="คำอธิบายสีกราฟ"></div>
                 </div>
               </article>
-
-              <article class="chart-card dashboard-card-wide">
+              <article class="chart-card dashboard-debt-age-card">
+                <header class="chart-header">
+                  <div>
+                    <h3 class="chart-title">อายุหนี้สโมสร</h3>
+                    <p class="chart-caption">ยอดหนี้แยกตามจำนวนวันที่เลยกำหนด · ข้อมูลตามตัวกรอง</p>
+                  </div>
+                </header>
+                <div class="dashboard-debt-metrics">
+                    <div class="dashboard-debt-kpi">
+                      <span class="metric-label">ค้างนานที่สุด</span>
+                      <div><strong id="clubDebtOldestDaysStaff">0</strong><span class="dashboard-debt-unit">วัน</span></div>
+                    </div>
+                </div>
+                <div id="clubDebtCompactAgeStaff" class="debt-compact-list" role="region" aria-label="ยอดหนี้ตามอายุหนี้" tabindex="0"></div>
+              </article>
+              <article class="chart-card dashboard-card-wide dashboard-heatmap-card">
                 <header class="chart-header">
                   <h3 class="chart-title">วันปฏิบัติงานวันสุดท้าย</h3>
                 </header>

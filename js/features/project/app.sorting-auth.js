@@ -440,14 +440,29 @@ function syncStaffFinanceOverdueNotification() {
 function renderProjectOpsTable(tbody, rows) {
   if (!tbody) return;
   const colSpan = 3;
+  if (!tbody.dataset.copyCodeBound) {
+    tbody.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-copy-project-code]");
+      if (!button || !tbody.contains(button)) return;
+      const feedback = document.getElementById("projectCodeCopyFeedbackStaff");
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyProjectCode);
+        if (feedback) feedback.textContent = `คัดลอกรหัส ${button.dataset.copyProjectCode} แล้ว`;
+      } catch (error) {
+        if (feedback) feedback.textContent = "คัดลอกไม่สำเร็จ กรุณาลองอีกครั้ง";
+      }
+    });
+    tbody.dataset.copyCodeBound = "true";
+  }
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="${colSpan}" class="list-empty-cell">${renderListEmptyState("ยังไม่มีรายการที่ต้องตรวจ", "รายการที่ต้องตรวจจะแสดงที่นี่เมื่อมีข้อมูล")}</td></tr>`;
     return;
   }
 
+  let overdueIndex = 0;
   const html = rows.map(({ project, remainingDays, remainingText }) => `
-    <tr class="${remainingDays < 0 ? "is-overdue" : ""}">
-      <td class="project-staff-alert-code-cell"><span class="project-staff-alert-code">${escapeHtml(project.code || "")}</span></td>
+    <tr class="${remainingDays < 0 ? `is-overdue ${overdueIndex++ % 2 ? "is-overdue-dark" : "is-overdue-light"}` : ""}">
+      <td class="project-staff-alert-code-cell"><button type="button" class="project-staff-alert-code" data-copy-project-code="${escapeHtml(project.code || "")}" aria-label="คัดลอกรหัส ${escapeHtml(project.code || "")}" title="กดเพื่อคัดลอกรหัส" ${project.code ? "" : "disabled"}>${escapeHtml(project.code || "—")}</button></td>
       <td class="project-staff-alert-project-cell">
         <div class="project-staff-alert-project">${escapeHtml(project.name || "")}</div>
         <div class="project-staff-alert-org">${escapeHtml(project.orgName || "")}</div>

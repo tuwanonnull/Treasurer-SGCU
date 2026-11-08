@@ -12052,3 +12052,596 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
   font-size: 12px;
   font-weight: 400;
 }
+
+/* The closure comparison now shares the follow-up card's monthly/organization tabs. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 1fr); }
+.dashboard-overdue-close-chart-card [data-dashboard-closure-panel][hidden] { display: none; }
+.dashboard-overdue-close-chart-card .project-comparison-header { flex-wrap: wrap; gap: 12px; }
+
+/* Match the sheet review table to the dashboard cards and pink theme. */
+#projectStaffOpsPanelStaff .project-staff-check-card {
+  padding: 18px;
+  border: 1px solid var(--theme-pink-100);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(148, 163, 184, .12);
+}
+#projectStaffOpsPanelStaff .project-staff-ops-section-head { flex-wrap: wrap; }
+#projectStaffOpsPanelStaff .project-staff-ops-section-head > div:first-child { flex: 1 1 320px; }
+#projectStaffOpsPanelStaff .project-staff-alert-table-wrap {
+  padding: 0;
+  border: 1px solid var(--theme-pink-100);
+  border-radius: 12px;
+}
+#projectStaffOpsPanelStaff .project-staff-alert-table th {
+  background: var(--theme-pink-50);
+  color: var(--theme-pink-700);
+  font-weight: 600;
+}
+#projectStaffOpsPanelStaff .project-staff-alert-project { font-weight: 500; line-height: 1.6; }
+#projectStaffOpsPanelStaff .project-staff-alert-code,
+#projectStaffOpsPanelStaff .project-staff-check-tab.is-active span {
+  background: var(--theme-pink-100);
+  color: var(--theme-pink-700);
+  font-weight: 600;
+}
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue .project-staff-alert-project { color: #334155; }
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue .project-staff-alert-meta-cell { color: #9f1239; }
+@media (min-width: 861px) {
+  #projectStaffOpsPanelStaff .project-staff-alert-table th,
+  #projectStaffOpsPanelStaff .project-staff-alert-table td { padding: 14px 16px; }
+  #projectStaffOpsPanelStaff .project-staff-alert-table tbody tr:hover td { background: var(--theme-pink-50); }
+}
+@media (max-width: 860px) {
+  #projectStaffOpsPanelStaff .project-staff-check-card { padding: 14px; }
+  #projectStaffOpsPanelStaff .project-staff-alert-table-wrap { border: 0; border-radius: 0; }
+  #projectStaffOpsPanelStaff .project-staff-alert-table tr { border-radius: 12px; }
+}
+
+/* Follow-up summaries lead into the full-width action table. */
+#dashboardFollowupSectionStaff > .dashboard-charts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+}
+#dashboardFollowupSectionStaff > .dashboard-charts-grid > article {
+  margin: 0;
+  padding: 18px;
+}
+#dashboardFollowupSectionStaff .chart-header,
+#dashboardFollowupSectionStaff .dashboard-debt-combined-card .dashboard-card-header {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+#dashboardFollowupSectionStaff .dashboard-lower {
+  grid-template-columns: minmax(0, 1fr);
+}
+#dashboardAnalysisSectionStaff .dashboard-budget-comparison-card,
+#dashboardAnalysisSectionStaff .dashboard-card-wide {
+  grid-column: 1 / -1;
+}
+@media (max-width: 840px) {
+  #dashboardFollowupSectionStaff > .dashboard-charts-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  #dashboardFollowupSectionStaff > .dashboard-charts-grid > article {
+    padding: 14px;
+  }
+}
+
+/* Pair project progress and budget before the follow-up work. */
+.dashboard-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+}
+.dashboard-progress-grid > .chart-card { margin: 0; padding: 18px; }
+.dashboard-progress-grid .chart-header { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+#dashboardFollowupSectionStaff > .dashboard-charts-grid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 840px) {
+  .dashboard-progress-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .dashboard-progress-grid > .chart-card { padding: 14px; }
+}
+
+/* Sheet review: plain codes and alternating overdue rows. */
+#projectStaffOpsPanelStaff .project-staff-alert-table .project-staff-alert-code {
+  background: transparent;
+  color: #334155;
+  padding: 0;
+  border-radius: 0;
+  font-weight: 500;
+}
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue-light { --overdue-row-color: #fff1f2; }
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue-dark { --overdue-row-color: #fecdd3; }
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue,
+#projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue td {
+  background: var(--overdue-row-color);
+}
+/* Keep the chart viewport stable when switching between month and organization. */
+.dashboard-progress-grid [data-dashboard-closure-panel],
+.dashboard-progress-grid [data-dashboard-budget-panel] { min-height: 360px; }
+.dashboard-progress-grid .project-closure-comparison-scroll { max-height: 290px; }
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-progress-grid .tab-btn { transition: none; }
+}
+
+/* Shared table framing, preserving each wrapper's scrolling behavior. */
+:is(.table-wrapper, .project-table-wrapper):has(> table) {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: auto;
+}
+#projectStaffOpsPanelStaff .project-staff-alert-table-wrap { border-color: #e5e7eb; }
+#projectStaffOpsPanelStaff .project-staff-alert-table th {
+  color: #64748b;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+/* Identical title/caption/tab placement across the paired charts. */
+.dashboard-progress-grid > .chart-card > .chart-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.dashboard-progress-grid > .chart-card > .chart-header > .tabs {
+  justify-self: start;
+  margin: 0;
+}
+.dashboard-progress-grid .chart-header .chart-caption {
+  margin: 5px 0 0;
+  line-height: 1.6;
+  font-size: 12px;
+  color: #64748b;
+}
+.dashboard-progress-grid .dashboard-chart-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 8px 0;
+}
+.dashboard-progress-grid .dashboard-chart-legend button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font: 12px 'Kanit', sans-serif;
+  cursor: pointer;
+}
+.dashboard-progress-grid .dashboard-chart-legend i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 10px;
+}
+.dashboard-progress-grid .dashboard-chart-legend .is-pending { background: #ec4899; }
+.dashboard-progress-grid .dashboard-chart-legend .is-closed { background: #059669; }
+.dashboard-progress-grid .dashboard-chart-legend button[aria-pressed="false"] { opacity: .5; text-decoration: line-through; }
+.dashboard-progress-grid .dashboard-chart-legend button:focus-visible { outline: 2px solid var(--theme-pink-500); outline-offset: 2px; border-radius: 6px; }
+.dashboard-progress-grid .project-closure-toolbar { padding: 0; }
+.dashboard-budget-monthly-chart { height: 340px; }
+
+/* Debt summary follows the same card, heading, tabs and metric styling. */
+#dashboardFollowupSectionStaff .dashboard-debt-combined-card {
+  border: 1px solid #f3e8ff;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(148, 163, 184, .2);
+}
+#dashboardFollowupSectionStaff .dashboard-debt-combined-card .dashboard-card-header { margin-bottom: 16px; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid #fce7f3;
+  border-radius: 12px;
+  background: #fdf2f8;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-label { color: #64748b; font-size: 12px; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-value { font-size: 28px; font-weight: 600; line-height: 1.3; color: #be185d; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-caption { font-size: 12px; color: #64748b; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-label::after,
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-value::after { content: none; }
+#dashboardFollowupSectionStaff .dashboard-debt-combined-card .chart-caption { color: #64748b; font-size: 12px; line-height: 1.6; }
+
+/* The empty-state panel owns its border; wrappers must not add another frame. */
+:is(.table-wrapper, .project-table-wrapper, .project-staff-alert-table-wrap):has(td.list-empty-cell) {
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+.table-wrapper > .project-table-wrapper { border: 0; }
+#projectStaffOpsPanelStaff button.project-staff-alert-code {
+  border: 0;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: copy;
+}
+#projectStaffOpsPanelStaff button.project-staff-alert-code:hover { text-decoration: underline; text-underline-offset: 3px; }
+#projectStaffOpsPanelStaff button.project-staff-alert-code:focus-visible { outline: 2px solid var(--theme-pink-500); outline-offset: 4px; }
+.project-code-copy-feedback { margin: 0; min-height: 20px; color: #64748b; font-size: 12px; }
+
+/* Equal plot viewports and header rows prevent unused space in the shorter card. */
+.dashboard-progress-grid > .chart-card { display: flex; flex-direction: column; justify-content: flex-start; }
+.dashboard-progress-grid > .chart-card > .chart-header {
+  grid-template-rows: minmax(80px, auto) auto;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.dashboard-progress-grid .chart-title { margin: 0; line-height: 1.5; }
+.dashboard-progress-grid [data-dashboard-closure-panel],
+.dashboard-progress-grid [data-dashboard-budget-panel] { min-height: 0; }
+.dashboard-progress-grid .dashboard-overdue-close-chart-inner,
+.dashboard-progress-grid .dashboard-budget-monthly-chart { height: 340px; min-height: 340px; flex: none; }
+.dashboard-progress-grid .project-closure-comparison-scroll { height: 308px; max-height: 308px; }
+.dashboard-progress-grid .project-closure-fixed-axis { margin-bottom: 0; }
+.dashboard-progress-grid .dashboard-chart-legend { min-height: 44px; box-sizing: border-box; }
+
+/* Plain debt metric alongside the plot, using the dashboard typography. */
+#dashboardFollowupSectionStaff .dashboard-debt-content {
+  display: grid;
+  grid-template-columns: minmax(180px, .7fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total {
+  margin: 0;
+  padding: 16px 24px 16px 0;
+  border: 0;
+  border-right: 1px solid #f1f5f9;
+  border-radius: 0;
+  background: transparent;
+  gap: 8px;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-value { color: #111827; font-size: 28px; }
+#dashboardFollowupSectionStaff .dashboard-debt-combined-card .chart-title { margin: 0; }
+#dashboardFollowupSectionStaff .dashboard-debt-content > [data-dashboard-debt-panel] { min-width: 0; }
+#dashboardFollowupSectionStaff .dashboard-debt-content > [hidden] { display: none; }
+@media (max-width: 840px) {
+  .dashboard-progress-grid > .chart-card > .chart-header { grid-template-rows: auto auto; }
+  #dashboardFollowupSectionStaff .dashboard-debt-content { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  #dashboardFollowupSectionStaff .dashboard-debt-summary-total { border-right: 0; border-bottom: 1px solid #f1f5f9; padding: 0 0 16px; }
+}
+
+/* Keep title and description together, with tabs anchored at top right. */
+.dashboard-progress-grid > .chart-card > .chart-header {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  min-height: 0;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.dashboard-progress-grid > .chart-card > .chart-header > div:first-child {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.dashboard-progress-grid > .chart-card > .chart-header .chart-title { margin: 0; }
+.dashboard-progress-grid > .chart-card > .chart-header > .tabs {
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-start;
+}
+.dashboard-progress-grid > .chart-card > .chart-header .chart-caption {
+  margin: 4px 0 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.dashboard-progress-grid > .chart-card > .chart-header .chart-caption[hidden] { display: none; }
+
+/* Match Chart.js grid colors and centered category lines. */
+.project-closure-chart-plot {
+  border-left: 1px solid rgba(0, 0, 0, .1);
+  border-right: 1px solid rgba(0, 0, 0, .1);
+  border-bottom: 0;
+  background-image:
+    linear-gradient(to bottom, transparent calc(50% - .5px), rgba(0, 0, 0, .1) calc(50% - .5px), rgba(0, 0, 0, .1) calc(50% + .5px), transparent calc(50% + .5px)),
+    repeating-linear-gradient(to right, transparent 0, transparent calc(25% - 1px), rgba(0, 0, 0, .1) calc(25% - 1px), rgba(0, 0, 0, .1) 25%);
+}
+.project-closure-chart-row:first-child .project-closure-chart-plot { border-top: 1px solid rgba(0, 0, 0, .1); }
+.project-closure-chart-row:last-child .project-closure-chart-plot { border-bottom: 1px solid rgba(0, 0, 0, .1); }
+
+/* Debt charts use the same soft bars, typography and donut proportions. */
+#dashboardFollowupSectionStaff .dashboard-debt-content { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total {
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 18px;
+  padding: 0 0 16px;
+  border-right: 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-label { grid-column: 1 / -1; }
+#dashboardFollowupSectionStaff .dashboard-debt-summary-total .metric-value::after { content: " บาท"; font-size: 12px; color: #64748b; font-weight: 400; }
+#dashboardFollowupSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 360px);
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+  padding: 12px 0;
+}
+#clubDebtAgeCaptionStaff:empty { display: none; }
+#dashboardFollowupSectionStaff .club-debt-age-donut-wrap { width: 220px; height: 220px; margin: 0; }
+#dashboardFollowupSectionStaff .club-debt-age-legend { display: grid; gap: 0; margin: 0; }
+#dashboardFollowupSectionStaff .club-debt-age-legend-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+}
+#dashboardFollowupSectionStaff .club-debt-age-legend-item strong { color: #334155; font-weight: 500; }
+.club-debt-chart-inner .chart-external-axis-label { font-family: 'Kanit', sans-serif; font-size: 11px; color: #6b7280; }
+@media (max-width: 600px) {
+  .dashboard-progress-grid > .chart-card > .chart-header { min-height: 0; }
+  .dashboard-progress-grid > .chart-card > .chart-header .chart-title { font-size: 14px; }
+  .dashboard-progress-grid > .chart-card > .chart-header .tabs { gap: 0; }
+  .dashboard-progress-grid > .chart-card > .chart-header .tab-btn { padding: 7px 9px; font-size: 11px; }
+  #dashboardFollowupSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 16px; }
+  #dashboardFollowupSectionStaff .club-debt-age-legend { width: 100%; }
+  #dashboardFollowupSectionStaff .dashboard-debt-summary-total { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Six organization rows fit before the comparison charts need scrolling. */
+.dashboard-progress-grid { --dashboard-plot-height: 498px; }
+.dashboard-progress-grid .dashboard-overdue-close-chart-inner,
+.dashboard-progress-grid .dashboard-budget-monthly-chart {
+  height: var(--dashboard-plot-height);
+  min-height: var(--dashboard-plot-height);
+}
+.dashboard-progress-grid .project-closure-comparison-scroll {
+  height: calc(var(--dashboard-plot-height) - 32px);
+  max-height: calc(var(--dashboard-plot-height) - 32px);
+}
+@media (max-width: 380px) {
+  .dashboard-progress-grid > .chart-card > .chart-header { flex-wrap: wrap; }
+  .dashboard-progress-grid > .chart-card > .chart-header > div:first-child { flex-basis: 100%; }
+}
+
+/* Remove the old inner-card inset and fill the shared organization viewport. */
+.dashboard-progress-grid .project-comparison-chart { padding: 0; }
+.dashboard-progress-grid .project-closure-chart-row {
+  min-height: calc((var(--dashboard-plot-height) - 32px) / var(--closure-visible-rows, 6));
+  box-sizing: border-box;
+}
+.dashboard-progress-grid .project-closure-fixed-axis {
+  margin-right: var(--closure-value-space);
+}
+.dashboard-progress-grid > .chart-card > .chart-header { min-height: 84px; }
+.dashboard-section-nav .tab-btn { white-space: nowrap; }
+#dashboardProgressSectionStaff { scroll-margin-top: 166px; }
+@media (max-width: 840px) {
+  .dashboard-progress-grid > .chart-card > .chart-header { min-height: 0; }
+  #dashboardProgressSectionStaff { scroll-margin-top: 136px; }
+}
+
+/* Debt summary: compact KPI row and a clear chart area, matching dashboard cards. */
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .dashboard-card-header {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .dashboard-card-header > div:first-child { flex: 1; min-width: 0; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .dashboard-card-header .chart-caption { margin: 5px 0 0; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .dashboard-debt-content { gap: 22px; }
+.dashboard-debt-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dashboard-debt-kpi { min-width: 0; }
+.dashboard-debt-kpi + .dashboard-debt-kpi { border-left: 1px solid #f1f5f9; padding-left: 24px; }
+.dashboard-debt-kpi .metric-label { color: #64748b; font-size: 12px; font-weight: 400; }
+.dashboard-debt-kpi > div { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.dashboard-debt-kpi strong { font-size: 28px; line-height: 1.3; font-weight: 600; color: #334155; overflow-wrap: anywhere; }
+.dashboard-debt-kpi.is-total strong { color: #be185d; }
+.dashboard-debt-unit { color: #64748b; font-size: 12px; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign [data-dashboard-debt-panel="summary"] > .chart-caption { margin: 0 0 12px; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign [data-dashboard-debt-panel="age"]:not([hidden]) {
+  grid-template-columns: 240px minmax(0, 440px);
+  gap: 40px;
+  min-height: 260px;
+  padding: 0;
+}
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .club-debt-age-donut-wrap { width: 220px; height: 220px; justify-self: center; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .club-debt-age-legend-item { row-gap: 3px; padding: 12px 0; }
+#dashboardFollowupSectionStaff .dashboard-debt-redesign .club-debt-age-legend-item small { grid-column: 2 / -1; font-size: 11px; color: #94a3b8; }
+@media (max-width: 720px) {
+  .dashboard-debt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .dashboard-debt-kpi.is-total { grid-column: 1 / -1; }
+  .dashboard-debt-kpi:nth-child(2) { border-left: 0; padding-left: 0; }
+  .dashboard-debt-kpi strong { font-size: 24px; }
+  #dashboardFollowupSectionStaff .dashboard-debt-redesign [data-dashboard-debt-panel="age"]:not([hidden]) { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+}
+
+/* Secondary information shares a row and uses less visual weight. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .chart-card { grid-column: auto; box-shadow: none; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header { align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header > div:first-child { flex: 1; min-width: 160px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .chart-title { margin: 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .chart-caption { margin: 4px 0 10px; font-size: 12px; color: #64748b; }
+#dashboardAnalysisSectionStaff .dashboard-debt-metrics { gap: 12px; padding-bottom: 14px; margin-bottom: 14px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi + .dashboard-debt-kpi { padding-left: 12px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi strong { font-size: 20px; color: #334155; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi .metric-label { font-size: 11px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi > div { gap: 4px; margin-top: 4px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-chart-scroll { max-height: 230px; overflow-y: auto; overflow-x: hidden; }
+#dashboardAnalysisSectionStaff [data-dashboard-debt-panel][hidden] { display: none; }
+#dashboardAnalysisSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 18px; align-items: center; min-height: 220px; }
+#dashboardAnalysisSectionStaff .club-debt-age-donut-wrap { width: 150px; height: 150px; margin: 0; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend { display: grid; gap: 0; margin: 0; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend-item { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; gap: 4px 7px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 11px; color: #64748b; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend-item strong { font-weight: 500; color: #334155; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend-item small { grid-column: 2 / -1; color: #94a3b8; font-size: 10px; }
+@media (max-width: 1000px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 460px) {
+  #dashboardAnalysisSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  #dashboardAnalysisSectionStaff .club-debt-age-legend { width: 100%; }
+  #dashboardAnalysisSectionStaff .dashboard-debt-kpi:nth-child(2) { padding-left: 0; }
+}
+
+/* Overview charts lead directly into their actionable project list. */
+#dashboardProgressSectionStaff { gap: 16px; }
+#dashboardProgressSectionStaff #dashboardFollowupSectionStaff { margin: 0; }
+#dashboardProgressSectionStaff .dashboard-lower { margin: 0; }
+#dashboardProgressSectionStaff .dashboard-lower > .dashboard-card { margin: 0; }
+
+/* Keep secondary debt information compact beside the calendar. */
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header { margin-bottom: 10px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .chart-caption { margin: 4px 0 6px; line-height: 1.5; }
+#dashboardAnalysisSectionStaff .dashboard-debt-metrics { gap: 10px; margin-bottom: 10px; padding-bottom: 10px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi strong { font-size: 18px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi > div { margin-top: 2px; }
+#dashboardAnalysisSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) {
+  grid-template-columns: 130px minmax(0, 1fr);
+  min-height: 0;
+  gap: 16px;
+  padding: 0;
+}
+#dashboardAnalysisSectionStaff .club-debt-age-donut-wrap { width: 130px; height: 130px; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend-item { padding: 5px 0; row-gap: 1px; }
+#dashboardAnalysisSectionStaff .club-debt-age-legend-item:last-child { border-bottom: 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-chart-scroll { max-height: 190px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-toggle .tab-btn { padding: 7px 10px; font-size: 11px; }
+@media (max-width: 460px) {
+  #dashboardAnalysisSectionStaff [data-dashboard-debt-panel="age"]:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Secondary charts are available on demand; the summary remains visible. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-metrics { border-bottom: 0; margin-bottom: 0; padding-bottom: 14px; }
+.dashboard-debt-details { border-top: 1px solid #f1f5f9; }
+.dashboard-debt-details > summary {
+  cursor: pointer;
+  padding: 12px 0 0;
+  color: #be185d;
+  font-size: 12px;
+  font-weight: 500;
+}
+.dashboard-debt-details > summary::marker { color: #ec4899; }
+.dashboard-debt-details > summary:focus-visible { outline: 2px solid #ec4899; outline-offset: 4px; border-radius: 4px; }
+.dashboard-debt-details .debt-details-open { display: none; }
+.dashboard-debt-details[open] .debt-details-open { display: inline; }
+.dashboard-debt-details[open] .debt-details-closed { display: none; }
+#dashboardAnalysisSectionStaff .dashboard-debt-details > .dashboard-debt-toggle { display: flex; width: fit-content; margin: 14px 0; }
+@media (max-width: 1000px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Always-visible debt breakdown designed for a narrow secondary card. */
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header { flex-wrap: nowrap; gap: 10px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header > div:first-child { min-width: 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-toggle { flex-shrink: 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-debt-metrics { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+#dashboardAnalysisSectionStaff .dashboard-debt-redesign [data-dashboard-debt-panel="age"]:not([hidden]) { display: block; padding: 0; min-height: 0; }
+.debt-compact-list { max-height: 240px; overflow-y: auto; scrollbar-gutter: stable; padding-right: 6px; }
+.debt-compact-row { padding: 8px 0; }
+.debt-compact-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; color: #475569; }
+.debt-compact-label > span { min-width: 0; overflow-wrap: anywhere; }
+.debt-compact-label strong { flex-shrink: 0; color: #334155; font-weight: 500; font-variant-numeric: tabular-nums; }
+.debt-compact-label small { color: #94a3b8; font-size: 10px; font-weight: 400; }
+.debt-compact-track { height: 5px; margin: 6px 0 4px; border-radius: 999px; background: #f8fafc; overflow: hidden; }
+.debt-compact-track > span { display: block; height: 100%; border-radius: inherit; }
+.debt-compact-meta { display: flex; justify-content: space-between; gap: 8px; color: #94a3b8; font-size: 10px; }
+.debt-compact-empty { padding: 24px 8px; text-align: center; color: #64748b; font-size: 12px; }
+.debt-compact-list:focus-visible { outline: 2px solid #f9a8d4; outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 460px) {
+  #dashboardAnalysisSectionStaff .dashboard-debt-redesign .dashboard-card-header { flex-wrap: wrap; }
+  #dashboardAnalysisSectionStaff .dashboard-debt-toggle { margin-left: auto; }
+}
+
+/* Two complementary secondary charts; the annual heatmap gets its own full row. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-heatmap-card { grid-column: 1 / -1; }
+#dashboardAnalysisSectionStaff .dashboard-debt-metrics { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); min-height: 62px; box-sizing: border-box; }
+#dashboardAnalysisSectionStaff .dashboard-debt-kpi.is-total { grid-column: auto; }
+#dashboardAnalysisSectionStaff .dashboard-debt-age-card .chart-header { margin-bottom: 10px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-age-card .chart-caption { margin: 4px 0 6px; font-size: 12px; line-height: 1.5; color: #64748b; }
+#dashboardAnalysisSectionStaff .dashboard-debt-age-card .dashboard-debt-metrics { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 8px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-age-card .chart-title { margin: 0; }
+@media (max-width: 840px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Align secondary cards and let all four age bands remain visible. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid { align-items: stretch; gap: 16px; }
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card) {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+}
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) > :is(.dashboard-card-header, .chart-header) {
+  margin: 0 0 10px;
+  min-height: 46px;
+  align-items: flex-start;
+}
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) .chart-caption { margin: 4px 0 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-content { display: contents; }
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) .dashboard-debt-metrics {
+  min-height: 0;
+  padding: 8px 0 12px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+#dashboardAnalysisSectionStaff [data-dashboard-debt-panel="summary"] { display: flex; flex: 1; min-height: 0; }
+#dashboardAnalysisSectionStaff .debt-compact-list {
+  display: grid;
+  grid-auto-rows: minmax(min-content, 1fr);
+  flex: 1;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  scrollbar-gutter: auto;
+  padding: 0;
+}
+#dashboardAnalysisSectionStaff .debt-compact-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 0;
+}
+#dashboardAnalysisSectionStaff .debt-compact-label { line-height: 1.5; }
+#dashboardAnalysisSectionStaff .debt-compact-meta { line-height: 1.5; }
+#dashboardAnalysisSectionStaff .debt-compact-track { margin: 5px 0 3px; }
+#dashboardAnalysisSectionStaff .debt-compact-list:has(.debt-compact-row:nth-child(7)) {
+  display: block;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+@media (max-width: 840px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card) { padding: 14px; }
+  #dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) > :is(.dashboard-card-header, .chart-header) { min-height: 0; }
+}

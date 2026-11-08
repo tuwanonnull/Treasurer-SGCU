@@ -559,39 +559,32 @@ function getProjectBudgetStackRadius(ctx) {
 }
 
 function syncDashboardComparisonHeights() {
-  const closure = document.getElementById("projectOrgClosureChartStaff");
   const card = document.querySelector(".dashboard-budget-comparison-card");
-  if (!closure || !card) return;
-  const count = closure.querySelectorAll(".project-closure-chart-row").length;
-  const rowHeight = window.matchMedia("(max-width: 720px)").matches ? 72 : 76;
-  const contentHeight = closure.scrollHeight || Math.max(120, count * rowHeight);
-  const viewportHeight = Math.min(440, Math.max(120, contentHeight));
+  if (!card) return;
   const monthly = card.querySelector('[data-dashboard-budget-panel="monthly"]');
   const scroll = card.querySelector(".project-budget-comparison-scroll");
   const inner = card.querySelector(".project-budget-comparison-chart-inner");
-  const closureCard = closure.closest(".project-comparison-chart");
-  const closureAxis = document.getElementById("projectOrgClosureAxisStaff");
-  const closureLegend = closureCard?.querySelector(".project-closure-toolbar");
-  const footerHeight = (closureAxis?.offsetHeight || 32) + (closureLegend?.offsetHeight || 42);
-  // The monthly canvas contains its own axis and legend; include the entire
-  // closure chart block rather than just its scrollable plotting area.
-  let monthlyHeight = viewportHeight + footerHeight;
-  if (monthly && !monthly.hidden && closureCard && window.matchMedia("(min-width: 1280px)").matches) {
-    const closureRect = closureCard.getBoundingClientRect();
-    const monthlyRect = monthly.getBoundingClientRect();
-    if (closureRect.height > 0 && monthlyRect.width > 0) {
-      monthlyHeight = closureRect.bottom - monthlyRect.top;
-    }
-  }
-  if (monthly) monthly.style.height = `${Math.max(180, Math.round(monthlyHeight))}px`;
+  const labels = projectBudgetComparisonChart?.data?.labels || [];
+  const isMobile = window.matchMedia("(max-width: 720px)").matches;
+  const maxLines = labels.reduce((max, label) => Math.max(max, getWrappedLineCount(getProjectBudgetAxisWrappedLabel(label))), 1);
+  const rowHeight = isMobile ? Math.max(72, 22 + maxLines * 14) : Math.max(76, 16 + maxLines * 13);
+  const contentHeight = Math.max(6, labels.length) * rowHeight;
   const chart = projectBudgetComparisonChart;
   const plotHeight = chart?.chartArea ? chart.chartArea.bottom - chart.chartArea.top : 0;
   const chartChrome = plotHeight > 0 ? Math.max(0, chart.height - plotHeight) : 10;
-  if (scroll) {
-    scroll.style.height = `${viewportHeight + chartChrome}px`;
-    scroll.style.maxHeight = `${440 + chartChrome}px`;
+  const viewportHeight = 6 * rowHeight + chartChrome;
+  const grid = card.closest(".dashboard-progress-grid");
+  grid?.style.setProperty("--dashboard-plot-height", `${viewportHeight + 32}px`);
+  if (monthly) {
+    const canvasArea = monthly.querySelector(".dashboard-budget-monthly-chart");
+    if (canvasArea) canvasArea.style.height = `${viewportHeight + 32}px`;
   }
-  if (inner) inner.style.height = `${Math.max(120, contentHeight) + chartChrome}px`;
+  if (scroll) {
+    scroll.style.height = `${viewportHeight}px`;
+    scroll.style.maxHeight = `${viewportHeight}px`;
+  }
+  if (inner) inner.style.height = `${contentHeight + chartChrome}px`;
+
 }
 
 function resizeProjectBudgetComparisonChart(numLabels) {
@@ -608,11 +601,7 @@ function resizeProjectBudgetComparisonChart(numLabels) {
   const perLabel = isMobile
     ? Math.max(72, 22 + maxWrappedLines * 14)
     : Math.max(76, 16 + maxWrappedLines * 13);
-  const closure = activeProjectStatusContext === "staff"
-    ? document.getElementById("projectOrgClosureChartStaff") : null;
-  const sameRows = closure?.querySelectorAll(".project-closure-chart-row").length === numLabels;
-  const closureHeight = sameRows ? closure.scrollHeight : 0;
-  container.style.height = `${Math.max(120, closureHeight || numLabels * perLabel)}px`;
+  container.style.height = `${Math.max(120, numLabels * perLabel)}px`;
 
   if (projectBudgetComparisonChart) {
     projectBudgetComparisonChart.options.layout.padding.right = isMobile ? 62 : 110;
@@ -692,7 +681,7 @@ function updateProjectBudgetComparisonChart(filtered) {
       const isSuborganization = comparisonLevel === "orgName";
       const key = isSuborganization ? JSON.stringify([groupName, orgName]) : groupName;
       const name = isSuborganization ? `${orgName} · ${groupName}` : groupName;
-      if (!grouped.has(key)) grouped.set(key, createBudgetSummaryRow(name, groupName));
+      if (!grouped.has(key)) grouped.set(key, { ...createBudgetSummaryRow(name, groupName), orgName });
       addProjectToBudgetSummary(grouped.get(key), project);
     });
   } else if (isGlobalView) {
@@ -731,7 +720,9 @@ function updateProjectBudgetComparisonChart(filtered) {
       };
     });
 
-  const visibleRows = rows.sort((a, b) => b.approved - a.approved || a.name.localeCompare(b.name, "th"));
+  const visibleRows = rows.sort(isStaffComparison
+    ? getProjectStatusOrgComparator(comparisonLevel)
+    : (a, b) => b.approved - a.approved || a.name.localeCompare(b.name, "th"));
   chart.$projectBudgetRows = visibleRows;
   chart.data.labels = visibleRows.map((row) => row.name);
   chart.data.datasets[0].data = visibleRows.map((row) => row.approved);
@@ -746,7 +737,7 @@ function updateProjectBudgetComparisonChart(filtered) {
 
   if (captionEl) {
     captionEl.textContent = isStaffComparison
-      ? `${comparisonLevel === "orgName" ? "ฝ่าย / ชมรม" : "องค์กรใหญ่"}ตามตัวกรอง · หน่วยบาท · ยอดอนุมัติมาก → น้อย`
+      ? `${comparisonLevel === "orgName" ? "ฝ่าย / ชมรม" : "องค์กรใหญ่"}ตามตัวกรอง · หน่วยบาท · ลำดับเดียวกับหน้าสถานะโครงการ`
       : "";
   }
 
@@ -779,6 +770,23 @@ function updateClosureXAxisMax(chart = budgetByMonthChart) {
   );
   const maxTotal = totals.length ? Math.max(...totals) : 0;
   chart.options.scales.x.max = getNiceProjectCountAxisMax(maxTotal);
+}
+
+function getProjectStatusOrgComparator(level = "orgGroup") {
+  const groups = getChartOrgGroups();
+  const groupRanks = new Map(groups.map((name, index) => [name, index]));
+  const orgRanks = new Map(groups.map((group) => [group, new Map(getOrgsByGroup(group).map((name, index) => [name, index]))]));
+  return (a, b) => {
+    const groupA = a.orgGroup || a.name;
+    const groupB = b.orgGroup || b.name;
+    const groupOrder = (groupRanks.get(groupA) ?? Infinity) - (groupRanks.get(groupB) ?? Infinity);
+    if (groupOrder) return groupOrder;
+    if (groupA !== groupB) return groupB.localeCompare(groupA, "th");
+    if (level !== "orgName") return 0;
+    const ranks = orgRanks.get(groupA);
+    const orgOrder = (ranks?.get(a.orgName) ?? Infinity) - (ranks?.get(b.orgName) ?? Infinity);
+    return orgOrder || (a.orgName || a.name).localeCompare(b.orgName || b.name, "th");
+  };
 }
 
 function getChartOrgGroups() {
