@@ -349,6 +349,23 @@ function initDashboardClosureToggle() {
   setView("monthly");
 }
 
+function setDashboardChartEmptyState(panelId, isEmpty, title) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  panel.dataset.chartEmpty = String(isEmpty);
+  let empty = panel.querySelector(".dashboard-chart-empty-state");
+  if (!empty && isEmpty) {
+    empty = document.createElement("div");
+    empty.className = "dashboard-chart-empty-state";
+    empty.setAttribute("role", "status");
+    panel.appendChild(empty);
+  }
+  if (empty) {
+    empty.hidden = !isEmpty;
+    if (isEmpty) empty.innerHTML = renderListEmptyState(title, "ลองเปลี่ยนหรือล้างตัวกรองเพื่อดูข้อมูลโครงการ", "search");
+  }
+}
+
 function updateProjectOrgComparison(filtered) {
   initDashboardClosureToggle();
   filtered = getDueClosureProjects(filtered);
@@ -379,6 +396,7 @@ function updateProjectOrgComparison(filtered) {
     }
   });
   const rows = Array.from(grouped.values()).sort(getProjectStatusOrgComparator(filters.level));
+  setDashboardChartEmptyState("closureOrgPanelStaff", rows.length === 0, "ไม่มีข้อมูลสถานะการปิดโครงการตามตัวกรอง");
   const unit = filters.level === "orgGroup" ? "องค์กรใหญ่" : "ฝ่าย / ชมรม";
   const title = document.getElementById("projectOrgComparisonTitleStaff");
   if (title) title.textContent = `การปิดโครงการแยกตาม${unit}`;
@@ -439,7 +457,10 @@ function syncProjectClosureSeries(container) {
   container.querySelectorAll("[data-closure-row]").forEach((button) => {
     const row = rows[Number(button.dataset.closureRow)];
     const value = button.dataset.closureStatus === "pending" ? row.eligible - row.closed : row.closed;
-    button.querySelector(".project-closure-chart-bar").style.width = `${value / (step * 4) * 100}%`;
+    const visible = button.dataset.closureStatus === "pending" ? pendingVisible : closedVisible;
+    button.querySelector(".project-closure-chart-bar").style.width = `${visible ? value / (step * 4) * 100 : 0}%`;
+    button.setAttribute("aria-hidden", String(!visible));
+    button.tabIndex = visible ? 0 : -1;
   });
   const axis = document.getElementById("projectOrgClosureAxisStaff");
   if (axis) axis.innerHTML = Array.from({ length: 5 }, (_, index) => `<span style="left:${index * 25}%">${(index * step).toLocaleString("th-TH")}</span>`).join("");
@@ -1003,6 +1024,16 @@ function resizeClubDebtSummaryChart(rows, chartInnerEl) {
   if (clubDebtSummaryChart) clubDebtSummaryChart.resize();
 }
 
+function formatProjectMoneyAxisTick(value, scale) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "";
+  const axisValues = [scale?.min, scale?.max, ...(scale?.ticks || []).map((tick) => tick.value)];
+  const useMillions = axisValues.some((tick) => Math.abs(Number(tick)) >= 1000000);
+  return useMillions
+    ? `${(num / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 2 })} ล้าน`
+    : new Intl.NumberFormat("th-TH", { notation: "compact", maximumFractionDigits: 1 }).format(num);
+}
+
 function formatDebtAxisTick(value, compact = false) {
   const num = Math.abs(Number(value));
   if (!Number.isFinite(num)) return "";
@@ -1127,7 +1158,7 @@ function updateClubDebtSummaryChart(rows, chartCanvasEl, chartInnerEl) {
           color: "#64748b",
           maxTicksLimit: isMobile ? 4 : 5,
           callback(value) {
-            return formatDebtAxisTick(value, isMobile);
+            return formatProjectMoneyAxisTick(value, this);
           }
         }
       },
@@ -1600,6 +1631,101 @@ function updateDashboardInsights(filtered, summary) {
   }
 }
 
+// Keep each series in its own slot, like the organization closure bars.
+const dashboardSeriesSlotsPlugin = {
+  id: "dashboardSeriesSlots",
+  beforeDatasetsDraw(chart) {
+    const metas = chart.data.datasets.map((_, index) => chart.getDatasetMeta(index)).filter((meta) => meta.type === "bar");
+    if (!metas.length) return;
+    metas.forEach((meta, seriesIndex) => {
+      const scale = meta.iScale;
+      const horizontal = scale.axis === "y";
+      const count = Math.max(1, chart.data.labels.length);
+      const available = (horizontal ? scale.height : scale.width) / count;
+      const slot = Math.min(27, available * 0.72 / metas.length);
+      meta.data.forEach((bar, index) => {
+        const center = scale.getPixelForValue(index);
+        bar[horizontal ? "y" : "x"] = center + (seriesIndex - (metas.length - 1) / 2) * slot;
+        bar[horizontal ? "height" : "width"] = Math.min(21, slot * 0.78);
+      });
+    });
+  }
+};
+
+function toggleDashboardChartSeries(chart, index) {
+  const show = !chart.isDatasetVisible(index);
+  const valueAxis = chart.options.indexAxis === "y" ? "x" : "y";
+  if (chart.config.type === "line") {
+    // Change the scale between fades, without visibly moving the remaining line.
+    delete chart.options.scales[valueAxis].min;
+    delete chart.options.scales[valueAxis].max;
+    delete chart.options.scales[valueAxis].suggestedMax;
+    chart.options.animation = false;
+    chart.setDatasetVisibility(index, show);
+    const canvas = chart.canvas;
+    const revision = (chart.$seriesFadeRevision || 0) + 1;
+    chart.$seriesFadeRevision = revision;
+    chart.$seriesFade?.cancel();
+    if (!canvas?.animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      chart.update("none");
+      return;
+    }
+    const fadeOut = canvas.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: 120, easing: "ease-out", fill: "forwards"
+    });
+    chart.$seriesFade = fadeOut;
+    fadeOut.finished.then(() => {
+      if (chart.$seriesFadeRevision !== revision || chart.canvas !== canvas) return;
+      chart.update("none");
+      const fadeIn = canvas.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 180, easing: "ease-in"
+      });
+      chart.$seriesFade = fadeIn;
+      fadeOut.cancel();
+      return fadeIn.finished;
+    }).catch(() => {
+      // A newer click supersedes the previous fade.
+    });
+    return;
+  }
+  if (chart.config.type === "bar" && chart.options.scales?.[valueAxis]) {
+    const visibleValues = chart.data.datasets.flatMap((dataset, datasetIndex) =>
+      (datasetIndex === index ? show : chart.isDatasetVisible(datasetIndex)) ? dataset.data : []
+    );
+    const maximum = Math.max(0, ...visibleValues.map((value) => Number(value) || 0));
+    delete chart.options.scales[valueAxis].max;
+    chart.options.scales[valueAxis].suggestedMax = maximum > 0 ? maximum * 1.08 : 1;
+  }
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motion = { duration: 280, easing: "easeOutCubic" };
+  chart.options.animation = reducedMotion ? false : motion;
+  const isBar = chart.config.type === "bar";
+  const baseline = (context) => context.chart.scales[valueAxis].getPixelForValue(0);
+  chart.options.transitions = {
+    ...chart.options.transitions,
+    show: {
+      animation: motion,
+      animations: { colors: { from: "transparent" }, ...(isBar ? { [valueAxis]: { from: baseline } } : {}) }
+    },
+    hide: {
+      animation: motion,
+      animations: {
+        colors: { to: "transparent" },
+        visible: { type: "boolean", easing: "linear", fn: (from) => from },
+        ...(isBar ? { [valueAxis]: { to: baseline } } : {})
+      }
+    }
+  };
+  if (reducedMotion) {
+    chart.setDatasetVisibility(index, show);
+    chart.update("none");
+  } else if (show) {
+    chart.show(index);
+  } else {
+    chart.hide(index);
+  }
+}
+
 function renderDashboardChartLegend(chart, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -1614,9 +1740,8 @@ function renderDashboardChartLegend(chart, containerId) {
     button.append(swatch, document.createTextNode(dataset.label));
     button.setAttribute("aria-pressed", String(chart.isDatasetVisible(index)));
     button.addEventListener("click", () => {
-      chart.setDatasetVisibility(index, !chart.isDatasetVisible(index));
+      toggleDashboardChartSeries(chart, index);
       button.setAttribute("aria-pressed", String(chart.isDatasetVisible(index)));
-      chart.update("none");
     });
     container.appendChild(button);
   });
@@ -1636,6 +1761,9 @@ function updateTrendLineChart(filtered) {
   });
 
   const entries = Array.from(buckets.values()).sort((a, b) => a.date - b.date);
+  if (activeProjectStatusContext === "staff") {
+    setDashboardChartEmptyState("closureMonthlyPanelStaff", entries.length === 0, "ไม่มีข้อมูลสถานะการปิดโครงการตามตัวกรอง");
+  }
   const trimmed = entries;
   const monthNamesShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
   const formatMonthLabel = (date) => {
@@ -1654,6 +1782,10 @@ function updateTrendLineChart(filtered) {
     pointHoverRadius: 5, fill: true, tension: 0.35
   }));
   trendLineChart.options.plugins.legend = { display: false };
+  // Recompute the range from the currently visible datasets.
+  delete trendLineChart.options.scales.y.max;
+  delete trendLineChart.options.scales.y.min;
+  trendLineChart.options.plugins.filler = { propagate: false };
   trendLineChart.update("none");
   renderDashboardChartLegend(trendLineChart, "closureMonthlyLegendStaff");
 }
@@ -1924,20 +2056,8 @@ function renderHomeHeatmap(sourceProjects = projects, container = homeHeatmapEl,
 
 function renderHomeKpis(sourceProjects = projects) {
   initDashboardBudgetComparisonToggle();
-  const data = Array.isArray(sourceProjects) ? sourceProjects : projects;
-  if (!data || !data.length) {
-    if (kpiMonthlyCaptionEl) {
-      kpiMonthlyCaptionEl.textContent = "ไม่มีข้อมูลตรงกับตัวกรอง";
-    }
-    renderHomeHeatmap([], homeHeatmapEl, homeHeatmapMonthsEl);
-    if (homeKpiChart) {
-      homeKpiChart.destroy();
-      homeKpiChart = null;
-      renderDashboardChartLegend(null, "budgetMonthlyLegendStaff");
-    }
-    return;
-  }
-
+  const data = Array.isArray(sourceProjects) ? sourceProjects : (projects || []);
+  // Empty filter results still need to reset every KPI and donut before clearing the monthly chart.
   const closedProjects = data.filter(isProjectClosed);
 
   const onTimeProjects = closedProjects.filter((p) => {
@@ -1972,7 +2092,7 @@ function renderHomeKpis(sourceProjects = projects) {
   if (kpiOnTimeCaptionEl) {
     kpiOnTimeCaptionEl.textContent = closedProjects.length
       ? `${onTimeCount} จาก ${closedProjects.length} โครงการปิดภายใน 14 วัน`
-      : "ยังไม่มีโครงการที่ปิดแล้ว";
+      : data.length ? "ยังไม่มีโครงการที่ปิดแล้ว" : "ไม่มีข้อมูลตรงกับตัวกรอง";
   }
   if (kpiOnTimeBarEl) {
     kpiOnTimeBarEl.style.width = `${Math.min(onTimePercent, 100)}%`;
@@ -1992,7 +2112,7 @@ function renderHomeKpis(sourceProjects = projects) {
   if (kpiOnTimeCaptionStaffEl) {
     kpiOnTimeCaptionStaffEl.textContent = closedProjects.length
       ? `${onTimeCount} จาก ${closedProjects.length} โครงการปิดภายใน 14 วัน`
-      : "ยังไม่มีโครงการที่ปิดแล้ว";
+      : data.length ? "ยังไม่มีโครงการที่ปิดแล้ว" : "ไม่มีข้อมูลตรงกับตัวกรอง";
   }
 
   const totalApproved = data.reduce(
@@ -2011,7 +2131,7 @@ function renderHomeKpis(sourceProjects = projects) {
   }
   if (kpiBudgetUsageCaptionEl) {
     kpiBudgetUsageCaptionEl.textContent =
-      `${formatMoney(totalActual)} จาก ${formatMoney(totalApproved)} บาท`;
+      data.length ? `${formatMoney(totalActual)} จาก ${formatMoney(totalApproved)} บาท` : "ไม่มีข้อมูลตรงกับตัวกรอง";
   }
   if (kpiBudgetUsageBarEl) {
     kpiBudgetUsageBarEl.style.width = `${Math.min(usagePercent, 100)}%`;
@@ -2030,7 +2150,7 @@ function renderHomeKpis(sourceProjects = projects) {
   }
   if (kpiBudgetUsageCaptionStaffEl) {
     kpiBudgetUsageCaptionStaffEl.textContent =
-      `${formatMoney(totalActual)} จาก ${formatMoney(totalApproved)} บาท`;
+      data.length ? `${formatMoney(totalActual)} จาก ${formatMoney(totalApproved)} บาท` : "ไม่มีข้อมูลตรงกับตัวกรอง";
   }
 
   if (kpiClosedProjectsEl) {
@@ -2100,10 +2220,13 @@ function renderHomeKpis(sourceProjects = projects) {
   );
 
   if (kpiMonthlyCaptionEl) {
-    kpiMonthlyCaptionEl.textContent = labels.length ? "" : "ยังไม่มีวันที่สิ้นสุดการปฏิบัติงานของโครงการ";
+    kpiMonthlyCaptionEl.textContent = !data.length
+      ? "ไม่มีข้อมูลตรงกับตัวกรอง"
+      : labels.length ? "" : "ยังไม่มีวันที่สิ้นสุดการปฏิบัติงานของโครงการ";
   }
   renderHomeHeatmap(data, homeHeatmapEl, homeHeatmapMonthsEl);
 
+  setDashboardChartEmptyState("budgetMonthlyPanelStaff", labels.length === 0, "ไม่มีข้อมูลเปรียบเทียบงบประมาณตามตัวกรอง");
   if (!labels.length) {
     if (homeKpiChart) {
       homeKpiChart.destroy();
@@ -2148,8 +2271,13 @@ function renderHomeKpis(sourceProjects = projects) {
       },
       y: {
         beginAtZero: true,
+        afterFit(scale) { scale.width = 76; },
+        border: { display: false },
+        grid: { color: "#f1f5f9", drawTicks: false },
         ticks: {
-          callback: (value) => formatMoney(value)
+          maxTicksLimit: 5,
+          padding: 8,
+          callback(value) { return formatProjectMoneyAxisTick(value, this); }
         }
       }
     },
@@ -2199,6 +2327,7 @@ function renderHomeKpis(sourceProjects = projects) {
     if (!ctx) return;
     homeKpiChart = new Chart(ctx, {
       type: "bar",
+      plugins: [dashboardSeriesSlotsPlugin],
       data: chartData,
       options
     });

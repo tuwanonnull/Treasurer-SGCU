@@ -30,11 +30,60 @@
 }
 
 .login-greeting {
-  margin-top: 0;
+  margin: 0;
   min-height: 0;
-  color: #475569;
-  font-size: 12px;
+  color: #0f172a;
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.login-greeting:empty,
+.login-signed-in-title,
+.login-hero.is-authenticated .login-access-note,
+.login-hero.is-authenticated .login-signed-out-title {
+  display: none;
+}
+
+.login-hero.is-authenticated .login-signed-in-title {
+  display: inline;
+}
+
+.login-hero.is-authenticated .login-account-title {
+  margin-bottom: 0;
+  color: #64748b;
+  font-size: 13px;
   font-weight: 500;
+}
+
+.login-intro-card .login-logout-btn {
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 8px 14px;
+}
+
+.login-access-note {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.login-notification-section {
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.login-notification-title {
+  margin: 0 0 10px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .login-notification-controls {
@@ -295,6 +344,8 @@
 }
 
 .login-help {
+  display: flex;
+  flex-direction: column;
   padding: 16px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.75);
@@ -306,12 +357,14 @@
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 4px;
+  line-height: 1.5;
 }
 
 .login-help-text {
   margin: 0;
   font-size: 13px;
   color: #475569;
+  line-height: 1.7;
 }
 
 .login-help-actions {
@@ -338,6 +391,7 @@
   .login-hero.is-authenticated .login-hero-panel {
     display: grid;
     grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
+    grid-template-rows: minmax(min-content, 1.2fr) minmax(min-content, 1fr);
     gap: 18px;
     align-items: stretch;
   }
@@ -354,12 +408,43 @@
   .login-hero.is-authenticated .login-intro-card {
     grid-column: 2;
     grid-row: 1;
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .login-hero.is-authenticated .login-notification-section {
+    margin-top: auto;
+    padding-top: 24px;
+  }
+
+  .login-hero.is-authenticated .login-intro-card .login-logout-btn {
+    margin-bottom: 8px;
   }
 
   .login-hero.is-authenticated .login-help {
     grid-column: 2;
     grid-row: 2;
     min-height: 0;
+    padding: 24px;
+    justify-content: center;
+  }
+
+  .login-hero.is-authenticated .login-help-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .login-hero.is-authenticated .login-help-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    margin-top: 24px;
+    gap: 12px;
+  }
+
+  .login-hero.is-authenticated .login-help-cta {
+    min-height: 44px;
+    text-align: center;
+    white-space: normal;
   }
 }
 

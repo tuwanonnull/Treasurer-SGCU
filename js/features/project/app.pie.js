@@ -13,7 +13,7 @@ function updateApprovedBudgetPie(filtered) {
   const orgGroupFilter = orgTypeSelect ? orgTypeSelect.value : "all";
   const orgFilter = orgSelect ? orgSelect.value : "all";
 
-  let baseAllProjects = projects.filter(
+  let baseAllProjects = (Array.isArray(filtered) ? filtered : []).filter(
     (p) => yearFilter === "all" || p.year === yearFilter
   );
 
@@ -210,5 +210,13 @@ function updateApprovedBudgetPie(filtered) {
     statusPieChart.options.plugins.centerText.subText = "";
   }
 
+  if (!baseAllProjects.length) {
+    statusPieChart.data.labels = [];
+    statusPieChart.data.datasets[0].data = [];
+    statusPieChart.data.datasets[0].backgroundColor = [];
+    statusPieChart.data.datasets[0].offset = [];
+    statusPieChart.options.plugins.centerText.text = "0%";
+    statusPieChart.options.plugins.centerText.subText = "ไม่มีข้อมูลตรงกับตัวกรอง";
+  }
   statusPieChart.update("none");
 }

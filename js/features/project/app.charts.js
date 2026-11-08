@@ -44,9 +44,7 @@ const projectBudgetFixedAxisPlugin = {
       scale.ticks.forEach((tick) => {
         const label = document.createElement("span");
         const value = Number(tick.value);
-        label.textContent = Math.abs(value) >= 1000000
-          ? `${(value / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน`
-          : value.toLocaleString("th-TH");
+        label.textContent = formatProjectMoneyAxisTick(value, scale);
         label.style.left = `${scale.getPixelForValue(tick.value)}px`;
         axis.appendChild(label);
       });
@@ -59,8 +57,7 @@ const projectBudgetFixedAxisPlugin = {
         swatch.style.backgroundColor = dataset.backgroundColor;
         button.append(swatch, document.createTextNode(dataset.label));
         button.addEventListener("click", () => {
-          chart.setDatasetVisibility(index, !chart.isDatasetVisible(index));
-          chart.update("none");
+          toggleDashboardChartSeries(chart, index);
         });
         legend.appendChild(button);
       });
@@ -405,7 +402,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
   if (projectBudgetComparisonCtx) {
     projectBudgetComparisonChart = new Chart(projectBudgetComparisonCtx, {
       type: "bar",
-      plugins: [projectBudgetValueLabelsPlugin, projectBudgetFixedAxisPlugin],
+      plugins: [dashboardSeriesSlotsPlugin, projectBudgetValueLabelsPlugin, projectBudgetFixedAxisPlugin],
       data: {
         labels: [],
         datasets: [
@@ -416,7 +413,8 @@ function initCharts(ctxKey = activeProjectStatusContext) {
             borderSkipped: false,
             borderRadius: { topLeft: 0, bottomLeft: 0, topRight: 8, bottomRight: 8 },
             barPercentage: 0.78,
-            categoryPercentage: 0.72
+            categoryPercentage: 0.72,
+            maxBarThickness: 21
           },
           {
             label: "งบที่ใช้จริง",
@@ -425,7 +423,8 @@ function initCharts(ctxKey = activeProjectStatusContext) {
             borderSkipped: false,
             borderRadius: { topLeft: 0, bottomLeft: 0, topRight: 8, bottomRight: 8 },
             barPercentage: 0.78,
-            categoryPercentage: 0.72
+            categoryPercentage: 0.72,
+            maxBarThickness: 21
           }
         ]
       },
@@ -487,7 +486,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
               display: false,
               maxTicksLimit: isMobileChart ? 3 : 6,
               font: { size: isMobileChart ? 11 : 12 },
-              callback: (value) => Number(value || 0).toLocaleString("th-TH")
+              callback(value) { return formatProjectMoneyAxisTick(value, this); }
             }
           },
           y: {
@@ -568,13 +567,16 @@ function syncDashboardComparisonHeights() {
   const isMobile = window.matchMedia("(max-width: 720px)").matches;
   const maxLines = labels.reduce((max, label) => Math.max(max, getWrappedLineCount(getProjectBudgetAxisWrappedLabel(label))), 1);
   const rowHeight = isMobile ? Math.max(72, 22 + maxLines * 14) : Math.max(76, 16 + maxLines * 13);
-  const contentHeight = Math.max(6, labels.length) * rowHeight;
+  const closureCount = document.getElementById("projectOrgClosureChartStaff")?.closureDetailsState?.rows?.length || 0;
+  const visibleRows = Math.max(2, Math.min(6, Math.max(labels.length, closureCount)));
+  const contentHeight = Math.max(1, labels.length) * rowHeight;
   const chart = projectBudgetComparisonChart;
   const plotHeight = chart?.chartArea ? chart.chartArea.bottom - chart.chartArea.top : 0;
   const chartChrome = plotHeight > 0 ? Math.max(0, chart.height - plotHeight) : 10;
-  const viewportHeight = 6 * rowHeight + chartChrome;
+  const viewportHeight = visibleRows * rowHeight + chartChrome;
   const grid = card.closest(".dashboard-progress-grid");
   grid?.style.setProperty("--dashboard-plot-height", `${viewportHeight + 32}px`);
+  grid?.style.setProperty("--dashboard-org-row-height", `${rowHeight}px`);
   if (monthly) {
     const canvasArea = monthly.querySelector(".dashboard-budget-monthly-chart");
     if (canvasArea) canvasArea.style.height = `${viewportHeight + 32}px`;
@@ -628,6 +630,9 @@ function updateProjectBudgetComparisonChart(filtered) {
   if (!chart) return;
 
   if (!Array.isArray(filtered) || filtered.length === 0) {
+    if (activeProjectStatusContext === "staff") {
+      setDashboardChartEmptyState("budgetOrgPanelStaff", true, "ไม่มีข้อมูลเปรียบเทียบงบประมาณตามตัวกรอง");
+    }
     chart.$projectBudgetRows = [];
     chart.data.labels = [];
     chart.data.datasets.forEach((dataset) => {
@@ -723,6 +728,9 @@ function updateProjectBudgetComparisonChart(filtered) {
   const visibleRows = rows.sort(isStaffComparison
     ? getProjectStatusOrgComparator(comparisonLevel)
     : (a, b) => b.approved - a.approved || a.name.localeCompare(b.name, "th"));
+  if (activeProjectStatusContext === "staff") {
+    setDashboardChartEmptyState("budgetOrgPanelStaff", !visibleRows.some((row) => row.projectCount > 0), "ไม่มีข้อมูลเปรียบเทียบงบประมาณตามตัวกรอง");
+  }
   chart.$projectBudgetRows = visibleRows;
   chart.data.labels = visibleRows.map((row) => row.name);
   chart.data.datasets[0].data = visibleRows.map((row) => row.approved);
@@ -730,10 +738,10 @@ function updateProjectBudgetComparisonChart(filtered) {
 
   const maxValue = Math.max(
     0,
-    ...visibleRows.map((row) => row.approved),
-    ...visibleRows.map((row) => row.actual)
+    ...(chart.isDatasetVisible(0) ? visibleRows.map((row) => row.approved) : []),
+    ...(chart.isDatasetVisible(1) ? visibleRows.map((row) => row.actual) : [])
   );
-  chart.options.scales.x.suggestedMax = maxValue > 0 ? maxValue * 1.08 : undefined;
+  chart.options.scales.x.suggestedMax = maxValue > 0 ? maxValue * 1.08 : 1;
 
   if (captionEl) {
     captionEl.textContent = isStaffComparison

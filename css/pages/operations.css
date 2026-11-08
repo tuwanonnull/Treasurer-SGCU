@@ -11699,7 +11699,7 @@ button.project-closure-chart-series { pointer-events: none; }
 .project-closure-toolbar .project-comparison-legend button { display: inline-flex; align-items: center; gap: 7px; padding: 6px; border: 0; background: transparent; color: #475569; font: 12px 'Kanit', sans-serif; cursor: pointer; }
 .project-closure-toolbar .project-comparison-legend button[aria-pressed="false"] { opacity: .5; text-decoration: line-through; }
 .project-closure-bar-chart.hide-pending [data-closure-status="pending"],
-.project-closure-bar-chart.hide-closed [data-closure-status="closed"] { display: none; }
+.project-closure-bar-chart.hide-closed [data-closure-status="closed"] { opacity: 0; visibility: hidden; pointer-events: none; }
 #dashboardAnalysisSectionStaff .dashboard-budget-comparison-card > .chart-header > div:first-child { min-width: 0; flex: 1; }
 #dashboardAnalysisSectionStaff .dashboard-budget-comparison-toggle { flex-shrink: 0; }
 
@@ -11712,7 +11712,7 @@ button.project-closure-chart-series { pointer-events: none; }
 .project-closure-chart-bar { border-radius: 0 8px 8px 0; }
 .project-closure-chart-name strong { font-size: 11px; font-weight: 600; }
 .project-closure-bar-chart.hide-pending:not(.hide-closed) [data-closure-status="closed"],
-.project-closure-bar-chart.hide-closed:not(.hide-pending) [data-closure-status="pending"] { height: 42px; }
+.project-closure-bar-chart.hide-closed:not(.hide-pending) [data-closure-status="pending"] { height: 21px; }
 .project-closure-toolbar { padding: 4px 0 8px; }
 .project-closure-toolbar .project-comparison-legend { gap: 16px; }
 .project-closure-details-popup { border-color: #e5e7eb; border-radius: 6px; color: #374151; box-shadow: 0 6px 18px rgba(148, 163, 184, .2); }
@@ -12421,8 +12421,14 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
 /* Remove the old inner-card inset and fill the shared organization viewport. */
 .dashboard-progress-grid .project-comparison-chart { padding: 0; }
 .dashboard-progress-grid .project-closure-chart-row {
-  min-height: calc((var(--dashboard-plot-height) - 32px) / var(--closure-visible-rows, 6));
+  min-height: var(--dashboard-org-row-height, 76px);
   box-sizing: border-box;
+}
+.project-closure-chart-bar { transition: width 280ms ease-out; }
+.project-closure-chart-series { transition: opacity 280ms ease-out, visibility 280ms; }
+.dashboard-chart-legend button { transition: opacity 200ms ease, background-color 200ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .project-closure-chart-bar, .project-closure-chart-series, .dashboard-chart-legend button { transition: none; }
 }
 .dashboard-progress-grid .project-closure-fixed-axis {
   margin-right: var(--closure-value-space);
@@ -12651,6 +12657,9 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
  .dashboard-past-unapproved { margin: 0; min-width: 0; }
 
 .dashboard-past-unapproved .dashboard-card-title { min-width: 0; overflow-wrap: anywhere; }
+[data-chart-empty="true"] > :not(.dashboard-chart-empty-state) { display: none !important; }
+.dashboard-chart-empty-state { width: 100%; min-width: 0; }
+.dashboard-chart-empty-state[hidden] { display: none !important; }
 .dashboard-past-unapproved .dashboard-card-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
