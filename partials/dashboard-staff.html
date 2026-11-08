@@ -561,6 +561,29 @@
                   <span class="heatmap-legend-label">มาก</span>
                 </div>
               </article>
+              <article class="dashboard-card dashboard-card-wide dashboard-past-unapproved">
+                <div class="dashboard-card-header">
+                  <h4 class="dashboard-card-title">โครงการที่เลยกำหนดจัดและยังไม่อนุมัติ</h4>
+                  <p id="pastUnapprovedCaptionStaff" class="chart-caption">อ้างอิงวันปฏิบัติงานวันสุดท้ายและสถานะล่าสุดในระบบ · ข้อมูลตามตัวกรอง · ไม่รวมโครงการที่ยกเลิก</p>
+                  <label class="past-unapproved-toggle">
+                    <span>ซ่อนโครงการที่ไม่ส่งปิด</span>
+                    <input id="pastUnapprovedHideNoCloseStaff" type="checkbox" role="switch" checked>
+                  </label>
+                </div>
+                <div id="pastUnapprovedCountStaff" class="table-caption" aria-live="polite">แสดงผล 0 โครงการ</div>
+                <div class="project-table-wrapper">
+                  <table id="pastUnapprovedTableStaff" aria-labelledby="pastUnapprovedCountStaff" aria-describedby="pastUnapprovedCaptionStaff">
+                    <thead><tr>
+                      <th style="text-align:center;">รหัสโครงการ</th>
+                      <th style="text-align:center;">ชื่อโครงการ</th>
+                      <th style="text-align:center;">วันปฏิบัติงานวันสุดท้าย</th>
+                      <th style="text-align:center;">สถานะอนุมัติล่าสุด</th>
+                      <th style="text-align:right;">ผ่านกำหนดจัดแล้ว</th>
+                    </tr></thead>
+                    <tbody id="pastUnapprovedTableBodyStaff"></tbody>
+                  </table>
+                </div>
+              </article>
             </div>
             </section>
           </section>

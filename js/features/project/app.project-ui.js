@@ -1165,6 +1165,102 @@ function updateClubDebtSummaryChart(rows, chartCanvasEl, chartInnerEl) {
   });
 }
 
+function getPastUnapprovedProjects(filtered, now = new Date(), hideNoClose = true) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Bangkok", year: "numeric", month: "numeric", day: "numeric"
+  }).formatToParts(now);
+  const part = (type) => Number(parts.find((item) => item.type === type).value);
+  const today = Date.UTC(part("year"), part("month") - 1, part("day"));
+  return filtered.flatMap((project) => {
+    if (isProjectApproved(project) || isProjectCancelled(project)) return [];
+    if (hideNoClose && (project.statusClose || "").toString().trim() === "ไม่ส่งปิดโครงการ") return [];
+    const date = parseProjectDate(project.lastWorkDateObj || project.lastWorkDate);
+    if (!date) return [];
+    const day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const days = Math.floor((today - day) / 86400000);
+    return days > 0 ? [{ project, date, days }] : [];
+  }).sort((a, b) => b.days - a.days);
+}
+
+function updatePastUnapprovedProjects(filtered) {
+  const body = document.getElementById("pastUnapprovedTableBodyStaff");
+  const count = document.getElementById("pastUnapprovedCountStaff");
+  if (!body || !count) return;
+  const toggle = document.getElementById("pastUnapprovedHideNoCloseStaff");
+  if (toggle) toggle.onchange = () => {
+    updatePastUnapprovedProjects(filtered);
+    const wrapper = body.closest(".project-table-wrapper");
+    if (!wrapper) return;
+    wrapper.scrollTop = 0;
+    wrapper.getAnimations?.().forEach((animation) => animation.cancel());
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      wrapper.animate?.([
+        { opacity: 0.35, transform: "translateY(6px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ], { duration: 220, easing: "ease-out" });
+    }
+  };
+  const hideNoClose = toggle ? toggle.checked : true;
+  const items = getPastUnapprovedProjects(filtered, new Date(), hideNoClose);
+  count.textContent = `แสดงผล ${items.length.toLocaleString("th-TH")} โครงการ`;
+  body.replaceChildren();
+  if (!items.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 5;
+    cell.className = "list-empty-cell";
+    cell.innerHTML = renderListEmptyState(
+      "ไม่พบโครงการที่เลยกำหนดจัดและยังไม่อนุมัติ",
+      hideNoClose
+        ? "ลองปรับตัวกรอง หรือปิดตัวเลือกซ่อนโครงการที่ไม่ส่งปิดเพื่อดูรายการเพิ่มเติม"
+        : "ไม่มีรายการตามตัวกรองที่เลือก ลองปรับตัวกรองเพื่อดูโครงการอื่น",
+      "calendar"
+    );
+    row.append(cell);
+    body.append(row);
+    return;
+  }
+  items.forEach(({ project, date, days }) => {
+    const row = document.createElement("tr");
+    row.className = "project-row";
+    row.style.cursor = "pointer";
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-label", `ดูรายละเอียดโครงการ ${project.name || project.code || ""}`);
+    const cells = [
+      ["col-code", "รหัสโครงการ", project.code || "-"],
+      ["col-name", "ชื่อโครงการ", project.name || "(ไม่ระบุชื่อโครงการ)"],
+      ["col-year", "วันปฏิบัติงานวันสุดท้าย", date.toLocaleDateString("th-TH")],
+      ["col-status", "สถานะอนุมัติล่าสุด", project.statusMain || project.approvalStatus || "ไม่ระบุสถานะ"],
+      ["col-budget", "ผ่านกำหนดจัดแล้ว", `${days.toLocaleString("th-TH")} วัน`]
+    ];
+    cells.forEach(([className, label, value]) => {
+      const cell = document.createElement("td");
+      cell.className = className;
+      cell.dataset.label = label;
+      const valueEl = document.createElement("span");
+      valueEl.className = "past-unapproved-cell-value";
+      valueEl.textContent = value;
+      cell.append(valueEl);
+      if (className === "col-name") {
+        const org = document.createElement("div");
+        org.className = "kpi-caption";
+        org.textContent = project.orgName || project.orgGroup || "-";
+        cell.append(org);
+      }
+      row.append(cell);
+    });
+    row.addEventListener("click", () => openProjectModal(project));
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openProjectModal(project);
+      }
+    });
+    body.append(row);
+  });
+}
+
 function updateDashboardInsights(filtered, summary) {
   if (!summary) return;
   if (

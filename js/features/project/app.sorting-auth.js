@@ -140,6 +140,7 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   const filtered = getVisibleProjectsForContext(ctxKey);
   if (ctxKey === "staff") {
     updateProjectOrgComparison(filtered);
+    updatePastUnapprovedProjects(filtered);
     updateProjectFilterPresentation();
     const filters = getStaffProjectTrackingFilters();
     const result = document.getElementById("projectFilterResultsStaff");
@@ -625,7 +626,7 @@ function syncStaffProjectWorkflowTabs() {
       setActiveStaffProjectWorkflowTab(tab);
       const targetId = btn.dataset.projectWorkflowTarget || "";
       const target = targetId ? document.getElementById(targetId) : null;
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (target) scrollToStaffProjectSection(target);
     });
   });
 
@@ -646,6 +647,28 @@ function setStaffProjectWorkflowTab(tab = "checks") {
 
 window.sgcuSetStaffProjectWorkflowTab = setStaffProjectWorkflowTab;
 
+function getStaffProjectSectionOffset() {
+  const header = document.querySelector(".site-header");
+  const headerHeight = header?.getBoundingClientRect().height || 0;
+  const controls = document.querySelector('.page-view[data-page="dashboard-staff"] .dashboard-sticky-controls');
+  const controlsHeight = controls?.getBoundingClientRect().height || 0;
+  if (!controlsHeight) return headerHeight + 12;
+  // Use the same measured clearance for navigation and its active-section marker.
+  const stickyTop = headerHeight + 8;
+  controls.style.top = `${stickyTop}px`;
+  return stickyTop + controlsHeight + 12;
+}
+
+function scrollToStaffProjectSection(target) {
+  const offset = getStaffProjectSectionOffset();
+  window.scrollTo({
+    top: Math.max(0, window.scrollY + target.getBoundingClientRect().top - offset),
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+  });
+}
+
+window.sgcuScrollToStaffProjectSection = scrollToStaffProjectSection;
+
 function initStaffProjectWorkflowScrollSpy() {
   if (staffProjectWorkflowSpyReady) return;
   const navButtons = Array.from(document.querySelectorAll("[data-project-workflow-toc]"))
@@ -658,18 +681,12 @@ function initStaffProjectWorkflowScrollSpy() {
     .filter((item) => item.tab && item.el);
   if (!sections.length) return;
 
-  const getHeaderOffset = () => {
-    const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
-    const navHeight = document.querySelector(".dashboard-section-nav")?.getBoundingClientRect().height || 0;
-    return headerHeight + navHeight + 24;
-  };
-
   const updateActiveFromScroll = () => {
     staffProjectWorkflowScrollSpyRaf = 0;
     const activePage = document.querySelector(".page-view.active")?.dataset.page || "";
     if (activePage !== "dashboard-staff") return;
 
-    const checkpoint = getHeaderOffset();
+    const checkpoint = getStaffProjectSectionOffset() + 2;
     let current = sections[0];
     sections.forEach((item) => {
       const rect = item.el.getBoundingClientRect();

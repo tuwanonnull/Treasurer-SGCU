@@ -634,7 +634,11 @@ function initDashboardMobileActionBar() {
     const target = targetId ? document.getElementById(targetId) : null;
     if (!target) return;
     window.sgcuSetStaffProjectWorkflowTab?.(action);
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (window.sgcuScrollToStaffProjectSection) {
+      window.sgcuScrollToStaffProjectSection(target);
+    } else {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
     window.setTimeout(sync, 0);
   };
 
@@ -2817,11 +2821,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   document.querySelectorAll("[data-about-org-term]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
       const container = document.getElementById("org-structure-content");
       const heading = document.getElementById("about-org-heading");
       const status = document.getElementById("aboutOrgJumpStatus");
       if (!container || !heading) return;
+      event.preventDefault();
       const term = button.dataset.aboutOrgTerm;
       const tab = Array.from(container.querySelectorAll("[data-org-term]"))
         .find((item) => item.dataset.orgTerm === term);

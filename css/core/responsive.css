@@ -1873,3 +1873,120 @@
     border-top: 1px solid rgba(226, 232, 240, 0.9);
   }
 }
+
+/* Past unapproved projects: one readable card per project on mobile. */
+@media (max-width: 840px) {
+  .dashboard-past-unapproved .project-table-wrapper {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(520px, 60vh);
+    max-height: min(520px, 60dvh);
+    min-width: 0;
+    scrollbar-gutter: stable;
+    padding: 4px;
+    box-sizing: border-box;
+  }
+  #pastUnapprovedTableStaff,
+  #pastUnapprovedTableStaff tbody { display: block; width: 100%; min-width: 0; }
+  #pastUnapprovedTableStaff thead { display: none; }
+  #pastUnapprovedTableStaff tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border: 1px solid var(--theme-pink-100, #fce7f3);
+    border-radius: 14px;
+    background: #fff;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  #pastUnapprovedTableStaff tr:last-child { margin-bottom: 0; }
+  #pastUnapprovedTableStaff tr:focus-visible { outline: 2px solid var(--theme-pink-700, #be185d); outline-offset: 2px; }
+  #pastUnapprovedTableStaff td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  #pastUnapprovedTableStaff td:is(.col-code, .col-name, .col-year, .col-status, .col-budget) {
+    min-width: 0;
+    width: auto;
+    white-space: normal;
+    text-align: left;
+  }
+  #pastUnapprovedTableStaff td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 400;
+    text-align: left;
+  }
+  #pastUnapprovedTableStaff .past-unapproved-cell-value {
+    display: block;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .dashboard-past-unapproved .dashboard-card-header { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-past-unapproved .past-unapproved-toggle { grid-column: 1; grid-row: 3; justify-self: end; margin: 4px 0 0; }
+  #pastUnapprovedTableStaff td.col-code {
+    grid-column: 1;
+    grid-row: 1;
+    color: #9f1239;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  #pastUnapprovedTableStaff td.col-name {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: -6px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  #pastUnapprovedTableStaff td.col-name .kpi-caption {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  #pastUnapprovedTableStaff td.col-status {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    font-size: 11px;
+    color: #9f1239;
+  }
+  #pastUnapprovedTableStaff td.col-status .past-unapproved-cell-value {
+    display: inline-block;
+    max-width: 100%;
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: var(--theme-pink-50, #fdf2f8);
+  }
+  #pastUnapprovedTableStaff td.col-year,
+  #pastUnapprovedTableStaff td.col-budget { grid-row: 3; padding-top: 10px; border-top: 1px solid #f1f5f9; text-align: left; }
+  #pastUnapprovedTableStaff td.col-year { grid-column: 1; }
+  #pastUnapprovedTableStaff td.col-budget { grid-column: 2; }
+  #pastUnapprovedTableStaff td.col-year::before { content: "วันปฏิบัติงานสุดท้าย"; }
+  #pastUnapprovedTableStaff td.col-budget .past-unapproved-cell-value { font-weight: 600; }
+  #pastUnapprovedTableStaff td[colspan] { grid-column: 1 / -1; }
+  #pastUnapprovedTableStaff td.col-code::before,
+  #pastUnapprovedTableStaff td.col-status::before,
+  #pastUnapprovedTableStaff td.col-name::before,
+  #pastUnapprovedTableStaff td[colspan]::before { display: none; }
+
+}

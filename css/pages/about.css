@@ -221,6 +221,12 @@
 }
 
 /* Long-form text has distinct, indented paragraphs. */
+.about-page .about-block-story > p {
+  text-align: justify;
+  text-align-last: start;
+  text-justify: inter-character;
+}
+
 .about-page .about-block-story > p,
 .about-page .about-block-scope > p,
 .about-page .about-block-vision > p {
@@ -333,12 +339,9 @@
   font: inherit;
   text-align: inherit;
   cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: var(--theme-pink-300);
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1px;
+  text-decoration: none;
 }
-.about-org-link:hover { text-decoration-color: var(--theme-pink-600); }
+.about-org-link:hover { text-decoration: none; }
 #about-org-heading { scroll-margin-top: 90px; }
 #aboutOrgStructureTitleLabel {
   display: inline-block;

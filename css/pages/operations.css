@@ -12645,3 +12645,30 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
   #dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card) { padding: 14px; }
   #dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) > :is(.dashboard-card-header, .chart-header) { min-height: 0; }
 }
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-past-unapproved {
+  grid-column: 1 / -1;
+}
+ .dashboard-past-unapproved { margin: 0; min-width: 0; }
+
+.dashboard-past-unapproved .dashboard-card-title { min-width: 0; overflow-wrap: anywhere; }
+.dashboard-past-unapproved .dashboard-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+}
+.dashboard-past-unapproved .dashboard-card-header .chart-caption { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+.dashboard-past-unapproved .past-unapproved-toggle { grid-column: 2; grid-row: 1; }
+.past-unapproved-toggle { display: inline-flex; align-items: center; justify-content: flex-end; gap: 10px; font-size: 12px; color: #64748b; cursor: pointer; }
+.past-unapproved-toggle input {
+  appearance: none; flex: 0 0 36px; width: 36px; height: 22px; margin: 0;
+  border: 1px solid #94a3b8; border-radius: 999px; background: #cbd5e1; cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.past-unapproved-toggle input::before { content: ""; display: block; width: 16px; height: 16px; margin: 2px; border-radius: 50%; background: white; transition: transform .15s; }
+.past-unapproved-toggle input:checked { background: #db2777; border-color: #db2777; }
+.past-unapproved-toggle input:checked::before { transform: translateX(14px); }
+.past-unapproved-toggle input:focus-visible { outline: 2px solid #9d174d; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .past-unapproved-toggle input,
+  .past-unapproved-toggle input::before { transition: none; }
+}

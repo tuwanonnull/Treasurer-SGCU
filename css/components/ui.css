@@ -1513,19 +1513,19 @@ th.sortable.sort-desc::after {
   border-collapse: collapse;
 }
 
-#projectTable th, #projectTable td, #projectTableStaff th, #projectTableStaff td, #longestOpenTableStaff th, #longestOpenTableStaff td {
+#projectTable th, #projectTable td, #projectTableStaff th, #projectTableStaff td, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td {
   padding: 12px 16px;
 }
 
 /* columns not wrapping */
 
-#projectTable td.col-code, #projectTable td.col-year, #projectTable td.col-status, #projectTable td.col-budget, #projectTableStaff td.col-code, #projectTableStaff td.col-year, #projectTableStaff td.col-status, #projectTableStaff td.col-budget, #longestOpenTableStaff td.col-code, #longestOpenTableStaff td.col-year, #longestOpenTableStaff td.col-status, #longestOpenTableStaff td.col-budget {
+#projectTable td.col-code, #projectTable td.col-year, #projectTable td.col-status, #projectTable td.col-budget, #projectTableStaff td.col-code, #projectTableStaff td.col-year, #projectTableStaff td.col-status, #projectTableStaff td.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-code, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-budget {
   white-space: nowrap;
 }
 
 /* columns allowed to wrap */
 
-#projectTable td.col-name, #projectTableStaff td.col-name, #longestOpenTableStaff td.col-name {
+#projectTable td.col-name, #projectTableStaff td.col-name, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-name {
   white-space: normal;
   overflow-wrap: break-word;
 }
@@ -1542,48 +1542,48 @@ th.sortable.sort-desc::after {
 
 /* alignments */
 
-#projectTable td.col-year, #projectTable td.col-status, #projectTableStaff td.col-year, #projectTableStaff td.col-status, #longestOpenTableStaff td.col-year, #longestOpenTableStaff td.col-status {
+#projectTable td.col-year, #projectTable td.col-status, #projectTableStaff td.col-year, #projectTableStaff td.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-status {
   text-align: center;
 }
 
-#projectTable td.col-budget, #projectTableStaff td.col-budget, #longestOpenTableStaff td.col-budget {
+#projectTable td.col-budget, #projectTableStaff td.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-budget {
   text-align: right;
 }
 
 /* column widths */
 
-#projectTable th.col-code, #projectTable td.col-code, #projectTable th.col-year, #projectTable td.col-year, #projectTable th.col-status, #projectTable td.col-status, #projectTable th.col-budget, #projectTable td.col-budget, #projectTableStaff th.col-code, #projectTableStaff td.col-code, #projectTableStaff th.col-year, #projectTableStaff td.col-year, #projectTableStaff th.col-status, #projectTableStaff td.col-status, #projectTableStaff th.col-budget, #projectTableStaff td.col-budget, #longestOpenTableStaff th.col-code, #longestOpenTableStaff td.col-code, #longestOpenTableStaff th.col-year, #longestOpenTableStaff td.col-year, #longestOpenTableStaff th.col-status, #longestOpenTableStaff td.col-status, #longestOpenTableStaff th.col-budget, #longestOpenTableStaff td.col-budget {
+#projectTable th.col-code, #projectTable td.col-code, #projectTable th.col-year, #projectTable td.col-year, #projectTable th.col-status, #projectTable td.col-status, #projectTable th.col-budget, #projectTable td.col-budget, #projectTableStaff th.col-code, #projectTableStaff td.col-code, #projectTableStaff th.col-year, #projectTableStaff td.col-year, #projectTableStaff th.col-status, #projectTableStaff td.col-status, #projectTableStaff th.col-budget, #projectTableStaff td.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-code, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-code, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-budget {
   width: auto;
   min-width: 76px;
   white-space: nowrap;
 }
 
-#projectTable th.col-code, #projectTable td.col-code, #projectTableStaff th.col-code, #projectTableStaff td.col-code, #longestOpenTableStaff th.col-code, #longestOpenTableStaff td.col-code {
+#projectTable th.col-code, #projectTable td.col-code, #projectTableStaff th.col-code, #projectTableStaff td.col-code, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-code, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-code {
   min-width: 80px;
 }
 
-#projectTable th.col-year, #projectTable td.col-year, #projectTableStaff th.col-year, #projectTableStaff td.col-year, #longestOpenTableStaff th.col-year, #longestOpenTableStaff td.col-year {
+#projectTable th.col-year, #projectTable td.col-year, #projectTableStaff th.col-year, #projectTableStaff td.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-year, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-year {
   min-width: 80px;
 }
 
-#projectTable th.col-status, #projectTable td.col-status, #projectTableStaff th.col-status, #projectTableStaff td.col-status, #longestOpenTableStaff th.col-status, #longestOpenTableStaff td.col-status {
+#projectTable th.col-status, #projectTable td.col-status, #projectTableStaff th.col-status, #projectTableStaff td.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-status, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-status {
   min-width: 140px;
 }
 
-#projectTable th.col-budget, #projectTable td.col-budget, #projectTableStaff th.col-budget, #projectTableStaff td.col-budget, #longestOpenTableStaff th.col-budget, #longestOpenTableStaff td.col-budget {
+#projectTable th.col-budget, #projectTable td.col-budget, #projectTableStaff th.col-budget, #projectTableStaff td.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-budget, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-budget {
   min-width: 120px;
 }
 
-#projectTable th.col-name, #projectTable td.col-name, #projectTableStaff th.col-name, #projectTableStaff td.col-name, #longestOpenTableStaff th.col-name, #longestOpenTableStaff td.col-name {
+#projectTable th.col-name, #projectTable td.col-name, #projectTableStaff th.col-name, #projectTableStaff td.col-name, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) th.col-name, :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td.col-name {
   white-space: normal;
   overflow-wrap: break-word;
 }
 
-#longestOpenTableStaff tr.project-row-advance td {
+:is(#longestOpenTableStaff, #pastUnapprovedTableStaff) tr.project-row-advance td {
   background: #fef2f2;
 }
 
-#longestOpenTableStaff tr.project-row-advance td:first-child {
+:is(#longestOpenTableStaff, #pastUnapprovedTableStaff) tr.project-row-advance td:first-child {
   box-shadow: inset 4px 0 0 #dc2626;
 }
 
