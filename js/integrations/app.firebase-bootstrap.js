@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
+  connectAuthEmulator,
   onAuthStateChanged,
   signInWithPopup,
   GoogleAuthProvider,
@@ -14,6 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
   getFirestore,
+  connectFirestoreEmulator,
   doc,
   collection,
   addDoc,
@@ -43,9 +45,15 @@ const firebaseConfig = {
   measurementId: "G-BFW19TSYL0"
 };
 
-const app = initializeApp(firebaseConfig);
+const meetingEmulator = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('meetingEmulator') === '1';
+const app = initializeApp(meetingEmulator ? { apiKey: 'demo-budget-meeting', projectId: 'demo-budget-meeting', authDomain: 'demo-budget-meeting.firebaseapp.com' } : firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+if (meetingEmulator) {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9098', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8089);
+}
+window.sgcuMeetingEmulator = meetingEmulator;
 const ALLOWED_AUTH_EMAIL_DOMAIN = "chula.ac.th";
 const AUTH_EMAIL_ACCESS_COLLECTION =
   globalThis.SGCU_APP_CONFIG?.firestore?.collections?.authEmailAccess || "authEmailAccess";
@@ -161,6 +169,7 @@ window.sgcuAuth = {
   signOut,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  meetingEmulator,
   allowedEmailDomain: ALLOWED_AUTH_EMAIL_DOMAIN,
   allowedEmailExceptions: Array.from(AUTH_EMAIL_EXCEPTIONS),
   authEmailAccessCollection: AUTH_EMAIL_ACCESS_COLLECTION,

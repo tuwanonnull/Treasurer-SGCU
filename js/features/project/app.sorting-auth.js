@@ -159,7 +159,9 @@ function refreshProjectStatus(ctxKey = activeProjectStatusContext) {
   // keep the table/summary refresh usable until the chart bundle is available.
   if (typeof updateClosureStatusChart === "function") updateClosureStatusChart(filtered);
   if (typeof updateProjectBudgetComparisonChart === "function") updateProjectBudgetComparisonChart(filtered);
-  if (typeof updateApprovedBudgetPie === "function") updateApprovedBudgetPie(filtered);
+  if (typeof updateApprovedBudgetPie === "function") {
+    updateApprovedBudgetPie(filterProjects({ ignoreOrganization: true }));
+  }
   if (typeof updateTrendLineChart === "function") updateTrendLineChart(filtered);
   if (ctxKey === "staff") {
     renderHomeKpis(filtered);

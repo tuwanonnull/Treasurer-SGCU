@@ -2,221 +2,76 @@
 function updateApprovedBudgetPie(filtered) {
   if (!statusPieChart) return;
 
-  const includedStatuses = [
-    "ผ่านสภาใหญ่",
-    "ส่งขออนุมัติกิจการนิสิต",
-    "อนุมัติโครงการ",
-    "ยกเลิกโครงการ"
-  ];
-
+  // Keep the same approval stages used by this overview.
+  const includedStatuses = new Set([
+    "ผ่านสภาใหญ่", "ส่งขออนุมัติกิจการนิสิต", "อนุมัติโครงการ", "ยกเลิกโครงการ"
+  ]);
   const yearFilter = yearSelect ? yearSelect.value : "all";
   const orgGroupFilter = orgTypeSelect ? orgTypeSelect.value : "all";
   const orgFilter = orgSelect ? orgSelect.value : "all";
-
-  let baseAllProjects = (Array.isArray(filtered) ? filtered : []).filter(
-    (p) => yearFilter === "all" || p.year === yearFilter
+  // The caller applies year, search and tracking filters, but leaves
+  // organizations unfiltered so the pie retains its comparison context.
+  const baseRows = (Array.isArray(filtered) ? filtered : []).filter(
+    (p) => yearFilter === "all" || String(p.year) === String(yearFilter)
   );
+  const byOrganization = orgFilter !== "all";
+  const yearOrganizations = typeof getProjectOrgFiltersForYear === "function"
+    ? getProjectOrgFiltersForYear() : [];
+  const selectedGroup = orgGroupFilter !== "all" ? orgGroupFilter
+    : yearOrganizations.find((org) => org.name === orgFilter)?.group
+      || baseRows.find((project) => project.orgName === orgFilter)?.orgGroup;
+  const rows = byOrganization
+    ? baseRows.filter((project) => selectedGroup && project.orgGroup === selectedGroup)
+    : baseRows;
+  const key = byOrganization ? "orgName" : "orgGroup";
+  const highlightLabel = byOrganization ? orgFilter
+    : orgGroupFilter !== "all" ? orgGroupFilter : null;
+  const totals = new Map();
+  rows.forEach((project) => {
+    if (!includedStatuses.has((project.statusMain || "").trim())) return;
+    const budget = Number(project.approvedBudget100 ?? project.budget ?? 0);
+    if (!Number.isFinite(budget) || budget <= 0) return;
+    const label = project[key] || "(ไม่ระบุ)";
+    totals.set(label, (totals.get(label) || 0) + budget);
+  });
 
-  let baseApprovedProjects = baseAllProjects.filter((p) =>
-    includedStatuses.includes((p.statusMain || "").trim())
-  );
-
-  let labels = [];
-  let data = [];
-  let highlightLabel = null;
-
-  const baseColors = [
-    "#f9a8d4",
-    "#bfdbfe",
-    "#bbf7d0",
-    "#fed7aa",
-    "#fecaca",
-    "#ddd6fe",
-    "#fef3c7"
-  ];
-  const highlightColor = "#fb7185";
-
-  let sumApproved = 0;
-  let sumBase = 0;
-
-  const baseGroups = getChartOrgGroups();
-
-  if (orgGroupFilter === "all" && orgFilter === "all") {
-    const budgetByGroup = {};
-    baseGroups.forEach((g) => (budgetByGroup[g] = 0));
-
-    baseApprovedProjects.forEach((p) => {
-      if (budgetByGroup[p.orgGroup] !== undefined) {
-        budgetByGroup[p.orgGroup] += p.budget || 0;
-      }
-    });
-
-    baseGroups.forEach((g) => {
-      if (budgetByGroup[g] > 0) {
-        labels.push(g);
-        data.push(budgetByGroup[g]);
-      }
-    });
-
-    sumApproved = baseApprovedProjects.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-    sumBase = baseAllProjects.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-  } else if (orgGroupFilter !== "all" && orgFilter === "all") {
-    const budgetByGroup = {};
-    baseGroups.forEach((g) => (budgetByGroup[g] = 0));
-
-    baseApprovedProjects.forEach((p) => {
-      if (budgetByGroup[p.orgGroup] !== undefined) {
-        budgetByGroup[p.orgGroup] += p.budget || 0;
-      }
-    });
-
-    baseGroups.forEach((g) => {
-      if (budgetByGroup[g] > 0) {
-        labels.push(g);
-        data.push(budgetByGroup[g]);
-      }
-    });
-
-    highlightLabel = orgGroupFilter;
-
-    const groupApproved = baseAllProjects
-      .filter((p) => p.orgGroup === orgGroupFilter)
-      .filter((p) => includedStatuses.includes((p.statusMain || "").trim()));
-
-    sumApproved = groupApproved.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-    sumBase = baseAllProjects.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-  } else if (orgGroupFilter !== "all" && orgFilter !== "all") {
-    const allowedOrgs = getOrgsByGroup(orgGroupFilter);
-    const budgetByClub = {};
-
-    baseApprovedProjects
-      .filter((p) => p.orgGroup === orgGroupFilter)
-      .forEach((p) => {
-        const name = p.orgName || "(ไม่ระบุ)";
-        if (allowedOrgs.length && !allowedOrgs.includes(name)) return;
-        budgetByClub[name] = (budgetByClub[name] || 0) + (p.budget || 0);
-      });
-
-    const orderedLabels = allowedOrgs.length ? allowedOrgs : Object.keys(budgetByClub);
-    labels = orderedLabels.filter((l) =>
-      allowedOrgs.length ? budgetByClub[l] > 0 || l === orgFilter : true
-    );
-    data = labels.map((l) => budgetByClub[l] || 0);
-    highlightLabel = orgFilter;
-
-    const clubApproved = baseAllProjects
-      .filter((p) => p.orgGroup === orgGroupFilter && p.orgName === orgFilter)
-      .filter((p) => includedStatuses.includes((p.statusMain || "").trim()));
-
-    sumApproved = clubApproved.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-    sumBase = baseAllProjects
-      .filter((p) => p.orgGroup === orgGroupFilter)
-      .reduce((a, p) => a + (p.budget || 0), 0);
-  } else if (orgGroupFilter === "all" && orgFilter !== "all") {
-    const budgetByGroup = {};
-    baseGroups.forEach((g) => (budgetByGroup[g] = 0));
-
-    baseApprovedProjects.forEach((p) => {
-      if (budgetByGroup[p.orgGroup] !== undefined) {
-        budgetByGroup[p.orgGroup] += p.budget || 0;
-      }
-    });
-
-    baseGroups.forEach((g) => {
-      if (budgetByGroup[g] > 0) {
-        labels.push(g);
-        data.push(budgetByGroup[g]);
-      }
-    });
-
-    const yearOrgFilters = typeof getProjectOrgFiltersForYear === "function"
-      ? getProjectOrgFiltersForYear()
-      : (Array.isArray(orgFilters) ? orgFilters : []);
-    const selectedOrgGroupFromFilters = yearOrgFilters.find((o) => o.name === orgFilter);
-    const selectedOrgProject = projects.find((p) => p.orgName === orgFilter);
-    const selectedOrgGroup = selectedOrgGroupFromFilters
-      ? selectedOrgGroupFromFilters.group
-      : selectedOrgProject
-      ? selectedOrgProject.orgGroup
-      : null;
-    highlightLabel = selectedOrgGroup || null;
-
-    const clubApproved = baseAllProjects
-      .filter((p) => p.orgName === orgFilter)
-      .filter((p) => includedStatuses.includes((p.statusMain || "").trim()));
-
-    sumApproved = clubApproved.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-    sumBase = baseAllProjects.reduce(
-      (a, p) => a + (p.budget || 0),
-      0
-    );
-  }
-
-  const bgColors = labels.map((l, i) =>
-    l === highlightLabel ? highlightColor : baseColors[i % baseColors.length]
-  );
-  const offsets = labels.map((l) => (l === highlightLabel ? 15 : 0));
-
+  const preferredLabels = byOrganization && selectedGroup
+    ? getOrgsByGroup(selectedGroup) : byOrganization ? [] : getChartOrgGroups();
+  // Catalogs define order, not eligibility: historical/uncatalogued
+  // organizations must still contribute to both the arcs and the total.
+  const labels = [...new Set([...preferredLabels, ...totals.keys()])]
+    .filter((label) => totals.has(label));
+  const data = labels.map((label) => totals.get(label));
+  const total = data.reduce((sum, value) => sum + value, 0);
+  const baseColors = ["#f9a8d4", "#bfdbfe", "#bbf7d0", "#fed7aa", "#fecaca", "#ddd6fe", "#fef3c7"];
+  const dataset = statusPieChart.data.datasets[0];
   statusPieChart.data.labels = labels;
-  statusPieChart.data.datasets[0].data = data;
-  statusPieChart.data.datasets[0].backgroundColor = bgColors;
-  statusPieChart.data.datasets[0].offset = offsets;
+  dataset.data = data;
+  dataset.backgroundColor = labels.map((label, index) =>
+    label === highlightLabel ? "#fb7185" : baseColors[index % baseColors.length]
+  );
+  dataset.offset = labels.map((label) => label === highlightLabel ? 15 : 0);
 
-  if (highlightLabel) {
-    const idx = labels.indexOf(highlightLabel);
-    if (idx !== -1) {
-      const targetVal = data[idx];
-      const percent =
-        sumBase > 0 ? Math.round((sumApproved / sumBase) * 100) : 0;
+  const center = statusPieChart.options.plugins.centerText;
+  const selectedBudget = highlightLabel ? totals.get(highlightLabel) || 0 : total;
+  // Use exactly the same denominator and precision as the arc tooltip.
+  center.text = total > 0 ? ((selectedBudget / total) * 100).toFixed(1) + "%" : "0%";
+  center.subText = "";
+  if (!rows.length) {
+    center.subText = "ไม่มีข้อมูลตรงกับตัวกรอง";
+  } else if (!selectedBudget) {
+    center.subText = "ไม่มีงบอนุมัติ";
+  } else if (highlightLabel) {
+    const rankedValues = [...new Set(data)].sort((a, b) => b - a);
+    center.subText = `อันดับงบ ${rankedValues.indexOf(selectedBudget) + 1}/${data.length}`;
+  }
 
-      statusPieChart.options.plugins.centerText.text = percent + "%";
-
-      if (targetVal > 0) {
-        const positiveValues = data.filter((v) => v > 0);
-        const rankedValues = [...new Set(positiveValues)].sort((a, b) => b - a);
-        const rank = rankedValues.findIndex((v) => v === targetVal) + 1;
-
-        statusPieChart.options.plugins.centerText.subText =
-          rank > 0 ? `อันดับงบ ${rank}/${positiveValues.length}` : "";
-      } else {
-        statusPieChart.options.plugins.centerText.subText = "ไม่มีงบอนุมัติ";
-      }
-    } else {
-      statusPieChart.options.plugins.centerText.text = "0%";
-      statusPieChart.options.plugins.centerText.subText = "";
+  // Chart.js stores legend visibility by index; discard it when filter changes
+  // replace the labels so a previously hidden arc cannot hide another group.
+  labels.forEach((label, index) => {
+    if (statusPieChart.getDataVisibility && !statusPieChart.getDataVisibility(index)) {
+      statusPieChart.toggleDataVisibility(index);
     }
-  } else {
-    const percent =
-      sumBase > 0 ? Math.round((sumApproved / sumBase) * 100) : 0;
-    statusPieChart.options.plugins.centerText.text = percent + "%";
-    statusPieChart.options.plugins.centerText.subText = "";
-  }
-
-  if (!baseAllProjects.length) {
-    statusPieChart.data.labels = [];
-    statusPieChart.data.datasets[0].data = [];
-    statusPieChart.data.datasets[0].backgroundColor = [];
-    statusPieChart.data.datasets[0].offset = [];
-    statusPieChart.options.plugins.centerText.text = "0%";
-    statusPieChart.options.plugins.centerText.subText = "ไม่มีข้อมูลตรงกับตัวกรอง";
-  }
+  });
   statusPieChart.update("none");
 }

@@ -5,3 +5,5 @@ dist/
 firebase-debug.log
 functions/.env*
 functions/.secret.local
+
+firestore-debug.log

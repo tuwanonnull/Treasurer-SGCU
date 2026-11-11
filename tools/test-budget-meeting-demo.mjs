@@ -1,0 +1,188 @@
+import { loadMeetingFixture } from './budget-meeting-test-fixture.mjs';
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+const url = process.env.BUDGET_DEMO_URL || 'http://localhost:4186/budget-meeting-preview.html';
+const click = action => page.locator(`[data-action="${action}"]`).first().click();
+async function setup() {
+  await page.goto(url);
+  await loadMeetingFixture(page);
+  for (const input of await page.locator('[data-form="setup"] input[type="number"]').all()) await input.fill('4');
+  assert.equal(await page.locator('[data-people-total]').innerText(), '24');
+  await page.locator('[name="ack"]').check();
+  await page.locator('[data-form="setup"] button[type="submit"]').click();
+}
+async function vote(yes, no, missing) {
+  await click('open-vote');
+  await page.locator('[name="yes"]').fill(String(yes));
+  await page.locator('[name="no"]').fill(String(no));
+  await page.locator('[name="missing"]').fill(String(missing));
+  await page.locator('[data-form="vote"] button[type="submit"]').click();
+}
+async function cancelAndRank(ids, cancel = []) {
+  for (const id of cancel) await page.locator(`[name="cancel"][value="${id}"]`).check();
+  await page.locator('[data-form="cancel"] button[type="submit"]').click();
+  for (const [rank, id] of ids.entries()) await page.locator('[name="nominee"]').nth(rank).selectOption(String(id), { force: true });
+  await page.locator('[data-form="nominate"] button[type="submit"]').click();
+  await click('rank');
+  await click('choose-project');
+}
+try {
+  await page.goto(url);
+  await loadMeetingFixture(page);
+  assert.equal(await page.locator('[data-form="setup"] [data-meeting-filter]').count(), 0);
+  assert.equal(await page.locator('[data-form="setup"] tbody tr:visible').count(), 6);
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({width,height:900});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({path:`/tmp/bm-setup-refresh-${width}.png`,fullPage:true});
+  }
+  await page.setViewportSize({width:1280,height:900});
+  await setup();
+  await click('back');
+  await click('dismiss');
+  assert.match(await page.locator('.bm-work h3').innerText(), /กรอบงบ/);
+  await click('back'); await click('back-confirm');
+  assert.equal(await page.locator('[name="count0"]').inputValue(), '4');
+  await page.locator('[name="ack"]').check();
+  await page.locator('[data-form="setup"] button[type="submit"]').click();
+  await vote(13, 11, 0);
+  await click('finish');
+  assert.match(await page.locator('.bm-closed').innerText(), /รับรองผล/);
+  await setup();
+  await vote(12, 12, 0);
+  assert.equal(await page.locator('[data-action="finish"]').count(), 0);
+  await click('revote');
+  await page.locator('[name="yes"]').fill('25');
+  await page.locator('[data-form="vote"] button[type="submit"]').click();
+  assert.equal(await page.locator('[data-form="vote"]').count(), 1);
+  await page.locator('[name="yes"]').fill('10');
+  await page.locator('[name="no"]').fill('14');
+  await page.locator('[name="missing"]').fill('0');
+  await page.locator('[data-form="vote"] button[type="submit"]').click();
+  await click('dissatisfied');
+  await page.locator('[data-meeting-filter]').fill('SGCU-06');
+  await page.locator('[name="cancel"][value="5"]').check();
+  await page.locator('[data-meeting-filter]').fill('SGCU-01');
+  assert.equal(await page.locator('[name="cancel"][value="5"]').isChecked(), true);
+  assert.equal(await page.locator('[data-form="cancel"] tbody tr:visible').count(), 1);
+  await page.locator('[data-meeting-filter]').fill('');
+  await page.screenshot({path:'/tmp/bm-cancel-refresh-1280.png',fullPage:true});
+  await cancelAndRank([0, 1], [5]);
+  assert.match(await page.locator('.bm-work h3').innerText(), /ต้อนรับ/);
+  assert.equal(await page.locator('.bm-project-actions [data-action="switch-project"]').count(), 1);
+  assert.match(await page.locator('.bm-choice-list').innerText(), /ผู้มีสิทธิ์ออกเสียง/);
+  assert.equal(await page.locator('.bm-choice-list label').last().evaluate(el => getComputedStyle(el).borderBottomWidth), '0px');
+  await page.screenshot({path:'/tmp/bm-recipients-final.png',fullPage:true});
+  for (const id of [1, 2, 3, 4, 5]) await page.locator(`[name="recipient"][value="${id}"]`).check();
+  await page.locator('[data-form="recipients"] button[type="submit"]').click();
+  assert.match(await page.getByRole('alert').innerText(), /1–4/);
+  assert.equal(await page.locator('[name="recipient"]:checked').count(), 5);
+  for (const input of await page.locator('[name="recipient"]').all()) await input.uncheck();
+  for (const id of [3, 4]) await page.locator(`[name="recipient"][value="${id}"]`).check();
+  assert.equal(await page.locator('.bm-choice-list label:has(input:checked)').first().evaluate(el => getComputedStyle(el).boxShadow), 'none');
+  await page.locator('[data-form="recipients"] button[type="submit"]').click();
+  assert.match(await page.locator('.bm-work .bm-tag').innerText(), /12 คน/);
+  assert.equal(await page.locator('.bm-project-actions [data-action="switch-project"]').count(), 1);
+  assert.equal(await page.locator('[data-action="timer"]').evaluate(el => el.classList.contains('bm-primary')), true);
+  assert.equal(await page.locator('[data-action="next-stage"]').evaluate(el => el.classList.contains('bm-primary')), false);
+  for (const width of [1280,390,320]) {
+    await page.setViewportSize({width,height:900});
+    const widths = await page.locator('.bm-hearing-steps li').evaluateAll(items => items.map(el => el.getBoundingClientRect().width));
+    assert.ok(Math.max(...widths) - Math.min(...widths) < 1);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({path:`/tmp/bm-hearing-equal-${width}.png`,fullPage:true});
+  }
+  await page.setViewportSize({width:1280,height:900});
+
+  await click('timer');
+  await page.waitForTimeout(1100);
+  assert.notEqual(await page.locator('[data-clock]').innerText(), '05:00');
+  await click('timer');
+  await page.screenshot({ path: '/tmp/bm-process-desktop.png', fullPage: true });
+  for (let i = 0; i < 3; i++) await click('next-stage');
+  await vote(8, 4, 0);
+  assert.equal(await page.locator('.bm-allocation > .bm-table-wrap + .bm-calculation-notes').count(), 1);
+  assert.equal(await page.locator('.bm-calculation-notes').evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
+  await page.screenshot({path:'/tmp/bm-allocation-criteria-final.png',fullPage:true});
+  assert.match(await page.getByRole('status').innerText(), /30,000/);
+  await click('apply');
+  await click('back'); await click('back-confirm');
+  assert.match(await page.getByRole('status').innerText(), /30,000/);
+  await click('apply');
+  await click('choose-project');
+  await click('skip');
+  const rows = await page.locator('.bm-work tbody tr').allTextContents();
+  assert(rows[0].includes('90,000'));
+  assert(rows[3].includes('55,000'));
+  assert(rows[4].includes('45,000'));
+  assert(rows[5].includes('20,000'));
+  assert.match(await page.locator('.bm-work tfoot').innerText(), /350,000/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: '/tmp/bm-process-mobile-summary.png', fullPage: true });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  await vote(10, 14, 0);
+  await click('dissatisfied');
+  await cancelAndRank([0]);
+  await click('skip');
+  await vote(10, 14, 0);
+  await click('dissatisfied');
+  assert.match(await page.locator('.bm-closed').innerText(), /ยอดจัดสรรรอบล่าสุด/);
+  await click('reset');
+  await click('dismiss');
+  assert.equal(await page.locator('.bm-closed').count(), 1);
+  await page.goto(url);
+  await loadMeetingFixture(page);
+  for (const input of await page.locator('[data-form="setup"] input[type="number"]').all()) await input.fill('4');
+  await page.locator('[name="count0"]').fill('0');
+  await page.locator('[name="ack"]').check();
+  await page.locator('[data-form="setup"] button[type="submit"]').click();
+  await click('exception');
+  await page.locator('[name="type"]').selectOption('absence', { force: true });
+  await page.locator('[name="note"]').fill('จำลองฝ่ายขอรับไม่มีผู้เข้าร่วมหรือผู้แทน และไม่มีเหตุอันสมควร');
+  await page.locator('[name="confirmed"]').check();
+  await page.locator('[data-form="exception"] button[type="submit"]').click();
+  await page.locator('[name="recipient"][value="3"]').check();
+  await page.locator('[data-form="recipients"] button[type="submit"]').click();
+  await vote(4, 12, 0);
+  assert.match(await page.getByRole('status').innerText(), /12,000/);
+  await click('apply');
+  assert.match(await page.locator('.bm-current').innerText(), /มติกรอบงบ/);
+  await click('exception');
+  await page.locator('[name="note"]').fill('มติที่ประชุมเห็นชอบเปลี่ยนประเภท');
+  await page.locator('[name="confirmed"]').check();
+  await page.locator('[data-form="exception"] button[type="submit"]').click();
+  assert.match(await page.locator('.bm-closed').innerText(), /ส่งต่อให้นายก/);
+  await page.goto(url);
+  await loadMeetingFixture(page);
+  for (const input of await page.locator('[data-form="setup"] input[type="number"]').all()) await input.fill('4');
+  await page.locator('[name="ack"]').check();
+  await page.locator('[data-form="setup"] button[type="submit"]').click();
+  await vote(0, 24, 0);
+  await click('dissatisfied');
+  await cancelAndRank([0]);
+  await page.locator('[name="recipient"][value="3"]').check();
+  await page.locator('[data-form="recipients"] button[type="submit"]').click();
+  for (let i = 0; i < 3; i++) await click('next-stage');
+  await vote(3, 13, 0);
+  assert.match(await page.getByRole('status').innerText(), /ลด 0%/);
+  await click('apply');
+  assert.match(await page.locator('.bm-work tbody tr').first().innerText(), /120,000/);
+  await page.goto(url);
+  await loadMeetingFixture(page);
+  for (const input of await page.locator('[data-form="setup"] input[type="number"]').all()) await input.fill('4');
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: '/tmp/bm-process-mobile-setup.png', fullPage: true });
+  assert.deepEqual(errors, []);
+  console.log('Passed: early close, tie, invalid tally, cancellation retention, ranked queue, timer, eligibility, allocation conservation, repeat round, absence motion, meeting transfer, mobile widths.');
+} finally {
+  await browser.close();
+}

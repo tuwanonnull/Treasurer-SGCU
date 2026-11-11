@@ -582,14 +582,15 @@ function matchesProjectTrackingFilters(project, filters) {
   return statusMatch && advanceMatch && monthMatch && orgMatch;
 }
 
-function filterProjects() {
+function filterProjects({ ignoreOrganization = false } = {}) {
   const year = yearSelect ? yearSelect.value : "all";
-  const orgGroup = orgTypeSelect ? orgTypeSelect.value : "all";
-  const org = orgSelect ? orgSelect.value : "all";
+  const orgGroup = !ignoreOrganization && orgTypeSelect ? orgTypeSelect.value : "all";
+  const org = !ignoreOrganization && orgSelect ? orgSelect.value : "all";
   const searchTerm = projectSearchInput ? projectSearchInput.value.trim().toLowerCase() : "";
 
   const trackingFilters = activeProjectStatusContext === "staff"
     ? getStaffProjectTrackingFilters() : { status: "all", advance: "all" };
+  if (ignoreOrganization) trackingFilters.orgs = [];
   return projects.filter((p) => {
     const yearMatch = year === "all" || p.year === year;
     const compareGroups = trackingFilters.level === "orgGroup" && trackingFilters.orgs?.length;

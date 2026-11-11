@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "meeting:emulators": "firebase emulators:start --only auth,firestore --project demo-budget-meeting --config firebase.budget-meeting-emulator.json",
+    "meeting:seed": "node tools/seed-budget-meeting-emulator.mjs",
+    "test:meeting:roster": "node tools/test-budget-meeting-roster.mjs",
+    "test:meeting:accounts": "node tools/test-budget-meeting-accounts.mjs",
     "build": "node tools/build-static.mjs",
     "check": "node tools/build-static.mjs --check && node tools/check-audit-log.mjs && node tools/test-meeting-room-catalog.mjs && node tools/test-meeting-cancel-approval.mjs && node tools/test-meeting-manage-success.mjs && node tools/test-staff-access-catalog.mjs && node tools/test-organization-copy-selection.mjs && node tools/test-temporary-login-profile.mjs && node tools/test-staff-directory-placement.mjs && node tools/test-borrow-subscription.mjs && node tools/test-borrow-projects.mjs && node tools/test-borrow-submit.mjs && node tools/test-receipt-documents.mjs",
     "check:audit": "node tools/check-audit-log.mjs",

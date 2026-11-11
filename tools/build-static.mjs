@@ -16,6 +16,7 @@ const copyIgnoreNames = new Set([
   ".DS_Store",
   ".github",
   "firebase-debug.log",
+  "firestore-debug.log",
   "node_modules",
   "package.json",
   "package-lock.json",
@@ -27,6 +28,7 @@ const scanIgnoreNames = new Set([
   ".git",
   ".DS_Store",
   "firebase-debug.log",
+  "firestore-debug.log",
   "node_modules"
 ]);
 
@@ -49,7 +51,10 @@ const textFileExtensions = new Set([
 
 const textTransforms = new Map([
   ["index.html", transformIndexHtml],
+  ["budget-meeting-preview.html", async html => withVersionedLocalAssets(await resolveIncludes(html, rootDir))],
   ["meeting-room-calendar.html", withVersionedLocalAssets],
+  ["budget-meeting-vote.html", withVersionedLocalAssets],
+  ["budget-meeting-display.html", withVersionedLocalAssets],
   ["css/style.css", transformCssEntrypoint],
   ["sw.js", transformServiceWorker]
 ]);

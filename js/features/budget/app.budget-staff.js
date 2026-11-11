@@ -219,6 +219,56 @@
   let clearCodeResolve = null;
   let clearCodeContext = null;
   let currentBudgetStaffTab = "overview";
+  let meetingSourceReady = false;
+  let meetingSourceTruncated = false;
+
+  const assertMeetingAccess = () => {
+    if (typeof staffAuthUser === "undefined" || !staffAuthUser ||
+        typeof getAllowedStaffPagesByProfile !== "function" ||
+        !getAllowedStaffPagesByProfile(staffAuthUser).has("budget-approval-staff")) {
+      throw new Error("กรุณาเข้าสู่ระบบด้วยสิทธิ์จัดการคำของบประมาณ");
+    }
+  };
+  const readMeetingRepresentatives = async () => {
+    const f = window.sgcuFirestore;
+    const snapshot = await f.getDocs(f.query(f.collection(f.db, 'organizationRepresentativeApplications'), f.limit(5000)));
+    assertMeetingAccess();
+    if (snapshot.size >= 5000) throw new Error('ทะเบียนผู้แทนอาจโหลดไม่ครบ กรุณาตรวจสอบก่อนเปิดประชุม');
+    return snapshot.docs.map(d => {
+      const item = d.data();
+      const year = item.academicYear || item.representativeAcademicYear || item.schoolYear ||
+        window.sgcuStaffAccessShared?.getAcademicYearFromTimestamp(item.createdAt || item.reviewedAt || item.updatedAt);
+      return { ...item, id: d.id, academicYear: year || '' };
+    });
+  };
+  const meetingOrganizations = (year, members) => window.sgcuBudgetMeetingRoster.organizations(
+    getOrgCatalogRowsForYear(year).map(o => ({ id: o.item.id, baseOrganizationId: o.item.baseOrganizationId, group: o.group, code: o.code, name: o.name })), members, year
+  );
+  window.sgcuGetBudgetMeetingDefaults = async () => {
+    assertMeetingAccess();
+    return meetingOrganizations(getCurrentBudgetAcademicYear(), await readMeetingRepresentatives());
+  };
+  // Return a detached, minimal snapshot only through the existing staff access gate.
+  window.sgcuGetBudgetMeetingSource = async () => {
+    assertMeetingAccess();
+    if (!meetingSourceReady) throw new Error("ข้อมูลคำขอยังโหลดไม่สำเร็จ กรุณาลองใหม่");
+    if (meetingSourceTruncated) throw new Error("รายการอาจโหลดไม่ครบตามขีดจำกัดระบบ ยังไม่สามารถสร้างสำเนาสำหรับประชุมได้");
+    const members = await readMeetingRepresentatives();
+    return JSON.parse(JSON.stringify({
+      version: 1,
+      rounds: budgetActiveRounds.map(r => ({
+        id: r.id, label: r.label,
+        sgcuBudgetCeiling: r.budgetGroupCeilings?.["องค์การบริหารสโมสรนิสิต"] ?? null,
+        organizations: meetingOrganizations(r.year, members)
+      })),
+      requests: requestRows.map(r => ({
+        id: r.id, budgetRoundId: r.budgetRoundId,
+        projectCodeGenerated: r.projectCodeGenerated, projectName: r.projectName,
+        organizationName: r.organizationName, organizationType: r.organizationType, organizationCode: r.organizationCode,
+        estimatedExpense: r.estimatedExpense, approvedAmount: r.approvedAmount, status: r.status
+      }))
+    }));
+  };
 
   const formatMoney = (value) => {
     const num = Number(value || 0);
@@ -1243,7 +1293,7 @@
     !window.matchMedia || window.matchMedia("(max-width: 840px)").matches;
 
   const setActiveTab = (tab = "overview") => {
-    const nextTab = tab === "review" ? "review" : "overview";
+    const nextTab = ["review", "meeting"].includes(tab) ? tab : "overview";
     currentBudgetStaffTab = nextTab;
     pageRootEl?.classList.toggle("is-budget-review-mode", nextTab === "review");
     pageRootEl?.classList.toggle("is-budget-overview-mode", nextTab === "overview");
@@ -1260,6 +1310,7 @@
     if (nextTab === "overview") {
       window.setTimeout(() => { void renderOrgSummaryChart(); }, 0);
     }
+    if (nextTab === "meeting") document.dispatchEvent(new Event("sgcu:budget-meeting-open"));
   };
 
   const getFirestore = () => window.sgcuFirestore || {};
@@ -2262,6 +2313,7 @@
   };
 
   const subscribeRequests = () => {
+    meetingSourceReady = false;
     if (typeof unsubscribeRequests === "function") {
       try { unsubscribeRequests(); } catch (_) {}
       unsubscribeRequests = null;
@@ -2281,6 +2333,7 @@
     );
 
     unsubscribeRequests = firestore.onSnapshot(listQuery, (snapshot) => {
+      meetingSourceTruncated = snapshot.size >= REQUEST_LIST_LIMIT;
       const rows = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data() || {};
@@ -2288,9 +2341,11 @@
         rows.push({ id: docSnap.id, ...data });
       });
       requestRows = rows;
+      meetingSourceReady = true;
       void refreshOrgSummaryFilters();
       renderRows();
     }, () => {
+      meetingSourceReady = false;
       tableBodyEl.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#b91c1c;">โหลดรายการไม่สำเร็จ</td></tr>';
     });
   };
