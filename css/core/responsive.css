@@ -132,20 +132,58 @@
   .calendar-grid {
     font-size: 10px;
   }
+  .site-footer {
+    background: transparent;
+  }
+
   .footer-inner {
     grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+    text-align: center;
+    padding: 18px 16px 24px;
   }
 
   .footer-address,
-  .footer-copyright {
-    text-align: left;
-    white-space: normal;
+  .footer-desktop-only {
+    display: none;
+  }
+
+  .footer-mobile-only {
+    display: inline;
+  }
+
+  .footer-copyright,
+  .footer-contact {
+    color: #64748b;
   }
 
   .footer-copyright {
-    align-items: flex-start;
+    text-align: center;
+    white-space: normal;
+    align-items: center;
+  }
+
+  .footer-contact a {
+    display: inline;
+    margin-left: 0;
+    min-height: 0;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: 400;
+  }
+
+  .footer-contact a:hover,
+  .footer-contact a:focus-visible {
+    background: transparent;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .site-header {

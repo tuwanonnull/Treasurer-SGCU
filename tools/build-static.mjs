@@ -194,12 +194,12 @@ async function transformIndexHtml(html) {
   const revision = Number(git("rev-list", "--count", "HEAD"));
   const commit = git("rev-parse", "--short=7", "HEAD");
   const dirty = git("status", "--porcelain", "--untracked-files=no") !== "";
-  // Encode the Git revision in base 100: 547 -> 0.5.47, 10000 -> 1.0.0.
-  const version = `${Math.floor(revision / 10000)}.${Math.floor(revision / 100) % 100}.${revision % 100}`;
+  // Encode the Git revision in base 100: 547 -> 0.5.47, 10000 -> 1.0.00.
+  const version = `${Math.floor(revision / 10000)}.${Math.floor(revision / 100) % 100}.${String(revision % 100).padStart(2, "0")}`;
   const detail = `Commit ${commit}${dirty ? " (มีการแก้ไขในเครื่อง)" : ""}`;
   const versionedHtml = resolvedHtml.replace(
-    /<span data-site-version>[^<]*<\/span>/,
-    `<span data-site-version title="${detail}">เวอร์ชัน ${version}</span>`
+    /<span data-site-version>[^<]*<\/span>/g,
+    `<span data-site-version title="${detail}">${version}</span>`
   );
   return withVersionedLocalAssets(versionedHtml);
 }
