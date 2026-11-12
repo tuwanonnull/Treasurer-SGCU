@@ -35,7 +35,7 @@
   .login-notification-description { flex: 1 1 110px; min-width: 0; }
   .login-notification-title { margin: 0; }
   .login-notification-controls { margin-top: 0; width: 164px; max-width: 100%; }
-  .theme-picker select {
+  .theme-picker .theme-cycle-button {
     box-sizing: border-box;
     width: 164px;
     min-height: 40px;
@@ -51,12 +51,15 @@
     font-weight: 500;
     cursor: pointer;
   }
+  .theme-cycle-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .theme-cycle-button svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .theme-cycle-button svg[hidden] { display: none; }
   .login-notification-controls .btn-ghost { box-sizing: border-box; width: 100%; min-height: 40px; }
   @media (pointer: coarse) {
-    .theme-picker select,
+    .theme-picker .theme-cycle-button,
     .login-notification-controls .btn-ghost { min-height: 44px; }
   }
-  .theme-picker select:focus-visible {
+  .theme-picker .theme-cycle-button:focus-visible {
     outline: 2px solid var(--theme-pink-500);
     outline-offset: 2px;
   }
@@ -83,7 +86,7 @@
   html[data-theme="dark"] body :is(.theme-picker, .logo-subtitle, .footer-inner, .footer-affiliation, .footer-address, .footer-contact, .footer-copyright, .app-loader-detail, .app-loader-status, .app-loader-version) {
     color: var(--preview-muted);
   }
-  html[data-theme="dark"] body :is(.theme-picker select, .nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-bottom-item) {
+  html[data-theme="dark"] body :is(.theme-picker .theme-cycle-button, .nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-bottom-item) {
     color: var(--preview-text); background-color: var(--preview-surface); border-color: var(--preview-border);
   }
   html[data-theme="dark"] body :is(.nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-bottom-item):is(:hover, .active, [aria-expanded="true"]) {
@@ -92,13 +95,16 @@
   html[data-theme="dark"] body :is(.footer-brand, .logo-title, .app-loader-title) {
     color: var(--preview-text);
   }
+  html[data-theme="dark"] body .app-loader-step {
+    color: var(--preview-accent);
+  }
   html[data-theme="dark"] body .home-page-view :is(h1, h2, h3, h4, .list-empty-state strong, .home-faq-item summary) {
     color: var(--preview-text);
   }
   html[data-theme="dark"] body .home-page-view :is(.home-hero-subtitle, .home-section-header p, .home-news-card p, .home-news-date, .home-scroll-hint, .list-empty-state p, .workflow-description, .workflow-agenda-card ul, .workflow-subtitle, .workflow-card-heading p, .workflow-step-list, .workflow-agenda-card, .home-help-header p, .home-faq-answer p, .home-contact-card p, .home-contact-heading p) {
     color: var(--preview-muted);
   }
-  html[data-theme="dark"] body .home-page-view :is(.list-empty-state, .project-approval-workflow, .home-news-card, .home-news-more, .home-news-skeleton-card, .workflow-phase-card, .workflow-agenda-card, .home-main-action.is-secondary, .home-quick-action) {
+  html[data-theme="dark"] body .home-page-view :is(.list-empty-state, .home-news-card, .home-news-more, .home-news-skeleton-card, .workflow-phase-card, .workflow-agenda-card, .home-main-action.is-secondary, .home-quick-action) {
     background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
   }
   html[data-theme="dark"] body .home-page-view :is(.home-news-card, .home-main-action.is-secondary, .home-quick-action):hover {
@@ -130,9 +136,15 @@
     color: var(--preview-muted);
     border-color: var(--preview-border);
   }
-  html[data-theme="dark"] body .home-page-view .workflow-step-list li::before {
+  html[data-theme="dark"] body .home-page-view .workflow-phase-card .workflow-card-details :is(.workflow-step-list > li, .workflow-agenda-card) {
+    background: rgba(255, 255, 255, .025);
+    border: 0;
+    box-shadow: none;
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body .home-page-view .workflow-phase-card .workflow-card-details :is(.workflow-step-list > li, .workflow-agenda-card)::before {
     background: var(--preview-muted);
-    box-shadow: 0 0 0 4px rgba(184, 184, 184, .12);
+    box-shadow: none;
   }
   html[data-theme="dark"] body .home-page-view .home-faq-toggle::after,
   html[data-theme="dark"] body .home-page-view .home-faq-toggle::before {
@@ -1256,3 +1268,22 @@
   html[data-theme="dark"] body :is(.page-view[data-page="content-management-staff"], .page-view[data-page="content-news-staff"], .page-view[data-page="content-documents-staff"], #contentNewsEditor, #contentDocumentsEditor) .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
   html[data-theme="dark"] body :is(.page-view[data-page="content-management-staff"], .page-view[data-page="content-news-staff"], .page-view[data-page="content-documents-staff"], #contentNewsEditor, #contentDocumentsEditor) .btn-primary:hover:not(:disabled) { background: #49313e; }
 }
+
+/* Blend the full theme frame, including navigation gradients and translucent menus. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  html.theme-changing *,
+  html.theme-changing *::before,
+  html.theme-changing *::after { transition: none !important; }
+  ::view-transition-group(root) { animation-duration: 300ms; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 300ms;
+    animation-timing-function: ease-in-out;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(root) { animation-name: sgcu-theme-fade-out; }
+  ::view-transition-new(root) { animation-name: sgcu-theme-fade-in; }
+  ::view-transition { pointer-events: none; }
+}
+@keyframes sgcu-theme-fade-out { to { opacity: 0; } }
+@keyframes sgcu-theme-fade-in { from { opacity: 0; } }

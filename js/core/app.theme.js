@@ -3,17 +3,54 @@
   const key = "sgcu-home-theme";
   const system = window.matchMedia("(prefers-color-scheme: dark)");
   const normalize = value => ["light", "dark"].includes(value) ? value : "system";
+  const preferences = ["light", "dark", "system"];
+  const labels = { light: "สว่าง", dark: "มืด", system: "ตามระบบ" };
   let preference = "system";
   try { preference = normalize(localStorage.getItem(key)); } catch { /* Private storage. */ }
 
-  const apply = () => {
+  let themeTransition = null;
+  const renderTheme = () => {
     document.documentElement.dataset.theme = preference === "system"
       ? (system.matches ? "dark" : "light") : preference;
     const picker = document.getElementById("themePreference");
-    if (picker) picker.value = preference;
+    if (picker) {
+      picker.value = preference;
+      const next = preferences[(preferences.indexOf(preference) + 1) % preferences.length];
+      picker.setAttribute("aria-label", `ธีมการแสดงผล: ${labels[preference]} กดเพื่อเปลี่ยนเป็น${labels[next]}`);
+      picker.querySelector("[data-theme-label]").textContent = labels[preference];
+      picker.querySelectorAll("[data-theme-icon]").forEach(icon => {
+        icon.toggleAttribute("hidden", icon.dataset.themeIcon !== preference);
+      });
+    }
     if (window.Chart?.instances) {
       Object.values(window.Chart.instances).forEach(chart => chart.update("none"));
     }
+  };
+  const apply = (animate = false) => {
+    const nextTheme = preference === "system" ? (system.matches ? "dark" : "light") : preference;
+    const shouldAnimate = animate && document.startViewTransition &&
+      document.documentElement.dataset.theme !== nextTheme &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    themeTransition?.skipTransition();
+    themeTransition = null;
+    if (!shouldAnimate) {
+      document.documentElement.classList.remove("theme-changing");
+      renderTheme();
+      return;
+    }
+    // Crossfade the complete frame so menu gradients, icons and text change together.
+    const transition = document.startViewTransition(() => {
+      if (themeTransition !== transition) return;
+      document.documentElement.classList.add("theme-changing");
+      renderTheme();
+    });
+    themeTransition = transition;
+    transition.finished.catch(() => {}).finally(() => {
+      if (themeTransition === transition) {
+        themeTransition = null;
+        document.documentElement.classList.remove("theme-changing");
+      }
+    });
   };
   window.registerThemeChartPlugin = () => {
     if (!window.Chart || window.Chart.registry.plugins.get("sgcuTheme")) return;
@@ -41,18 +78,18 @@
     });
   };
   apply();
-  system.addEventListener("change", apply);
+  system.addEventListener("change", () => apply(true));
   window.addEventListener("storage", event => {
     if (event.key !== key && event.key !== null) return;
     preference = normalize(event.newValue);
-    apply();
+    apply(true);
   });
   document.addEventListener("DOMContentLoaded", () => {
     apply();
-    document.getElementById("themePreference")?.addEventListener("change", event => {
-      preference = normalize(event.target.value);
+    document.getElementById("themePreference")?.addEventListener("click", () => {
+      preference = preferences[(preferences.indexOf(preference) + 1) % preferences.length];
       try { localStorage.setItem(key, preference); } catch { /* Keep the session choice. */ }
-      apply();
+      apply(true);
     });
   });
 })();

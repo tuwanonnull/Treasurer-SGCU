@@ -111,6 +111,7 @@
 .app-loader-steps {
   margin-top: 10px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
   color: #9ca3af;
@@ -124,6 +125,7 @@
   align-items: center;
   gap: 5px;
   white-space: nowrap;
+  color: var(--theme-pink-600);
 }
 
 .app-loader-step::before {
@@ -134,18 +136,14 @@
   background: rgba(236, 72, 153, 0.22);
 }
 
-.app-loader-step.is-active {
-  color: #6b7280;
+.app-loader-step[hidden] {
+  display: none;
 }
 
 .app-loader-step.is-active::before {
   background: var(--theme-pink-400);
   box-shadow: 0 0 0 5px rgba(244, 114, 182, 0.14);
   animation: app-loader-step-pulse 1.5s ease-in-out infinite;
-}
-
-.app-loader-step.is-complete {
-  color: rgba(236, 72, 153, 0.85);
 }
 
 .app-loader-step.is-complete::before {

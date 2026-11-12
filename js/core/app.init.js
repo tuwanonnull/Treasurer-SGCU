@@ -1126,12 +1126,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   scheduleIdleTask(() => runBackgroundTask(initDailyVisitorCounter, "visitors"));
   const loaderStepLabels = {
     news: "กำลังโหลดข่าวสารล่าสุด",
-    orgStructure: "กำลังเตรียมแบบฟอร์มการเงิน"
+    orgStructure: "กำลังเตรียมแบบฟอร์มการเงิน",
+    auth: "กำลังตรวจสอบการเข้าสู่ระบบ"
   };
 
   const hasLoaderUi = Boolean(appLoaderEl);
   const loaderStepKeys = new Set();
   const loaderStepProgress = new Map();
+  let initialAuthStateReceived = false;
   let shouldHoldAppLoaderForHome = false;
   const simulatedLoaderDonePromise = window.sgcuAppLoaderReady || Promise.resolve();
   const finishSimulatedLoaderPercent = () => {
@@ -1157,7 +1159,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     appLoaderStepEls.forEach((el) => {
       const key = el.dataset.loaderStep || "";
       const progress = loaderStepProgress.get(key) || 0;
-      el.hidden = !loaderStepKeys.has(key);
+      // Keep the startup checklist stable even when a direct link skips home data.
+      el.hidden = false;
       el.classList.toggle("is-complete", progress >= 1);
       el.classList.toggle("is-active", key === nextActiveKey && progress < 1);
     });
@@ -1174,7 +1177,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         loaderStepKeys.add("orgStructure");
       }
     }
-    loaderStepKeys.forEach((key) => loaderStepProgress.set(key, 0));
+    loaderStepKeys.add("auth");
+    loaderStepKeys.forEach((key) => loaderStepProgress.set(key, key === "auth" && initialAuthStateReceived ? 1 : 0));
     syncLoaderStepUi();
   };
 
@@ -1189,6 +1193,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   markLoaderStep = (key) => {
     updateLoaderProgress(key, 1);
   };
+
+  // Auth can resolve before the initial page is configured. Preserve that result
+  // and complete this step for both signed-in users and signed-out visitors.
+  const onInitialLoaderAuthState = () => {
+    initialAuthStateReceived = true;
+    if (typeof markLoaderStep === "function") markLoaderStep("auth");
+  };
+  window.addEventListener("sgcu:auth-state", onInitialLoaderAuthState, { once: true });
 
   if (appAlertRetryEl) {
     appAlertRetryEl.addEventListener("click", () => window.location.reload());
@@ -2929,6 +2941,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       finishSimulatedLoaderPercent();
       appLoaderEl.classList.add("is-hidden");
       appLoaderEl.setAttribute("aria-busy", "false");
+      window.removeEventListener("sgcu:auth-state", onInitialLoaderAuthState);
       markLoaderStep = null;
       updateLoaderProgress = null;
     });
