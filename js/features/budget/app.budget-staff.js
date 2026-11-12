@@ -702,15 +702,6 @@
         ? globalThis.orgFilters
         : [];
 
-  const getBudgetRoundYearById = (roundId = "") => {
-    const id = normalizeText(roundId);
-    if (!id || id === "all") return getCurrentBudgetAcademicYear();
-    const activeRound = budgetActiveRounds.find((round) => normalizeText(round.id) === id);
-    if (activeRound) return normalizeAcademicYearText(activeRound.year);
-    const requestRow = requestRows.find((row) => normalizeText(row.budgetRoundId) === id);
-    return normalizeAcademicYearText(requestRow?.budgetRoundYear) || getCurrentBudgetAcademicYear();
-  };
-
   const normalizeOrgCatalogYearMap = (map = {}) => {
     if (!map || typeof map !== "object" || Array.isArray(map)) return {};
     return Object.entries(map).reduce((acc, [key, value]) => {
@@ -3212,39 +3203,6 @@
       setMessage(formMessageEl, "บันทึกรายการไม่สำเร็จ", "#b91c1c");
     } finally {
       saveBtnEl.disabled = false;
-    }
-  };
-
-  const cancelRow = async (id) => {
-    const firestore = getFirestore();
-    const canWrite = !!(firestore.db && firestore.doc && firestore.updateDoc && firestore.serverTimestamp);
-    if (!canWrite) {
-      setMessage(actionMessageEl, "ระบบฐานข้อมูลยังไม่พร้อมใช้งาน", "#b91c1c");
-      return;
-    }
-
-    const beforeRow = requestRows.find((item) => item.id === id) || null;
-    try {
-      await firestore.updateDoc(
-        firestore.doc(firestore.db, COLLECTION_REQUESTS, id),
-        {
-          status: "cancelled",
-          updatedAt: firestore.serverTimestamp(),
-          cancelledAt: firestore.serverTimestamp()
-        }
-      );
-      setMessage(actionMessageEl, "ลดรายการเรียบร้อย", "#047857");
-      void window.sgcuAuditLog?.write?.({
-        action: "budget.request.cancel",
-        entityType: "budgetApprovalRequest",
-        entityId: id,
-        before: beforeRow,
-        after: { status: "cancelled" },
-        source: "web_app_staff"
-      });
-    } catch (error) {
-      console.error("cancel budget request failed - app.budget-staff.js", error);
-      setMessage(actionMessageEl, "ลดรายการไม่สำเร็จ", "#b91c1c");
     }
   };
 

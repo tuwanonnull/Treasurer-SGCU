@@ -47,7 +47,6 @@ function initMeetingRoomBookingApp() {
   const rescheduleEndTimeInput = document.getElementById("meetingRescheduleEndTime");
   const rescheduleReasonInput = document.getElementById("meetingRescheduleReason");
   const rescheduleMessageEl = document.getElementById("meetingRescheduleMessage");
-  const projectModeSelect = document.getElementById("meetingProjectMode");
   const projectCodeInput = document.getElementById("meetingProjectCode");
   const projectCodeState = document.getElementById("meetingProjectCodeState");
   const projectNamePreview = document.getElementById("meetingProjectNamePreview");
@@ -339,47 +338,6 @@ function initMeetingRoomBookingApp() {
       month: "short",
       year: "numeric"
     });
-  };
-
-  const createFieldElement = ({ id, label, required = false, type = "text", value = "", placeholder = "" }) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "form-group";
-    const labelEl = document.createElement("label");
-    labelEl.setAttribute("for", id);
-    labelEl.textContent = required ? `${label} *` : label;
-    const input = document.createElement("input");
-    input.id = id;
-    input.name = id;
-    input.type = type;
-    input.className = "form-input";
-    input.placeholder = placeholder;
-    input.required = !!required;
-    input.value = value;
-    wrapper.appendChild(labelEl);
-    wrapper.appendChild(input);
-    return wrapper;
-  };
-
-  const createSelectElement = ({ id, label, options = [] }) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "form-group";
-    const labelEl = document.createElement("label");
-    labelEl.setAttribute("for", id);
-    labelEl.textContent = `${label} *`;
-    const select = document.createElement("select");
-    select.id = id;
-    select.name = id;
-    select.className = "form-input";
-    select.required = true;
-    options.forEach((option) => {
-      const optionEl = document.createElement("option");
-      optionEl.value = option.value;
-      optionEl.textContent = option.label;
-      select.appendChild(optionEl);
-    });
-    wrapper.appendChild(labelEl);
-    wrapper.appendChild(select);
-    return wrapper;
   };
 
   const ensureFormContactFields = () => {

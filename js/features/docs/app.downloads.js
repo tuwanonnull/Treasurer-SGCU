@@ -63,11 +63,6 @@ function createDownloadListItem(doc) {
   return li;
 }
 
-function hasDownloadLink(value) {
-  const text = (value || "").toString().trim();
-  return !!text && text !== "-" && text !== "--";
-}
-
 function normalizeDownloadOrder(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : Number.POSITIVE_INFINITY;

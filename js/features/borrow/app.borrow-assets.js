@@ -469,13 +469,6 @@ function initBorrowAssetsApp() {
     return previousYear ? normalizedMap[String(previousYear)] || "" : "";
   };
 
-  const resolveBorrowYearValueExact = (map = {}, academicYear = getBorrowAcademicYearBE()) => {
-    const normalizedMap = normalizeBorrowYearValueMap(map);
-    const year = (academicYear || "").toString().trim();
-    if (!/^\d{4}$/.test(year)) return "";
-    return normalizedMap[year] || "";
-  };
-
   const getBorrowOrgNameYearMap = (item = {}) => ({
     ...normalizeBorrowYearValueMap(item?.orgNameByAcademicYear),
     ...normalizeBorrowYearValueMap(item?.organizationNameByAcademicYear),
@@ -490,15 +483,6 @@ function initBorrowAssetsApp() {
   const resolveBorrowOrgDisplayName = (item = {}, academicYear = getBorrowAcademicYearBE()) =>
     resolveBorrowYearValue(getBorrowOrgNameYearMap(item), academicYear) ||
     (item?.name || item?.organizationName || item?.orgName || "").toString().trim();
-
-  const resolveBorrowOrgDisplayNameExact = (item = {}, academicYear = getBorrowAcademicYearBE()) => {
-    const yearMap = getBorrowOrgNameYearMap(item);
-    const exactName = resolveBorrowYearValueExact(yearMap, academicYear);
-    if (exactName) return exactName;
-    return Object.keys(yearMap).length
-      ? ""
-      : (item?.name || item?.organizationName || item?.orgName || "").toString().trim();
-  };
 
   const resolveBorrowOrgCodeForYear = (item = {}, academicYear = getBorrowAcademicYearBE()) =>
     normalizeOrgCode(
@@ -3078,7 +3062,6 @@ function initBorrowAssetsApp() {
       renderEmptyState("กรุณาเข้าสู่ระบบด้วยอีเมลจุฬาฯ เพื่อดูสถานะคำขอของตนเอง");
       return;
     }
-    const normalizedCurrentEmail = readCurrentAccountEmail();
     const list = borrowRequests
       .filter((item) => !item.isDeleted)
       .filter((item) => matchesCurrentAccountEmail(item.requesterEmail, item.accountEmail))
@@ -3213,33 +3196,6 @@ function initBorrowAssetsApp() {
     if (value === STATUS_CANCELLED) return "is-cancel-requested";
     if (value === "delete") return "is-delete";
     return "is-pending";
-  };
-
-  const renderRequesterCell = (item) => {
-    const fullName = [item.firstName, item.lastName].filter(Boolean).join(" ").trim() || "-";
-    const academicYearMeta = item.academicYear ? `ปีการศึกษา ${item.academicYear}` : "";
-    const projectMeta = [academicYearMeta, item.projectName, item.projectDept, item.borrowProjectName].filter(Boolean).join(" • ");
-    const contactMeta = [item.phone, item.lineId ? `Line: ${item.lineId}` : ""]
-      .filter(Boolean)
-      .join(" • ");
-    return `
-      <div class="borrow-staff-requester">
-        <div class="borrow-staff-requester-name">${safeEscape(fullName)}</div>
-        ${projectMeta ? `<div class="borrow-staff-requester-meta">${safeEscape(projectMeta)}</div>` : ""}
-        ${contactMeta ? `<div class="borrow-staff-requester-contact">${safeEscape(contactMeta)}</div>` : ""}
-      </div>
-    `;
-  };
-
-  const renderRequestMetaCell = (item) => {
-    const requestNo = (item.requestNo || item.id || "-").toString().trim();
-    const createdText = formatDate(item.createdDate || "");
-    return `
-      <div class="borrow-staff-request-meta">
-        <div class="borrow-staff-request-no">${safeEscape(requestNo)}</div>
-        <div class="borrow-staff-request-date">${safeEscape(createdText || "-")}</div>
-      </div>
-    `;
   };
 
   const renderAssetsCell = (assets = [], staffNote = "") => {
@@ -3816,13 +3772,6 @@ function initBorrowAssetsApp() {
   const renderBorrowDetailBody = (item, statusMessage = "", statusColor = "#374151") => {
     if (!borrowDetailBodyEl || !item) return;
     const fullName = [item.firstName, item.lastName].filter(Boolean).join(" ").trim() || "-";
-    const requestDateText = item.createdDate
-      ? formatDate(item.createdDate)
-      : (item.submittedAtMs ? new Date(item.submittedAtMs).toLocaleDateString("th-TH", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }) : "-");
     const updatedDateText = item.updatedAtMs
       ? new Date(item.updatedAtMs).toLocaleDateString("th-TH", {
         day: "2-digit",

@@ -536,27 +536,6 @@ function getProjectBudgetAxisWrappedLabel(label) {
   return String(label || "").replace(/\s+/g, " ").trim();
 }
 
-function getProjectBudgetStackRadius(ctx) {
-  const i = ctx.dataIndex;
-  const datasetIndex = ctx.datasetIndex;
-  const chart = ctx.chart;
-  const datasets = chart?.data?.datasets || [];
-  const currentValue = Number(datasets[datasetIndex]?.data?.[i] || 0);
-  const hasRightSegment = datasets.some((dataset, index) =>
-    index > datasetIndex &&
-    dataset?.stack === datasets[datasetIndex]?.stack &&
-    chart.isDatasetVisible(index) &&
-    Number(dataset?.data?.[i] || 0) > 0
-  );
-  const isRight = currentValue > 0 && !hasRightSegment;
-  return {
-    topLeft: 0,
-    bottomLeft: 0,
-    topRight: isRight ? 8 : 0,
-    bottomRight: isRight ? 8 : 0
-  };
-}
-
 function syncDashboardComparisonHeights() {
   const card = document.querySelector(".dashboard-budget-comparison-card");
   if (!card) return;

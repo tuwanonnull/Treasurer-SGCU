@@ -649,8 +649,6 @@
     }));
   };
 
-  const getRowsForExport = () => mapRowsForExport(getFilteredRows());
-
   const hasExportDateRange = () => !!(normalizeText(state.startDate) || normalizeText(state.endDate));
 
   const buildExportFileName = () => {

@@ -140,13 +140,6 @@ function isProjectApproved(project) {
   return status === "อนุมัติโครงการ";
 }
 
-function getProjectOverviewStatus(project) {
-  if (isProjectNoClose(project)) {
-    return (project.statusClose || "").trim();
-  }
-  return (project.statusMain || "").trim();
-}
-
 function getCloseDurationDays(project) {
   const raw = project.closeDurationText ?? project.closeDuration ?? null;
   if (raw === null || raw === undefined) return null;

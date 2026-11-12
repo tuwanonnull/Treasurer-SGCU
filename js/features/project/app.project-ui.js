@@ -266,22 +266,6 @@ function updateProjectFilterPresentation() {
   chips.hidden = !chips.childElementCount;
 }
 
-function buildProjectOrgComparisonRows(filtered, selectedOrgs = [], level = "orgName") {
-  const rows = new Map(selectedOrgs.map((name) => [name, { name, count: 0, budget: 0, closed: 0, eligible: 0 }]));
-  filtered.forEach((project) => {
-    const name = project[level] || (level === "orgGroup" ? "ไม่ระบุประเภทองค์กร" : "ไม่ระบุฝ่าย / ชมรม");
-    if (!rows.has(name)) rows.set(name, { name, count: 0, budget: 0, closed: 0, eligible: 0 });
-    const row = rows.get(name);
-    row.count++;
-    row.budget += Number(project.budget) || 0;
-    if (!isProjectTerminalWithoutClosure(project)) {
-      row.eligible++;
-      if (isProjectClosed(project)) row.closed++;
-    }
-  });
-  return Array.from(rows.values()).sort((a, b) => b.budget - a.budget || a.name.localeCompare(b.name, "th"));
-}
-
 function getDueClosureProjects(filtered, today = new Date()) {
   return filtered.filter((project) => {
     if ((project.statusMain || "").trim() === "ยกเลิกโครงการ" ||
@@ -939,7 +923,6 @@ function updateClubDebtAgeChart(filtered, chartCanvasEl, captionEl, legendEl) {
   const buckets = buildClubDebtAgeBuckets(filtered);
   const totalDebt = buckets.reduce((sum, bucket) => sum + bucket.totalDebt, 0);
   const totalProjects = buckets.reduce((sum, bucket) => sum + bucket.projectCount, 0);
-  const activeBuckets = buckets.filter((bucket) => bucket.projectCount > 0);
   const activeColors = ["#fbcfe8", "#f9a8d4", "#ec4899", "#9d174d"];
   const emptyColors = ["rgba(209, 213, 219, 0.72)", "rgba(209, 213, 219, 0.18)", "rgba(209, 213, 219, 0.18)", "rgba(209, 213, 219, 0.18)"];
   const ageColors = totalDebt > 0 ? activeColors : emptyColors;
@@ -1033,35 +1016,6 @@ function formatProjectMoneyAxisTick(value, scale) {
   return useMillions
     ? `${(num / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 2 })} ล้าน`
     : new Intl.NumberFormat("th-TH", { notation: "compact", maximumFractionDigits: 1 }).format(num);
-}
-
-function formatDebtAxisTick(value, compact = false) {
-  const num = Math.abs(Number(value));
-  if (!Number.isFinite(num)) return "";
-  if (compact) {
-    if (num >= 1000000) {
-      const valueText = (num / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 1 });
-      return `${valueText}M`;
-    }
-    if (num >= 1000) {
-      const valueText = (num / 1000).toLocaleString("th-TH", { maximumFractionDigits: 0 });
-      return `${valueText}K`;
-    }
-    return num.toLocaleString("th-TH", { maximumFractionDigits: 0 });
-  }
-  if (num >= 1000000) {
-    const valueText = (num / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 1 });
-    return `${valueText} ล้าน`;
-  }
-  if (num >= 100000) {
-    const valueText = (num / 100000).toLocaleString("th-TH", { maximumFractionDigits: 1 });
-    return `${valueText} แสน`;
-  }
-  if (num >= 1000) {
-    const valueText = (num / 1000).toLocaleString("th-TH", { maximumFractionDigits: 0 });
-    return `${valueText} พัน`;
-  }
-  return num.toLocaleString("th-TH", { maximumFractionDigits: 0 });
 }
 
 const clubDebtValueLabelsPlugin = {
@@ -2503,11 +2457,4 @@ function updateTable(filteredProjects) {
     });
     tbody.dataset.boundClick = "true";
   }
-}
-
-function formatDaysToDeadline(days) {
-  if (days === null || days === undefined || isNaN(days)) return "-";
-  if (days > 0) return `เหลืออีก ${days} วันก่อนครบกำหนดปิดโครงการ`;
-  if (days === 0) return `ครบกำหนดปิดโครงการวันนี้`;
-  return `เกินกำหนดปิดโครงการมาแล้ว ${Math.abs(days)} วัน`;
 }

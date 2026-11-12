@@ -3611,12 +3611,6 @@ function initStaffAccessPages() {
     return `${year}-${base || slugifyOrganizationCatalogId(`organization-${Date.now()}`)}`;
   };
 
-  const shouldUseOrganizationCatalogItemForYear = (item = {}, academicYear = getOrganizationCatalogDisplayAcademicYear()) => {
-    const itemYear = getOrganizationCatalogItemAcademicYear(item);
-    const targetYear = normalizeOrganizationCatalogAcademicYearText(academicYear);
-    return !itemYear || !targetYear || itemYear === targetYear;
-  };
-
   const normalizeOrganizationCatalogMatchValue = (value = "") =>
     normalizeOrganizationCatalogText(value).toLowerCase().replace(/\s+/g, " ");
 
@@ -3666,7 +3660,6 @@ function initStaffAccessPages() {
   };
 
   const ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR = catalog.LEGACY_ACADEMIC_YEAR;
-  const ORGANIZATION_CATALOG_DOCUMENT_PREFIX_BY_GROUP = catalog.DOCUMENT_PREFIX_BY_GROUP;
   const getOrganizationCatalogDocumentPrefix = catalog.documentPrefix;
   const isOrganizationCatalogManualDocumentRunGroup = catalog.isManualRunGroup;
   const isOrganizationCatalogCouncilGroup = catalog.isCouncilGroup;
@@ -3703,7 +3696,6 @@ function initStaffAccessPages() {
     return stripOrganizationCatalogDocumentRunYear(getOrganizationCatalogYearValue(runMap, year));
   };
 
-  const getOrganizationCatalogManualRunSubNumber = catalog.manualRunSubNumber;
   const formatOrganizationCatalogManualRunSubCode = catalog.formatManualRunSubCode;
 
   const getOrganizationCatalogSelectedDivisionCode = () => {
@@ -3835,12 +3827,6 @@ function initStaffAccessPages() {
   const normalizeOrganizationCatalogCodeMap = catalog.normalizeCodeMap;
   const normalizeOrganizationCatalogYearTextMap = catalog.normalizeTextMap;
   const buildOrganizationCatalogYearTextMap = catalog.buildTextMap;
-
-  const getOrganizationCatalogYearText = ({ text = "", textByAcademicYear = {}, academicYear = getOrganizationCatalogDisplayAcademicYear() } = {}) => {
-    const year = normalizeOrganizationCatalogText(academicYear);
-    const map = buildOrganizationCatalogYearTextMap({ text, textByAcademicYear });
-    return Object.keys(map).length ? normalizeOrganizationCatalogText(getOrganizationCatalogYearValue(map, year)) : normalizeOrganizationCatalogText(text);
-  };
 
   const buildOrganizationCatalogCodeMap = catalog.buildCodeMap;
 
@@ -4430,49 +4416,6 @@ function initStaffAccessPages() {
     return matchedItems.length;
   };
 
-  const buildOrganizationCatalogYearLinkUpdates = ({ academicYear = getOrganizationCatalogDisplayAcademicYear() } = {}) => {
-    const year = normalizeOrganizationCatalogAcademicYearText(academicYear);
-    if (!/^\d{4}$/.test(year)) return [];
-    const targetYear = Number(year);
-    const rows = getRawOrganizationCatalogRows();
-    const sourceByKey = new Map();
-    rows.forEach((item) => {
-      const itemYear = getOrganizationCatalogItemAcademicYear(item);
-      if (itemYear === year) return;
-      if (itemYear && Number(itemYear) >= targetYear) return;
-      const sourceId = normalizeOrganizationCatalogText(item.id);
-      if (!sourceId) return;
-      const sourceBaseId = getOrganizationCatalogExplicitBaseId(item) || sourceId;
-      getOrganizationCatalogMatchKeys(item, year).forEach((key) => {
-        if (!sourceByKey.has(key)) {
-          sourceByKey.set(key, {
-            id: sourceId,
-            baseOrganizationId: sourceBaseId
-          });
-        }
-      });
-    });
-
-    return rows
-      .filter((item) => getOrganizationCatalogItemAcademicYear(item) === year)
-      .map((item) => {
-        const id = normalizeOrganizationCatalogText(item.id);
-        if (!id) return null;
-        const explicitBaseId = getOrganizationCatalogExplicitBaseId(item);
-        const legacyId = normalizeOrganizationCatalogText(item.legacyOrganizationId || item.legacyOrgId);
-        if (explicitBaseId && legacyId) return null;
-        const match = getOrganizationCatalogMatchKeys(item, year)
-          .map((key) => sourceByKey.get(key))
-          .find(Boolean);
-        if (!match) return null;
-        const fields = {};
-        if (!explicitBaseId) fields.baseOrganizationId = match.baseOrganizationId;
-        if (!legacyId) fields.legacyOrganizationId = match.id;
-        return Object.keys(fields).length ? { id, fields } : null;
-      })
-      .filter(Boolean);
-  };
-
   const writeOrganizationCatalogUpdateItems = async (updates = [], { updatedBy = "", timestampValue = null, createdFromLegacy = false } = {}) => {
     if (!updates.length) return;
     const stamp = timestampValue || (firestore.serverTimestamp ? firestore.serverTimestamp() : new Date().toISOString());
@@ -4519,148 +4462,6 @@ function initStaffAccessPages() {
       if (!seen.has(id)) nextRows.push({ id, ...item.fields });
     });
     setLocalOrganizationCatalogRows(nextRows);
-  };
-
-  const linkOrganizationCatalogCurrentYearWithPrevious = async () => {
-    const academicYear = getOrganizationCatalogDisplayAcademicYear();
-    const updates = buildOrganizationCatalogYearLinkUpdates({ academicYear });
-    const messageEl = organizationCatalogImportMessageEl || organizationCatalogFormMessageEl;
-    if (!updates.length) {
-      setMessage(messageEl, `ปีการศึกษา ${academicYear} ไม่มีรายการที่ต้องเชื่อมเพิ่ม`, "#047857");
-      return;
-    }
-    if (!resolveStore() || !firestore.setDoc || !firestore.doc) {
-      setMessage(messageEl, "ระบบยังไม่พร้อมบันทึก Firebase", "#b91c1c");
-      return;
-    }
-    const ok = window.confirm(
-      `เชื่อมข้อมูลปีการศึกษา ${academicYear} กับทะเบียนเดิม ${updates.length.toLocaleString("th-TH")} รายการ?\n` +
-      "ระบบจะเติมเฉพาะรหัสเชื่อม และไม่แก้ชื่อ รหัส เลขรัน หรือเลขบัญชี"
-    );
-    if (!ok) return;
-    const currentUser = readCurrentUser();
-    const updatedBy = (currentUser?.email || getCurrentAuthEmail() || "").toString().trim().toLowerCase();
-    const timestampValue = firestore.serverTimestamp ? firestore.serverTimestamp() : new Date().toISOString();
-    try {
-      setMessage(messageEl, `กำลังเชื่อมข้อมูลปีการศึกษา ${academicYear}...`, "#1d4ed8");
-      await writeOrganizationCatalogUpdateItems(updates, { updatedBy, timestampValue });
-      applyOrganizationCatalogUpdateItems(updates);
-      renderOrganizationCatalogTable();
-      renderOrgRepresentativeApplications();
-      setMessage(messageEl, `เชื่อมข้อมูลปี ${academicYear} แล้ว ${updates.length.toLocaleString("th-TH")} รายการ`, "#047857");
-    } catch (error) {
-      console.error("link organization catalog year failed - app.staff-access.js:4360", error);
-      const message = (error?.code || "") === "permission-denied"
-        ? "ไม่มีสิทธิ์เชื่อมข้อมูลทะเบียนองค์กร"
-        : (error?.message || "เชื่อมข้อมูลทะเบียนองค์กรไม่สำเร็จ");
-      setMessage(messageEl, message, "#b91c1c");
-    }
-  };
-
-  const buildOrganizationCatalogNormalizeYearUpdates = ({ academicYear = getOrganizationCatalogDisplayAcademicYear() } = {}) => {
-    const year = normalizeOrganizationCatalogAcademicYearText(academicYear);
-    if (!/^\d{4}$/.test(year)) return [];
-    const rows = getRawOrganizationCatalogRows();
-    const targetByBaseId = rows.reduce((map, item) => {
-      if (getOrganizationCatalogItemAcademicYear(item) !== year) return map;
-      const baseId = getOrganizationCatalogBaseId(item);
-      if (baseId) map.set(baseId, item);
-      return map;
-    }, new Map());
-
-    return rows
-      .filter((item) => !getOrganizationCatalogItemAcademicYear(item))
-      .map((item) => {
-        const group = normalizeOrganizationCatalogText(item?.group || item?.organizationType || item?.orgGroup);
-        const rawName = normalizeOrganizationCatalogText(item?.name || item?.organizationName || item?.orgName);
-        const rawCode = normalizeOrganizationCatalogText(item?.code || item?.orgCode).toUpperCase();
-        const rawRunCode = stripOrganizationCatalogDocumentRunYear(item?.documentRunCode || item?.runCode);
-        const baseOrganizationId = getOrganizationCatalogExplicitBaseId(item) ||
-          normalizeOrganizationCatalogText(item.id) ||
-          slugifyOrganizationCatalogId(`${group}-${rawCode || rawName}`);
-        if (!baseOrganizationId || targetByBaseId.has(baseOrganizationId)) return null;
-
-        const nameByAcademicYear = buildOrganizationCatalogYearTextMap({
-          text: rawName,
-          textByAcademicYear: item?.nameByAcademicYear || item?.organizationNameByAcademicYear || item?.orgNameByAcademicYear
-        });
-        const documentRunCodeByAcademicYear = buildOrganizationCatalogDocumentRunMap({
-          documentRunCode: rawRunCode,
-          documentRunCodeByAcademicYear: item?.documentRunCodeByAcademicYear,
-          runCodeByAcademicYear: item?.runCodeByAcademicYear
-        });
-        const codeByAcademicYear = buildOrganizationCatalogCodeMap({
-          group,
-          code: rawCode,
-          codeByAcademicYear: item?.codeByAcademicYear,
-          orgCodeByAcademicYear: item?.orgCodeByAcademicYear,
-          documentRunCodeByAcademicYear
-        });
-        const name = getOrganizationCatalogExactYearValue(nameByAcademicYear, year) ||
-          (year === ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR ? rawName : "");
-        const documentRunCode = getOrganizationCatalogExactYearValue(documentRunCodeByAcademicYear, year) ||
-          (year === ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR ? rawRunCode : "");
-        const code = getOrganizationCatalogExactYearValue(codeByAcademicYear, year) ||
-          buildOrganizationCatalogManualCodeFromRunBase(group, documentRunCode) ||
-          (year === ORGANIZATION_CATALOG_LEGACY_DOCUMENT_RUN_ACADEMIC_YEAR ? rawCode : "");
-        if (!group || !name) return null;
-        const accountNo = normalizeOrganizationCatalogText(item?.accountNo || item?.bankAccount || item?.bankAccountNo);
-        return {
-          id: buildOrganizationCatalogYearDocId(baseOrganizationId, year),
-          fields: {
-            academicYear: year,
-            baseOrganizationId,
-            legacyOrganizationId: normalizeOrganizationCatalogText(item.id),
-            group,
-            name,
-            nameByAcademicYear: { [year]: name },
-            code: normalizeOrganizationCatalogText(code).toUpperCase(),
-            codeByAcademicYear: code ? { [year]: normalizeOrganizationCatalogText(code).toUpperCase() } : {},
-            documentRunCode,
-            documentRunCodeByAcademicYear: documentRunCode ? { [year]: documentRunCode } : {},
-            accountNo,
-            bankAccount: accountNo,
-            status: "active"
-          }
-        };
-      })
-      .filter(Boolean);
-  };
-
-  const normalizeOrganizationCatalogSelectedYear = async () => {
-    const academicYear = getOrganizationCatalogDisplayAcademicYear();
-    const updates = buildOrganizationCatalogNormalizeYearUpdates({ academicYear });
-    const messageEl = organizationCatalogImportMessageEl || organizationCatalogFormMessageEl;
-    if (!updates.length) {
-      setMessage(messageEl, `ปีการศึกษา ${academicYear} มีเอกสารรายปีครบแล้ว หรือไม่มีข้อมูล legacy ให้แปลง`, "#047857");
-      return;
-    }
-    if (!resolveStore() || !firestore.setDoc || !firestore.doc) {
-      setMessage(messageEl, "ระบบยังไม่พร้อมบันทึก Firebase", "#b91c1c");
-      return;
-    }
-    const ok = window.confirm(
-      `สร้างข้อมูลปีการศึกษา ${academicYear} เป็นเอกสารรายปี ${updates.length.toLocaleString("th-TH")} รายการ?\n` +
-      "ระบบจะสร้างเอกสารใหม่จากข้อมูลเดิม และไม่ลบหรือทับเอกสารเดิม"
-    );
-    if (!ok) return;
-    const currentUser = readCurrentUser();
-    const updatedBy = (currentUser?.email || getCurrentAuthEmail() || "").toString().trim().toLowerCase();
-    const timestampValue = firestore.serverTimestamp ? firestore.serverTimestamp() : new Date().toISOString();
-    try {
-      setMessage(messageEl, `กำลังสร้างข้อมูลรายปี ${academicYear}...`, "#1d4ed8");
-      await writeOrganizationCatalogUpdateItems(updates, { updatedBy, timestampValue, createdFromLegacy: true });
-      applyOrganizationCatalogUpdateItems(updates);
-      renderOrganizationCatalogTable();
-      renderOrgRepresentativeApplications();
-      setMessage(messageEl, `สร้างข้อมูลปี ${academicYear} เป็นเอกสารรายปีแล้ว ${updates.length.toLocaleString("th-TH")} รายการ`, "#047857");
-    } catch (error) {
-      console.error("normalize organization catalog year failed - app.staff-access.js:4466", error);
-      const message = (error?.code || "") === "permission-denied"
-        ? "ไม่มีสิทธิ์สร้างข้อมูลทะเบียนองค์กรรายปี"
-        : (error?.message || "สร้างข้อมูลทะเบียนองค์กรรายปีไม่สำเร็จ");
-      setMessage(messageEl, message, "#b91c1c");
-    }
   };
 
   const buildOrganizationCatalogBackfillUpdates = ({ academicYear = getOrganizationCatalogDisplayAcademicYear(), sourceYear = "" } = {}) => {
@@ -4782,54 +4583,6 @@ function initStaffAccessPages() {
       }, new Map())
       .values()
     );
-  };
-
-  const backfillOrganizationCatalogCurrentYearFromPrevious = async () => {
-    const academicYear = getOrganizationCatalogDisplayAcademicYear();
-    const updates = buildOrganizationCatalogBackfillUpdates({ academicYear });
-    if (!updates.length) {
-      setMessage(organizationCatalogImportMessageEl || organizationCatalogFormMessageEl, `ปีการศึกษา ${academicYear} มีข้อมูลครบแล้ว ไม่ต้องเติม`, "#047857");
-      return;
-    }
-    if (!resolveStore() || !firestore.setDoc || !firestore.doc) {
-      setMessage(organizationCatalogImportMessageEl || organizationCatalogFormMessageEl, "ระบบยังไม่พร้อมบันทึก Firebase", "#b91c1c");
-      return;
-    }
-
-    const totals = updates.reduce((acc, item) => {
-      acc.name += item.stats.name;
-      acc.code += item.stats.code;
-      acc.runCode += item.stats.runCode;
-      return acc;
-    }, { name: 0, code: 0, runCode: 0 });
-    const ok = window.confirm(
-      `เติมข้อมูลปีการศึกษา ${academicYear} จากปีล่าสุดก่อนหน้าให้ ${updates.length.toLocaleString("th-TH")} องค์กร?\n` +
-      "ระบบจะเติมเฉพาะช่องที่ยังว่าง และไม่เขียนทับข้อมูลปีนี้ที่มีอยู่แล้ว"
-    );
-    if (!ok) return;
-
-    const currentUser = readCurrentUser();
-    const updatedBy = (currentUser?.email || getCurrentAuthEmail() || "").toString().trim().toLowerCase();
-    const timestampValue = firestore.serverTimestamp ? firestore.serverTimestamp() : new Date().toISOString();
-    const messageEl = organizationCatalogImportMessageEl || organizationCatalogFormMessageEl;
-    try {
-      setMessage(messageEl, `กำลังเติมข้อมูลปีการศึกษา ${academicYear}...`, "#1d4ed8");
-      await writeOrganizationCatalogUpdateItems(updates, { updatedBy, timestampValue });
-      applyOrganizationCatalogUpdateItems(updates);
-      renderOrganizationCatalogTable();
-      renderOrgRepresentativeApplications();
-      setMessage(
-        messageEl,
-        `เติมข้อมูลปี ${academicYear} แล้ว ${updates.length.toLocaleString("th-TH")} องค์กร (ชื่อ ${totals.name.toLocaleString("th-TH")} / รหัส ${totals.code.toLocaleString("th-TH")} / เลขรัน ${totals.runCode.toLocaleString("th-TH")})`,
-        "#047857"
-      );
-    } catch (error) {
-      console.error("backfill organization catalog year failed - app.staff-access.js:4629", error);
-      const message = (error?.code || "") === "permission-denied"
-        ? "ไม่มีสิทธิ์เติมข้อมูลปีการศึกษาในทะเบียนองค์กร"
-        : (error?.message || "เติมข้อมูลปีการศึกษาไม่สำเร็จ");
-      setMessage(messageEl, message, "#b91c1c");
-    }
   };
 
   const buildOrganizationCatalogCopyPreview = ({ backfill, normalize, link, sourceYear: selectedSourceYear = "" }) => {
@@ -5288,7 +5041,6 @@ function initStaffAccessPages() {
     if (code) {
       codeByAcademicYear[academicYear] = code;
     }
-    const isManualGroup = isOrganizationCatalogManualDocumentRunGroup(group);
     const accountNo = normalizeOrganizationCatalogText(organizationCatalogFields.accountNo?.value);
     const nameByAcademicYear = buildOrganizationCatalogYearTextMap({
       text: existingItem?.name || existingItem?.organizationName || existingItem?.orgName,

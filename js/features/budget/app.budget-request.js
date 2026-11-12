@@ -141,24 +141,6 @@ function initBudgetApprovalRequestPage() {
     document.body.appendChild(representativeModalEl);
   }
 
-  const collectBudgetOrgTypeOptions = () => {
-    const fromFilters =
-      typeof orgFilters !== "undefined" && Array.isArray(orgFilters)
-        ? orgFilters
-          .filter((item) => {
-            const itemYear = normalizeAcademicYearText(item?.academicYear || item?.year || item?.catalogAcademicYear);
-            return !itemYear || itemYear === getRepresentativeApplicationAcademicYear();
-          })
-          .map((item) => (item?.group || "").toString().trim())
-        : [];
-    const fromProjects =
-      typeof projects !== "undefined" && Array.isArray(projects)
-        ? projects.map((item) => (item?.orgGroup || "").toString().trim())
-        : [];
-    return Array.from(new Set([...fromFilters, ...fromProjects].filter(Boolean)))
-      .sort((a, b) => b.localeCompare(a, "th"));
-  };
-
   const normalizeOrgText = (value) => (value || "").toString().trim();
 
   const normalizePositiveIntegerText = (value) => {
@@ -248,32 +230,6 @@ function initBudgetApprovalRequestPage() {
       return getBudgetYearValue(nameByAcademicYear, getRepresentativeApplicationAcademicYear());
     }
     return rawName;
-  };
-
-  const collectBudgetOrgNameOptions = (orgType) => {
-    const selectedType = (orgType || "").toString().trim();
-    if (!selectedType) return [];
-    const codeByName = new Map();
-    const fromFilters = [];
-    if (typeof orgFilters !== "undefined" && Array.isArray(orgFilters)) {
-      orgFilters
-        .filter((item) => (item?.group || "").toString().trim() === selectedType)
-        .forEach((item) => {
-          const name = getBudgetOrgNameForRepresentativeYear(item);
-          if (!name) return;
-          const code = getBudgetOrgCodeForYear(item);
-          if (code && !codeByName.has(name)) codeByName.set(name, code);
-          fromFilters.push(name);
-        });
-    }
-    const fromProjects =
-      typeof projects !== "undefined" && Array.isArray(projects)
-        ? projects
-          .filter((item) => (item?.orgGroup || "").toString().trim() === selectedType)
-          .map((item) => (item?.orgName || "").toString().trim())
-        : [];
-    return Array.from(new Set([...fromFilters, ...fromProjects].filter(Boolean)))
-      .sort((a, b) => compareBudgetOrgNameByCode(a, b, codeByName));
   };
 
   const collectRepresentativeOrgTypeOptions = () => {
@@ -539,11 +495,6 @@ function initBudgetApprovalRequestPage() {
   const getRequestRoundLabel = (item) => {
     const label = formatBudgetRoundLabel(item?.budgetRoundYear, item?.budgetRoundNo);
     return label || (getRequestRoundId(item) ? getRequestRoundId(item) : "ไม่ระบุรอบ");
-  };
-
-  const isCurrentBudgetRoundItem = (item) => {
-    if (!currentBudgetRoundId) return true;
-    return getRequestRoundId(item) === currentBudgetRoundId;
   };
 
   const normalizeBudgetActiveRounds = (value, fallback = {}) => {

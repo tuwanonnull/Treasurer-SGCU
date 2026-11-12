@@ -580,9 +580,6 @@ function initCalendar(ctxKey = activeProjectStatusContext) {
         return;
       }
       generateCalendar();
-      if (typeof refreshScoreboardForProjectYear === "function") {
-        await refreshScoreboardForProjectYear();
-      }
     });
   }
 

@@ -8,7 +8,6 @@ const copySource = source.slice(source.indexOf('  let organizationCatalogCopyYea
 const updates = () => ['selected', 'excluded'].map((id) => ({ id, fields: { name: id } }));
 let selection = new Set(['selected']);
 let writes = [];
-let stages = [];
 let confirmCalls = 0;
 let releaseWrite;
 let holdWrite = false;
@@ -30,8 +29,6 @@ const context = vm.createContext({
     assert.equal(options.academicYear, '2570');
     return updates();
   },
-  buildOrganizationCatalogNormalizeYearUpdates: () => { stages.push(writes.length); return updates(); },
-  buildOrganizationCatalogYearLinkUpdates: () => { stages.push(writes.length); return updates(); },
   askOrganizationCatalogCopyYearConfirm: async () => { confirmCalls++; return selection ? { selectedIds: selection, sourceYear: "2567", academicYear: "2570" } : null; },
   readCurrentUser: () => ({ email: 'test@example.com' }),
   setMessage() {},
@@ -61,7 +58,6 @@ assert.equal(preview.find((row) => row.id === 'existing').existing, true);
 await context.copy();
 assert.equal(writes.length, 1);
 assert.ok(writes.every((items) => items.length === 1 && items[0].id === 'selected'), 'writes exclude unselected destinations');
-assert.equal(stages.length, 0, 'copying an explicit source year must not normalize or link unrelated years');
 for (const cancelled of [null, new Set()]) {
   selection = cancelled;
   writes = [];
@@ -81,7 +77,7 @@ await pending;
 assert.equal(context.organizationCatalogCopyYearBtnEl.disabled, false);
 console.log('Organization copy: grouped preview, selected-only writes with explicit source and destination years, cancellation, empty selection and duplicate guard passed.');
 
-const backfillSource = source.slice(source.indexOf('  const buildOrganizationCatalogBackfillUpdates ='), source.indexOf('  const backfillOrganizationCatalogCurrentYearFromPrevious ='));
+const backfillSource = source.slice(source.indexOf('  const buildOrganizationCatalogBackfillUpdates ='), source.indexOf('  const buildOrganizationCatalogCopyPreview ='));
 let catalogRows = [];
 const yearContext = vm.createContext({
   getOrganizationCatalogDisplayAcademicYear: () => '2570',

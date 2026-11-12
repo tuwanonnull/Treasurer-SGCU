@@ -18,7 +18,7 @@ const legend = makeElement();
 const panel = { querySelector: selector => selector.endsWith('-axis') ? axis : legend };
 const context = vm.createContext({window: {matchMedia: () => ({matches: false})}, document: {createElement: makeElement, createTextNode: text => text}});
 const ui = fs.readFileSync(new URL('../js/features/project/app.project-ui.js', import.meta.url), 'utf8');
-vm.runInContext(ui.slice(ui.indexOf('function formatProjectMoneyAxisTick'),ui.indexOf('function formatDebtAxisTick')),context);
+vm.runInContext(ui.slice(ui.indexOf('function formatProjectMoneyAxisTick'),ui.indexOf('const clubDebtValueLabelsPlugin')),context);
 vm.runInContext(ui.slice(ui.indexOf('const dashboardSeriesSlotsPlugin'), ui.indexOf('function renderDashboardChartLegend')), context);
 vm.runInContext(source.slice(source.indexOf('const projectBudgetFixedAxisPlugin'), source.indexOf('function wrapChartAxisLabel')) + '\nglobalThis.plugin = projectBudgetFixedAxisPlugin;', context);
 const plugin = context.plugin;

@@ -71,8 +71,7 @@ const SGCU_APP_CONFIG = {
       PROJECTS: "sgcu_cache_projects",
       NEWS: "sgcu_cache_news",
       DOWNLOADS: "sgcu_cache_downloads",
-      ORG_FILTERS: "sgcu_cache_org_filters",
-      SCOREBOARD: "sgcu_cache_scoreboard"
+      ORG_FILTERS: "sgcu_cache_org_filters"
     }
   }
 };

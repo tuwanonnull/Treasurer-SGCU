@@ -13,12 +13,6 @@
         "js/features/docs/app.file-links.js?v=20260417-1",
         "js/features/news/app.news.js?v=20260417-1"
       ],
-      scoreboard: [
-        "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
-        "js/features/project/app.calendar.js",
-        "js/features/project/app.data.js?v=20261005-borrow-project-status",
-        "js/features/news/app.scoreboard.js?v=20260501-1"
-      ],
       "org-structure": "js/features/org/app.org.js?v=20260503-1",
       news: [
         "js/features/docs/app.file-links.js?v=20260417-1",

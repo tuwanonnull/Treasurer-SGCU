@@ -33,7 +33,6 @@ function initMeetingRoomStaffApproval() {
   const holidayManageNameInput = document.getElementById("meetingHolidayManageName");
   const holidayManageMessage = document.getElementById("meetingHolidayManageMessage");
   const holidayManageDialogMessage = document.getElementById("meetingHolidayManageDialogMessage");
-  const holidayManageList = document.getElementById("meetingHolidayManageList");
   const holidayManageCountEl = document.getElementById("meetingHolidayManageCount");
   const holidayCalendarEl = document.getElementById("meetingHolidayCalendar");
   const holidayCalendarTitleEl = document.getElementById("meetingHolidayCalendarTitle");
@@ -1635,69 +1634,6 @@ function initMeetingRoomStaffApproval() {
       setRoomManageMessage("ไม่สามารถอัปเดตสิทธิ์การจองได้ในขณะนี้", "#b91c1c");
       return false;
     }
-  };
-
-  const getRowActions = (booking) => {
-    if (booking.status === "approved") {
-      return `
-        <button
-          class="btn-ghost staff-room-cancel"
-          type="button"
-          data-action="cancel"
-          data-id="${booking.id}"
-        >
-          ยกเลิกการอนุมัติ
-        </button>
-        <button
-          class="btn-ghost staff-room-delete"
-          type="button"
-          data-action="delete"
-          data-id="${booking.id}"
-        >
-          ลบคำขอ
-        </button>
-      `;
-    }
-
-    if (booking.status === "rejected") {
-      return `
-        <button
-          class="btn-ghost staff-room-delete"
-          type="button"
-          data-action="delete"
-          data-id="${booking.id}"
-        >
-          ลบคำขอ
-        </button>
-      `;
-    }
-
-    return `
-      <button
-        class="btn-primary staff-room-approve"
-        type="button"
-        data-action="approve"
-        data-id="${booking.id}"
-      >
-        อนุมัติ
-      </button>
-      <button
-        class="btn-ghost staff-room-reject"
-        type="button"
-        data-action="reject"
-        data-id="${booking.id}"
-      >
-        ไม่อนุมัติ
-      </button>
-      <button
-        class="btn-ghost staff-room-delete"
-        type="button"
-        data-action="delete"
-        data-id="${booking.id}"
-      >
-        ลบคำขอ
-      </button>
-    `;
   };
 
   const getStatusOptionLabel = (value, currentStatus = "") => {

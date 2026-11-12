@@ -43,9 +43,6 @@
 
 /* Mobile room comparison: show all seven days without horizontal clipping. */
 @media (max-width: 720px) {
-  .page-view[data-page="meeting-room-staff"] .meeting-staff-main-tabs {
-    display: none !important;
-  }
 
   .meeting-calendar-date-jump {
     position: relative;

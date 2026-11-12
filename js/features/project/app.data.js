@@ -176,11 +176,6 @@ function getActiveProjectSourceConfig(sources = projectSourceConfigs) {
   return sources.find((source) => source.isActive) || sources[sources.length - 1];
 }
 
-function parseProjectSourceRows(rows) {
-  if (!Array.isArray(rows) || rows.length < 2) return null;
-  return getActiveProjectSourceConfig(parseProjectSourceList(rows));
-}
-
 function getProjectCacheKey(sourceConfig = activeProjectSourceConfig) {
   const year = (sourceConfig?.year || "").toString().trim();
   if (year) return `${CACHE_KEYS.PROJECTS}:${year}`;
@@ -463,9 +458,6 @@ async function switchProjectSourceYear(year) {
   const selectedYear = (year || "").toString().trim();
   if (!selectedYear || selectedYear === selectedProjectSourceYear) {
     syncProjectYearSelects(selectedProjectSourceYear);
-    if (typeof refreshScoreboardForProjectYear === "function") {
-      await refreshScoreboardForProjectYear();
-    }
     return;
   }
 
@@ -491,9 +483,6 @@ async function switchProjectSourceYear(year) {
       refreshProjectCalendarForContext(ctxKey);
     });
     renderHomeKpis();
-    if (typeof refreshScoreboardForProjectYear === "function") {
-      await refreshScoreboardForProjectYear();
-    }
   } catch (err) {
     console.error("เปลี่ยนปี Project Status ไม่สำเร็จ - app.data.js", err);
     recordLoadError("projects", `โหลดข้อมูลปีการศึกษา ${selectedYear} ไม่สำเร็จ`, { showRetry: true });

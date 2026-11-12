@@ -23,7 +23,7 @@ const ctx = vm.createContext({
   kpiOnTimeDonutChart: null, kpiBudgetUsageDonutChart: null
 });
 for (const name of new Set(kpis.match(/\bkpi\w+(?:El|Canvas)\b/g))) ctx[name] = element();
-vm.runInContext(helpers.slice(helpers.indexOf('function parseProjectDate'), helpers.indexOf('function getProjectOverviewStatus')), ctx);
+vm.runInContext(helpers.slice(helpers.indexOf('function parseProjectDate'), helpers.indexOf('function getCloseDurationDays')), ctx);
 vm.runInContext(helpers.slice(helpers.indexOf('function getCloseDurationDays'), helpers.indexOf('\n}', helpers.indexOf('function getCloseDurationDays')) + 2), ctx);
 vm.runInContext(ui.slice(ui.indexOf('function updateDonutChart'), ui.indexOf('function initDashboardBudgetComparisonToggle')), ctx);
 vm.runInContext(kpis, ctx);
