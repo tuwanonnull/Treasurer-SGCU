@@ -189,6 +189,7 @@
     if (globalName && window[globalName]) {
       if (key === "chart" && typeof window.registerCenterTextPlugin === "function") {
         window.registerCenterTextPlugin();
+        window.registerThemeChartPlugin?.();
       }
       return;
     }
@@ -197,6 +198,7 @@
     await loadScriptOnce(src);
     if (key === "chart" && typeof window.registerCenterTextPlugin === "function") {
       window.registerCenterTextPlugin();
+      window.registerThemeChartPlugin?.();
     }
   };
 

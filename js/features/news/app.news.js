@@ -629,8 +629,9 @@ function openNewsModal(newsId) {
   const previewUrl = toPreviewUrl(item.previewUrl);
   const previewHtml = previewUrl
     ? `
-      <div class="news-preview-frame">
-        <iframe src="${previewUrl}" title="news-preview" allow="fullscreen"></iframe>
+      <div class="news-preview-frame is-loading" aria-busy="true">
+        <div class="news-preview-loading" role="status">กำลังโหลดเอกสาร…</div>
+        <iframe title="news-preview" allow="fullscreen"></iframe>
       </div>
     `
     : "";
@@ -648,6 +649,17 @@ function openNewsModal(newsId) {
     ${downloadHtml}
     ${previewHtml}
   `;
+
+  const previewFrame = newsModalBodyEl.querySelector('.news-preview-frame');
+  const previewIframe = previewFrame?.querySelector('iframe');
+  if (previewIframe) {
+    previewIframe.addEventListener('load', () => {
+      previewFrame.classList.remove('is-loading');
+      previewFrame.setAttribute('aria-busy', 'false');
+      previewFrame.querySelector('.news-preview-loading')?.remove();
+    }, { once: true });
+    previewIframe.src = previewUrl;
+  }
 
   openDialog(newsModalEl, { focusSelector: "#newsModalClose" });
 }

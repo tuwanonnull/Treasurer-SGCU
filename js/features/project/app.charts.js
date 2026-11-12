@@ -9,7 +9,9 @@ const projectBudgetValueLabelsPlugin = {
     ctx.textAlign = "left";
     [0, 1].forEach((datasetIndex) => {
       if (!chart.isDatasetVisible(datasetIndex)) return;
-      ctx.fillStyle = datasetIndex === 0 ? "#9d174d" : "#047857";
+      ctx.fillStyle = document.documentElement.dataset.theme === "dark"
+        ? (datasetIndex === 0 ? "#f9a8d4" : "#91e3b5")
+        : (datasetIndex === 0 ? "#9d174d" : "#047857");
       chart.getDatasetMeta(datasetIndex).data.forEach((bar, index) => {
         const value = Number(chart.data.datasets[datasetIndex].data[index]);
         if (!Number.isFinite(value)) return;
@@ -249,7 +251,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
         scales: {
           x: {
             stacked: true,
-            ticks: { stepSize: 1 }
+            ticks: { precision: 0, maxTicksLimit: 6, maxRotation: 0, minRotation: 0 }
           },
           y: {
             stacked: true,
@@ -308,8 +310,8 @@ function initCharts(ctxKey = activeProjectStatusContext) {
             }
           },
           centerText: {
-            text: "0%",
-            subText: "",
+            text: "0",
+            subText: "งบอนุมัติรวม (บาท)",
             color: "#111827",
             fontSize: 22,
             subFontSize: 11,
@@ -756,7 +758,13 @@ function updateClosureXAxisMax(chart = budgetByMonthChart) {
     }, 0)
   );
   const maxTotal = totals.length ? Math.max(...totals) : 0;
-  chart.options.scales.x.max = getNiceProjectCountAxisMax(maxTotal);
+  const axisMax = getNiceProjectCountAxisMax(maxTotal);
+  const targetStep = axisMax / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(targetStep));
+  const step = Math.max(1, [1, 2, 2.5, 5, 10].map(value => value * magnitude)
+    .find(value => value >= targetStep));
+  chart.options.scales.x.max = Math.ceil(axisMax / step) * step;
+  chart.options.scales.x.ticks.stepSize = step;
 }
 
 function getProjectStatusOrgComparator(level = "orgGroup") {
@@ -1013,7 +1021,7 @@ async function downloadClosureStatusChartPng(ctxKey = activeProjectStatusContext
     const exportCtx = exportCanvas.getContext("2d");
     if (!exportCtx) return;
 
-    exportCtx.fillStyle = "#ffffff";
+    exportCtx.fillStyle = document.documentElement.dataset.theme === "dark" ? "#222222" : "#ffffff";
     exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     exportCtx.drawImage(sourceCanvas, 0, 0);
     drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDesktopLabels: true });
@@ -1084,7 +1092,7 @@ function drawClosureExportYAxisLabels(exportCtx, chart, sourceCanvas, { useDeskt
 
   exportCtx.save();
   exportCtx.scale(pixelRatio, pixelRatio);
-  exportCtx.fillStyle = "#6b7280";
+  exportCtx.fillStyle = document.documentElement.dataset.theme === "dark" ? "#b8b8b8" : "#6b7280";
   exportCtx.font = `600 ${useDesktopLabels ? 16 : 11}px Kanit, sans-serif`;
   // Calculate the left edge ourselves instead of relying on textAlign="right".
   // Safari's canvas implementation can position Thai text from the anchor toward

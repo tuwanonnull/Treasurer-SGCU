@@ -280,8 +280,19 @@ function openDownloadPreviewModal(doc, label, url) {
   bodyEl.appendChild(action);
 
   const frame = document.createElement("div");
-  frame.className = "download-preview-frame news-preview-frame";
+  frame.className = "download-preview-frame news-preview-frame is-loading";
+  frame.setAttribute("aria-busy", "true");
+  const loading = document.createElement("div");
+  loading.className = "news-preview-loading";
+  loading.setAttribute("role", "status");
+  loading.textContent = "กำลังโหลดเอกสาร…";
+  frame.appendChild(loading);
   const iframe = document.createElement("iframe");
+  iframe.addEventListener("load", () => {
+    frame.classList.remove("is-loading");
+    frame.setAttribute("aria-busy", "false");
+    loading.remove();
+  }, { once: true });
   iframe.src = previewUrl;
   iframe.title = `preview-${label.toLowerCase()}-${doc?.name || "financial-document"}`;
   iframe.allow = "fullscreen";

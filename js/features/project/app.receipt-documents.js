@@ -377,7 +377,7 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
       : `<tr${item ? ` data-receipt-amount="${item.satang}"` : ""}><td class="receipt-description">${item ? esc(item.description) : "&nbsp;"}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td></tr>`;
   }).join("");
   const cssURL = esc(new URL("css/pages/receipt-print.css", baseURI).href);
-  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  return `<!doctype html><html lang="th" data-theme="${typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${esc(project.code || "โครงการ")}_${PROJECT_RECEIPT_TITLES[type]}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap"><link rel="stylesheet" href="${cssURL}"></head>
     <body><nav class="receipt-toolbar" aria-label="เครื่องมือเอกสาร"><div class="receipt-toolbar-inner">
       <div class="receipt-project-info"><div class="receipt-project-meta"><span class="receipt-project-code">${esc(project.code || "โครงการ")}</span><span>ตัวอย่าง${PROJECT_RECEIPT_TITLES[type]}</span></div><div class="receipt-project-name">${esc(project.name || "")}</div></div>

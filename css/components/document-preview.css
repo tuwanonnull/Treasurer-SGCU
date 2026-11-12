@@ -18,3 +18,27 @@
 }
 
 @media print { .receipt-toolbar { display: none !important; } }
+
+/* Preview chrome follows the originating page; the paper and print remain light. */
+@media screen {
+  html[data-theme="dark"] body,
+  html[data-theme="dark"] .receipt-preview-stage { background: #181818; }
+  html[data-theme="dark"] .receipt-toolbar,
+  html[data-theme="dark"] .receipt-print-dialog {
+    background: #222222; color: #f2f2f2; border-color: #404040;
+    --receipt-pink: #f9a8d4;
+    --receipt-border: #404040;
+  }
+  html[data-theme="dark"] :is(.receipt-project-name, .receipt-dialog-heading h2) { color: #f2f2f2; }
+  html[data-theme="dark"] :is(.receipt-project-meta, .receipt-dialog-heading p) { color: #b8b8b8; }
+  html[data-theme="dark"] :is(.receipt-project-code, .receipt-dialog-icon, .receipt-submission-notice p:first-of-type) {
+    background: #382630; color: #f9a8d4; border-color: #895269;
+  }
+  html[data-theme="dark"] :is(.receipt-ui-secondary, .receipt-submission-notice) {
+    background: #2c2c2c; color: #f2f2f2; border-color: #404040;
+  }
+  html[data-theme="dark"] :is(.receipt-submission-notice strong, .receipt-dialog-close) { color: #f9a8d4; }
+  html[data-theme="dark"] .receipt-print-dialog-actions { border-color: #404040; }
+  html[data-theme="dark"] #receiptPrintStatus:not(:empty) { color: #ffb4b4; }
+  html[data-theme="dark"] :is(.receipt-sheet, .pdf-root) { color-scheme: light; color: #000; }
+}

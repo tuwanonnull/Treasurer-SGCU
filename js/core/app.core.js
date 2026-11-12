@@ -263,7 +263,7 @@ const centerTextPlugin = {
     if (!text) return;
 
     ctx.save();
-    ctx.fillStyle = options.color || "#111827";
+    ctx.fillStyle = document.documentElement.dataset.theme === "dark" ? "#f2f2f2" : (options.color || "#111827");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 

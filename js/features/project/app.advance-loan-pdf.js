@@ -293,9 +293,11 @@ async function downloadProjectPdf(project, signatureData, printWin = null) {
 }
 
 function showProjectDocumentLoading(printWin) {
-printWin.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>กำลังเตรียมเอกสาร</title>
+printWin.document.write(`<!doctype html><html lang="th" data-theme="${document.documentElement.dataset.theme === "dark" ? "dark" : "light"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>กำลังเตรียมเอกสาร</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fffafd; color: #475569; font: 16px/1.6 system-ui, sans-serif; }
+    html[data-theme="dark"] body { background: #181818; color: #b8b8b8; }
+    html[data-theme="dark"] .spinner { border-color: #404040; border-top-color: #f9a8d4; }
     [role="status"] { padding: 24px; text-align: center; }
     .spinner { display: block; width: 32px; height: 32px; margin: 0 auto 16px; border: 3px solid #fce7f3; border-top-color: #db2777; border-radius: 50%; animation: spin 800ms linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -565,7 +567,7 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   printWin.document.open();
   printWin.document.write(`
     <!doctype html>
-    <html lang="th">
+    <html lang="th" data-theme="${document.documentElement.dataset.theme === "dark" ? "dark" : "light"}">
       <head>
         <meta charset="UTF-8" />
         <base href="${baseHref}" />

@@ -65,6 +65,10 @@ function updateApprovedBudgetPie(filtered) {
     const rankedValues = [...new Set(data)].sort((a, b) => b - a);
     center.subText = `อันดับงบ ${rankedValues.indexOf(selectedBudget) + 1}/${data.length}`;
   }
+  if (!highlightLabel) {
+    center.text = total.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+    if (total > 0) center.subText = "งบอนุมัติรวม (บาท)";
+  }
 
   // Chart.js stores legend visibility by index; discard it when filter changes
   // replace the labels so a previously hidden arc cannot hide another group.

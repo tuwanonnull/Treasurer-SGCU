@@ -124,12 +124,24 @@
 }
 
 .news-preview-frame {
+  position: relative;
   margin-top: 12px;
   border: 1px solid rgba(236, 72, 153, 0.2);
   border-radius: 14px;
   overflow: hidden;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(236, 72, 153, 0.08);
+}
+
+.news-preview-frame.is-loading iframe { visibility: hidden; }
+.news-preview-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .news-preview-frame iframe {

@@ -1,0 +1,847 @@
+/* Charcoal theme for the main application.
+   Screen-only rules deliberately leave printed documents in the light theme. */
+.theme-picker { display: none; }
+@media screen {
+  body .theme-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 16px 0 0;
+    flex-shrink: 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  .theme-picker-label,
+  .login-notification-title { font-size: 14px; font-weight: 600; line-height: 1.5; color: #334155; }
+  .login-notification-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .login-notification-description { flex: 1 1 110px; min-width: 0; }
+  .login-notification-title { margin: 0; }
+  .login-notification-controls { margin-top: 0; width: 164px; max-width: 100%; }
+  .theme-picker select {
+    box-sizing: border-box;
+    width: 164px;
+    min-height: 40px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 7px 14px;
+    border: 1px solid var(--theme-pink-300);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .7);
+    color: var(--theme-pink-700);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .login-notification-controls .btn-ghost { box-sizing: border-box; width: 100%; min-height: 40px; }
+  @media (pointer: coarse) {
+    .theme-picker select,
+    .login-notification-controls .btn-ghost { min-height: 44px; }
+  }
+  .theme-picker select:focus-visible {
+    outline: 2px solid var(--theme-pink-500);
+    outline-offset: 2px;
+  }
+  html[data-theme="dark"] body .theme-picker-label { color: var(--preview-text); }
+  html[data-theme="dark"] body {
+    --preview-bg: #181818;
+    --preview-surface: #222222;
+    --preview-raised: #2c2c2c;
+    --preview-text: #f2f2f2;
+    --preview-muted: #b8b8b8;
+    --preview-accent: #f9a8d4;
+    --preview-border: #404040;
+    --menu-glass-bg: rgba(34, 34, 34, .94);
+    --menu-glass-border: #404040;
+    --menu-shadow: 0 14px 34px rgba(0, 0, 0, .25);
+    --theme-focus: rgba(249, 168, 212, .3);
+    color-scheme: dark;
+    color: var(--preview-text);
+    background: var(--preview-bg);
+  }
+  html[data-theme="dark"] body :is(.site-header, .site-footer, .mobile-menu, .mobile-bottom-nav, .nav-group-menu, .app-loader, .app-loader-panel) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.theme-picker, .logo-subtitle, .footer-inner, .footer-affiliation, .footer-address, .footer-contact, .footer-copyright, .app-loader-detail, .app-loader-status, .app-loader-version) {
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body :is(.theme-picker select, .nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-bottom-item) {
+    color: var(--preview-text); background-color: var(--preview-surface); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-bottom-item):is(:hover, .active, [aria-expanded="true"]) {
+    background: var(--preview-raised); color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body :is(.footer-brand, .logo-title, .app-loader-title) {
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body .home-page-view :is(h1, h2, h3, h4, .list-empty-state strong, .home-faq-item summary) {
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.home-hero-subtitle, .home-section-header p, .home-news-card p, .home-news-date, .home-scroll-hint, .list-empty-state p, .workflow-description, .workflow-agenda-card ul, .workflow-subtitle, .workflow-card-heading p, .workflow-step-list, .workflow-agenda-card, .home-help-header p, .home-faq-answer p, .home-contact-card p, .home-contact-heading p) {
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.list-empty-state, .project-approval-workflow, .home-news-card, .home-news-more, .home-news-skeleton-card, .workflow-phase-card, .workflow-agenda-card, .home-main-action.is-secondary, .home-quick-action) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.home-news-card, .home-main-action.is-secondary, .home-quick-action):hover {
+    background: var(--preview-raised); border-color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.home-hero-eyebrow, .workflow-kicker, .workflow-phase-label, .home-help-eyebrow, .home-help-link, .home-news-link, .home-contact-cta, .home-contact-line, .home-contact-instagram) {
+    color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.workflow-kicker, .list-empty-state-icon, .workflow-step-list li, .home-contact-cta, .home-contact-line, .home-contact-instagram, .home-main-action.is-secondary .home-main-action-icon, .home-quick-action-icon, .workflow-icon, .home-faq-toggle) {
+    background: var(--preview-raised); color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.home-main-action.is-secondary, .home-quick-action)::after {
+    color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .home-page-view :is(.home-faq-item, .home-contact-group, .workflow-agenda-card) {
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .home-page-view .home-faq-toggle::before,   html[data-theme="dark"] body .home-page-view .home-faq-toggle::after {
+    background: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .home-page-view .home-news-skeleton-card > div {
+    background: linear-gradient(90deg, var(--preview-surface), var(--preview-raised), var(--preview-surface));
+  }
+  html[data-theme="dark"] body .footer-contact a {
+    background: var(--preview-raised); color: var(--preview-accent); border-color: var(--preview-border);
+  }
+  /* Keep decorative text and icons neutral; reserve pink for actions. */
+  html[data-theme="dark"] body .home-page-view :is(.home-hero-eyebrow, .workflow-kicker, .workflow-phase-label, .home-help-eyebrow, .list-empty-state-icon, .workflow-step-list li, .home-main-action.is-secondary .home-main-action-icon, .home-quick-action-icon, .workflow-icon, .home-faq-toggle) {
+    color: var(--preview-muted);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .home-page-view .workflow-step-list li::before {
+    background: var(--preview-muted);
+    box-shadow: 0 0 0 4px rgba(184, 184, 184, .12);
+  }
+  html[data-theme="dark"] body .home-page-view .home-faq-toggle::after,
+  html[data-theme="dark"] body .home-page-view .home-faq-toggle::before {
+    background: var(--preview-muted);
+  }
+  html[data-theme="dark"] body .home-page-view .home-main-action.is-primary {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+  }
+  html[data-theme="dark"] body .home-hero::before {
+    background: none;
+  }
+}
+
+/* Shared screens and controls. Keep document paper outside these selectors. */
+@media screen {
+  html[data-theme="dark"] body :is(.card, .panel, .dashboard-card, .dashboard-metric, .chart-card, .table-wrapper,
+    .project-table-wrapper, .modal-dialog, .modal-section, .person-modal-dialog,
+    .auth-alert-dialog, .staff-action-menu, .mobile-filter-sheet,
+    .about-card, .about-combined-block, .scope-team-card, .org-node,
+    .news-card, .download-card, .download-skeleton-card, .list-empty-state,
+    .login-card, .login-hero, .login-hero-panel, .login-intro-card, .login-profile-card,
+    .borrow-detail-section, .borrow-asset-row, .borrow-mode-option, .borrow-project-choice,
+    .borrow-my-request-card, .borrow-request-context, .borrow-selected-project,
+    .budget-request-form-section, .budget-org-summary-card, .budget-org-floating-card,
+    .budget-org-identity-card, .budget-org-round-card, .budget-org-deadline-card,
+    .budget-org-totals-chart-card, .budget-staff-chart-card,
+    .meeting-calendar-panel, .meeting-form-panel, .meeting-my-requests-panel) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  }
+  html[data-theme="dark"] body :is(.page-title, .panel-title, .card-value, .dashboard-card-title, .metric-value,
+    .modal-title, .modal-section-title, .modal-item-value, .person-modal-name,
+    .project-name, .news-card-title, .download-title, .login-title, .login-greeting,
+    .login-hero-title, .login-account-title, .login-notification-title, .login-help-title,
+    .about-card h2, .about-card h3, .about-card h4, .about-principle-title,
+    .scope-team-card h3, .org-node-name, .borrow-selected-project-name,
+    .borrow-detail-section-title, .budget-request-form-section-title,
+    .budget-org-summary-value, .budget-org-floating-value, .meeting-calendar-period-title,
+    .list-empty-state strong, .status-pie-center-main, .rank-item-value) {
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body :is(.page-subtitle, .page-meta, .section-text-sm, .panel-caption, .panel-meta,
+    .card-title, .card-caption, .metric-label, .metric-caption, .project-org,
+    .modal-subtitle, .modal-section-caption, .modal-item-label, .person-modal-nick,
+    .person-modal-contact-label, .news-card-meta, .news-card-summary,
+    .download-description, .download-meta, .table-empty, .list-empty-state p,
+    .login-label, .filter-group label, .login-access-note, .login-hero-lead,
+    .login-hero-item, .login-hero-meta, .login-help-text, .login-notification-summary,
+    .about-card p, .about-card li, .scope-team-card, .scope-team-card li,
+    .org-node-role, .org-node-nick, .borrow-detail-section-caption,
+    .borrow-asset-actions-hint, .borrow-date-rule, .borrow-project-window,
+    .budget-org-summary-caption, .budget-org-summary-label, .budget-org-floating-subvalue,
+    .budget-request-field-hint, .budget-request-counter, .budget-org-totals-note,
+    .meeting-manage-helper, .meeting-calendar-heading, .staff-breadcrumb,
+    .status-pie-center-sub, .rank-item-title) {
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body :is(.login-input, .filter-group select, .filter-group input, .staff-status-select,
+    .staff-access-textarea, .readonly-field, .search-box, .modal-dialog input:not([type="checkbox"]):not([type="radio"]),
+    .modal-dialog select, .modal-dialog textarea) {
+    background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border); color-scheme: dark;
+  }
+  html[data-theme="dark"] body .login-input::placeholder,
+  html[data-theme="dark"] body .filter-group input::placeholder,
+  html[data-theme="dark"] body .modal-dialog textarea::placeholder {
+    color: #999; opacity: 1;
+  }
+  html[data-theme="dark"] body :is(.btn-secondary, .btn-ghost, .csv-export-btn, .search-clear, .modal-close,
+    .person-modal-close, .tab-btn, .scope-pill, .staff-mode-btn,
+    .meeting-calendar-nav-btn, .meeting-calendar-today-btn, .meeting-calendar-date-jump,
+    .project-refresh-data-btn, .news-card-btn, .borrow-asset-add, .borrow-asset-remove) {
+    background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.tabs, .staff-mode-toggle, .login-hero-chip, .login-hero-icon,
+    .about-principle-number, .about-system-icon, .list-empty-state-icon,
+    .modal-section-icon, .pill-soft-gray, .badge-draft) {
+    background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.tab-btn.is-active, .tab-btn.active, .scope-pill-active,
+    .staff-mode-btn.is-active, .borrow-mode-option.is-active, .borrow-project-choice.is-selected,
+    .btn-secondary:hover:not(:disabled), .btn-ghost:hover:not(:disabled), .news-card-btn:hover) {
+    background: #382630; color: var(--preview-accent); border-color: #895269;
+  }
+  html[data-theme="dark"] body :is(.about-org-link, .login-consent-link, .person-modal-contact-value a,
+    .download-card a, .staff-breadcrumb [aria-current="page"]) {
+    color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body :is(.table-wrapper table, .project-table-wrapper table, .modal-table,
+    .budget-org-totals-table) {
+    background: var(--preview-surface); color: var(--preview-text);
+  }
+  html[data-theme="dark"] body :is(.table-wrapper th, .project-table-wrapper th, .modal-table th,
+    .calendar-weekday, .calendar-day-header) {
+    background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.table-wrapper td, .project-table-wrapper td, .modal-table td) {
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.table-wrapper tbody tr, .project-table-wrapper tbody tr, .modal-table tbody tr) {
+    background: var(--preview-surface); color: var(--preview-text);
+  }
+  html[data-theme="dark"] body :is(.table-wrapper tbody tr:hover, .project-table-wrapper tbody tr:hover, .modal-table tbody tr:hover) {
+    background: var(--preview-raised);
+  }
+  html[data-theme="dark"] body :is(.badge-approved, .pill-soft-green, .status-approved, .status-closed) {
+    background: #17382b; color: #91e3b5;
+  }
+  html[data-theme="dark"] body :is(.badge-rejected, .pill-soft-red, .status-cancelled) {
+    background: #442323; color: #ffb4b4;
+  }
+  html[data-theme="dark"] body :is(.badge-pending, .badge-reviewing, .badge-warning, .status-pending) {
+    background: #40331c; color: #f5d18a;
+  }
+  html[data-theme="dark"] body :is(.pill-soft-pink) {
+    background: #382630; color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body :is(.skeleton-card, .project-table-skeleton, .table-skeleton,
+    .org-structure-skeleton) {
+    background: var(--preview-surface); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.skeleton-line, .org-skeleton-line, .org-skeleton-avatar) {
+    background: linear-gradient(90deg, #2c2c2c, #404040, #2c2c2c);
+  }
+  html[data-theme="dark"] body :is(.login-notification-section, .about-principle-card, .about-system-item,
+    .modal-header, .modal-section, .borrow-detail-section-head) {
+    border-color: var(--preview-border);
+  }
+}
+
+@media screen {
+  html[data-theme="dark"] body :is(.login-shell, .login-help, .meeting-form-panel .panel-body, .meeting-booking-form, .staff-application-result-field, .download-section-card, .download-card-header, .calendar-day, .meeting-week-room, .meeting-week-header) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .login-shell::before,
+  html[data-theme="dark"] body .login-shell::after { background: none; }
+  html[data-theme="dark"] body :is(.login-hero-eyebrow, .download-btn) {
+    background: var(--preview-raised); color: var(--preview-accent); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .download-section-card {
+    box-shadow: none;
+    border: 1px solid var(--preview-border);
+  }
+  html[data-theme="dark"] body .download-card-title { background: transparent; color: var(--preview-text); }
+  html[data-theme="dark"] body .download-card-bar { background: var(--preview-accent); }
+  html[data-theme="dark"] body .download-item { border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.download-desc, .about-principle-title small, .about-principle-card > span:last-child, .about-system-timeline span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .about-page :is(.about-principle-title strong, .about-systems-list h3) { color: var(--preview-text); }
+  html[data-theme="dark"] body .about-page :is(.about-principle-number, .about-system-icon, .scope-team-card) { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .about-page .about-purpose-list li::before { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .calendar-day-empty { background: var(--preview-bg); }
+  html[data-theme="dark"] body .calendar-day-today { border-color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.calendar-day-today .calendar-day-header, .calendar-today-pill) { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.calendar-event.approved, .calendar-event.closed) { background: #17382b; color: #91e3b5; }
+  html[data-theme="dark"] body :is(.calendar-event.pending, .calendar-event.cancel-requested) { background: #40331c; color: #f5d18a; }
+  html[data-theme="dark"] body .calendar-event.cancelled { background: #442323; color: #ffb4b4; }
+  html[data-theme="dark"] body .calendar-event.calendar-more { background: var(--preview-raised); color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.pdf-root, .receipt-sheet) { color-scheme: light; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .about-page .about-framework .about-principle-card > span:last-child { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.about-page .home-section-header h2, .about-system-timeline strong, .borrow-year-value, .dashboard-section-title, .dashboard-debt-summary strong) { color: var(--preview-text); }
+}
+@media screen {
+  html[data-theme="dark"] body #borrowAcademicYearDisplay,
+  html[data-theme="dark"] body #filterBarStaff .dashboard-floating-filter-head strong,
+  html[data-theme="dark"] body #dashboardAnalysisSectionStaff .dashboard-debt-kpi strong,
+  html[data-theme="dark"] body #dashboardFollowupSectionStaff .dashboard-debt-kpi strong {
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body :is(.project-budget-comparison-axis, .project-budget-comparison-legend button, .dashboard-chart-legend button) {
+    color: var(--preview-muted);
+  }
+}
+
+/* Page-by-page audit: explicit overrides for older page-specific selectors. */
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="project-status"] .project-summary-cards .project-summary-card {
+    background: var(--preview-surface); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .about-page :is(.home-section-header p, #aboutOrgStructureTitleLabel) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .about-page .about-system-timeline time { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.borrow-required) { color: #ffb4b4; }
+  html[data-theme="dark"] body .borrow-asset-quick-head { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.meeting-calendar-nav-btn span, .meeting-calendar-nav-text) { color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.management-link-panel, .staff-auth-profile-preview, .org-representative-summary-card, .system-health-summary-card) { background: var(--preview-surface); border-color: var(--preview-border); color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.management-link-copy h3, .staff-auth-form-heading) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.management-link-copy p, .staff-auth-profile-preview, .management-link-kicker) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#staffAuthAccessProfilePreview, #budgetRequestDeadlineStatus) { color: var(--preview-muted); background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.budget-staff-controls, .budget-staff-setting-block) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #budgetRoundYearInput { background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #budgetRoundAddBtn { background: var(--theme-gradient); color: white; }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-check-card { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table :is(th, td) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table th { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffMeetingAll .table-wrapper { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .table-wrapper th { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  /* Mobile tables use high-specificity backgrounds on individual cells. */
+  html[data-theme="dark"] body .page-view :is(.table-wrapper, .project-table-wrapper) :is(tbody tr, tbody td) {
+    background-color: var(--preview-surface) !important;
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(#dashboardBudgetComparisonCaption, #kpiMonthlyCaption, #longestOpenTableCaptionStaff, #clubDebtCaptionStaff, #pastUnapprovedCaptionStaff, #pastUnapprovedCountStaff) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#dashboardAnalysisSectionStaff, #dashboardFollowupSectionStaff) :is(.chart-caption, .dashboard-debt-unit, .heatmap-legend-label, .past-unapproved-toggle span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="dashboard-staff"] :is(.heatmap-legend-label, .past-unapproved-toggle span) { color: var(--preview-muted); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] {
+    --handover-ink: var(--preview-text);
+    --handover-muted: var(--preview-muted);
+    --handover-line: var(--preview-border);
+    --handover-pink: var(--preview-accent);
+    --handover-teal: var(--preview-muted);
+    --handover-soft: var(--preview-raised);
+  }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.project-staff-ops-page, .handover-page) {
+    --handover-ink: var(--preview-text);
+    --handover-muted: var(--preview-muted);
+    --handover-line: var(--preview-border);
+    --handover-pink: var(--preview-accent);
+    --handover-teal: var(--preview-muted);
+    --handover-soft: var(--preview-raised);
+  }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.handover-opening-note, .handover-section, .handover-department-hero, .handover-global-toc, .handover-common-guide-header, .handover-job-card, .handover-org-main, .handover-org-branches article, .handover-accordion details, .handover-question-grid details, .handover-reason-list > div, .handover-note, .handover-timeline li, .handover-table, .handover-table tr, .handover-table th, .handover-table td, .handover-department-tags span) {
+    background: var(--preview-surface); border-color: var(--preview-border); color: var(--preview-text);
+  }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(h1, h2, h3, h4, strong, summary) { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(p, li, small, .handover-signature span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .handover-global-toc button { background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .handover-global-toc button.is-active { background: #382630; color: var(--preview-accent); }
+}
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="project-status"] .project-summary-cards .project-summary-card .card-value { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="project-status"] .project-summary-cards .project-summary-card :is(.card-title, .card-caption) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.project-staff-ops-section-head p, #projectCodeCopyFeedbackStaff, .system-health-summary-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .system-health-summary-card strong { color: var(--preview-text); }
+  html[data-theme="dark"] body #projectAdvanceBlockedTableBodyStaff tr { background: var(--preview-surface); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"].active #staffMeetingAll :is(.table-wrapper, table thead th) { background: var(--preview-surface); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"].active #staffMeetingAll td { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="org-representative-approval-staff"] .org-representative-summary-grid .org-representative-summary-card { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] #budgetRoundYearInput[readonly] { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.handover-section-kicker, .handover-org-main span, .handover-org-branches article span) { color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .handover-global-toc button span { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.handover-note span, .handover-reason-list span, .handover-signature span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .workflow-status-pill.is-council { background: #40331c; color: #f5d18a; }
+}
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="project-status"].active #projectTable .project-name { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="project-status"].active #projectTable .project-org { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.handover-timeline li > span, .handover-accordion summary span, .handover-question-grid summary span) { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="org-representative-approval-staff"] .org-representative-summary-card .org-representative-summary-label { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="org-representative-approval-staff"] .org-representative-summary-card strong { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(#authAlertTitle, .budget-round-delete-check, .consent-check) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.auth-alert-subtitle, .consent-version, .modal .table-empty) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.budget-round-delete-warning, .budget-code-clear-warning) { background: #40331c; color: #f5d18a; border-color: #6d5731; }
+  html[data-theme="dark"] body :is(.budget-round-delete-export, .budget-code-clear-preview, .consent-checklist, #personModalAvatar) { background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffApplicationMyTableBody tr { background: var(--preview-surface); }
+}
+@media screen {
+  html[data-theme="dark"] body .modal .modal-header { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view.active #projectTable td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue td { background-color: #342527 !important; }
+}
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="org-representative-approval-staff"] .org-representative-summary-card .org-representative-summary-value { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.budget-round-delete-name, .budget-round-delete-summary, .budget-code-clear-count, .budget-code-clear-copy) { color: #f5d18a; }
+  html[data-theme="dark"] body :is(.budget-round-delete-step-title, .budget-code-clear-preview-title) { color: var(--preview-text); }
+  html[data-theme="dark"] body .budget-round-delete-step-text { color: var(--preview-muted); }
+  html[data-theme="dark"] body #budgetRepresentativeApplicationModal .budget-representative-modal-dialog,
+  html[data-theme="dark"] body #staffApplicationModal .staff-application-modal-dialog { background: var(--preview-surface); }
+  html[data-theme="dark"] body #budgetRepresentativeApplicationModal td { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#staffApplicationMyTableBody, #meetingRoomAllTableBody) tr { background: var(--preview-surface); }
+  html[data-theme="dark"] body :is(.auth-alert-message, .budget-round-info) { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+}
+/* Native editor dialogs live in the top layer but share the same palette. */
+@media screen {
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor, #orgStructureEditor, #organizationCatalogEditorModal) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor, #orgStructureEditor, #organizationCatalogEditorModal) :is(.panel-header, .modal-header, .content-documents-editor-footer, .org-directory-form-footer, .modal-footer, .modal-dialog, .content-news-summary-tip-body, .org-directory-advanced, .org-directory-photo-preview, .org-directory-placement-hint) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor, #orgStructureEditor, #organizationCatalogEditorModal) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border); color-scheme: dark; }
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor, #orgStructureEditor, #organizationCatalogEditorModal) .btn-primary { background: var(--theme-gradient); color: white; }
+  html[data-theme="dark"] body :is(#orgStructureEditorTitle, #organizationCatalogFormTitle) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(#orgStructureEditor, #organizationCatalogEditorModal) :is(.panel-caption, .modal-subtitle, .login-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#orgStructureAdvanced, #orgStructurePhotoPreview, #orgStructurePlacementHint) { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.meeting-access-toggle, .meeting-access-option span) { background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .meeting-access-help { color: var(--preview-muted); }
+  html[data-theme="dark"] body .meeting-delete-warning { background: #442323; color: #ffb4b4; border-color: #704040; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"].active #meetingRoomAllTableBody tr { background: var(--preview-surface); }
+  html[data-theme="dark"] body #staffApplicationModal #staffApplicationMyTableBody tr { background: var(--preview-surface); }
+  html[data-theme="dark"] body #budgetRepresentativeApplicationModal #budgetRepresentativeMyApplicationsTable td[colspan] { color: var(--preview-muted); }
+}
+@media screen {
+  html[data-theme="dark"] body #meetingRoomDeleteDialog .meeting-delete-warning :is(strong, p, #meetingRoomDeleteName) { color: #ffb4b4; }
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor) :is(.panel-title, .content-documents-form-heading) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(#contentNewsEditor, #contentDocumentsEditor) :is(.panel-caption, .login-label, .content-admin-checkbox span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #contentNewsEditor .content-news-summary-tip-title { color: var(--preview-accent); }
+  html[data-theme="dark"] body #orgStructureEditor :is(.org-directory-section-heading h4, .org-directory-step) { color: var(--preview-text); }
+  html[data-theme="dark"] body #orgStructureEditor :is(.org-directory-section-hint, #orgStructureCodeHint) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffApplicationModal #staffApplicationMyTable td[colspan] { color: var(--preview-muted); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .news-preview-frame {
+    background: var(--preview-bg);
+    border-color: var(--preview-border);
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .news-preview-loading { color: var(--preview-muted); }
+}
+
+@media screen {
+  html[data-theme="dark"] body #projectModal.project-login-prompt .modal-dialog {
+    background: var(--preview-surface);
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body #projectModal .project-login-content p { color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectModal .project-document-entry-help { color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectModal .modal-header {
+    border: 0;
+    border-bottom: 1px solid var(--preview-border);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0 0 12px;
+  }
+  html[data-theme="dark"] body #projectModal.project-login-prompt .modal-header { border-bottom: 0; }
+}
+@media screen and (max-width: 768px) {
+  #projectModal.project-login-prompt {
+    align-items: center;
+    justify-content: center;
+  }
+  #projectModal.project-login-prompt .modal-dialog { margin: auto; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .chart-external-axis-label { color: var(--preview-muted); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .assistant-contact-box {
+    background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .assistant-contact-method {
+    background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body :is(.assistant-contact-title, .assistant-contact-method-value) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.assistant-contact-role, .assistant-contact-method-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.assistant-contact-link, .assistant-contact-avatar, .assistant-contact-card-label, .assistant-contact-method-icon) {
+    background: #382630; color: var(--preview-accent); border-color: #895269; box-shadow: none;
+  }
+  html[data-theme="dark"] body .assistant-contact-method-action { color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.assistant-contact-copy, .assistant-contact-line-icon) {
+    background: #17382b; color: #91e3b5; border-color: #32664b;
+  }
+}
+
+/* Project document editors; printed document sheets keep their original palette. */
+@media screen {
+  html[data-theme="dark"] body #projectModal :is(.project-document-panel, .project-document-types, .project-document-row) {
+    background: var(--preview-surface);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #projectModal :is(.project-document-form fieldset, .project-document-header) { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #projectModal .project-document-type {
+    background: var(--preview-raised);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+    opacity: 1;
+  }
+  html[data-theme="dark"] body #projectModal .project-document-type:is(:hover, [aria-pressed="true"]) {
+    background: #382630;
+    color: var(--preview-accent);
+    border-color: #895269;
+  }
+  html[data-theme="dark"] body #projectModal :is(.project-document-context, .project-document-download-hint, .project-document-mobile-description, .project-document-date-hint, .project-document-date-hint span, .project-document-type-description, #projectDocumentHelp) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectModal :is(.project-document-type-action, .project-document-total) { color: var(--preview-accent); }
+  html[data-theme="dark"] body #projectModal .project-document-error { color: #ffb4b4; }
+  html[data-theme="dark"] body #projectModal .project-document-collapse { background: transparent; color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectModal .project-document-collapse:is(:hover, :focus-visible) { color: var(--preview-accent); }
+}
+
+/* A consistent close control, independent of the original × / ✕ font glyph. */
+@media screen {
+  html[data-theme="dark"] body :is(.modal-close, .person-modal-close, .receipt-dialog-close, #organizationCatalogEditorClose)[type="button"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--preview-muted);
+    box-shadow: none;
+    font-size: 0;
+    line-height: 1;
+  }
+  html[data-theme="dark"] body :is(.modal-close, .person-modal-close, .receipt-dialog-close, #organizationCatalogEditorClose)[type="button"] > * { display: none; }
+  html[data-theme="dark"] body :is(.modal-close, .person-modal-close, .receipt-dialog-close, #organizationCatalogEditorClose)[type="button"]::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 6 12 12M18 6 6 18' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  html[data-theme="dark"] body :is(.modal-close, .person-modal-close, .receipt-dialog-close, #organizationCatalogEditorClose)[type="button"]:is(:hover, :focus-visible) {
+    color: var(--preview-accent);
+  }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body :is(.modal-close, .person-modal-close, .receipt-dialog-close, #organizationCatalogEditorClose)[type="button"] {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}
+
+/* Mobile navigation keeps one continuous surface beneath the moving indicator. */
+@media screen {
+  html[data-theme="dark"] body .mobile-bottom-nav {
+    background: var(--preview-surface);
+    border-color: var(--preview-border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, .24);
+  }
+  html[data-theme="dark"] body .mobile-bottom-nav::before { background: none; }
+  html[data-theme="dark"] body .mobile-menu-group {
+    background: var(--preview-bg);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .mobile-menu-group.is-single { background: transparent; }
+  html[data-theme="dark"] body .mobile-menu-group summary::after { border-color: var(--preview-muted); }
+  html[data-theme="dark"] body .mobile-nav-heading { color: var(--preview-muted); }
+  html[data-theme="dark"] body .mobile-bottom-nav .mobile-bottom-indicator {
+    background: var(--preview-raised);
+    border-color: var(--preview-border);
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .mobile-bottom-nav .mobile-bottom-item {
+    background: transparent;
+    color: var(--preview-muted);
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .mobile-bottom-nav .mobile-bottom-item:is(:hover, .active, [aria-expanded="true"]) {
+    background: transparent;
+    color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body :is(.mobile-menu, .mobile-project-action-bar, .mobile-dashboard-action-bar, .mobile-meeting-action-bar, .mobile-directory-action-bar, .mobile-org-action-bar, .mobile-budget-action-bar, .mobile-borrow-action-bar) {
+    background: var(--preview-surface);
+    border-color: var(--preview-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+  }
+}
+
+/* Loading placeholders: low-contrast charcoal rather than the light-mode sheen. */
+@media screen {
+  html[data-theme="dark"] body {
+    --skeleton-base: #2b2b2b;
+    --skeleton-highlight: #363636;
+    --skeleton-fill: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-highlight) 42%, var(--skeleton-base) 82%);
+  }
+  html[data-theme="dark"] body .dashboard-overview-skeleton { background: var(--preview-bg); }
+  html[data-theme="dark"] body :is(.dashboard-skeleton-card, .chart-skeleton, .project-table-skeleton, .skeleton-card, .download-skeleton-card, .home-page-view .home-news-skeleton-card) {
+    background: var(--preview-surface);
+    border-color: #333333;
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body :is(
+    .skeleton-line,
+    .home-page-view .home-news-skeleton-card > div,
+    .dashboard-skeleton-line, .dashboard-skeleton-donut, .dashboard-skeleton-bar,
+    .dashboard-skeleton-pill, .dashboard-skeleton-control, .dashboard-skeleton-toggle,
+    .dashboard-skeleton-action, .dashboard-skeleton-table span,
+    .project-table-skeleton span,
+    .chart-skeleton span, .chart-skeleton-donut-shape, .chart-skeleton-bar,
+    .org-structure-skeleton span, .org-skeleton-avatar, .org-skeleton-line, .org-skeleton-pill,
+    .calendar-skeleton-cell
+  ) {
+    background-color: var(--skeleton-base);
+    background-image: var(--skeleton-fill);
+    background-size: 220% 100%;
+    border-color: #383838;
+  }
+  html[data-theme="dark"] body .project-table-skeleton-row { background: var(--preview-surface); border-color: #333333; }
+  html[data-theme="dark"] body .chart-skeleton-axis span {
+    background: #333333;
+    animation: none;
+  }
+}
+
+/* Team structure is rendered after loading: cover its labels and member details. */
+@media screen {
+  html[data-theme="dark"] body #org-structure-content .org-node {
+    background: transparent;
+    color: var(--preview-text);
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body #org-structure-content :is(.org-node-role, .org-node-name, .org-code-branch-label strong) { color: var(--preview-text); }
+  html[data-theme="dark"] body #org-structure-content :is(.org-node-nick, .org-code-section-label, .org-code-branch-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #org-structure-content :is(.org-node-assistant-box, .org-code-zz-label) {
+    background: var(--preview-raised);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #org-structure-content :is(.org-node-code, .org-code-branch-label span, .org-term-dot.is-active) {
+    background: #382630;
+    color: var(--preview-accent);
+    border-color: #895269;
+  }
+  html[data-theme="dark"] body #org-structure-content .org-node-circle {
+    background: var(--preview-raised);
+    color: var(--preview-text);
+    border-color: #895269;
+  }
+  html[data-theme="dark"] body #org-structure-content .org-node:is(:hover, :focus-visible) .org-node-circle { border-color: var(--preview-accent); }
+  html[data-theme="dark"] body #org-structure-content .org-term-dot:not(.is-active) .org-term-dot-mark { background: var(--preview-muted); }
+  html[data-theme="dark"] body #personModal :is(.person-modal-name, .person-modal-position, .person-modal-contact-value) { color: var(--preview-text); }
+  html[data-theme="dark"] body #personModal :is(.person-modal-nick, .person-modal-contact-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #personModal .person-modal-contact-value a { color: var(--preview-accent); }
+}
+
+/* Project calendar: match event, selected-day and legend status colors. */
+@media screen {
+  html[data-theme="dark"] body .project-refresh-data-btn { background: transparent; }
+  html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.pending, .status-pending, .pill-soft-gray) { background: #2c2c2c; color: #b8b8b8; }
+  html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.approved, .status-approved, .pill-soft-pink) { background: #382630; color: #f9a8d4; }
+  html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.closed, .status-closed, .pill-soft-green) { background: #17382b; color: #91e3b5; }
+  html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.cancelled, .status-cancelled, .pill-soft-red) { background: #442323; color: #ffb4b4; }
+  html[data-theme="dark"] body #calendarView :is(.calendar-selected-item, .calendar-selected-empty) { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #calendarView :is(.calendar-selected-day-title, .calendar-selected-title) { color: var(--preview-text); }
+  html[data-theme="dark"] body #calendarView :is(.calendar-selected-day-caption, .calendar-selected-meta, .calendar-selected-empty) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #calendarView .calendar-selected-day-count { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body #calendarView .calendar-selected-day-panel { border-color: var(--preview-border); }
+}
+@media screen and (max-width: 640px) {
+  html[data-theme="dark"] body #calendarView .calendar-heat-0 { background: var(--preview-surface); }
+  html[data-theme="dark"] body #calendarView .calendar-heat-1 { background: #382630; border-color: #654052; }
+  html[data-theme="dark"] body #calendarView .calendar-heat-2 { background: #513040; border-color: #895269; }
+  html[data-theme="dark"] body #calendarView .calendar-heat-3 { background: #70334f; border-color: #ac6081; }
+  html[data-theme="dark"] body #calendarView :is(.calendar-heat-4, .calendar-heat-5) { background: #92345f; border-color: #d786aa; }
+  html[data-theme="dark"] body #calendarView .calendar-day-header { background: transparent; color: var(--preview-text); }
+  html[data-theme="dark"] body #calendarView .calendar-day-has-events::after { background: #222222; color: #f9a8d4; }
+  html[data-theme="dark"] body #calendarView .calendar-today-pill { background: var(--preview-accent); color: transparent; }
+  html[data-theme="dark"] body #calendarView .calendar-selected-item { flex-wrap: wrap; }
+  html[data-theme="dark"] body #calendarView .calendar-selected-main { flex: 1 1 180px; overflow-wrap: anywhere; }
+}
+
+/* Loading messages and dynamically mounted mobile filters. */
+@media screen {
+  html[data-theme="dark"] body :is(.load-state, .load-state-info, .load-state-empty) {
+    background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .load-state-error { background: #442323; color: #ffb4b4; border-color: #815151; }
+  html[data-theme="dark"] body .modal-table-wrap { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .modal-table-title { color: var(--preview-text); }
+  html[data-theme="dark"] body .modal-table-caption { color: var(--preview-muted); }
+  html[data-theme="dark"] body #calendarModal .modal-header { border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
+  html[data-theme="dark"] body .mobile-filter-sheet { background: transparent; }
+  html[data-theme="dark"] body :is(.mobile-filter-dialog, .mobile-filter-header, .mobile-filter-footer, .project-mobile-filter-summary) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .mobile-filter-dialog::before { background: var(--preview-border); }
+  html[data-theme="dark"] body .mobile-filter-title { color: var(--preview-text); }
+  html[data-theme="dark"] body .mobile-filter-caption { color: var(--preview-muted); }
+  html[data-theme="dark"] body .mobile-filter-close {
+    background: transparent; color: var(--preview-muted); border: 0; box-shadow: none; width: 44px; height: 44px;
+  }
+  html[data-theme="dark"] body :is(.project-mobile-filter-chip, .project-mobile-filter-clear) {
+    background: var(--preview-raised); color: var(--preview-accent); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .mobile-project-action { color: var(--preview-muted); }
+  html[data-theme="dark"] body .mobile-project-action:is(:hover, :focus-visible, .is-active, .has-active-filters) { background: var(--preview-raised); color: var(--preview-accent); }
+  html[data-theme="dark"] body .mobile-project-action.has-active-filters::after { background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-surface); }
+}
+@media screen and (max-width: 640px) {
+  #calendarModal .modal-table { table-layout: fixed; }
+  #calendarModal .modal-table :is(th, td):first-child { width: 24%; white-space: normal; overflow-wrap: anywhere; }
+  #calendarModal .modal-table :is(th, td):last-child { width: 30%; white-space: normal; }
+  #calendarModal .modal-table :is(th, td) { padding: 10px 6px; }
+  #calendarModal .modal-table .status-pill { white-space: normal; border-radius: 6px; padding: 4px 6px; }
+}
+
+@media screen {
+  html[data-theme="dark"] body {
+    --meeting-load-error: #ffb4b4;
+    --meeting-load-muted: #b8b8b8;
+  }
+  html[data-theme="dark"] body #meetingRoomCalendar.meeting-week-matrix { background: var(--preview-border); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #meetingRoomCalendar.meeting-week-matrix .meeting-week-slot.calendar-day-today { background: #2d2328; }
+  html[data-theme="dark"] body :is(.meeting-week-corner, .meeting-week-date, .meeting-week-empty) { background: var(--preview-surface); color: var(--preview-muted); }
+  html[data-theme="dark"] body .meeting-week-date strong { color: var(--preview-text); }
+  html[data-theme="dark"] body .meeting-week-date:is(.is-today, .is-holiday) { background: #382630; }
+  html[data-theme="dark"] body .meeting-week-date small { color: var(--preview-accent); }
+  html[data-theme="dark"] body .meeting-week-holiday { color: var(--preview-accent) !important; }
+  html[data-theme="dark"] body .meeting-week-available { color: #91e3b5; }
+  html[data-theme="dark"] body .meeting-week-slot-status { color: var(--preview-muted); }
+}
+@media screen {
+  html[data-theme="dark"] body #meetingRoomCalendar .meeting-week-slot::before { color: var(--preview-muted); }
+}
+
+/* Booking records and details are inserted after the initial page render. */
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"] :is(.btn-primary, .btn-ghost) { box-shadow: none; }
+  html[data-theme="dark"] body :is(#meetingBackToBooking, .meeting-secondary-actions .btn-ghost[aria-expanded="true"]) { background: var(--preview-raised); color: var(--preview-accent); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body #meetingRequestCancel { background: #442323; color: #ffb4b4; border-color: #815151; box-shadow: none; }
+  html[data-theme="dark"] body #meetingMyRequestsPanel :is(.table-wrapper, table thead th) { background: var(--preview-surface); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"].active #meetingMyRequestsBody tr { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"].active #meetingMyRequestsBody td { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"].active #meetingMyRequestsBody td[data-label]::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body #meetingMyRequestsBody .meeting-my-request-row:is(:hover, :focus-within, .is-selected) { background: var(--preview-raised); }
+  html[data-theme="dark"] body #meetingMyRequestsPanel :is(.meeting-row-meta, .meeting-staff-period-time) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .meeting-my-request-open { color: var(--preview-accent); }
+  html[data-theme="dark"] body .meeting-my-requests-notice { background: #382630; color: var(--preview-accent); border-color: #895269; }
+  html[data-theme="dark"] body #meetingBookingDetailModal .modal-header { border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
+  html[data-theme="dark"] body .meeting-booking-detail-summary { background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.meeting-booking-summary-label, .meeting-booking-detail-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.meeting-booking-summary-value, .meeting-booking-detail-value) { color: var(--preview-text); }
+  html[data-theme="dark"] body .meeting-booking-detail-item { border-color: var(--preview-border); }
+}
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"].active #meetingMyRequestsPanel .table-wrapper { background: var(--preview-surface); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-booking"].active #meetingMyRequestsPanel .meeting-staff-purpose-text { color: var(--preview-text); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .meeting-day-list-card { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .meeting-day-list-count { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.meeting-day-list-time, .meeting-day-list-room, .meeting-day-list-meta-value) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.meeting-day-list-card-index, .meeting-day-list-meta-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #meetingBookingDayModal .modal-header { border-radius: 0; box-shadow: none; border-width: 0 0 1px; }
+  html[data-theme="dark"] body #meetingBookingDayModal .meeting-day-modal-table tbody tr { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body #meetingBookingDayModal .meeting-day-modal-table tbody tr:hover { background: var(--preview-raised); }
+  html[data-theme="dark"] body #meetingBookingDayModal .meeting-day-modal-table tbody td { color: var(--preview-text); }
+  html[data-theme="dark"] body #meetingBookingDayModal .meeting-day-modal-table tbody td::before,
+  html[data-theme="dark"] body #meetingBookingDayModal :is(.meeting-row-meta, .meeting-day-reason-value) { color: var(--preview-muted); }
+}
+
+@media screen {
+  html[data-theme="dark"] body #borrowRequestDetailModal :is(.borrow-request-detail-hero, .borrow-request-summary-card, .borrow-request-detail-section, .borrow-request-detail-item, .borrow-request-assets-wrap, .borrow-request-assets-table, .borrow-request-assets-table tbody tr, .borrow-request-assets-table tbody td) {
+    background: var(--preview-surface); border-color: var(--preview-border); color: var(--preview-text); box-shadow: none;
+  }
+  html[data-theme="dark"] body #borrowRequestDetailModal .borrow-request-assets-table th { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #borrowRequestDetailModal :is(.borrow-request-detail-hero-name, .borrow-request-summary-value, .borrow-request-detail-section-title, .borrow-request-detail-value, .borrow-request-subtitle) { color: var(--preview-text); }
+  html[data-theme="dark"] body #borrowRequestDetailModal :is(.borrow-request-detail-hero-label, .borrow-request-detail-hero-meta, .borrow-request-summary-label, .borrow-request-detail-label, .borrow-request-assets-empty) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #borrowRequestDetailModal .borrow-request-assets-table td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body #borrowRequestDetailModal .modal-header { border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .borrow-mode-picker legend,
+  html[data-theme="dark"] body .borrow-mode-option-copy strong { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.borrow-mode-intro, .borrow-mode-option-copy > span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .borrow-mode-option:has(input:checked) { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body .borrow-mode-option:has(input:checked) strong { color: var(--preview-accent); }
+  html[data-theme="dark"] body .borrow-mode-option input { accent-color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.borrow-my-requests-wrapper, .borrow-my-request-row td, .borrow-my-request-row-mobile, .borrow-my-request-card-empty, .filter-bar.assets-filter-bar, .filter-bar.borrow-staff-request-filters) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .borrow-my-requests-table thead th { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .borrow-my-request-row:is(:hover, :focus) td,
+  html[data-theme="dark"] body .borrow-my-request-row-mobile:is(:hover, :focus-visible) { background: var(--preview-raised); border-color: #895269; }
+  html[data-theme="dark"] body :is(.borrow-my-request-item-main, .borrow-my-cell-value) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.borrow-my-request-no, .borrow-my-cell-label) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .borrow-my-request-row-mobile > div { border-color: var(--preview-border); }
+}
+@media screen {
+  html[data-theme="dark"] body .filter-bar.assets-filter-bar {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .assets-filter-bar .search-box { background: transparent; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .budget-org-totals-inline-filter label { color: var(--preview-muted); }
+  html[data-theme="dark"] body #budgetOrgTotalsRoundSelect {
+    background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border);
+  }
+}
+
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable :is(tr, td) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own,
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own td { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body #budgetOrgTotalsTable .budget-request-history-project-name { color: var(--preview-text); }
+  html[data-theme="dark"] body #budgetOrgTotalsTable .budget-request-history-project-meta { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td::before { color: var(--preview-muted); }
+}
+@media screen and (max-width: 480px) {
+  .budget-org-totals-summary .budget-org-summary-card:nth-child(n + 3) { grid-column: 1 / -1; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .login-profile-actions { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .login-logout-btn { color: var(--preview-muted); background: transparent; border-color: var(--preview-border); }
+  html[data-theme="dark"] body .login-logout-btn:hover { color: #ffb4b4; }
+}
+@media screen {
+  html[data-theme="dark"] body .login-hero.is-authenticated .login-intro-card .login-account-title { color: var(--preview-muted); }
+}
+@media screen {
+  html[data-theme="dark"] body {
+    --profile-status-success: #91e3b5;
+    --profile-status-muted: #b8b8b8;
+    --profile-status-error: #ffb4b4;
+    --profile-status-warning: #f5d18a;
+  }
+  html[data-theme="dark"] body .login-profile-status {
+    --profile-status-success: #b8b8b8;
+    background: var(--preview-raised);
+    border-color: var(--preview-border);
+  }
+}

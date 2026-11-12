@@ -2208,7 +2208,14 @@ function initAuthUI() {
   function setLoginProfileStatus(text, color = "#6b7280") {
     if (!loginProfileStatusEl) return;
     loginProfileStatusEl.textContent = text || "";
-    loginProfileStatusEl.style.color = color;
+    const statusToken = {
+      "#047857": "--profile-status-success",
+      "#0f766e": "--profile-status-success",
+      "#6b7280": "--profile-status-muted",
+      "#b91c1c": "--profile-status-error",
+      "#b45309": "--profile-status-warning"
+    }[color];
+    loginProfileStatusEl.style.color = statusToken ? `var(${statusToken}, ${color})` : color;
   }
 
   function hasSavedLoginProfileData(profile) {

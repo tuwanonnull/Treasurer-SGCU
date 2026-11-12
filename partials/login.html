@@ -55,13 +55,25 @@
                     <button id="loginPageLogoutBtn" type="button" class="login-logout-btn" style="display:none;">ออกจากระบบ</button>
                     <p class="login-access-note">สำหรับผู้ได้รับสิทธิ์ชั่วคราว: ใช้บัญชี Google ที่ตรงกับอีเมลที่ได้รับอนุญาต</p>
                     <div class="login-notification-section">
-                      <h4 class="login-notification-title">การแจ้งเตือน</h4>
-                      <div class="login-notification-controls">
-                        <button id="loginNotificationEnableBtn" class="btn-ghost" type="button">ตรวจสอบสถานะแจ้งเตือน</button>
+                      <div class="login-notification-row">
+                        <div class="login-notification-description">
+                          <h4 class="login-notification-title">การแจ้งเตือน</h4>
+                          <div id="loginNotificationSummary" class="section-text-sm login-notification-summary" aria-live="polite">
+                            การแจ้งเตือน: กำลังตรวจสอบ
+                          </div>
+                        </div>
+                        <div class="login-notification-controls">
+                          <button id="loginNotificationEnableBtn" class="btn-ghost" type="button">ตรวจสอบสถานะแจ้งเตือน</button>
+                        </div>
                       </div>
-                      <div id="loginNotificationSummary" class="section-text-sm login-notification-summary" aria-live="polite">
-                        การแจ้งเตือน: กำลังตรวจสอบ
-                      </div>
+                      <label class="theme-picker">
+                        <span class="theme-picker-label">ธีมการแสดงผล</span>
+                        <select id="themePreference" aria-label="ธีมการแสดงผล">
+                          <option value="system">ตามระบบ</option>
+                          <option value="light">สว่าง</option>
+                          <option value="dark">มืด</option>
+                        </select>
+                      </label>
                     </div>
                   </div>
 

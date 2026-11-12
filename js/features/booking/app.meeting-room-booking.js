@@ -1281,19 +1281,19 @@ function initMeetingRoomBookingApp() {
     if (!stateEl) return;
     if (!hasFirestore) {
       stateEl.hidden = false;
-      stateEl.style.color = "#b91c1c";
+      stateEl.style.color = "var(--meeting-load-error, #b91c1c)";
       stateEl.innerHTML = "ระบบยังไม่เชื่อมต่อ Firestore โปรดตรวจสอบการตั้งค่า";
       return;
     }
     if (!roomsLoaded || !bookingsLoaded) {
       stateEl.hidden = false;
-      stateEl.style.color = "#6b7280";
+      stateEl.style.color = "var(--meeting-load-muted, #6b7280)";
       stateEl.innerHTML = "กำลังโหลดข้อมูลการจองห้องประชุม...";
       return;
     }
     if (roomsLoadFailed || bookingsLoadFailed) {
       stateEl.hidden = false;
-      stateEl.style.color = "#b91c1c";
+      stateEl.style.color = "var(--meeting-load-error, #b91c1c)";
       stateEl.innerHTML = `
         โหลดข้อมูลการจองไม่สำเร็จในขณะนี้
         <button id="meetingRoomRetryButton" type="button" class="btn-ghost" style="margin-left:8px;">ลองใหม่</button>
@@ -2336,7 +2336,7 @@ function initMeetingRoomBookingApp() {
           </tbody>
         </table>
       </div>
-      <div class="section-text-sm" style="margin-top:8px;color:#6b7280;">คลิกแถวเพื่อดูรายละเอียดรายการจอง</div>
+      <div class="section-text-sm" style="margin-top:8px;color:var(--meeting-load-muted, #6b7280);">คลิกแถวเพื่อดูรายละเอียดรายการจอง</div>
     `;
   };
 
