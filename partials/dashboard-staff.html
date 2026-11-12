@@ -385,7 +385,9 @@
                   </div>
                 </header>
                 <div id="closureMonthlyPanelStaff" data-dashboard-closure-panel="monthly" role="tabpanel" aria-labelledby="closureMonthlyTabStaff">
-                  <div class="chart-inner dashboard-overdue-close-chart-inner"><canvas id="trendLineChartStaff"></canvas></div>
+                  <div class="dashboard-monthly-chart-scroll" role="region" aria-label="กราฟสถานะการปิดโครงการรายเดือน เลื่อนเพื่อดูครบทุกเดือน" tabindex="0">
+                    <div class="chart-inner dashboard-overdue-close-chart-inner"><canvas id="trendLineChartStaff"></canvas></div>
+                  </div>
                   <div id="closureMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีสถานะการปิดโครงการ"></div>
                 </div>
                 <div id="closureOrgPanelStaff" data-dashboard-closure-panel="org" role="tabpanel" aria-labelledby="closureOrgTabStaff" hidden>
@@ -418,7 +420,9 @@
                   </div>
                 </header>
                 <div id="budgetMonthlyPanelStaff" data-dashboard-budget-panel="monthly">
-                  <div class="chart-inner dashboard-budget-monthly-chart"><canvas id="homeKpiChart" height="140"></canvas></div>
+                  <div class="dashboard-monthly-chart-scroll" role="region" aria-label="กราฟงบประมาณรายเดือน เลื่อนเพื่อดูครบทุกเดือน" tabindex="0">
+                    <div class="chart-inner dashboard-budget-monthly-chart"><canvas id="homeKpiChart" height="140"></canvas></div>
+                  </div>
                   <div id="budgetMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีงบประมาณ"></div>
                 </div>
                 <div id="budgetOrgPanelStaff" class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden>

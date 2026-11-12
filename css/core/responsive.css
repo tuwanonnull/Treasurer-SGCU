@@ -2008,7 +2008,7 @@
     font-size: 11px;
     color: #9f1239;
   }
-  #pastUnapprovedTableStaff td.col-status .past-unapproved-cell-value {
+  #pastUnapprovedTableStaff td.col-status .past-unapproved-cell-value:not(.badge) {
     display: inline-block;
     max-width: 100%;
     padding: 3px 8px;

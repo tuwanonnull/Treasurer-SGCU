@@ -1226,6 +1226,7 @@ function updatePastUnapprovedProjects(filtered) {
       cell.dataset.label = label;
       const valueEl = document.createElement("span");
       valueEl.className = "past-unapproved-cell-value";
+      if (className === "col-status") valueEl.classList.add(...statusMainToBadgeClass(value).split(" "));
       valueEl.textContent = value;
       cell.append(valueEl);
       if (className === "col-name") {

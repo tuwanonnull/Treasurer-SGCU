@@ -6381,21 +6381,21 @@ function initStaffAccessPages() {
     if (!staffAuthAccessProfilePreviewEl) return;
     if (!email) {
       staffAuthAccessProfilePreviewEl.textContent = "กรอกอีเมลเพื่อดูข้อมูลโปรไฟล์ที่เคยบันทึกไว้";
-      staffAuthAccessProfilePreviewEl.style.color = "#6b7280";
+      staffAuthAccessProfilePreviewEl.style.color = "var(--auth-preview-muted, #6b7280)";
       return;
     }
     staffAuthAccessProfilePreviewEl.textContent = "กำลังค้นหาโปรไฟล์...";
-    staffAuthAccessProfilePreviewEl.style.color = "#1d4ed8";
+    staffAuthAccessProfilePreviewEl.style.color = "var(--auth-preview-info, #1d4ed8)";
     try {
       const profile = await findUserProfileByEmail(email);
       staffAuthAccessProfilePreviewEl.innerHTML = profile
         ? `พบโปรไฟล์: ${renderAuthAccessProfileSummary(profile)}`
         : "ยังไม่พบโปรไฟล์ ผู้ใช้จะสร้าง/บันทึกโปรไฟล์ได้หลังได้รับสิทธิ์และเข้าสู่ระบบ";
-      staffAuthAccessProfilePreviewEl.style.color = profile ? "#047857" : "#b45309";
+      staffAuthAccessProfilePreviewEl.style.color = profile ? "var(--auth-preview-success, #047857)" : "var(--auth-preview-warning, #b45309)";
     } catch (error) {
       console.warn("auth access profile preview failed - app.staff-access.js:6112", error);
       staffAuthAccessProfilePreviewEl.textContent = "ค้นหาโปรไฟล์ไม่สำเร็จ";
-      staffAuthAccessProfilePreviewEl.style.color = "#b91c1c";
+      staffAuthAccessProfilePreviewEl.style.color = "var(--auth-preview-error, #b91c1c)";
     }
   };
 

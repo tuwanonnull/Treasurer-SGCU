@@ -17,6 +17,7 @@
   };
   window.registerThemeChartPlugin = () => {
     if (!window.Chart || window.Chart.registry.plugins.get("sgcuTheme")) return;
+    const tooltipDefaults = new WeakMap();
     window.Chart.register({
       id: "sgcuTheme",
       beforeUpdate(chart) {
@@ -24,6 +25,14 @@
         const text = dark ? "#b8b8b8" : "#666666";
         const grid = dark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.1)";
         if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = text;
+        const tooltip = chart.options.plugins?.tooltip;
+        if (tooltip) {
+          const colors = { backgroundColor: "#2c2c2c", titleColor: "#f2f2f2", bodyColor: "#f2f2f2", borderColor: "#555555" };
+          if (!tooltipDefaults.has(chart)) {
+            tooltipDefaults.set(chart, Object.fromEntries(Object.keys(colors).map(key => [key, tooltip[key]])));
+          }
+          Object.assign(tooltip, dark ? colors : tooltipDefaults.get(chart));
+        }
         for (const scale of Object.values(chart.options.scales || {})) {
           if (scale.ticks) scale.ticks.color = text;
           if (scale.grid) scale.grid.color = grid;

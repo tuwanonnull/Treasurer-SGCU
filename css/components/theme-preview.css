@@ -1,5 +1,15 @@
 /* Charcoal theme for the main application.
    Screen-only rules deliberately leave printed documents in the light theme. */
+@media screen {
+  html[data-theme="dark"] body #filterBarHostDashboardStaff.is-floating-open {
+    background: var(--preview-surface);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #filterBarHostDashboardStaff .dashboard-floating-filter-head strong {
+    color: var(--preview-text);
+  }
+}
 .theme-picker { display: none; }
 @media screen {
   body .theme-picker {
@@ -714,8 +724,8 @@
     --meeting-load-error: #ffb4b4;
     --meeting-load-muted: #b8b8b8;
   }
-  html[data-theme="dark"] body #meetingRoomCalendar.meeting-week-matrix { background: var(--preview-border); border-color: var(--preview-border); }
-  html[data-theme="dark"] body #meetingRoomCalendar.meeting-week-matrix .meeting-week-slot.calendar-day-today { background: #2d2328; }
+  html[data-theme="dark"] body :is(#meetingRoomCalendar, #meetingRoomStaffCalendar).meeting-week-matrix { background: var(--preview-border); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(#meetingRoomCalendar, #meetingRoomStaffCalendar).meeting-week-matrix .meeting-week-slot.calendar-day-today { background: #2d2328; }
   html[data-theme="dark"] body :is(.meeting-week-corner, .meeting-week-date, .meeting-week-empty) { background: var(--preview-surface); color: var(--preview-muted); }
   html[data-theme="dark"] body .meeting-week-date strong { color: var(--preview-text); }
   html[data-theme="dark"] body .meeting-week-date:is(.is-today, .is-holiday) { background: #382630; }
@@ -844,4 +854,405 @@
     background: var(--preview-raised);
     border-color: var(--preview-border);
   }
+}
+
+/* Staff overview: populated filters, readiness rows, and comparison details. */
+@media screen {
+  html[data-theme="dark"] body #filterBarStaff :is(input[type="search"], input[type="month"], select),
+  html[data-theme="dark"] body #filterBarStaff .dashboard-filter-results {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #filterBarStaff :is(.project-filter-section, .project-compare-section, .project-compare-options label) { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #filterBarStaff .search-box { background: transparent; }
+  html[data-theme="dark"] body #filterBarStaff :is(.filter-group label, .project-filter-hint, .project-organization-selection, .project-compare-heading) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #filterBarStaff .project-filter-section legend { color: var(--preview-accent); }
+  html[data-theme="dark"] body #filterBarStaff .project-compare-options label { background: var(--preview-surface); color: var(--preview-text); }
+  html[data-theme="dark"] body #filterBarStaff :is(.project-compare-options label:has(input:checked), .project-filter-chip, #projectCompareCountStaff) {
+    background: #382630; color: var(--preview-accent); border-color: #895269;
+  }
+  html[data-theme="dark"] body #filterBarStaff .project-filter-error { color: #ffb4b4; }
+  html[data-theme="dark"] body #filterBarHostDashboardStaff .project-filter-body { scrollbar-color: #555 transparent; }
+  html[data-theme="dark"] body #filterBarHostDashboardStaff .project-filter-body::-webkit-scrollbar-thumb { background: #555; }
+
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff :is(.project-staff-check-card, .project-staff-alert-table-wrap, .project-staff-alert-table tr, .project-staff-alert-table td) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-check-card { box-shadow: none; }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table th {
+    background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff :is(.project-staff-alert-project, .project-staff-alert-table tr.is-overdue .project-staff-alert-project) { color: var(--preview-text); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff :is(.project-staff-alert-org, .project-staff-alert-empty, .project-staff-alert-more, .project-code-copy-feedback) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-check-tab span { background: var(--preview-border); color: var(--preview-muted); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-check-tab.is-active span { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-code { background: transparent; color: var(--preview-accent); }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue td { background: #302328; border-color: #594047; }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue .project-staff-alert-meta-cell { color: #ffb4b4; }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tbody tr:hover td { background: var(--preview-raised); }
+
+  html[data-theme="dark"] body #dashboardProgressSectionStaff :is(.chart-caption, .project-closure-chart-name strong, .project-closure-chart-name small, .project-closure-fixed-axis, .project-comparison-legend button) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .project-closure-chart-plot {
+    border-color: var(--preview-border);
+    background: repeating-linear-gradient(to right, transparent 0, transparent calc(25% - 1px), rgba(255,255,255,.06) calc(25% - 1px), rgba(255,255,255,.06) 25%);
+  }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .project-closure-chart-bar span { color: #91e3b5; }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .project-closure-chart-bar.is-pending span { color: var(--preview-accent); }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .project-closure-no-projects { background: var(--preview-surface); color: var(--preview-muted); }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .chart-external-axis-month .chart-external-axis-label {
+    background: transparent;
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] body #dashboardProgressSectionStaff .chart-external-axis-month .chart-external-axis-label span:last-child { color: var(--preview-muted); }
+  html[data-theme="dark"] body #homeHeatmap .heat-0 { background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.project-closure-details-popup, .project-closure-details-header) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .project-closure-details-popup p { color: var(--preview-muted); }
+  html[data-theme="dark"] body .project-closure-details-popup li { border-color: var(--preview-border); }
+  html[data-theme="dark"] body .project-closure-details-popup li strong { color: var(--preview-accent); }
+}
+
+@media screen {
+  html[data-theme="dark"] body #dashboardAnalysisSectionStaff :is(.debt-compact-label, .debt-compact-meta, .debt-compact-empty, .debt-compact-label small) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #dashboardAnalysisSectionStaff .debt-compact-label strong { color: var(--preview-text); }
+  html[data-theme="dark"] body #dashboardAnalysisSectionStaff .debt-compact-track { background: var(--preview-border); }
+  html[data-theme="dark"] body #dashboardAnalysisSectionStaff :is(.dashboard-debt-metrics, .dashboard-debt-kpi, .dashboard-debt-summary) { border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="dashboard-staff"] :is(.kpi-caption, .project-org-name) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) .col-code { color: var(--preview-accent); }
+}
+@media screen and (max-width: 860px) {
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue { background: #302328; border-color: #594047; }
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr td,
+  html[data-theme="dark"] body #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue td { background: transparent; }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) tr.project-row {
+    background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body #longestOpenTableStaff tr.project-row-advance { background: #302328; border-color: #594047; box-shadow: inset 3px 0 0 #c77890; }
+  html[data-theme="dark"] body :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) tr.project-row td { background: transparent; border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#longestOpenTableStaff, #pastUnapprovedTableStaff) tr.project-row td.col-code { box-shadow: none; }
+}
+
+@media screen {
+  html[data-theme="dark"] body .mobile-dashboard-action { background: transparent; color: var(--preview-muted); }
+  html[data-theme="dark"] body .mobile-dashboard-action:is(:hover, :focus-visible, .is-active, .has-active-filters) { background: var(--preview-raised); color: var(--preview-accent); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-dashboard-action:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .mobile-dashboard-action.has-active-filters::after { background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-surface); }
+  html[data-theme="dark"] body .dashboard-monthly-chart-scroll { scrollbar-color: #555 var(--preview-surface); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .dashboard-sticky-controls .dashboard-filter-sticky-trigger {
+    background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .dashboard-sticky-controls .dashboard-filter-sticky-trigger:is(:hover, :focus-visible, .has-active-filters, [aria-expanded="true"]) {
+    background: #382630; color: var(--preview-accent); border-color: #895269; box-shadow: none;
+  }
+  html[data-theme="dark"] body .dashboard-filter-sticky-trigger:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: 2px; }
+  html[data-theme="dark"] body .dashboard-sticky-controls .dashboard-filter-sticky-trigger.has-active-filters::after {
+    background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-bg);
+  }
+}
+
+/* Handbook surfaces retain their light colors through fallbacks in the page stylesheet. */
+@media screen {
+  html[data-theme="dark"] body :is(.page-view[data-page="treasurer-handover-staff"], .handover-floating-nav) {
+    --handover-pink: #f9a8d4;
+    --guide-surface: #222222;
+    --guide-raised: #2c2c2c;
+    --guide-border: #404040;
+    --guide-text: #f2f2f2;
+    --guide-muted: #b8b8b8;
+    --guide-accent: #f9a8d4;
+    --guide-pink-bg: #382630;
+    --guide-info-bg: #24313d;
+    --guide-info: #aacff0;
+    --guide-success-bg: #20382b;
+    --guide-success: #91e3b5;
+    --guide-warning-bg: #3c3220;
+    --guide-warning: #f5d18a;
+    --guide-error: #ffb4b4;
+  }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .handover-project-status-part {
+    --handover-ink: var(--preview-text);
+    --handover-muted: var(--preview-muted);
+    --handover-line: var(--preview-border);
+    --handover-pink: var(--preview-accent);
+    --handover-soft: var(--preview-raised);
+  }
+}
+
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.project-numbering-money-grid > span, .project-closeout-steps, .project-closeout-command-box > span, .project-numbering-detail-card dl > div) {
+    background: var(--preview-raised); border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .project-closeout-tool-check { background: var(--guide-warning-bg); border-color: #665334; }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(b, #projectClosureExportUntilMonthStaff) { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .project-closeout-warning span { color: var(--guide-warning); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] :is(.project-numbering-money-grid > span, .project-closeout-command-box > span, .project-numbering-example) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="treasurer-handover-staff"] .project-staff-ops-kicker { color: var(--preview-muted); }
+}
+
+/* System data: status badges and audit rows, including mobile card layouts. */
+@media screen {
+  html[data-theme="dark"] body #dashboardAuditLogTable th { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #dashboardAuditLogTable .dashboard-audit-row td { color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #dashboardAuditLogTable .dashboard-audit-row td:first-child { color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="system-data-staff"] :is(.dashboard-audit-detail-item:not(:first-child), .list-pagination-summary, .list-pagination-page) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .system-health-badge.is-ok { background: #20382b; color: #91e3b5; border-color: #3e6550; }
+  html[data-theme="dark"] body .system-health-badge.is-warn { background: #3c3220; color: #f5d18a; border-color: #665334; }
+  html[data-theme="dark"] body .system-health-badge.is-error { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
+  html[data-theme="dark"] body .system-health-badge.is-pending { background: #24313d; color: #aacff0; border-color: #425e78; }
+  html[data-theme="dark"] body .page-view[data-page="system-data-staff"] .form-message[data-tone="error"] { color: #ffb4b4; }
+  html[data-theme="dark"] body .page-view[data-page="system-data-staff"] .form-message[data-tone="warn"] { color: #f5d18a; }
+  html[data-theme="dark"] body .page-view[data-page="system-data-staff"] .form-message[data-tone="ok"] { color: #91e3b5; }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body :is(#systemHealthTable, #dashboardAuditLogTable) tr { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body :is(#systemHealthTable, #dashboardAuditLogTable) td { background: transparent; }
+  html[data-theme="dark"] body :is(#systemHealthTable, #dashboardAuditLogTable) td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body #dashboardAuditLogTable tr:hover { background: var(--preview-raised); }
+  .page-view[data-page="system-data-staff"] .system-health-badge { justify-self: start; }
+}
+
+/* Staff budget requests and meeting workflow share the charcoal palette. */
+@media screen {
+  html[data-theme="dark"] body #budgetStaffActionMessage { color: var(--preview-muted) !important; background: var(--preview-raised); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body #budgetStaffActionMessage[data-tone="error"] { color: #ffb4b4 !important; }
+  html[data-theme="dark"] body #budgetStaffActionMessage[data-tone="warning"] { color: #f5d18a !important; }
+  html[data-theme="dark"] body #budgetStaffActionMessage[data-tone="success"] { color: #91e3b5 !important; }
+  html[data-theme="dark"] body .mobile-budget-action { background: transparent; color: var(--preview-muted); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-budget-action:is(:hover, :focus-visible, .is-active, [aria-expanded="true"]) { background: #382630; color: var(--preview-accent); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-budget-action:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .mobile-budget-action.has-active-filters::after { background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-surface); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] :is(.budget-staff-form-section, .budget-active-round-item) {
+    background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] .budget-active-round-item:is(:hover, .is-active) { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] :is(.budget-staff-project-name, .budget-active-round-title) { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] :is(.budget-staff-org-name, .budget-staff-project-meta, .budget-active-round-meta) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] .budget-staff-form-section-title { color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] .budget-active-round-state { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="budget-approval-staff"] .budget-active-round-state.is-warning { background: #3c3220; color: #f5d18a; }
+  html[data-theme="dark"] body #budgetStaffRequestsTable .budget-request-project-code { background: transparent; color: var(--preview-muted); border: 0; }
+  html[data-theme="dark"] body .bm {
+    --bm-text: var(--preview-text); --bm-muted: var(--preview-muted);
+    --bm-accent: var(--preview-accent); --bm-line: var(--preview-border); --bm-border: var(--preview-border);
+    --bm-surface: var(--preview-surface); --bm-raised: var(--preview-raised); --bm-pink-bg: #382630;
+    --bm-success: #91e3b5; --bm-success-bg: #20382b; --bm-success-border: #3e6550;
+    --bm-warning: #f5d18a; --bm-error: #ffb4b4; --bm-error-bg: #3c2529; --bm-error-border: #71444c;
+    --theme-pink-50: #382630; --theme-pink-100: #382630; --theme-pink-200: #895269;
+    --theme-pink-300: #895269; --theme-pink-800: #f9a8d4;
+  }
+  html[data-theme="dark"] body .bm button.bm-primary { background: var(--preview-accent); color: #251a20; border-color: transparent; box-shadow: none; }
+  html[data-theme="dark"] body .bm button.bm-primary:hover:not(:disabled) { background: #fbc5e2; color: #251a20; }
+  html[data-theme="dark"] body .bm :is(.bm-work, .bm-workflow, .bm-meeting-meta > div) { box-shadow: none; }
+  html[data-theme="dark"] body .bm button.bm-import-close { background: transparent; border: 0; box-shadow: none; color: var(--preview-muted); }
+  html[data-theme="dark"] body .bm button.bm-import-close:hover { color: var(--preview-text); }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body #budgetStaffRequestsTable tr { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body #budgetStaffRequestsTable td::before { color: var(--preview-muted); }
+}
+
+/* Staff borrowing: request cards, advanced filters and pickup settings. */
+@media screen {
+  html[data-theme="dark"] body :is(.borrow-advanced-filter-grid, #staffBorrowQueue .borrow-staff-request-card, #staffBorrowPickupSettings.borrow-default-pickup, #staffBorrowProjectsPanel, #staffBorrowSettings .borrow-manager-create, #staffBorrowSettings .borrow-manager-active, #staffBorrowSettings .borrow-project-card, #staffBorrowSettings .borrow-project-date-group) {
+    background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body :is(.filter-bar.borrow-staff-request-filters, .borrow-inventory-filter-bar) { background: transparent; border: 0; box-shadow: none; }
+  html[data-theme="dark"] body #staffBorrowQueue .borrow-staff-row:hover .borrow-staff-request-card { background: var(--preview-raised); border-color: #895269; box-shadow: none; }
+  html[data-theme="dark"] body :is(.borrow-advanced-toggle[aria-expanded="true"], .borrow-filter-count, .borrow-queue-project, #staffBorrowSettings .borrow-manager-count, #staffBorrowSettings .borrow-manager-step) { background: #382630; color: var(--preview-accent); border-color: #895269; }
+  html[data-theme="dark"] body :is(.borrow-staff-card-name, .borrow-staff-item-name, .borrow-staff-item-qty-number, .borrow-staff-period, #staffBorrowSettings .borrow-project-card-name, #staffBorrowSettings .borrow-manager-header h3, #staffBorrowSettings .borrow-manager-section-heading h4) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.borrow-queue-label, .borrow-staff-request-no, .borrow-staff-request-date, .borrow-staff-card-meta, .borrow-staff-card-contact, .borrow-staff-items-head, .borrow-staff-item-unit, .borrow-staff-items-total, .borrow-staff-items-note, .borrow-staff-period-label, .borrow-queue-project > span, #staffBorrowSettings .borrow-project-field-hint, #staffBorrowSettings .borrow-manager-header p, #staffBorrowSettings .borrow-manager-section-heading p, #staffBorrowSettings .borrow-manager-card-meta, #staffBorrowSettings .borrow-manager-card-footer, #staffBorrowSettings .borrow-manager-submit small, #staffBorrowSettings .borrow-project-pickup-summary) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.borrow-queue-card-header, .borrow-staff-item-row, .borrow-staff-card-assets, #staffBorrowSettings .borrow-manager-card-footer, #staffBorrowSettings .borrow-project-weekdays, #staffBorrowSettings .borrow-manager-header) { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings { --borrow-settings-muted: var(--preview-muted); --borrow-settings-border: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings :is(input:not([type="checkbox"]), select, .borrow-project-name-display) { background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings .settings-weekday-grid label { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings .settings-weekday-grid label:has(input:checked) { background: #382630; color: var(--preview-accent); border-color: #895269; }
+  html[data-theme="dark"] body #staffBorrowSettings :is(.borrow-manager-period, .borrow-manager-feedback, .borrow-manager-empty) { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings :is(.borrow-manager-code, .borrow-project-pickup-summary strong, .borrow-project-edit-link, .borrow-manager-card-actions [data-borrow-project-toggle]) { color: var(--preview-accent); }
+  html[data-theme="dark"] body #staffBorrowSettings :is(.borrow-project-date-group legend, .borrow-weekdays-fields legend) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffBorrowSettings .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body #staffBorrowSettings .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-manager-card-actions [data-borrow-project-delete] { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
+  html[data-theme="dark"] body :is(.borrow-delete-confirm-warning, .borrow-delete-confirm-note) { background: #3c3220; color: #f5d18a; border-color: #665334; }
+  html[data-theme="dark"] body .mobile-borrow-action { background: transparent; color: var(--preview-muted); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-borrow-action:is(:hover, :focus-visible, .is-active, [aria-expanded="true"]) { background: #382630; color: var(--preview-accent); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-borrow-action:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .mobile-borrow-action.has-active-filters::after { background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-surface); }
+}
+@media screen {
+  html[data-theme="dark"] body #staffBorrowQueue :is(.borrow-staff-item-row, .borrow-staff-item-qty) { background: transparent; border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowQueue .borrow-staff-items-total { background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowQueue .borrow-staff-period-row > span:not(.borrow-staff-period-label) { color: var(--preview-text); }
+  html[data-theme="dark"] body #staffBorrowSettings #staffBorrowPickupTitle { color: var(--preview-text); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-default-pickup-footer { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings :is(.borrow-project-field-hint span, .borrow-manager-card-footer span, .borrow-manager-period > span) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-manager-period strong { color: var(--preview-text); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-manager-status { background: #20382b; color: #91e3b5; }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-manager-status[data-tone="upcoming"] { background: #24313d; color: #aacff0; }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-manager-status[data-tone="ended"] { background: var(--preview-raised); color: var(--preview-muted); }
+}
+@media screen {
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-project-weekdays { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-copy strong { color: var(--preview-text); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-copy > span { color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-fields { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-toggle input { background: var(--preview-raised); border-color: #737373; }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-toggle input::after { background: var(--preview-muted); box-shadow: none; }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-toggle input:checked { background: #382630; border-color: var(--preview-accent); }
+  html[data-theme="dark"] body #staffBorrowSettings .borrow-weekdays-toggle input:checked::after { background: var(--preview-accent); }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body .borrow-assets-staff-table tbody tr { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .borrow-assets-staff-table tbody td { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .borrow-assets-staff-table tbody td:nth-child(odd) { background: var(--preview-raised); }
+  html[data-theme="dark"] body .borrow-assets-staff-table tbody td::before { color: var(--preview-muted); }
+}
+
+/* Staff meeting-room settings and their native dialogs. */
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] :is(.meeting-room-manage-panel .panel-body, .meeting-room-holiday-panel .panel-body, .meeting-room-manage-item, .meeting-holiday-day, .meeting-settings-dialog, .meeting-settings-dialog-card) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-room-manage-item-button:hover { background: var(--preview-raised); border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-room-manage-name { color: var(--preview-text); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] :is(.meeting-staff-period-time, .meeting-row-meta, .meeting-holiday-weekdays span, .meeting-access-help) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-room-manage-access-pill { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day:is(:hover, .is-closed) { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-today { border-color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-empty { background: transparent; border-color: transparent; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day-label { color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-settings-dialog { border: 1px solid var(--preview-border); box-shadow: 0 24px 70px #0006; }
+  html[data-theme="dark"] body .meeting-settings-dialog::backdrop { background: rgba(10,10,10,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-access-toggle { background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-access-option span { background: transparent; color: var(--preview-muted); opacity: 1; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-access-option input:checked + span { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-access-option input:focus-visible + span { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] :is(.meeting-delete-confirm-btn, .meeting-room-delete-action) { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
+  html[data-theme="dark"] body .mobile-meeting-action { background: transparent; color: var(--preview-muted); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-meeting-action:is(:hover, :focus-visible, .is-active, [aria-expanded="true"]) { background: #382630; color: var(--preview-accent); box-shadow: none; }
+  html[data-theme="dark"] body .mobile-meeting-action:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .mobile-meeting-action.has-active-filters::after { background: #382630; color: var(--preview-accent); box-shadow: 0 0 0 2px var(--preview-surface); }
+  html[data-theme="dark"] body #meetingRoomStaffCalendar .meeting-week-slot::before { color: var(--preview-muted); }
+}
+@media screen {
+  html[data-theme="dark"] body #staffMeetingAll .meeting-staff-period-time { color: var(--preview-muted); }
+  html[data-theme="dark"] body #meetingHolidayCalendarTitle { color: var(--preview-text); }
+}
+
+/* Staff membership requests, position permissions and approval details. */
+@media screen {
+  html[data-theme="dark"] body :is(.staff-bulk-action-bar, .staff-position-form, .staff-position-result-field, .staff-position-page-option, .staff-position-chip, .staff-approval-position-item) {
+    background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none;
+  }
+  html[data-theme="dark"] body .staff-bulk-action-bar { background: var(--preview-raised); }
+  html[data-theme="dark"] body :is(.staff-bulk-action-bar span, .staff-position-page-badge) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#staffApprovalPendingTable, #staffApprovalHistoryTable) .section-text-sm { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#staffApprovalPendingTable, #staffApprovalHistoryTable) td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.staff-approval-history-code, .staff-approval-code-pill) { background: transparent; color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .staff-approval-position-item code { background: transparent; color: var(--preview-muted); border: 0; }
+  html[data-theme="dark"] body .staff-position-chip-name { color: var(--preview-text); }
+  html[data-theme="dark"] body .staff-position-chip:is(:hover, :focus-visible, .is-editing) { background: var(--preview-raised); border-color: #895269; box-shadow: none; }
+  html[data-theme="dark"] body .staff-position-page-option:has(input:checked) { background: #382630; border-color: #895269; color: var(--preview-accent); }
+  html[data-theme="dark"] body .staff-position-page-badge { background: var(--preview-raised); }
+  html[data-theme="dark"] body :is(.staff-position-page-badge.is-summary, .staff-position-chip-badge, .staff-selection-mode-btn[aria-pressed="true"]) { background: #382630; color: var(--preview-accent); border-color: #895269; }
+  html[data-theme="dark"] body :is(.page-view[data-page="staff-approval"], #staffApprovalDetailModal) .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body :is(.page-view[data-page="staff-approval"], #staffApprovalDetailModal) .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body :is(.staff-bulk-delete-btn, .staff-position-manage-delete-btn, #staffApprovalDetailModal .staff-approval-manage-btn.is-danger, #staffApprovalDetailModal .staff-approval-manage-btn.is-delete) { background: #3c2529; color: #ffb4b4; border: 1px solid #71444c; box-shadow: none; }
+  html[data-theme="dark"] body :is(.staff-bulk-delete-btn, .staff-position-manage-delete-btn, #staffApprovalDetailModal .staff-approval-manage-btn.is-danger, #staffApprovalDetailModal .staff-approval-manage-btn.is-delete):hover:not(:disabled) { background: #4c2c32; color: #ffb4b4; }
+  html[data-theme="dark"] body #staffApprovalDetailModal .modal-header { border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
+}
+
+/* Directory entries use the same surfaces on desktop and mobile. */
+@media screen {
+  html[data-theme="dark"] body .org-directory-member-row small { color: var(--preview-muted); }
+  html[data-theme="dark"] body .org-directory-mobile-card { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .org-directory-mobile-name { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(.org-directory-mobile-position, .org-directory-mobile-meta, .org-directory-mobile-code) { color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .org-directory-mobile-card:is(:hover, :focus-visible, :active) { background: var(--preview-raised); border-color: #895269; box-shadow: none; }
+  html[data-theme="dark"] body .org-directory-member-row:is(:hover, :focus-visible) { background: var(--preview-raised); }
+  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body #orgStructureEditor .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body #orgStructureEditor .btn-primary:hover:not(:disabled) { background: #49313e; }
+}
+
+/* Temporary account access: form feedback and all expiry states. */
+@media screen {
+  html[data-theme="dark"] body .page-view[data-page="staff-temporary-access-staff"] {
+    --auth-preview-muted: var(--preview-muted); --auth-preview-info: var(--preview-muted);
+    --auth-preview-success: #91e3b5; --auth-preview-warning: #f5d18a; --auth-preview-error: #ffb4b4;
+  }
+  html[data-theme="dark"] body .staff-auth-form-heading { color: var(--preview-text); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffAuthAccessForm .staff-auth-profile-preview { background: var(--preview-raised); color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .staff-auth-mobile-list .staff-auth-mobile-card { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .staff-auth-mobile-list .staff-auth-mobile-card:is(:hover, :focus-visible) { background: var(--preview-raised); border-color: #895269; }
+  html[data-theme="dark"] body :is(.staff-auth-mobile-profile, .staff-auth-mobile-reason) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .staff-auth-mobile-period { border-color: var(--preview-border); }
+  html[data-theme="dark"] body .staff-auth-status.is-active { background: #20382b; color: #91e3b5; }
+  html[data-theme="dark"] body .staff-auth-status.is-pending { background: #3c3220; color: #f5d18a; }
+  html[data-theme="dark"] body .staff-auth-status.is-expired { background: #3c2529; color: #ffb4b4; }
+  html[data-theme="dark"] body .staff-auth-status.is-inactive { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffAuthAccessSubmitBtn { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body #staffAuthAccessSubmitBtn:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body #staffAuthAccessDeleteBtn { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
+}
+
+/* Organization representatives: roster, registration table and profile workspace. */
+@media screen {
+  html[data-theme="dark"] body #orgRepresentativeOverviewTable td[data-label="องค์กร"] > div:first-child { color: var(--preview-text); }
+  html[data-theme="dark"] body #orgRepresentativeOverviewTable .section-text-sm { color: var(--preview-muted); }
+  html[data-theme="dark"] body #orgRepresentativeOverviewTable td::before { color: var(--preview-muted); }
+  html[data-theme="dark"] body .organization-catalog-row td[data-label="ประเภทองค์กร"] { color: var(--preview-muted); }
+  html[data-theme="dark"] body .organization-catalog-list-footer { color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body .organization-catalog-row:is(:hover, .is-selected) { background: var(--preview-raised); }
+  html[data-theme="dark"] body .organization-catalog-edit-link { color: var(--preview-text); }
+  html[data-theme="dark"] body #staffApprovalDetailModal:has(.representative-workspace) :is(.modal-dialog, .representative-profile, .representative-profile-header, .org-representative-person-detail > .modal-section) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body #staffApprovalDetailModal .representative-roster { border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffApprovalDetailModal .representative-person { background: transparent; color: var(--preview-text); }
+  html[data-theme="dark"] body #staffApprovalDetailModal .representative-person:is(:hover, [aria-pressed="true"]) { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body #staffApprovalDetailModal :is(.representative-person-role, .representative-person-status, .representative-roster-heading span, .representative-eyebrow, .representative-profile-header p, .representative-status-control) { color: var(--preview-muted); }
+  html[data-theme="dark"] body #staffApprovalDetailModal .representative-missing { color: #f5d18a; }
+  html[data-theme="dark"] body :is(.page-view[data-page="org-representative-approval-staff"], #organizationCatalogEditorModal) .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body :is(.page-view[data-page="org-representative-approval-staff"], #organizationCatalogEditorModal) .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body :is(#orgRepresentativeDeleteYearBtn, #organizationCatalogArchiveBtn) { background: #3c2529; color: #ffb4b4; border-color: #71444c; box-shadow: none; }
+}
+@media screen {
+  html[data-theme="dark"] body #organizationCatalogTable tbody td[data-label="ประเภทองค์กร"] { color: var(--preview-muted); border-color: var(--preview-border); }
+  html[data-theme="dark"] body #staffApprovalDetailModal:has(.representative-workspace) .modal-header { border-color: var(--preview-border); }
+}
+
+@media screen {
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.modal-dialog, .organization-catalog-copy-years, .organization-catalog-copy-item) { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); box-shadow: none; }
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.modal-header, .modal-footer, .organization-catalog-copy-selection, .organization-catalog-copy-data) { border-color: var(--preview-border); }
+  html[data-theme="dark"] body .organization-catalog-copy-modal .modal-header { border-radius: 0; border-width: 0 0 1px; background: transparent; box-shadow: none; }
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.organization-catalog-copy-option, .organization-catalog-copy-year-card) { background: transparent; color: var(--preview-text); }
+  html[data-theme="dark"] body .organization-catalog-copy-modal .organization-catalog-copy-item:has(input:checked) { border-color: #895269; }
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.organization-catalog-copy-totals dt, .organization-catalog-copy-data) { color: var(--preview-muted); }
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.organization-catalog-copy-status, .organization-catalog-copy-renumber) { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body .organization-catalog-copy-modal :is(.organization-catalog-copy-arrow, .organization-catalog-copy-list-heading > span) { color: var(--preview-accent); }
+  html[data-theme="dark"] body .organization-catalog-copy-modal .organization-catalog-copy-conflict { background: #3c2529; color: #ffb4b4; }
+  html[data-theme="dark"] body .organization-catalog-copy-modal .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body .organization-catalog-copy-modal .btn-primary:hover:not(:disabled) { background: #49313e; }
+}
+@media screen {
+  html[data-theme="dark"] body :is(#organizationCatalogEditorModal, .organization-catalog-copy-modal) :is(.modal-dialog, .modal-header, .modal-footer) { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+}
+
+/* News and financial document administration. */
+@media screen {
+  html[data-theme="dark"] body :is(#contentNewsTableBody, #contentDocumentsTableBody) strong { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(#contentNewsTableBody, #contentDocumentsTableBody) small,
+  html[data-theme="dark"] body :is(.content-documents-category-main span, .content-documents-order-index) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(.content-news-row, .content-documents-row):is(:hover, :focus-visible) { background: var(--preview-raised); }
+  html[data-theme="dark"] body .content-documents-category-row td { background: var(--preview-raised); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(.content-documents-file-link, .content-documents-drag-handle, .content-documents-category-toggle) { background: #382630; color: var(--preview-accent); border-color: #895269; box-shadow: none; }
+  html[data-theme="dark"] body :is(.content-documents-file-link, .content-documents-drag-handle, .content-documents-category-toggle):is(:hover, :focus-visible) { background: #49313e; }
+  html[data-theme="dark"] body :is(.content-documents-row, .content-documents-category-row).is-drop-target td { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body :is(.page-view[data-page="content-management-staff"], .page-view[data-page="content-news-staff"], .page-view[data-page="content-documents-staff"], #contentNewsEditor, #contentDocumentsEditor) .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body :is(.page-view[data-page="content-management-staff"], .page-view[data-page="content-news-staff"], .page-view[data-page="content-documents-staff"], #contentNewsEditor, #contentDocumentsEditor) .btn-primary:hover:not(:disabled) { background: #49313e; }
 }

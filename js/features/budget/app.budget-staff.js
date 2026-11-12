@@ -1271,6 +1271,7 @@
     if (!el) return;
     el.textContent = text || "";
     el.style.color = color;
+    el.dataset.tone = ({ "#1d4ed8": "info", "#b91c1c": "error", "#b45309": "warning", "#047857": "success" })[color] || "neutral";
   };
 
   const setCodeActionBusy = (isBusy) => {

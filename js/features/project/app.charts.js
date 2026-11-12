@@ -556,11 +556,13 @@ function syncDashboardComparisonHeights() {
   const chartChrome = plotHeight > 0 ? Math.max(0, chart.height - plotHeight) : 10;
   const viewportHeight = visibleRows * rowHeight + chartChrome;
   const grid = card.closest(".dashboard-progress-grid");
+  const monthlyHeight = isMobile ? Math.min(320, viewportHeight + 32) : viewportHeight + 32;
   grid?.style.setProperty("--dashboard-plot-height", `${viewportHeight + 32}px`);
+  grid?.style.setProperty("--dashboard-monthly-plot-height", `${monthlyHeight}px`);
   grid?.style.setProperty("--dashboard-org-row-height", `${rowHeight}px`);
   if (monthly) {
     const canvasArea = monthly.querySelector(".dashboard-budget-monthly-chart");
-    if (canvasArea) canvasArea.style.height = `${viewportHeight + 32}px`;
+    if (canvasArea) canvasArea.style.height = `${monthlyHeight}px`;
   }
   if (scroll) {
     scroll.style.height = `${viewportHeight}px`;

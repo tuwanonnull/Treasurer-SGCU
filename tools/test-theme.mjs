@@ -51,12 +51,18 @@ app.window.Chart = {
 };
 app.window.registerThemeChartPlugin();
 const chart = { options: { plugins: { legend: { labels: {} } }, scales: { x: { ticks: {}, grid: {} } } } };
+const lightTooltip = { backgroundColor: '#ffffff', titleColor: '#111827', bodyColor: '#374151', borderColor: '#e5e7eb' };
+chart.options.plugins.tooltip = { ...lightTooltip };
 app.events.change({ target: { value: 'dark' } });
 plugin.beforeUpdate(chart);
 assert.equal(chart.options.plugins.legend.labels.color, '#b8b8b8');
 assert.equal(chart.options.scales.x.ticks.color, '#b8b8b8');
+assert.equal(chart.options.plugins.tooltip.backgroundColor, '#2c2c2c');
+assert.equal(chart.options.plugins.tooltip.bodyColor, '#f2f2f2');
+plugin.beforeUpdate(chart);
 app.events.change({ target: { value: 'light' } });
 plugin.beforeUpdate(chart);
 assert.equal(chart.options.scales.x.ticks.color, '#666666');
+assert.deepEqual(chart.options.plugins.tooltip, lightTooltip, 'Switching back restores the original tooltip colors, including after repeated dark updates');
 assert.equal(updates, 2);
 console.log('Theme: saved/system/manual preferences, cross-tab reset, blocked storage, and chart refresh passed.');

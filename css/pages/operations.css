@@ -1039,8 +1039,8 @@
 }
 
 .project-closeout-tool-check {
-  border-color: rgba(245, 158, 11, 0.24) !important;
-  background: #fffbeb !important;
+  border-color: var(--guide-border, rgba(245, 158, 11, 0.24)) !important;
+  background: var(--guide-warning-bg, #fffbeb) !important;
 }
 
 .project-closeout-tool-check span {
@@ -1216,7 +1216,7 @@
   border: 1px solid rgba(20, 184, 166, 0.18);
   border-radius: 8px;
   background: #f0fdfa;
-  color: #115e59 !important;
+  color: var(--guide-muted, #115e59) !important;
   font-weight: 700;
 }
 
@@ -12085,6 +12085,9 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
   color: var(--theme-pink-700);
   font-weight: 600;
 }
+#projectStaffOpsPanelStaff .project-staff-alert-table .project-staff-alert-code {
+  background: transparent;
+}
 #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue .project-staff-alert-project { color: #334155; }
 #projectStaffOpsPanelStaff .project-staff-alert-table tr.is-overdue .project-staff-alert-meta-cell { color: #9f1239; }
 @media (min-width: 861px) {
@@ -12334,6 +12337,9 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
 .dashboard-progress-grid > .chart-card > .chart-header .chart-title { margin: 0; }
 .dashboard-progress-grid > .chart-card > .chart-header > .tabs {
   flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-left: auto;
   align-self: flex-start;
 }
@@ -12393,7 +12399,8 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
 #dashboardFollowupSectionStaff .club-debt-age-legend-item strong { color: #334155; font-weight: 500; }
 .club-debt-chart-inner .chart-external-axis-label { font-family: 'Kanit', sans-serif; font-size: 11px; color: #6b7280; }
 @media (max-width: 600px) {
-  .dashboard-progress-grid > .chart-card > .chart-header { min-height: 0; }
+  .dashboard-progress-grid > .chart-card > .chart-header { min-height: 0; flex-direction: column; align-items: stretch; }
+  .dashboard-progress-grid > .chart-card > .chart-header > .tabs { width: 100%; margin-left: 0; }
   .dashboard-progress-grid > .chart-card > .chart-header .chart-title { font-size: 14px; }
   .dashboard-progress-grid > .chart-card > .chart-header .tabs { gap: 0; }
   .dashboard-progress-grid > .chart-card > .chart-header .tab-btn { padding: 7px 9px; font-size: 11px; }
@@ -12404,18 +12411,26 @@ body.has-content-documents-modal, body.has-content-news-modal { overflow: hidden
 
 /* Six organization rows fit before the comparison charts need scrolling. */
 .dashboard-progress-grid { --dashboard-plot-height: 498px; }
+.dashboard-monthly-chart-scroll { min-width: 0; max-width: 100%; }
+.dashboard-monthly-chart-scroll:focus-visible { outline: 2px solid var(--theme-pink-400); outline-offset: 2px; border-radius: 8px; }
+@media (max-width: 720px) {
+  .dashboard-monthly-chart-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .dashboard-monthly-chart-scroll > .chart-inner { min-width: 840px; }
+}
 .dashboard-progress-grid .dashboard-overdue-close-chart-inner,
 .dashboard-progress-grid .dashboard-budget-monthly-chart {
-  height: var(--dashboard-plot-height);
-  min-height: var(--dashboard-plot-height);
+  height: var(--dashboard-monthly-plot-height, var(--dashboard-plot-height));
+  min-height: var(--dashboard-monthly-plot-height, var(--dashboard-plot-height));
+}
+@media (max-width: 720px) {
+  .dashboard-progress-grid { --dashboard-monthly-plot-height: 320px; }
+  .dashboard-progress-grid .chart-external-axis-month-compact .chart-external-axis-label { font-size: 10px; }
+  #dashboardAnalysisSectionStaff .debt-compact-label { flex-wrap: wrap; gap: 4px 12px; }
+  #dashboardAnalysisSectionStaff .debt-compact-label strong { margin-left: auto; }
 }
 .dashboard-progress-grid .project-closure-comparison-scroll {
   height: calc(var(--dashboard-plot-height) - 32px);
   max-height: calc(var(--dashboard-plot-height) - 32px);
-}
-@media (max-width: 380px) {
-  .dashboard-progress-grid > .chart-card > .chart-header { flex-wrap: wrap; }
-  .dashboard-progress-grid > .chart-card > .chart-header > div:first-child { flex-basis: 100%; }
 }
 
 /* Remove the old inner-card inset and fill the shared organization viewport. */
