@@ -17,7 +17,22 @@
   .page-view[data-page="borrow-assets"] #assetsList input,
   .page-view[data-page="borrow-assets"] #assetsList select { min-height: 48px; font-size: 16px; box-sizing: border-box; }
   .page-view[data-page="borrow-assets"] textarea.login-input { min-height: 112px; }
-  .page-view[data-page="borrow-assets"] input[type="date"] { display: block; min-width: 0; width: 100%; }
+  /* Let native Safari date controls shrink to the form instead of their intrinsic width. */
+  .page-view[data-page="borrow-assets"] input[type="date"] {
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    text-align: left;
+  }
+  .page-view[data-page="borrow-assets"] input[type="date"]::-webkit-date-and-time-value {
+    min-width: 0;
+    min-height: 1.35em;
+    text-align: left;
+  }
   .page-view[data-page="borrow-assets"] .borrow-context-top,
   .page-view[data-page="borrow-assets"] .borrow-mode-options,
   .page-view[data-page="borrow-assets"] .borrow-detail-section-dates .borrow-form-row { grid-template-columns: minmax(0, 1fr); }

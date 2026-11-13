@@ -603,7 +603,9 @@
     background: transparent;
     color: var(--preview-accent);
   }
-  html[data-theme="dark"] body :is(.mobile-menu, .mobile-project-action-bar, .mobile-dashboard-action-bar, .mobile-meeting-action-bar, .mobile-directory-action-bar, .mobile-org-action-bar, .mobile-budget-action-bar, .mobile-borrow-action-bar) {
+  /* Match the visible state so standalone layout rules cannot restore a white surface. */
+  html[data-theme="dark"] body .mobile-menu,
+  html[data-theme="dark"] body :is(.mobile-project-action-bar, .mobile-dashboard-action-bar, .mobile-meeting-action-bar, .mobile-directory-action-bar, .mobile-org-action-bar, .mobile-budget-action-bar, .mobile-borrow-action-bar).is-visible {
     background: var(--preview-surface);
     border-color: var(--preview-border);
     box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
@@ -1291,3 +1293,47 @@
 }
 @keyframes sgcu-theme-fade-out { to { opacity: 0; } }
 @keyframes sgcu-theme-fade-in { from { opacity: 0; } }
+
+/* Mobile meeting request cards share their layout with the requester's history. */
+@media screen {
+  html[data-theme="dark"] body :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-purpose-cell {
+    color: var(--preview-text);
+  }
+}
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#staffMeetingAll, #meetingMyRequestsPanel) .table-wrapper {
+    background: transparent;
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) tr {
+    background: var(--preview-surface);
+    border-color: var(--preview-border);
+    box-shadow: none;
+  }
+  html[data-theme="dark"] body .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td {
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td[data-label]::before {
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body .page-view:is([data-page="meeting-room-staff"], [data-page="meeting-room-booking"]).active :is(#meetingRoomAllTableBody, #meetingMyRequestsBody) td:first-child {
+    color: var(--preview-accent);
+  }
+}
+@media screen {
+  html[data-theme="dark"] body :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type.is-student {
+    background: #382630;
+    color: var(--preview-accent);
+    border-color: #895269;
+  }
+  html[data-theme="dark"] body :is(#staffMeetingAll, #meetingMyRequestsPanel) .meeting-staff-requester-type.is-affairs {
+    background: var(--preview-raised);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+  }
+  html[data-theme="dark"] body .staff-status-select option {
+    background: var(--preview-bg);
+    color: var(--preview-text);
+  }
+}
