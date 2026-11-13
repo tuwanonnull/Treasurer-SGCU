@@ -245,7 +245,7 @@ function mountReceiptForm(form, project, type) {
   try { range = receiptDateRange(project); } catch (error) { dateError = error.message; }
   const defaultDate = range && today >= range.min && today <= range.max ? today : "";
   const field = (name, label, value = "", inputType = "text", required = true, max = 100) =>
-    `<label class="project-document-field">${label}${required ? " *" : ""}<input class="login-input" name="${name}" type="${inputType}" value="${esc(value)}" ${required ? "required" : ""} ${name === "unit" ? "readonly" : ""} ${inputType === "date" && range ? `min="${range.min}" max="${range.max}"` : ""} maxlength="${max}"></label>`;
+    `<label class="project-document-field" data-field="${name}">${label}${required ? " *" : ""}<input class="login-input" name="${name}" type="${inputType}" value="${esc(value)}" ${required ? "required" : ""} ${name === "unit" ? "readonly" : ""} ${inputType === "date" && range ? `min="${range.min}" max="${range.max}"` : ""} maxlength="${max}"></label>`;
   form.innerHTML = `
     ${template.available ? "" : `<p data-template-note role="status" tabindex="-1">${esc(template.note)}</p>`}
     ${dateError ? `<p data-template-note role="status" tabindex="-1" class="project-document-error">${esc(dateError)}</p>` : `<p class="project-document-date-hint">วันที่ในเอกสาร: <strong>${receiptDate(range.min)} – ${receiptDate(range.max)}</strong> <span>(วันที่อนุมัติถึงวันปฏิบัติงานสุดท้าย)</span></p>`}
@@ -253,10 +253,11 @@ function mountReceiptForm(form, project, type) {
       <legend>${PROJECT_RECEIPT_TITLES[type]}</legend>
       <p>ช่องที่มี * จำเป็นต้องกรอก</p>
       <div class="project-document-grid">
+        ${certificate ? field("unit", "หน่วยงาน โครงการ", unit, "text", true, 180) : ""}
         ${field("date", certificate ? "วันที่ลงนามรับรอง" : "วันที่รับเงิน", defaultDate, "date")}
-        ${certificate ? field("unit", "หน่วยงาน โครงการ", unit, "text", true, 180) : field("place", "เขียนที่ (สถานที่ซื้อ)")}
+        ${certificate ? field("position", "ตำแหน่งในหน่วยงาน / โครงการ") : field("place", "เขียนที่ (สถานที่ซื้อ)")}
         ${field("person", certificate ? "ชื่อ–นามสกุลผู้ซื้อ / จ้าง" : "ชื่อ–นามสกุลผู้รับเงิน")}
-        ${certificate ? field("position", "ตำแหน่งในหน่วยงาน / โครงการ") : field("house", "บ้านเลขที่") + field("road", "ถนน", "", "text", false) + field("subdistrict", "ตำบล / แขวง") + field("district", "อำเภอ / เขต") + field("province", "จังหวัด") + field("phone", "เบอร์โทรศัพท์ผู้รับเงิน", "", "tel", true, 30) + field("payer", "ชื่อ–นามสกุลผู้จ่ายเงิน")}
+        ${certificate ? "" : field("house", "บ้านเลขที่") + field("road", "ถนน", "", "text", false) + field("subdistrict", "ตำบล / แขวง") + field("district", "อำเภอ / เขต") + field("province", "จังหวัด") + field("phone", "เบอร์โทรศัพท์ผู้รับเงิน", "", "tel", true, 30) + field("payer", "ชื่อ–นามสกุลผู้จ่ายเงิน")}
         ${template.key === "club" ? field("advisor", "ชื่อ–นามสกุลอาจารย์ที่ปรึกษา") : ""}
       </div>
       <h4>รายการค่าใช้จ่าย</h4>
@@ -265,11 +266,138 @@ function mountReceiptForm(form, project, type) {
       <button type="button" class="btn-ghost" data-add-receipt-row>+ เพิ่มรายการ</button>
       <p class="project-document-total" data-receipt-total aria-live="polite">รวม 0.00 บาท</p>
       <p data-receipt-error role="alert" class="project-document-error"></p>
-      <div class="modal-actions"><button type="submit" class="btn-primary">ดูตัวอย่าง / พิมพ์ PDF</button></div>
+      <div class="modal-actions receipt-document-actions"><button type="button" class="btn-ghost" data-full-preview>ดูตัวอย่างเต็มจอ</button><button type="submit" class="btn-primary">พิมพ์ / บันทึก PDF</button></div>
     </fieldset>`;
+  form.noValidate = true;
+  const fields = form.querySelector('[data-receipt-fields]');
+  const workspace = document.createElement('div');
+  workspace.className = 'receipt-live-workspace';
+  workspace.dataset.view = 'edit';
+  fields.before(workspace);
+  workspace.innerHTML = `<div class="receipt-live-switch" role="group" aria-label="มุมมองเอกสาร">
+    <button type="button" class="receipt-view-option" data-live-view="edit" aria-pressed="true">กรอกข้อมูล</button>
+    <button type="button" class="receipt-view-option" data-live-view="preview" aria-pressed="false">ตัวอย่างเอกสาร</button>
+  </div><aside class="receipt-live-preview" aria-label="ตัวอย่าง${PROJECT_RECEIPT_TITLES[type]}">
+    <strong>ตัวอย่างเอกสาร</strong><p>อัปเดตตามข้อมูลที่กรอก · ตรวจข้อมูลให้ครบก่อนพิมพ์</p>
+    <p data-live-field role="status">เลือกช่องกรอกเพื่อดูตำแหน่งบนเอกสาร</p>
+    <p data-live-status role="status"></p>
+    <iframe title="ตัวอย่าง${PROJECT_RECEIPT_TITLES[type]}" sandbox="allow-scripts allow-same-origin"></iframe>
+  </aside>`;
+  workspace.insertBefore(fields, workspace.querySelector('aside'));
+  const actions = form.querySelector('.receipt-document-actions');
+  workspace.after(actions);
+  const error = form.querySelector('[data-receipt-error]');
+  actions.before(error);
+  const frame = workspace.querySelector('iframe');
+  let activeInput;
+  function highlightPreview(scroll = false) {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    doc.querySelectorAll('.receipt-active-field').forEach(node => node.classList.remove('receipt-active-field'));
+    if (!activeInput?.isConnected || !form.contains(activeInput)) return;
+    const row = activeInput.closest('.project-document-row');
+    const index = row ? [...row.parentElement.children].indexOf(row) : -1;
+    const targets = [...doc.querySelectorAll('[data-preview-field]')].filter(node =>
+      node.dataset.previewField === activeInput.name && (index < 0 || node.dataset.previewRow === String(index)));
+    targets.forEach(node => node.classList.add('receipt-active-field'));
+    if (scroll && frame.clientWidth && targets[0]) {
+      const box = targets[0].getBoundingClientRect();
+      if (box.top < 12 || box.bottom > frame.clientHeight - 12) {
+        frame.contentWindow.scrollBy({ top: box.top - frame.clientHeight / 3, behavior: 'instant' });
+      }
+    }
+  }
+  form.addEventListener('focusin', event => {
+    if (!event.target.matches('input[name]')) return;
+    activeInput = event.target;
+    const label = activeInput.closest('label')?.childNodes[0]?.textContent.trim().replace(/\s*\*$/, '') || activeInput.name;
+    const row = activeInput.closest('.project-document-row');
+    workspace.querySelector('[data-live-field]').textContent = `กำลังกรอก: ${label}${row ? ' · ' + row.querySelector('legend').textContent : ''}`;
+    highlightPreview(true);
+  });
+  function buildLivePreview() {
+    const data = Object.fromEntries(new FormData(form));
+    let invalidAmount = false;
+    const items = [...rows.children].map(row => {
+      const value = row.querySelector('[name="amount"]').value;
+      let satang = null;
+      if (value) {
+        try { satang = receiptSatang(value); } catch { invalidAmount = true; }
+      } else if (row.querySelector('[name="amount"]').validity.badInput) invalidAmount = true;
+      return {
+        description: row.querySelector('[name="description"]').value.trim(), satang,
+        date: certificate ? row.querySelector('[name="itemDate"]').value : '',
+        note: certificate ? row.querySelector('[name="note"]').value.trim() : ''
+      };
+    });
+    const html = buildReceiptDocument(type, data, items, project, document.baseURI, { draft: true });
+    const previewDocument = new DOMParser().parseFromString(html, 'text/html');
+    applyThaiSegmentation(previewDocument.querySelector('.receipt-sheet'), 'p, .signature, td:not(.money), .fill');
+    return { html: '<!doctype html>' + previewDocument.documentElement.outerHTML, sheet: previewDocument.querySelector('.receipt-sheet').outerHTML, invalidAmount };
+  }
+  form.querySelector('[data-full-preview]').addEventListener('click', () => {
+    error.textContent = '';
+    try {
+      const { html, invalidAmount } = buildLivePreview();
+      const dialog = document.createElement('dialog');
+      dialog.className = 'receipt-full-preview';
+      dialog.setAttribute('aria-label', 'ตัวอย่างเอกสารเต็มจอ');
+      dialog.innerHTML = `<header><strong>ตัวอย่าง${PROJECT_RECEIPT_TITLES[type]}</strong><button type="button" class="btn-ghost" autofocus>กลับไปแก้ไข</button></header>
+        <p>${invalidAmount ? 'จำนวนเงินที่ไม่ถูกต้องยังไม่รวมในยอดตัวอย่าง' : 'ตัวอย่างจากข้อมูลที่กรอก · ตรวจข้อมูลให้ครบก่อนพิมพ์'}</p>
+        <iframe title="ตัวอย่างเอกสารเต็มจอ" sandbox="allow-scripts allow-same-origin"></iframe>`;
+      document.body.appendChild(dialog);
+      dialog.querySelector('button').onclick = () => dialog.close();
+      dialog.addEventListener('close', () => { dialog.remove(); form.querySelector('[data-full-preview]').focus(); }, { once: true });
+      dialog.showModal();
+      dialog.querySelector('iframe').srcdoc = html;
+    } catch (reason) { error.textContent = reason.message || 'แสดงตัวอย่างไม่ได้ กรุณาลองอีกครั้ง'; }
+  });
+  let previewTimer;
+  let previewInitialized = false;
+  frame.addEventListener('receiptpreviewready', updatePreview);
+  function updatePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => {
+      if (!form.isConnected || !frame.clientWidth || !template.available || !range) return;
+      const status = workspace.querySelector('[data-live-status]');
+      try {
+        const { html, sheet, invalidAmount } = buildLivePreview();
+        if (!previewInitialized) {
+          previewInitialized = true;
+          frame.srcdoc = html;
+        } else if (frame.contentWindow?.updateReceiptPreview) {
+          frame.contentWindow.updateReceiptPreview(sheet);
+        }
+        highlightPreview();
+        // If fonts are still loading, the ready event renders the latest input.
+        status.textContent = invalidAmount ? 'จำนวนเงินที่ไม่ถูกต้องยังไม่รวมในยอดตัวอย่าง' : '';
+      } catch {
+        status.textContent = 'แสดงตัวอย่างไม่ได้ กรุณาตรวจข้อมูลแล้วลองแก้ไขอีกครั้ง';
+        // Keep the last valid preview visible while the user corrects input.
+      }
+    }, 100);
+  }
+  workspace.querySelectorAll('[data-live-view]').forEach(button => {
+    button.addEventListener('click', () => {
+      workspace.dataset.view = button.dataset.liveView;
+      workspace.querySelectorAll('[data-live-view]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    });
+  });
+  // Hidden preview panes have no layout dimensions. Render when revealed so
+  // the shared pagination measures the paper at its actual print size.
+  let previewVisible = false;
+  const previewObserver = new ResizeObserver(() => {
+    const visible = frame.clientWidth > 0;
+    if (visible && !previewVisible) { updatePreview(); highlightPreview(true); }
+    previewVisible = visible;
+  });
+  previewObserver.observe(frame);
+  form.addEventListener('input', updatePreview);
+  form.addEventListener('change', updatePreview);
   const rows = form.querySelector("[data-receipt-rows]");
   const add = form.querySelector("[data-add-receipt-row]");
   function refresh() {
+    updatePreview();
     [...rows.children].forEach((row, index) => {
       row.querySelector("legend").textContent = `รายการที่ ${index + 1}`;
       row.querySelector("[data-remove-row]").disabled = rows.children.length === 1;
@@ -288,8 +416,9 @@ function mountReceiptForm(form, project, type) {
     row.className = "project-document-row";
     row.innerHTML = `<legend></legend><div class="project-document-grid">
       ${certificate ? field("itemDate", "วันที่ซื้อ / จ้าง", form.elements.date.value || defaultDate, "date") : ""}
-      ${field("description", "รายละเอียดรายการ", "", "text", true, certificate ? 100 : 160)}
-      <label class="project-document-field">จำนวนเงิน (บาท) *<input class="login-input" name="amount" type="number" min="0.01" max="999999999.99" step="0.01" inputmode="decimal" required></label>
+      ${certificate ? "" : field("description", "รายละเอียดรายการ", "", "text", true, 160)}
+      <label class="project-document-field" data-field="amount">จำนวนเงิน (บาท) *<input class="login-input" name="amount" type="number" min="0.01" max="999999999.99" step="0.01" inputmode="decimal" required></label>
+      ${certificate ? field("description", "รายละเอียดรายการ", "", "text", true, 100) : ""}
       ${certificate ? field("note", "หมายเหตุ / ใช้ในงานใด", "", "text", false, 80) : ""}
       </div><button type="button" class="btn-ghost" data-remove-row>ลบรายการ</button>`;
     row.querySelector("[data-remove-row]").onclick = () => { row.remove(); refresh(); add.focus(); };
@@ -300,13 +429,19 @@ function mountReceiptForm(form, project, type) {
   rows.addEventListener("input", refresh);
   addRow();
   form.querySelector("[data-receipt-fields]").disabled = !template.available || !range;
+  actions.querySelectorAll('button').forEach(button => { button.disabled = !template.available || !range; });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = form.querySelector('[type="submit"]');
     if (button.disabled) return;
     const error = form.querySelector("[data-receipt-error]");
     error.textContent = "";
-    if (!resolveProjectReceiptTemplate(project).available || !form.reportValidity()) return;
+    if (!resolveProjectReceiptTemplate(project).available) return;
+    if (!form.checkValidity()) {
+      workspace.querySelector('[data-live-view="edit"]').click();
+      form.reportValidity();
+      return;
+    }
     let preview;
     const buttonLabel = button.textContent;
     button.disabled = true;
@@ -315,7 +450,7 @@ function mountReceiptForm(form, project, type) {
     try {
       const data = Object.fromEntries(new FormData(form));
       for (const input of form.querySelectorAll("input[required]")) {
-        if (!input.value.trim()) { input.focus(); throw new Error("กรุณากรอกข้อมูลให้ครบถ้วน"); }
+        if (!input.value.trim()) { workspace.querySelector('[data-live-view="edit"]').click(); input.focus(); throw new Error("กรุณากรอกข้อมูลให้ครบถ้วน"); }
       }
       const items = [...rows.children].map((row) => ({
         description: row.querySelector('[name="description"]').value.trim(),
@@ -323,7 +458,7 @@ function mountReceiptForm(form, project, type) {
         date: certificate ? row.querySelector('[name="itemDate"]').value : "",
         note: certificate ? row.querySelector('[name="note"]').value.trim() : ""
       }));
-      const html = buildReceiptDocument(type, data, items, project, document.baseURI);
+      const html = buildReceiptDocument(type, data, items, project, document.baseURI, { requestPrint: true });
       const printDocument = new DOMParser().parseFromString(html, "text/html");
       applyThaiSegmentation(printDocument.querySelector(".receipt-sheet"), "p, .signature, td:not(.money), .fill");
       preview = window.open("", "_blank");
@@ -346,39 +481,45 @@ function mountReceiptForm(form, project, type) {
   });
 }
 
-function buildReceiptDocument(type, data, items, project, baseURI) {
+function buildReceiptDocument(type, data, items, project, baseURI, { draft = false, requestPrint = false } = {}) {
   if (!Object.hasOwn(PROJECT_RECEIPT_TITLES, type)) throw new Error("ประเภทเอกสารไม่ถูกต้อง");
   const esc = receiptEscape, certificate = type === "certificate";
   const club = resolveProjectReceiptTemplate(project).key === "club";
-  if (club && !String(data.advisor || "").trim()) throw new Error("กรุณากรอกชื่ออาจารย์ที่ปรึกษา");
+  if (!draft && club && !String(data.advisor || "").trim()) throw new Error("กรุณากรอกชื่ออาจารย์ที่ปรึกษา");
   const range = receiptDateRange(project);
-  validateReceiptDate(data.date, range);
+  if (!draft) validateReceiptDate(data.date, range);
   if (certificate) {
-    items.forEach((item) => validateReceiptDate(item.date, range));
+    if (!draft) items.forEach((item) => validateReceiptDate(item.date, range));
     data = { ...data, unit: receiptProjectUnit(project) };
-    if (!data.unit) throw new Error("โครงการยังไม่มีข้อมูลหน่วยงาน โครงการ กรุณาติดต่อผู้ดูแลโครงการ");
+    if (!draft && !data.unit) throw new Error("โครงการยังไม่มีข้อมูลหน่วยงาน โครงการ กรุณาติดต่อผู้ดูแลโครงการ");
   }
   const maxRows = certificate ? 14 : 8;
   if (!items.length || items.length > maxRows) throw new Error("จำนวนรายการเกินแบบฟอร์ม");
   const total = items.reduce((sum, item) => {
+    if (draft && item.satang === null) return sum;
     if (!Number.isSafeInteger(item.satang) || item.satang <= 0) throw new Error("จำนวนเงินไม่ถูกต้อง");
     return sum + item.satang;
   }, 0);
-  receiptDate(data.date, true);
-  const line = (text) => `<span class="fill">${esc(text || "") || "&nbsp;"}</span>`;
-  const field = (label, value) => `<span class="receipt-field-label">${label}</span>${line(value)}`;
-  const [year, , day] = data.date.split("-").map(Number);
-  const monthName = new Intl.DateTimeFormat("th-TH", { month: "long", timeZone: "Asia/Bangkok" }).format(new Date(data.date + "T12:00:00+07:00"));
-  const sign = (name, role) => `<div class="signature"><div class="signature-line" aria-label="ช่องลงนาม"></div><div class="signature-name"><span>(</span>${line(name)}<span>)</span></div><div>${role}</div></div>`;
+  if (!draft) receiptDate(data.date, true);
+  const displayDate = value => {
+    if (draft && !value) return '';
+    return receiptDate(value);
+  };
+  const line = (text, key = "") => `<span class="fill"${key ? ` data-preview-field="${key}"` : ""}>${esc(text || "") || "&nbsp;"}</span>`;
+  const field = (label, value, key = "") => `<span class="receipt-field-label">${label}</span>${line(value, key)}`;
+  const [year, , day] = (data.date || "").split("-").map(Number);
+  const monthName = !data.date && draft ? "" : new Intl.DateTimeFormat("th-TH", { month: "long", timeZone: "Asia/Bangkok" }).format(new Date(data.date + "T12:00:00+07:00"));
+  const sign = (name, role, key) => `<div class="signature"><div class="signature-line" aria-label="ช่องลงนาม"></div><div class="signature-name"><span>(</span>${line(name, key)}<span>)</span></div><div>${role}</div></div>`;
   const tableRows = Array.from({ length: maxRows }, (_, i) => {
     const item = items[i];
     return certificate
-      ? `<tr${item ? ` data-receipt-amount="${item.satang}"` : ""}><td>${item ? esc(receiptDate(item.date)) : "&nbsp;"}</td><td class="receipt-description">${item ? esc(item.description) : ""}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td><td class="receipt-description">${item ? esc(item.note) : ""}</td></tr>`
-      : `<tr${item ? ` data-receipt-amount="${item.satang}"` : ""}><td class="receipt-description">${item ? esc(item.description) : "&nbsp;"}</td><td class="money">${item ? receiptMoney(item.satang) : ""}</td></tr>`;
+      ? `<tr${item ? ` data-receipt-amount="${item.satang ?? 0}"` : ""}><td data-preview-field="itemDate" data-preview-row="${i}">${item ? esc(displayDate(item.date)) : "&nbsp;"}</td><td class="receipt-description" data-preview-field="description" data-preview-row="${i}">${item ? esc(item.description) : ""}</td><td class="money" data-preview-field="amount" data-preview-row="${i}">${item && item.satang !== null ? receiptMoney(item.satang) : ""}</td><td class="receipt-description" data-preview-field="note" data-preview-row="${i}">${item ? esc(item.note) : ""}</td></tr>`
+      : `<tr${item ? ` data-receipt-amount="${item.satang ?? 0}"` : ""}><td class="receipt-description" data-preview-field="description" data-preview-row="${i}">${item ? esc(item.description) : "&nbsp;"}</td><td class="money" data-preview-field="amount" data-preview-row="${i}">${item && item.satang !== null ? receiptMoney(item.satang) : ""}</td></tr>`;
   }).join("");
   const cssURL = esc(new URL("css/pages/receipt-print.css", baseURI).href);
   return `<!doctype html><html lang="th" data-theme="${typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${esc(project.code || "โครงการ")}_${PROJECT_RECEIPT_TITLES[type]}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap"><link rel="stylesheet" href="${cssURL}"></head>
+    <title>${esc(project.code || "โครงการ")}_${PROJECT_RECEIPT_TITLES[type]}</title>${draft ? "" : '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap">'}<link rel="stylesheet" href="${cssURL}"></head>
+    ${draft ? '<style>.receipt-toolbar, .receipt-print-dialog { display: none !important; } .receipt-preview-stage { width: 794px; padding: 0; margin: auto; background: transparent; } .receipt-sheet { margin: 8px auto; } body { background: #eef0f3; } .receipt-active-field { position: relative; } .receipt-active-field::after { content: ""; position: absolute; inset: -.6mm 0 .6mm; background: rgba(236, 72, 153, .10); border: 1.5px solid #ec4899; border-radius: 2px; pointer-events: none; } @media print { .receipt-active-field::after { display: none; } }</style>' : ''}
     <body><nav class="receipt-toolbar" aria-label="เครื่องมือเอกสาร"><div class="receipt-toolbar-inner">
       <div class="receipt-project-info"><div class="receipt-project-meta"><span class="receipt-project-code">${esc(project.code || "โครงการ")}</span><span>ตัวอย่าง${PROJECT_RECEIPT_TITLES[type]}</span></div><div class="receipt-project-name">${esc(project.name || "")}</div></div>
       <div class="receipt-toolbar-actions"><button class="receipt-ui-button receipt-ui-secondary" type="button" onclick="window.close()"><span aria-hidden="true">←</span> กลับไปแก้ไข</button><button class="receipt-ui-button receipt-ui-primary" type="button" id="receiptPrint" disabled>กำลังเตรียมเอกสาร…</button></div>
@@ -393,15 +534,15 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
       </div>
     </dialog>
     <div class="receipt-preview-stage"><main class="receipt-sheet ${certificate ? "certificate" : "voucher"}${club ? " club" : ""}"><h1>${PROJECT_RECEIPT_TITLES[type]}</h1>
-    ${certificate ? `<p class="unit receipt-field-row">${field("หน่วยงาน", data.unit)}</p>` : `<div class="place"><p class="receipt-field-row">${field("เขียนที่", data.place)}</p><p class="receipt-field-row receipt-date-row">${field("วันที่", day)}${field("เดือน", monthName)}${field("พ.ศ.", year + 543)}</p></div>
-      <div class="recipient"><p class="receipt-field-row receipt-person-row">${field("ข้าพเจ้า", data.person)}${field("บ้านเลขที่", data.house)}${field("ถนน", data.road)}</p>
-      <p class="receipt-field-row receipt-address-row">${field("ตำบล/แขวง", data.subdistrict)}${field("อำเภอ/เขต", data.district)}${field("จังหวัด", data.province)}</p>
-      <p class="receipt-field-row">${field("เบอร์โทรศัพท์", data.phone)}</p><p>ได้รับเงินจากสโมสรนิสิต จุฬาลงกรณ์มหาวิทยาลัย ดังรายการต่อไปนี้</p></div>`}
+    ${certificate ? `<p class="unit receipt-field-row">${field("หน่วยงาน", data.unit, "unit")}</p>` : `<div class="place"><p class="receipt-field-row">${field("เขียนที่", data.place, "place")}</p><p class="receipt-field-row receipt-date-row">${field("วันที่", day, "date")}${field("เดือน", monthName, "date")}${field("พ.ศ.", year ? year + 543 : "", "date")}</p></div>
+      <div class="recipient"><p class="receipt-field-row receipt-person-row">${field("ข้าพเจ้า", data.person, "person")}${field("บ้านเลขที่", data.house, "house")}${field("ถนน", data.road, "road")}</p>
+      <p class="receipt-field-row receipt-address-row">${field("ตำบล/แขวง", data.subdistrict, "subdistrict")}${field("อำเภอ/เขต", data.district, "district")}${field("จังหวัด", data.province, "province")}</p>
+      <p class="receipt-field-row">${field("เบอร์โทรศัพท์", data.phone, "phone")}</p><p>ได้รับเงินจากสโมสรนิสิต จุฬาลงกรณ์มหาวิทยาลัย ดังรายการต่อไปนี้</p></div>`}
     <table><colgroup>${certificate ? '<col style="width:17%"><col style="width:40%"><col style="width:20%"><col style="width:23%">' : '<col style="width:72%"><col style="width:28%">'}</colgroup>
     <thead><tr>${certificate ? "<th>วันที่</th><th>รายละเอียด</th><th>จำนวนเงิน</th><th>หมายเหตุ</th>" : "<th>รายการ</th><th>จำนวนเงิน</th>"}</tr></thead>
     <tbody>${tableRows}<tr data-receipt-total-row>${certificate ? '<td></td><td class="money" data-page-total-label>รวม</td>' : '<td class="money" data-page-total-label>รวม</td>'}<td class="money" data-page-total>${receiptMoney(total)}</td>${certificate ? "<td></td>" : ""}</tr></tbody></table>
     <div class="receipt-ending"><p class="total-words receipt-field-row">${field("รวมเงิน (ตัวอักษร)", receiptBahtText(total))}</p>
-    ${certificate ? `<div class="declaration"><p class="receipt-field-row receipt-certifier-row">${field("ข้าพเจ้า", data.person)}${field("ตำแหน่ง", data.position)}</p><p class="receipt-field-row">${field("หน่วยงาน", data.unit)}</p><p>ขอรับรองว่ารายจ่ายข้างต้นนี้ ไม่อาจเรียกใบเสร็จรับเงินจากผู้รับเงินได้และข้าพเจ้าได้จ่ายเงินในการดำเนินการอย่างโดยแท้จริง</p></div><div class="certificate-sign">${sign(data.person, `วันที่ ${esc(receiptDate(data.date))}`)}${club ? sign(data.advisor, "อาจารย์ที่ปรึกษา") : ""}</div>` : sign(data.person, "ผู้รับเงิน") + sign(data.payer, "ผู้จ่ายเงิน") + (club ? sign(data.advisor, "อาจารย์ที่ปรึกษา") : "")}</div></main></div>
+    ${certificate ? `<div class="declaration"><p class="receipt-field-row receipt-certifier-row">${field("ข้าพเจ้า", data.person, "person")}${field("ตำแหน่ง", data.position, "position")}</p><p class="receipt-field-row">${field("หน่วยงาน", data.unit, "unit")}</p><p>ขอรับรองว่ารายจ่ายข้างต้นนี้ ไม่อาจเรียกใบเสร็จรับเงินจากผู้รับเงินได้และข้าพเจ้าได้จ่ายเงินในการดำเนินการอย่างโดยแท้จริง</p></div><div class="certificate-sign">${sign(data.person, `<span data-preview-field="date">วันที่ ${esc(displayDate(data.date))}</span>`, "person")}${club ? sign(data.advisor, "อาจารย์ที่ปรึกษา", "advisor") : ""}</div>` : sign(data.person, "ผู้รับเงิน", "person") + sign(data.payer, "ผู้จ่ายเงิน", "payer") + (club ? sign(data.advisor, "อาจารย์ที่ปรึกษา", "advisor") : "")}</div></main></div>
     <script src="${esc(new URL('js/features/project/receipt-pagination.js', baseURI).href)}"></script>
     <script>
     ${receiptBahtText.toString()}
@@ -436,6 +577,39 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
         document.querySelectorAll('.fill-rules').forEach(rule => rule.remove());
         paginateReceiptDocument();
         layoutReceiptFields();
+        if (${draft}) {
+          const fit = () => {
+            const stage = document.querySelector('.receipt-preview-stage');
+            stage.style.zoom = Math.min(1, (window.innerWidth - 16) / 794);
+          };
+          // Replace and lay out the paper synchronously in the existing document.
+          // Keep CSS, loaded fonts and the scroll position across input changes.
+          window.updateReceiptPreview = (sheet) => {
+            const stage = document.querySelector('.receipt-preview-stage');
+            const previous = stage.innerHTML;
+            const zoom = stage.style.zoom;
+            const scrollX = window.scrollX, scrollY = window.scrollY;
+            try {
+              stage.style.zoom = '1';
+              stage.innerHTML = sheet;
+              layoutReceiptFields();
+              stage.querySelectorAll('.fill-rules').forEach(rule => rule.remove());
+              paginateReceiptDocument();
+              layoutReceiptFields();
+            } catch (error) {
+              stage.innerHTML = previous;
+              throw error;
+            } finally {
+              stage.style.zoom = zoom;
+              fit();
+              window.scrollTo(scrollX, scrollY);
+            }
+          };
+          fit();
+          window.addEventListener('resize', fit);
+          window.frameElement?.dispatchEvent(new Event('receiptpreviewready'));
+          return;
+        }
         const dialog = document.getElementById('receiptPrintDialog');
         document.getElementById('receiptPrintCancel').onclick = () => dialog.close();
         document.getElementById('receiptPrintClose').onclick = () => dialog.close();
@@ -446,6 +620,7 @@ function buildReceiptDocument(type, data, items, project, baseURI) {
         button.disabled = false;
         button.textContent = 'พิมพ์ / บันทึก PDF';
         button.onclick = () => dialog.showModal();
-      } catch (error) { document.getElementById('receiptPrintStatus').textContent = error.message === 'font' ? 'โหลดฟอนต์ไม่สำเร็จ กรุณาปิดแล้วเปิดตัวอย่างอีกครั้ง' : 'เตรียมเอกสารไม่สำเร็จ: ' + error.message; }
+        if (${requestPrint}) dialog.showModal();
+      } catch (error) { if (${draft}) { const status = document.getElementById('receiptPrintStatus'); document.body.prepend(status); status.style.cssText = 'display:block;font:14px sans-serif;padding:12px;color:#b91c1c'; } document.getElementById('receiptPrintStatus').textContent = error.message === 'font' ? 'โหลดฟอนต์ไม่สำเร็จ กรุณาปิดแล้วเปิดตัวอย่างอีกครั้ง' : 'เตรียมเอกสารไม่สำเร็จ: ' + error.message; }
     });</script></body></html>`;
 }

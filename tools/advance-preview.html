@@ -1,10 +1,65 @@
-<!doctype html><html lang="th"><head><title>ทดสอบเอกสารยืมรองจ่าย</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/css/style.css"></head><body>
-<main style="max-width:900px;margin:32px auto;padding:16px"><h1>ทดสอบเอกสารยืมรองจ่าย</h1><p>ใช้โครงการตัวอย่าง ไม่บันทึกข้อมูลเข้าระบบ</p><button class="btn-primary" onclick="openProjectModal(project)">เปิดโครงการตัวอย่าง</button></main>
-<div class="modal" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle"><div class="modal-dialog"><div class="modal-header"><div><div id="projectModalTitle" class="modal-title"></div><div id="projectModalHeaderRow" class="modal-header-row"></div></div><button id="projectModalClose" class="modal-close" type="button" onclick="closeProjectModal()" aria-label="ปิดรายละเอียดโครงการ">×</button></div><div id="projectModalTitleBadge"></div><div class="modal-body" id="projectModalBody"></div></div></div><!-- ADVANCE_TEMPLATE -->
-<script src="/js/core/app.dialog.js"></script><script src="/js/features/project/app.advance-loan-pdf.js"></script><script src="/js/features/project/app.receipt-documents.js"></script><script src="/js/features/project/app.project-modal.js"></script>
-<script>
-const projectModalEl=document.getElementById('projectModal'),projectModalTitleEl=document.getElementById('projectModalTitle'),projectModalTitleBadgeEl=document.getElementById('projectModalTitleBadge'),projectModalHeaderRowEl=document.getElementById('projectModalHeaderRow'),projectModalBodyEl=document.getElementById('projectModalBody'),pdfRootEl=document.getElementById('pdfRoot');
-const PROJECT_PENDING_APPROVAL_STATUS='รออนุมัติ', assistantContactsByName={},orgFilters=[];
-const formatMoney=n=>Number(n).toLocaleString('th-TH'),statusMainToBadgeClass=()=>'';
-const project={code:'TEST-01',name:'โครงการทดสอบยืมรองจ่าย',orgName:'องค์การบริหารสโมสรนิสิต',orgGroup:'องค์การบริหารสโมสรนิสิต',statusMain:'อนุมัติโครงการ',approveDate:'29/10/2026',lastWorkDate:'20/12/2026',daysToDeadline:45,budget:10000};openProjectModal(project);
-</script></body></html>
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ทดสอบเอกสารยืมรองจ่าย</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/components/theme-preview.css">
+  <style>
+    .receipt-demo-tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+    html[data-theme="dark"] .receipt-demo-caption { color: #9ca3af; }
+    .receipt-demo-caption { margin: 0 0 12px; font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body class="has-modal">
+  <div id="projectModal" class="modal show" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+    <main class="modal-dialog">
+      <div class="modal-header">
+        <div id="projectModalTitle" class="modal-title">ทดสอบเอกสารยืมรองจ่าย</div>
+        <button type="button" class="btn-ghost" id="demoTheme" aria-pressed="false">Dark mode</button>
+      </div>
+      <div id="projectModalBody" class="modal-body">
+        <p class="receipt-demo-caption">พื้นที่ทดสอบข้อมูลสมมติ · ไม่เชื่อมต่อฐานข้อมูลจริง ไม่ต้องเข้าสู่ระบบ และไม่บันทึกข้อมูล</p>
+        <div class="receipt-demo-tools"><a class="btn-ghost" href="/documents">ใบรับเงิน / ใบรับรอง</a><label>ประเภทหน่วยงาน <select id="demoOrg"><option value="central">อบจ.</option><option value="club">ชมรม</option></select></label><button type="button" class="btn-ghost" id="fillSample">เติมข้อมูลสมมติ</button><button type="button" class="btn-ghost" id="resetSample">เริ่มใหม่</button></div>
+        <div id="projectDocumentPanel" class="project-document-section"></div>
+      </div>
+    </main>
+  </div>
+  <!-- ADVANCE_TEMPLATE -->
+  <script src="/js/core/app.helpers.js"></script>
+  <script src="/js/features/project/app.advance-loan-pdf.js"></script>
+  <script src="/js/features/project/app.receipt-documents.js"></script>
+  <script>
+    const themeButton = document.getElementById('demoTheme');
+    themeButton.onclick = () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      themeButton.textContent = dark ? 'Light mode' : 'Dark mode';
+      themeButton.setAttribute('aria-pressed', String(dark));
+    };
+    const pdfRootEl = document.getElementById('pdfRoot');
+    const orgFilters = [{ name: 'องค์การบริหารสโมสรนิสิต', accountNo: '000-000000-0' }, { name: 'ชมรมตัวอย่าง', accountNo: '000-000000-0' }];
+    const project = { code: 'TEST-ADVANCE', name: 'โครงการตัวอย่างยืมรองจ่าย', orgName: 'องค์การบริหารสโมสรนิสิต', orgGroup: 'องค์การบริหารสโมสรนิสิต', approveDate: '2026-11-01', lastWorkDate: '2026-12-01', evidenceDueDate: '2026-12-15', budget: 10000, advancePercent: 80, councilSessionText: '1/2569' };
+    globalThis.SGCU_APP_CONFIG = { documents: { signersByAcademicYear: { '2569': { treasurerName: 'เหรัญญิกตัวอย่าง', treasurerPhone: '0800000000', presidentName: 'ประธานตัวอย่าง', viceRectorName: 'ผู้อนุมัติตัวอย่าง' } } } };
+    function mountDemo() {
+      const club = document.getElementById('demoOrg').value === 'club';
+      project.orgName = club ? 'ชมรมตัวอย่าง' : 'องค์การบริหารสโมสรนิสิต';
+      project.orgGroup = club ? 'ชมรมฝ่ายกีฬา' : 'องค์การบริหารสโมสรนิสิต';
+      mountAdvanceLoanForm(document.getElementById('projectDocumentPanel'), project);
+    }
+    document.getElementById('demoOrg').onchange = mountDemo;
+    mountDemo();
+    document.getElementById('fillSample').onclick = () => {
+      const form = document.querySelector('.project-document-form');
+      const values = { name: 'นายตัวอย่าง ประธานโครงการ', phone: '0800000000', headName: 'ประธานชมรมตัวอย่าง', clubTreasurer: 'เหรัญญิกชมรมตัวอย่าง', advisor: 'อาจารย์ตัวอย่าง' };
+      form.querySelectorAll('input').forEach(input => { input.value = values[input.name] || ''; });
+      form.querySelector('input').dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    document.getElementById('resetSample').onclick = mountDemo;
+  </script>
+</body>
+</html>

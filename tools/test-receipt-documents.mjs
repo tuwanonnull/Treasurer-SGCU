@@ -80,3 +80,17 @@ assert.throws(() => ctx.receiptDateRange({ approveDate: '2026-10-01' }), /ยั
 assert.throws(() => ctx.receiptDateRange({}), /ยังไม่มีวันที่อนุมัติ และ ยังไม่มีวันปฏิบัติงานสุดท้าย/);
 assert.throws(() => ctx.receiptDateRange({ ...projectDates, approveDate: '31/02/2569' }), /วันที่อนุมัติไม่ถูกต้อง/);
 assert.throws(() => ctx.receiptDateRange({ ...projectDates, lastWorkDate: 'อ่านไม่ได้' }), /วันปฏิบัติงานสุดท้ายไม่ถูกต้อง/);
+
+for (const type of ['voucher', 'certificate']) {
+  const draftProject = { ...project, orgGroup: 'ชมรมฝ่ายกีฬา' };
+  const blank = { date: '', person: '', advisor: '' };
+  const blankItems = [{ satang: null, description: '', date: '', note: '' }];
+  const draft = ctx.buildReceiptDocument(type, blank, blankItems, draftProject, 'http://localhost/', { draft: true });
+  assert.doesNotMatch(draft, /NaN|undefined/);
+  assert.match(draft, /ศูนย์บาทถ้วน/);
+  assert.throws(() => ctx.buildReceiptDocument(type, blank, blankItems, draftProject, 'http://localhost/'));
+  const partial = ctx.buildReceiptDocument(type, blank, [...blankItems, { ...items[0], satang: 125050 }], draftProject, 'http://localhost/', { draft: true });
+  assert.match(partial, /1,250.50/);
+  assert.match(partial, /หนึ่งพันสองร้อยห้าสิบบาทห้าสิบสตางค์/);
+}
+console.log('Incomplete live drafts render blank fields and correct totals without relaxing print validation.');

@@ -46,9 +46,10 @@ http.createServer(async (request, response) => {
       response.end(page.replace('<!-- ADVANCE_TEMPLATE -->', template));
       return;
     }
-    const relative = pathname === '/'  ? 'tools/receipt-preview.html' : pathname.slice(1);
+    const isEditor = pathname === '/' || pathname === '/documents';
+    const relative = isEditor  ? 'tools/receipt-preview.html' : pathname.slice(1);
     const file = path.resolve(root, relative);
-    if (!file.startsWith(root) || (pathname !== '/' && !/^(css|js|THSarabunNew|img)\//.test(relative))) {
+    if (!file.startsWith(root) || (!isEditor && !/^(css|js|THSarabunNew|img)\//.test(relative))) {
       response.writeHead(404); response.end(); return;
     }
     const content = await fs.readFile(file);

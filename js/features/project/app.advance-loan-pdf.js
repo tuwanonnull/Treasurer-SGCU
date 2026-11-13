@@ -271,7 +271,7 @@ function fitAdvanceLoanSignatures(rootEl) {
   if (columns.every(column => !column.children.length)) signaturePage.remove();
 }
 
-async function downloadProjectPdf(project, signatureData, printWin = null) {
+async function downloadProjectPdf(project, signatureData, printWin = null, options = {}) {
   if (!pdfRootEl) throw new Error("ไม่พบแบบฟอร์มเอกสาร กรุณารีเฟรชแล้วลองอีกครั้ง");
 
   // Account data improves the generated document, but a slow Firestore request
@@ -283,7 +283,7 @@ async function downloadProjectPdf(project, signatureData, printWin = null) {
 
   if (printWin) {
     if (printWin.closed) throw new Error("หน้าตัวอย่างถูกปิด กรุณาเปิดตัวอย่างอีกครั้ง");
-    if (!openPdfPrintWindow(project, printWin, signatureData)) throw new Error("ไม่สามารถเปิดตัวอย่างเอกสารได้");
+    if (!openPdfPrintWindow(project, printWin, signatureData, options)) throw new Error("ไม่สามารถเปิดตัวอย่างเอกสารได้");
     return;
   }
 
@@ -308,29 +308,111 @@ printWin.document.close();
 
 function mountAdvanceLoanForm(panel, project) {
   const isCentral = ["องค์การบริหารสโมสรนิสิต", "สภานิสิต", "องค์การบริหารสโมสรนิสิต, สภานิสิต"].includes(project.orgGroup);
-  const field = (name, label, type = "text") => `<label class="project-document-field">${escapeHtml(label)} *<input class="login-input" name="${name}" type="${type}" maxlength="150" required></label>`;
+  const field = (name, label, type = "text") => `<label class="project-document-field" data-field="${name}">${escapeHtml(label)} *<input class="login-input" name="${name}" type="${type}" maxlength="150" required></label>`;
   panel.innerHTML = `<h3>สร้างเอกสารยืมรองจ่าย</h3>
     <p class="project-document-download-hint">แนะนำให้ดาวน์โหลดเอกสารผ่านคอมพิวเตอร์ (PC/Desktop)</p>
     <p class="project-document-context">กรอกข้อมูลผู้ลงนามเพื่อตรวจสอบเอกสารก่อนพิมพ์</p>
-    <form class="project-document-form">
+    <form class="project-document-form" novalidate>
+      <div class="receipt-live-workspace" data-view="edit">
+        <div class="receipt-live-switch" role="group" aria-label="มุมมองเอกสาร">
+          <button type="button" class="receipt-view-option" data-live-view="edit" aria-pressed="true">กรอกข้อมูล</button>
+          <button type="button" class="receipt-view-option" data-live-view="preview" aria-pressed="false">ตัวอย่างเอกสาร</button>
+        </div>
+        <fieldset data-receipt-fields><legend>ข้อมูลผู้ลงนาม</legend>
       <div class="project-document-grid">
         ${field("name", "ชื่อประธานโครงการ")}
         ${field("phone", "เบอร์โทรศัพท์ประธานโครงการ", "tel")}
         ${isCentral ? "" : field("headName", `ชื่อประธาน${project.orgName || "ชมรม"}`) + field("clubTreasurer", `ชื่อเหรัญญิก${project.orgName || "ชมรม"}`) + field("advisor", "ชื่ออาจารย์ที่ปรึกษา")}
       </div>
+      </fieldset>
+      <aside class="receipt-live-preview" aria-label="ตัวอย่างเอกสารยืมรองจ่าย">
+        <strong>ตัวอย่างเอกสาร</strong><p>อัปเดตตามข้อมูลที่กรอก · ตรวจข้อมูลให้ครบก่อนพิมพ์</p>
+        <p data-live-field role="status">เลือกช่องกรอกเพื่อดูตำแหน่งบนเอกสาร</p>
+        <p data-live-status role="status"></p>
+        <iframe title="ตัวอย่างเอกสารยืมรองจ่าย" sandbox="allow-scripts allow-same-origin"></iframe>
+      </aside></div>
       <p class="project-document-error" role="alert"></p>
-      <div class="modal-actions"><button class="btn-primary" type="submit">ดูตัวอย่าง / พิมพ์ PDF</button></div>
+      <div class="modal-actions receipt-document-actions"><button type="button" class="btn-ghost" data-full-preview>ดูตัวอย่างเต็มจอ</button><button class="btn-primary" type="submit">พิมพ์ / บันทึก PDF</button></div>
     </form>`;
   const form = panel.querySelector("form");
+  const workspace = form.querySelector('.receipt-live-workspace');
+  const frame = form.querySelector('iframe');
+  const status = form.querySelector('[data-live-status]');
+  const values = () => Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim()]));
+  const fieldKeys = { name: 'projectLeadName', phone: 'projectLeadPhone', headName: 'orgHeadName', clubTreasurer: 'clubTreasurerName', advisor: 'advisorName' };
+  let activeField = '', initialized = false, previewTimer;
+  function highlight(scroll = false) {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    doc.querySelectorAll('.advance-active-field').forEach(node => node.classList.remove('advance-active-field'));
+    const targets = [...doc.querySelectorAll('[data-pdf-field]')].filter(node => node.dataset.pdfField === fieldKeys[activeField] && node.getClientRects().length);
+    targets.forEach(node => node.classList.add('advance-active-field'));
+    if (scroll && frame.clientWidth && targets[0]) {
+      const box = targets[0].getBoundingClientRect();
+      if (box.top < 12 || box.bottom > frame.clientHeight - 12) frame.contentWindow.scrollBy(0, box.top - frame.clientHeight / 3);
+    }
+  }
+  function updatePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => {
+      if (!form.isConnected || !frame.clientWidth) return;
+      try {
+        if (!initialized) {
+          initialized = openPdfPrintWindow(project, frame.contentWindow, values(), { embedded: true, onReady: updatePreview });
+          if (!initialized) throw new Error('ไม่พบแม่แบบเอกสาร');
+        } else frame.contentWindow.updateAdvancePreview?.(values());
+        highlight();
+        status.textContent = '';
+      } catch (reason) { status.textContent = reason.message || 'แสดงตัวอย่างไม่ได้ กรุณาลองอีกครั้ง'; }
+    }, 100);
+  }
+  form.addEventListener('input', updatePreview);
+  form.addEventListener('focusin', event => {
+    if (!event.target.matches('input[name]')) return;
+    activeField = event.target.name;
+    form.querySelector('[data-live-field]').textContent = 'กำลังกรอก: ' + event.target.closest('label').childNodes[0].textContent.trim().replace(/\s*\*$/, '');
+    highlight(true);
+  });
+  workspace.querySelectorAll('[data-live-view]').forEach(button => button.addEventListener('click', () => {
+    workspace.dataset.view = button.dataset.liveView;
+    workspace.querySelectorAll('[data-live-view]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  }));
+  let visible = false;
+  new ResizeObserver(() => {
+    const nextVisible = frame.clientWidth > 0;
+    if (nextVisible && !visible) { updatePreview(); highlight(true); }
+    visible = nextVisible;
+  }).observe(frame);
+  // Reuse cached account data; refresh the preview once if it arrives later.
+  void ensureOrgAccountMap().then(updatePreview);
+  form.querySelector('[data-full-preview]').addEventListener('click', () => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'receipt-full-preview';
+    dialog.setAttribute('aria-label', 'ตัวอย่างเอกสารยืมรองจ่ายเต็มจอ');
+    dialog.innerHTML = '<header><strong>ตัวอย่างเอกสารยืมรองจ่าย</strong><button type="button" class="btn-ghost" autofocus>กลับไปแก้ไข</button></header><p>ตัวอย่างจากข้อมูลที่กรอก · ตรวจข้อมูลให้ครบก่อนพิมพ์</p><iframe title="ตัวอย่างเอกสารยืมรองจ่ายเต็มจอ" sandbox="allow-scripts allow-same-origin"></iframe>';
+    document.body.appendChild(dialog);
+    dialog.querySelector('button').onclick = () => dialog.close();
+    dialog.addEventListener('close', () => { dialog.remove(); form.querySelector('[data-full-preview]').focus(); }, { once: true });
+    dialog.showModal();
+    if (!openPdfPrintWindow(project, dialog.querySelector('iframe').contentWindow, values(), { embedded: true })) {
+      dialog.close();
+      form.querySelector('[role="alert"]').textContent = 'ไม่พบแม่แบบเอกสาร';
+    }
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const error = form.querySelector('[role="alert"]');
     const button = form.querySelector('[type="submit"]');
     error.textContent = "";
-    if (button.disabled || !form.reportValidity()) return;
+    if (button.disabled) return;
+    if (!form.checkValidity()) {
+      workspace.querySelector('[data-live-view="edit"]').click();
+      form.reportValidity();
+      return;
+    }
     const signatureData = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, value.trim()]));
     const empty = [...form.querySelectorAll("input[required]")].find(input => !input.value.trim());
-    if (empty) { error.textContent = "กรุณากรอกข้อมูลผู้ลงนามให้ครบถ้วน"; empty.focus(); return; }
+    if (empty) { workspace.querySelector('[data-live-view="edit"]').click(); error.textContent = "กรุณากรอกข้อมูลผู้ลงนามให้ครบถ้วน"; empty.focus(); return; }
     let printWin;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
@@ -339,14 +421,14 @@ function mountAdvanceLoanForm(panel, project) {
       printWin = window.open("", "_blank");
       if (!printWin) throw new Error("กรุณาอนุญาตหน้าต่างป๊อปอัป แล้วเปิดตัวอย่างอีกครั้ง");
       showProjectDocumentLoading(printWin);
-      await downloadProjectPdf(project, signatureData, printWin);
+      await downloadProjectPdf(project, signatureData, printWin, { requestPrint: true });
     } catch (reason) {
       if (printWin && !printWin.closed) printWin.close();
       error.textContent = reason.message || "ไม่สามารถสร้างเอกสารได้ กรุณาลองใหม่อีกครั้ง";
     } finally {
       button.disabled = false;
       button.removeAttribute("aria-busy");
-      button.textContent = "ดูตัวอย่าง / พิมพ์ PDF";
+      button.textContent = "พิมพ์ / บันทึก PDF";
     }
   });
 }
@@ -502,11 +584,8 @@ function getAdvanceLoanStylesheetHref() {
   return `css/style.css?v=${encodeURIComponent(version)}`;
 }
 
-function openPdfPrintWindow(project, printWin, signatureData) {
-  if (!pdfRootEl) return false;
-
+function createAdvanceLoanPreviewRoot(project, signatureData) {
   const data = buildPdfData(project, signatureData);
-  const docTitle = escapeHtml(buildPdfTitle(project));
   const tempRoot = pdfRootEl.cloneNode(true);
   tempRoot.id = "pdfRootPrint";
   tempRoot.removeAttribute("aria-hidden");
@@ -520,23 +599,31 @@ function openPdfPrintWindow(project, printWin, signatureData) {
   applyThaiSegmentation(tempRoot);
   setupPdfSignatures(tempRoot, project);
 
-  const cssHref = getAdvanceLoanStylesheetHref();
   const baseHref = new URL(".", window.location.href).href;
   tempRoot.querySelectorAll("img").forEach((img) => {
     img.loading = "eager";
     img.src = new URL(img.getAttribute("src"), baseHref).href;
   });
 
+  return tempRoot;
+}
+
+function openPdfPrintWindow(project, printWin, signatureData, { embedded = false, requestPrint = false, onReady } = {}) {
+  if (!pdfRootEl) return false;
+  const tempRoot = createAdvanceLoanPreviewRoot(project, signatureData);
+  const docTitle = escapeHtml(buildPdfTitle(project));
+  const cssHref = getAdvanceLoanStylesheetHref();
+  const baseHref = new URL('.', window.location.href).href;
   let hasPrepared = false;
   let fallbackTimer = 0;
   const preparePreview = async () => {
-    if (hasPrepared || printWin.closed) return;
+    if (hasPrepared || printWin.closed || (embedded && !printWin.frameElement?.isConnected)) return;
     hasPrepared = true;
     if (fallbackTimer) window.clearTimeout(fallbackTimer);
     const previewStage = printWin.document.querySelector(".pdf-preview-stage");
-    const previewRoot = printWin.document.getElementById("pdfRootPrint");
+    let previewRoot = printWin.document.getElementById("pdfRootPrint");
     await waitForPdfAssets(printWin.document, previewRoot);
-    if (printWin.closed) return;
+    if (printWin.closed || (embedded && !printWin.frameElement?.isConnected)) return;
     fitAdvanceLoanSignatures(previewRoot);
     const fitPreview = () => {
       if (!previewStage || printWin.matchMedia("print").matches) return;
@@ -552,19 +639,42 @@ function openPdfPrintWindow(project, printWin, signatureData) {
     };
     fitPreview();
     printWin.addEventListener("resize", fitPreview);
+    if (embedded) {
+      printWin.updateAdvancePreview = (values) => {
+        const scrollX = printWin.scrollX, scrollY = printWin.scrollY;
+        const next = printWin.document.importNode(createAdvanceLoanPreviewRoot(project, values), true);
+        // Reserve the loaded banner's size before measuring freshly cloned pages.
+        // Cached images still become complete asynchronously after insertion.
+        const images = [...previewRoot.querySelectorAll('img')];
+        next.querySelectorAll('img').forEach((image, index) => {
+          const loaded = images[index];
+          if (loaded?.naturalWidth && loaded.naturalHeight) {
+            image.width = loaded.naturalWidth;
+            image.height = loaded.naturalHeight;
+          }
+        });
+        previewRoot.replaceWith(next);
+        previewRoot = next;
+        fitAdvanceLoanSignatures(previewRoot);
+        fitPreview();
+        printWin.scrollTo(scrollX, scrollY);
+      };
+      onReady?.();
+      return;
+    }
     printWin.focus();
     const printButton = printWin.document.getElementById("advancePrintButton");
     printButton.disabled = false;
     printButton.textContent = "พิมพ์ / บันทึก PDF";
     printButton.onclick = () => printWin.print();
+    if (requestPrint) printWin.print();
   };
 
-  // Bind before closing the document to avoid missing a synchronous load event.
+  // document.open clears window listeners; bind after it and before close.
+  printWin.document.open();
   printWin.onload = () => {
     void preparePreview();
   };
-
-  printWin.document.open();
   printWin.document.write(`
     <!doctype html>
     <html lang="th" data-theme="${document.documentElement.dataset.theme === "dark" ? "dark" : "light"}">
@@ -579,12 +689,14 @@ function openPdfPrintWindow(project, printWin, signatureData) {
           body { margin: 0; background: radial-gradient(circle at top right, #fff1f2, #fdf2ff 45%, #fff7f0 100%); font-family: "THSarabunNew", "TH Sarabun New", serif; }
           .pdf-root { position: static !important; left: 0 !important; top: 0 !important; transform-origin: top left; }
           .pdf-preview-stage { margin: 24px auto; overflow: hidden; }
+          ${embedded ? '.receipt-toolbar { display: none !important; } body { background: #eef0f3; } .pdf-preview-stage { margin: 8px auto; } .advance-active-field { position: relative; } .advance-active-field::after { content: ""; position: absolute; inset: -.6mm 0 .6mm; background: rgba(236,72,153,.10); border: 1.5px solid #ec4899; border-radius: 2px; pointer-events: none; }' : ''}
           @media screen {
             .pdf-root > section { min-height: 297mm; margin: 0 0 18px; background: #fff; box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16); box-sizing: border-box; overflow: hidden; }
             .pdf-root > section:last-child { margin-bottom: 0; }
           }
           @media print {
             body { background: #fff; }
+            .advance-active-field::after { display: none; }
             .receipt-toolbar { display: none !important; }
             .pdf-preview-stage { display: contents; width: auto !important; height: auto !important; margin: 0; overflow: visible; }
             .pdf-root { transform: none !important; }
@@ -599,7 +711,7 @@ function openPdfPrintWindow(project, printWin, signatureData) {
     </html>
   `);
   printWin.document.close();
-  fallbackTimer = window.setTimeout(() => {
+  if (!embedded) fallbackTimer = window.setTimeout(() => {
     void preparePreview();
   }, 250);
 

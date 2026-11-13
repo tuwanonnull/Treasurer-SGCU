@@ -1,32 +1,62 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ทดสอบเอกสารการเงิน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap">
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/components/theme-preview.css">
   <style>
-    body { margin: 0; padding: 24px 16px; background: #fff7fb; }
-    main { max-width: 900px; margin: auto; }
-    h1 { font-size: 24px; margin: 0 0 8px; }
-    .preview-caption { color: #64748b; margin-bottom: 20px; }
+    .receipt-demo-tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+    html[data-theme="dark"] .receipt-demo-caption { color: #9ca3af; }
+    .receipt-demo-caption { margin: 0 0 12px; font-size: 13px; color: #64748b; }
   </style>
 </head>
-<body>
-  <main>
-    <h1>ทดสอบเอกสารการเงิน</h1>
-    <p class="preview-caption">ใช้โครงการตัวอย่าง อบจ. · ข้อมูลที่กรอกใช้สร้างตัวอย่างเอกสารเท่านั้น ไม่บันทึกเข้าระบบ</p>
-    <div id="receiptPreview" class="project-document-panel"></div>
-  </main>
+<body class="has-modal">
+  <div id="projectModal" class="modal show" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+    <main class="modal-dialog">
+      <div class="modal-header">
+        <div id="projectModalTitle" class="modal-title">ทดสอบเอกสารการเงิน</div>
+        <button type="button" class="btn-ghost" id="demoTheme" aria-pressed="false">Dark mode</button>
+      </div>
+      <div id="projectModalBody" class="modal-body">
+        <p class="receipt-demo-caption">พื้นที่ทดสอบข้อมูลสมมติ · ไม่เชื่อมต่อฐานข้อมูลจริง ไม่ต้องเข้าสู่ระบบ และไม่บันทึกข้อมูล</p>
+        <div class="receipt-demo-tools"><a class="btn-ghost" href="/advance">เอกสารยืมรองจ่าย</a><button type="button" class="btn-ghost" id="fillSample">เติมข้อมูลสมมติ</button><button type="button" class="btn-ghost" id="resetSample">เริ่มใหม่</button></div>
+        <div id="projectDocumentPanel" class="project-document-section"></div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/core/app.helpers.js"></script>
   <script src="/js/features/project/app.advance-loan-pdf.js"></script>
   <script src="/js/features/project/app.receipt-documents.js"></script>
   <script>
-    mountProjectDocuments(document.getElementById('receiptPreview'), {
+    const themeButton = document.getElementById('demoTheme');
+    themeButton.onclick = () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      themeButton.textContent = dark ? 'Light mode' : 'Dark mode';
+      themeButton.setAttribute('aria-pressed', String(dark));
+    };
+    mountProjectDocuments(document.getElementById('projectDocumentPanel'), {
       code: 'TEST-001',
+      approveDate: '2026-01-01',
+      lastWorkDate: '2026-12-31',
       name: 'โครงการทดสอบเอกสาร',
       orgName: 'องค์การบริหารสโมสรนิสิต',
       orgGroup: 'องค์การบริหารสโมสรนิสิต'
     });
+    document.querySelector('[data-receipt-type="voucher"]').click();
+    document.getElementById('fillSample').onclick = () => {
+      const form = document.querySelector('.project-document-form:not([hidden])');
+      if (!form) return;
+      const values = { date: '2026-11-13', itemDate: '2026-11-13', person: 'นายตัวอย่าง ทดสอบ', payer: 'นางสาวตัวอย่าง ทดสอบ', place: 'ร้านค้าตัวอย่าง', house: '123', road: 'ถนนตัวอย่าง', subdistrict: 'แขวงตัวอย่าง', district: 'เขตตัวอย่าง', province: 'กรุงเทพมหานคร', phone: '0800000000', position: 'ผู้รับผิดชอบโครงการ', description: 'ค่าวัสดุสำหรับกิจกรรม (ข้อมูลสมมติ)', amount: '1250.50', note: 'ใช้ในกิจกรรมตัวอย่าง' };
+      form.querySelectorAll('input').forEach(input => { if (Object.hasOwn(values, input.name)) input.value = values[input.name]; });
+      form.querySelector('[name="amount"]').dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    document.getElementById('resetSample').onclick = () => location.reload();
   </script>
 </body>
 </html>
