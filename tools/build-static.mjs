@@ -3,12 +3,14 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { hashAssetEntries, isReleaseInput, validateVersion, versionHtml, versionJavaScript, versionCss, versionServiceWorker } from "./lib/build-assets.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
 const isCheckOnly = process.argv.includes("--check");
-const buildVersion = process.env.BUILD_VERSION || new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 12);
+let buildVersion;
+let releaseInfo;
 
 const copyIgnoreNames = new Set([
   ".git",
@@ -49,15 +51,6 @@ const textFileExtensions = new Set([
   ".yaml"
 ]);
 
-const textTransforms = new Map([
-  ["index.html", transformIndexHtml],
-  ["budget-meeting-preview.html", async html => withVersionedLocalAssets(await resolveIncludes(html, rootDir))],
-  ["meeting-room-calendar.html", withVersionedLocalAssets],
-  ["budget-meeting-vote.html", withVersionedLocalAssets],
-  ["budget-meeting-display.html", withVersionedLocalAssets],
-  ["css/style.css", transformCssEntrypoint],
-  ["sw.js", transformServiceWorker]
-]);
 
 async function exists(filePath) {
   try {
@@ -154,36 +147,37 @@ async function resolveIncludes(content, fromDir, seen = []) {
   return output;
 }
 
-function withVersionedLocalAssets(html) {
-  return html
-    .replace(/((?:src|href)=["'](?:\.\/)?(?:css|js)\/[^"']+?)(?:\?v=[^"']*)?(["'])/g, `$1?v=${buildVersion}$2`)
-    .replace(/(window\.sgcuAssetVersion\s*=\s*["']).*?(["'])/g, `$1${buildVersion}$2`)
-    .replace(/(window\.sgcuServiceWorkerUrl\s*=\s*["']\.\/sw\.js)(?:\?v=[^"']*)?(["'])/g, `$1?v=${buildVersion}$2`);
-}
-
-async function transformIndexHtml(html) {
-  const resolvedHtml = await resolveIncludes(html, rootDir);
+function getGitReleaseInfo() {
   const git = (...args) => execFileSync("git", args, { cwd: rootDir, encoding: "utf8" }).trim();
   if (git("rev-parse", "--is-shallow-repository") === "true") {
     throw new Error("Site revision needs full Git history. Fetch full history before building (checkout fetch-depth: 0).");
   }
   const revision = Number(git("rev-list", "--count", "HEAD"));
-  const commit = git("rev-parse", "--short=7", "HEAD");
-  const dirty = git("status", "--porcelain", "--untracked-files=no") !== "";
-  // Encode the Git revision in base 100: 547 -> 0.5.47, 10000 -> 1.0.00.
-  const version = `${Math.floor(revision / 10000)}.${Math.floor(revision / 100) % 100}.${String(revision % 100).padStart(2, "0")}`;
-  const detail = `Commit ${commit}${dirty ? " (มีการแก้ไขในเครื่อง)" : ""}`;
-  const versionedHtml = resolvedHtml.replace(
-    /<span data-site-version>[^<]*<\/span>/g,
-    `<span data-site-version title="${detail}">${version}</span>`
-  );
-  return withVersionedLocalAssets(versionedHtml);
+  return {
+    version: `${Math.floor(revision / 10000)}.${Math.floor(revision / 100) % 100}.${String(revision % 100).padStart(2, "0")}`,
+    commit: git("rev-parse", "--short=7", "HEAD"),
+    dirty: git("status", "--porcelain", "--untracked-files=no") !== "",
+    assetVersion: buildVersion
+  };
 }
 
-function transformServiceWorker(source) {
-  return source
-    .replace(/const CACHE_VERSION = ".*?";/, `const CACHE_VERSION = "${buildVersion}";`)
-    .replace(/(\.\/(?:css|js)\/[^"',]+?)(?:\?v=[^"',]*)?(["'])/g, `$1?v=${buildVersion}$2`);
+async function initializeRelease() {
+  const files = (await listProjectFiles(rootDir)).filter(file => isReleaseInput(path.relative(rootDir, file)));
+  const entries = await Promise.all(files.map(async file => [path.relative(rootDir, file), await fs.readFile(file)]));
+  buildVersion = process.env.BUILD_VERSION
+    ? validateVersion(process.env.BUILD_VERSION)
+    : hashAssetEntries(entries);
+  releaseInfo = getGitReleaseInfo();
+}
+
+async function transformHtml(source, relativePath) {
+  let html = await resolveIncludes(source, rootDir);
+  if (relativePath === "index.html") {
+    const detail = `Commit ${releaseInfo.commit}${releaseInfo.dirty ? " (มีการแก้ไขในเครื่อง)" : ""}`;
+    html = html.replace(/<span data-site-version>[^<]*<\/span>/g,
+      `<span data-site-version title="${detail}">${releaseInfo.version}</span>`);
+  }
+  return versionHtml(html, buildVersion);
 }
 
 async function transformCssEntrypoint(source) {
@@ -210,15 +204,22 @@ async function transformCssEntrypoint(source) {
 }
 
 async function applyTextTransforms() {
-  for (const [relativePath, transform] of textTransforms) {
-    const filePath = path.join(distDir, relativePath);
-    if (!(await exists(filePath))) continue;
+  const files = await listProjectFiles(distDir);
+  for (const filePath of files) {
+    const relativePath = path.relative(distDir, filePath);
+    let transform;
+    if (/^[^/]+\.html$/.test(relativePath)) transform = source => transformHtml(source, relativePath);
+    else if (relativePath === "sw.js") transform = source => versionServiceWorker(source, buildVersion);
+    else if (relativePath.startsWith("js/") && relativePath.endsWith(".js")) transform = source => versionJavaScript(source, buildVersion);
+    else if (relativePath.startsWith("css/") && relativePath.endsWith(".css")) {
+      transform = async source => versionCss(relativePath === "css/style.css" ? await transformCssEntrypoint(source) : source, buildVersion);
+    }
+    if (!transform) continue;
     const before = await fs.readFile(filePath, "utf8");
     const after = await transform(before);
-    if (after !== before) {
-      await fs.writeFile(filePath, after);
-    }
+    if (after !== before) await fs.writeFile(filePath, after);
   }
+  await fs.writeFile(path.join(distDir, "build-info.json"), JSON.stringify(releaseInfo, null, 2) + "\n");
 }
 
 function getHashRoutes(html) {
@@ -325,7 +326,7 @@ function getLocalAssetRefs(html) {
 }
 
 async function validateLocalAssetRefs() {
-  const htmlFiles = ["index.html", "meeting-room-calendar.html", "googleb88e39dd5e406a95.html"];
+  const htmlFiles = (await fs.readdir(distDir)).filter(name => name.endsWith(".html"));
   const missing = [];
 
   for (const htmlFile of htmlFiles) {
@@ -337,7 +338,7 @@ async function validateLocalAssetRefs() {
       if (!cleanRef || cleanRef === "./" || cleanRef === "/") continue;
 
       const targetPath = path.resolve(path.dirname(filePath), cleanRef);
-      if (!targetPath.startsWith(distDir)) continue;
+      if (!targetPath.startsWith(distDir + path.sep)) continue;
       if (!(await exists(targetPath))) {
         missing.push(`${htmlFile} -> ${ref}`);
       }
@@ -351,6 +352,7 @@ async function validateLocalAssetRefs() {
 
 async function build() {
   await validateNoConflictMarkers();
+  await initializeRelease();
   await fs.rm(distDir, { recursive: true, force: true });
   await copyRecursive(rootDir, distDir);
   await applyTextTransforms();

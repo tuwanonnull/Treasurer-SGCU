@@ -3,116 +3,116 @@
   if (window.sgcuFeatureLoader) return;
 
   const config = {
-    assetVersion: window.sgcuAssetVersion || "20260505-1",
+    assetVersion: window.sgcuAssetVersion || "dev",
     vendorScripts: {
       chart: "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js",
       papa: "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
     },
     pageScripts: {
       home: [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/news/app.news.js?v=20260417-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/news/app.news.js"
       ],
-      "org-structure": "js/features/org/app.org.js?v=20260503-1",
+      "org-structure": "js/features/org/app.org.js",
       news: [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/news/app.news.js?v=20260417-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/news/app.news.js"
       ],
       "financial-docs": [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/docs/app.downloads.js?v=20260501-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/docs/app.downloads.js"
       ],
       "project-status": [
-        "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
+        "js/features/project/app.project-ui.js",
         "js/features/project/app.advance-loan-pdf.js",
         "js/features/project/app.receipt-documents.js",
         "js/features/project/app.project-modal.js",
         "js/features/project/app.charts.js",
         "js/features/project/app.pie.js",
         "js/features/project/app.calendar.js",
-        "js/features/project/app.data.js?v=20261005-borrow-project-status"
+        "js/features/project/app.data.js"
       ],
       "treasurer-handover-staff": [],
       "dashboard-staff": [
-        "js/features/project/app.project-ui.js?v=20260519-club-debt-age-donut-card-1",
+        "js/features/project/app.project-ui.js",
         "js/features/project/app.advance-loan-pdf.js",
         "js/features/project/app.receipt-documents.js",
         "js/features/project/app.project-modal.js",
-        "js/features/project/app.document-signers.js?v=20260828-runtime-reload-1",
+        "js/features/project/app.document-signers.js",
         "js/features/project/app.charts.js",
         "js/features/project/app.pie.js",
         "js/features/project/app.calendar.js",
-        "js/features/project/app.data.js?v=20261005-borrow-project-status"
+        "js/features/project/app.data.js"
       ],
       "borrow-assets": [
-        "js/features/project/app.data.js?v=20261005-borrow-project-status",
-        "js/features/borrow/app.borrow-assets.js?v=20261006-borrow-empty-width-1"
+        "js/features/project/app.data.js",
+        "js/features/borrow/app.borrow-assets.js"
       ],
       "borrow-assets-staff": [
-        "js/features/project/app.data.js?v=20261005-borrow-project-status",
-        "js/features/borrow/app.borrow-assets.js?v=20261006-borrow-empty-width-1"
+        "js/features/project/app.data.js",
+        "js/features/borrow/app.borrow-assets.js"
       ],
-      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js?v=20261006-empty-states-1",
+      "meeting-room-booking": "js/features/booking/app.meeting-room-booking.js",
       "meeting-room-staff": [
-        "js/features/booking/app.meeting-room-booking.js?v=20261006-empty-states-1",
-        "js/features/booking/app.meeting-room-staff.js?v=20261006-empty-states-1"
+        "js/features/booking/app.meeting-room-booking.js",
+        "js/features/booking/app.meeting-room-staff.js"
       ],
-      "budget-approval-request": "js/features/budget/app.budget-request.js?v=20261006-empty-states-1",
+      "budget-approval-request": "js/features/budget/app.budget-request.js",
       login: [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1",
-        "js/features/budget/app.budget-request.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js",
+        "js/features/budget/app.budget-request.js"
       ],
       "staff-application": [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js"
       ],
       "staff-approval": [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1",
-        "js/features/budget/app.budget-staff.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js",
+        "js/features/budget/app.budget-staff.js"
       ],
       "staff-directory-staff": [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js"
       ],
       "staff-temporary-access-staff": [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js"
       ],
       "org-representative-approval-staff": [
-        "js/features/staff/app.staff-access.shared.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog.js?v=20260828-staff-split-1",
-        "js/features/staff/app.staff-access.catalog-view.js?v=20260901-staff-split-1",
-        "js/features/staff/app.staff-access.js?v=20261006-empty-states-1"
+        "js/features/staff/app.staff-access.shared.js",
+        "js/features/staff/app.staff-access.catalog.js",
+        "js/features/staff/app.staff-access.catalog-view.js",
+        "js/features/staff/app.staff-access.js"
       ],
       "content-management-staff": [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/content/app.content-management.js?v=20261006-empty-states-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/content/app.content-management.js"
       ],
       "content-news-staff": [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/content/app.content-management.js?v=20261006-empty-states-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/content/app.content-management.js"
       ],
       "content-documents-staff": [
-        "js/features/docs/app.file-links.js?v=20260417-1",
-        "js/features/content/app.content-management.js?v=20261006-empty-states-1"
+        "js/features/docs/app.file-links.js",
+        "js/features/content/app.content-management.js"
       ],
-      "system-data-staff": "js/features/staff/app.health-check.js?v=20260520-1",
+      "system-data-staff": "js/features/staff/app.health-check.js",
       "budget-approval-staff": [
-        "js/features/project/app.data.js?v=20261005-borrow-project-status",
-        "js/features/budget/app.budget-org-options.js?v=20260613-budget-org-options-5",
-        "js/features/budget/app.budget-staff.js?v=20261006-empty-states-1"
+        "js/features/project/app.data.js",
+        "js/features/budget/app.budget-org-options.js",
+        "js/features/budget/app.budget-staff.js"
       ]
     },
     idlePrefetchPages: []

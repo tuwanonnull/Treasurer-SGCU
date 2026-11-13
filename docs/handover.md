@@ -274,3 +274,36 @@ appSettings/global
 4. ทำ staff UI สำหรับจัดการพัสดุจาก Firestore ถ้าจะเลิกใช้ Google Sheets
 5. ตัดสินใจเรื่อง Project Status หลังจาก workflow ของทีมชัดเจน
 6. เพิ่มคู่มือ deploy rules, export Firestore, และ restore ข้อมูลสำหรับ Head Staff
+
+## การควบคุมรุ่นไฟล์อัตโนมัติ
+
+ใช้ `npm run build` หรือ `npm run check` ก่อนเผยแพร่ และเผยแพร่เฉพาะ `dist/` เหมือนเดิม ไม่ต้องเพิ่ม/แก้วันที่ใน `?v=...` ของ HTML, CSS entrypoint, feature loader หรือ service worker ด้วยมือ
+
+ระบบแยกเลขสองชนิด:
+
+- **เลขเวอร์ชันที่ผู้ใช้เห็น** (`0.x.xx`): นับ revision จาก Git ตามรูปแบบเดิม
+- **รหัสรุ่นไฟล์** (`assetVersion`): hash จากเนื้อหาและชื่อไฟล์เว็บ ใช้กับ URL ของ assets และ cache ของ service worker ไฟล์เหมือนเดิมได้รหัสเดิม แม้ build คนละเวลา แก้ไฟล์ที่เกี่ยวข้องแล้วรหัสเปลี่ยน แม้ build ภายในนาทีเดียวกัน
+
+ไฟล์ที่ใช้คำนวณรหัสประกอบด้วย `js/`, `css/`, `img/`, `THSarabunNew/`, `partials/`, HTML ระดับราก, webmanifest, `sw.js` และตัว build ที่สร้าง output เอง การแก้เฉพาะเอกสารหรือโค้ด Cloud Functions ไม่เปลี่ยนรหัส assets
+
+### จุดที่ดูแล
+
+- `tools/build-static.mjs`: ประกอบ HTML/CSS, อ่านข้อมูล Git, ตรวจไฟล์ และสร้าง `dist/`
+- `tools/lib/build-assets.mjs`: คำนวณ hash และใส่เวอร์ชันให้ลิงก์ รวม static/dynamic import ที่ใช้ path แบบ literal
+- `js/core/app.feature-loader.js`: กำหนดว่าหน้าไหนใช้สคริปต์ใด ใส่ path ปกติโดยไม่ต้องเขียน `?v=`
+- `sw.js`: กำหนดไฟล์ app shell; ค่า `dev` ใน source จะถูกแทนตอน build
+- `dist/build-info.json`: ดู `version`, `commit`, `dirty`, `assetVersion` ของ output ชุดนั้น
+
+HTML ระดับรากที่เพิ่มใหม่จะเข้ากระบวนการประกอบ include/ใส่เวอร์ชันและตรวจลิงก์โดยอัตโนมัติ ไม่ต้องเพิ่มชื่อหน้าในรายการ transform แยกอีก
+
+### Import และการทดสอบ
+
+- Local ESM import แบบ `import './file.js'`, `import { x } from './file.js'` และ `import('./file.js')` ได้รหัสรุ่นเดียวกับ HTML
+- Dynamic import ที่ประกอบ path ด้วย template/ตัวแปรต้องส่งเวอร์ชันเอง เช่นใช้ `new URL(import.meta.url).search` ตามหน้าประชุมตัวอย่างเดิม
+- ไม่เปลี่ยน URL ของ CDN/Firebase/API ภายนอก
+- `npm run test:build` ทดสอบ build และการกำหนดรุ่นโดยเฉพาะ; `npm run check` รวมชุดนี้ด้วย
+- ทดลองเว็บจาก `npm run serve:dist` แล้วเปิด `http://localhost:4173/` เพื่อให้ตรงกับไฟล์ที่จะเผยแพร่ การเปิด source โดยตรงไม่ได้ทดสอบระบบ versioning นี้
+
+`BUILD_VERSION` ยังใช้กำหนดรหัสเองได้สำหรับกรณีจำเป็น โดยใช้ตัวอักษร/ตัวเลข/จุด/ขีดกลาง/ขีดล่างไม่เกิน 80 ตัว ห้ามใช้รหัสซ้ำกับเนื้อหาคนละชุด เพราะจะทำให้ cache แยกไม่ออก แนะนำปล่อยให้ hash อัตโนมัติตามปกติ
+
+ข้อจำกัด: การใส่เวอร์ชันช่วยแยก URL ของ assets ไม่ได้บังคับรีโหลดแท็บที่เปิดอยู่ และไม่ได้รับประกันการสลับรุ่นแบบครบชุดขณะ offline; พฤติกรรม service worker เดิมยังคงอยู่

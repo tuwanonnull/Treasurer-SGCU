@@ -1,31 +1,31 @@
 /* Split stylesheet entrypoint. Keep imports ordered to preserve the original cascade. */
-@import url("./core/base.css?v=20260611-thai-text-rendering-1");
-@import url("./core/prelude-layout.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/operations.css?v=20261006-empty-states-1");
-@import url("./pages/meeting-room.css?v=20260906-calendar-native-picker-2");
-@import url("./pages/login-staff.css?v=20260510-budget-spacing-fix-1");
-@import url("./core/layout.css?v=20260518-csv-refresh-5");
-@import url("./core/navigation.css?v=20260902-borrow-standalone-columns-1");
-@import url("./components/ui.css?v=20260828-dashboard-document-skeleton-2");
-@import url("./pages/home.css?v=20260611-thai-text-rendering-1");
-@import url("./pages/about-org.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/treasurer-handover.css?v=20260511-handover-part1-1");
-@import url("./pages/financial-docs.css?v=20260510-budget-spacing-fix-1");
-@import url("./components/modals-motion.css?v=20260510-budget-spacing-fix-1");
-@import url("./core/responsive.css?v=20260616-system-data-filter-1");
-@import url("./pages/home-scoreboard.css?v=20260510-budget-spacing-fix-1");
-@import url("./pages/request-details.css?v=20260901-borrow-mobile-columns-1");
-@import url("./pages/pdf.css?v=20260903-print-page-break-1");
+@import url("./core/base.css");
+@import url("./core/prelude-layout.css");
+@import url("./pages/operations.css");
+@import url("./pages/meeting-room.css");
+@import url("./pages/login-staff.css");
+@import url("./core/layout.css");
+@import url("./core/navigation.css");
+@import url("./components/ui.css");
+@import url("./pages/home.css");
+@import url("./pages/about-org.css");
+@import url("./pages/treasurer-handover.css");
+@import url("./pages/financial-docs.css");
+@import url("./components/modals-motion.css");
+@import url("./core/responsive.css");
+@import url("./pages/home-scoreboard.css");
+@import url("./pages/request-details.css");
+@import url("./pages/pdf.css");
 @import url("./pages/project-documents.css");
 @import url("./components/receipt-notice.css");
 @import url("./components/document-preview.css");
-@import url("./components/app-loader.css?v=20260514-loader-logo-shadow-1");
-@import url("./pages/meeting-public-calendar.css?v=20261106-empty-layout-1");
-@import url("./components/empty-state.css?v=20261106-full-width-empty-2");
-@import url("./pages/borrow-mobile.css?v=20261006-borrow-empty-width-1");
+@import url("./components/app-loader.css");
+@import url("./pages/meeting-public-calendar.css");
+@import url("./components/empty-state.css");
+@import url("./pages/borrow-mobile.css");
 @import url("./pages/organization-catalog.css");
-@import url("./pages/about.css?v=20261108-about-timeline-10");
-@import url("./pages/budget-meeting.css?v=20261111-theme-25");
+@import url("./pages/about.css");
+@import url("./pages/budget-meeting.css");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {

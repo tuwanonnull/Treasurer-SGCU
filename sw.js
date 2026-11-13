@@ -1,22 +1,22 @@
-const CACHE_VERSION = "20261006-borrow-empty-width-1";
+const CACHE_VERSION = "dev";
 const CACHE_PREFIX = "treasurer-sgcu-shell";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
   "./",
   "./index.html",
-  "./css/style.css?v=20261006-borrow-empty-width-1",
-  "./js/integrations/app.firebase-bootstrap.js?v=20260423-1",
-  "./js/core/app.config.js?v=20260518-csv-refresh-2",
-  "./js/integrations/app.runtime-config.js?v=20260504-1",
-  "./js/core/app.core.js?v=20260627-project-budget-comparison-chart-1",
-  "./js/core/app.csv-export.js?v=20260504-1",
-  "./js/core/app.audit-log.js?v=20260623-audit-hardening-1",
-  "./js/core/app.dialog.js?v=20260606-mobile-glass-compact-2",
-  "./js/core/app.helpers.js?v=20261006-empty-states-1",
-  "./js/features/project/app.sorting-auth.js?v=20260627-project-budget-comparison-chart-1",
+  "./css/style.css",
+  "./js/integrations/app.firebase-bootstrap.js",
+  "./js/core/app.config.js",
+  "./js/integrations/app.runtime-config.js",
+  "./js/core/app.core.js",
+  "./js/core/app.csv-export.js",
+  "./js/core/app.audit-log.js",
+  "./js/core/app.dialog.js",
+  "./js/core/app.helpers.js",
+  "./js/features/project/app.sorting-auth.js",
   "./js/motion/app.motion.js",
-  "./js/core/app.feature-loader.js?v=20261006-borrow-empty-width-1",
-  "./js/core/app.init.js?v=20260827-meeting-scroll-offset-1",
+  "./js/core/app.feature-loader.js",
+  "./js/core/app.init.js",
   "./manifest.webmanifest",
   "./img/icons/treasurer-icon-192.png",
   "./img/icons/treasurer-icon-512.png"
