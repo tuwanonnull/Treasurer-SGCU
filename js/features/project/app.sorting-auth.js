@@ -2763,6 +2763,52 @@ function initAuthUI() {
     return startedAt;
   }
 
+  function renderLoginAccountIdentity(user) {
+    const avatar = document.getElementById("loginAccountAvatar");
+    const email = document.getElementById("loginAccountEmail");
+    if (email) {
+      email.textContent = user?.email || "";
+      email.hidden = !user?.email;
+    }
+    if (!avatar) return;
+    avatar.hidden = !user;
+    if (!user) {
+      delete avatar.dataset.identity;
+      avatar.replaceChildren();
+      return;
+    }
+    const label = (user.displayName || user.email || "?").trim();
+    const initial = Array.from(label)[0]?.toLocaleUpperCase() || "?";
+    const photoURLs = [...new Set([
+      user.providerData?.find(provider => provider.providerId === "google.com")?.photoURL,
+      user.photoURL
+    ].filter(value => {
+      try { return new URL(value).protocol === "https:"; }
+      catch { return false; }
+    }))];
+    const identity = JSON.stringify([user.uid, user.email, initial, photoURLs]);
+    // Approval/profile listeners refresh this view repeatedly; retain the same request.
+    if (avatar.dataset.identity === identity) return;
+    avatar.dataset.identity = identity;
+    avatar.textContent = initial;
+    function loadPhoto(index) {
+      if (avatar.dataset.identity !== identity) return;
+      if (index >= photoURLs.length) {
+        avatar.textContent = initial;
+        return;
+      }
+      const photo = document.createElement("img");
+      photo.alt = "";
+      photo.referrerPolicy = "no-referrer";
+      photo.addEventListener("error", () => {
+        if (photo.parentNode === avatar) loadPhoto(index + 1);
+      }, { once: true });
+      avatar.replaceChildren(photo);
+      photo.src = photoURLs[index];
+    }
+    loadPhoto(0);
+  }
+
   function refreshAuthDisplay(firebaseUser) {
     const hasFirebase = !!firebaseUser;
     staffAuthUser = hasFirebase ? getStaffProfileByEmail(firebaseUser.email) : null;
@@ -2789,6 +2835,7 @@ function initAuthUI() {
     if (logoutBtnEl) logoutBtnEl.style.display = isAuth ? "inline-block" : "none";
     if (mobileLogoutBtnEl) mobileLogoutBtnEl.style.display = isAuth ? "block" : "none";
     if (loginPageStatusEl) loginPageStatusEl.textContent = nameText;
+    renderLoginAccountIdentity(firebaseUser);
     if (loginPageGoogleBtnEl) {
       loginPageGoogleBtnEl.style.display = isAuth ? "none" : "inline-block";
     }

@@ -86,11 +86,18 @@
   html[data-theme="dark"] body :is(.theme-picker, .logo-subtitle, .footer-inner, .footer-affiliation, .footer-address, .footer-contact, .footer-copyright, .app-loader-detail, .app-loader-status, .app-loader-version) {
     color: var(--preview-muted);
   }
-  html[data-theme="dark"] body :is(.theme-picker .theme-cycle-button, .nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-bottom-item) {
-    color: var(--preview-text); background-color: var(--preview-surface); border-color: var(--preview-border);
+  html[data-theme="dark"] body :is(.theme-picker .theme-cycle-button, .nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-menu-logout, .burger, .staff-action-summary, .mobile-bottom-item) {
+    color: var(--preview-text); background: var(--preview-surface); border-color: var(--preview-border);
   }
-  html[data-theme="dark"] body :is(.nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-bottom-item):is(:hover, .active, [aria-expanded="true"]) {
+  html[data-theme="dark"] body :is(.nav-group-toggle, .nav-pill, .nav-group-menu a, .mobile-menu a, .mobile-menu summary, .mobile-menu-logout, .burger, .staff-action-summary, .mobile-bottom-item):is(:hover, :focus-visible, .active, [aria-expanded="true"]),
+  html[data-theme="dark"] body .nav-group.is-open .nav-group-toggle,
+  html[data-theme="dark"] body .mobile-menu-group[open] summary,
+  html[data-theme="dark"] body .staff-action-dropdown[open] .staff-action-summary {
     background: var(--preview-raised); color: var(--preview-accent);
+  }
+  html[data-theme="dark"] body .burger span { background: var(--preview-accent); }
+  html[data-theme="dark"] body :is(.nav-group-menu, .staff-action-menu) {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
   }
   html[data-theme="dark"] body :is(.footer-brand, .logo-title, .app-loader-title) {
     color: var(--preview-text);
@@ -847,7 +854,6 @@
 }
 
 @media screen {
-  html[data-theme="dark"] body .login-profile-actions { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
   html[data-theme="dark"] body .login-logout-btn { color: var(--preview-muted); background: transparent; border-color: var(--preview-border); }
   html[data-theme="dark"] body .login-logout-btn:hover { color: #ffb4b4; }
 }
@@ -863,8 +869,6 @@
   }
   html[data-theme="dark"] body .login-profile-status {
     --profile-status-success: #b8b8b8;
-    background: var(--preview-raised);
-    border-color: var(--preview-border);
   }
 }
 

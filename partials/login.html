@@ -50,7 +50,13 @@
                 <div class="login-grid">
                   <div id="loginGooglePanel" class="panel panel-hover login-card login-intro-card">
                     <h3 class="login-title login-account-title"><span class="login-signed-out-title">เข้าสู่ระบบด้วย Mail CHULA</span><span class="login-signed-in-title">บัญชีที่เข้าสู่ระบบ</span></h3>
-                    <div class="login-status login-greeting" id="loginPageStatus" aria-live="polite"></div>
+                    <div class="login-account-identity">
+                      <div id="loginAccountAvatar" class="login-account-avatar" aria-hidden="true" hidden></div>
+                      <div class="login-account-details">
+                        <div class="login-status login-greeting" id="loginPageStatus" aria-live="polite"></div>
+                        <div id="loginAccountEmail" class="login-account-email" hidden></div>
+                      </div>
+                    </div>
                     <button id="loginPageGoogleBtn" type="button" class="btn-primary w-full">เข้าสู่ระบบด้วย Mail CHULA</button>
                     <button id="loginPageLogoutBtn" type="button" class="login-logout-btn" style="display:none;">ออกจากระบบ</button>
                     <p class="login-access-note">สำหรับผู้ได้รับสิทธิ์ชั่วคราว: ใช้บัญชี Google ที่ตรงกับอีเมลที่ได้รับอนุญาต</p>
