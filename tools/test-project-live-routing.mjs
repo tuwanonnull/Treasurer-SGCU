@@ -25,10 +25,10 @@ console.log('Project navigation allows only the year 2568 treasurer and administ
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 for(const role of ['General','Staff']){
  const section=html.split(`id="desktopNav${role}"`)[1]?.split('id="desktopNav')[0];
- assert.ok(section?.includes('data-page="project-live-staff"'),`Desktop ${role} entry`);
+ assert.equal(section?.includes('data-page="project-live-staff"'),role==='Staff',`Desktop ${role} entry`);
 }
 for(const role of ['general','staff']){
  const groups=[...html.matchAll(/<details class="mobile-menu-group" data-mobile-nav="(general|staff)">([\s\S]*?)<\/details>/g)];
- assert.ok(groups.some(([,r,body])=>r===role && body.includes('data-page="project-live-staff"')),`Mobile ${role} entry`);
+ assert.equal(groups.some(([,r,body])=>r===role && body.includes('data-page="project-live-staff"')),role==='staff',`Mobile ${role} entry`);
 }
-console.log('Project entry is present in desktop and mobile navigation for both modes.');
+console.log('Project entry is present only in staff navigation on desktop and mobile; general navigation has no entry.');
