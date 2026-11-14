@@ -7,7 +7,7 @@
 - ต้นฉบับ ข้อมูลจริง สำรอง และ credential ต้องอยู่นอก repository ในพื้นที่ส่วนตัว ไม่ใช้ Git เก็บข้อมูลเหล่านี้
 - การจัดระเบียบนี้แยกคอมมิทเครื่องมือจากงาน UI ที่ค้างไว้ และไม่ถือเป็นการอนุมัติให้เผยแพร่ UI; ทดสอบ branch ก่อน merge main เสมอ
 
-ตรวจเครื่องมือด้วย `node --test tools/project-pilot/*.test.mjs` และ `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/project-pilot -p 'test_*.py'` ส่วน Emulator ต้องเปิดแยกและใช้โปรเจกต์ demo ตามคำสั่งของแต่ละเครื่องมือ พรีวิวหน้าเว็บด้วยข้อมูลจำลองใช้ `node tools/serve-project-live-preview.mjs`
+ตรวจเครื่องมือด้วย `node --test tools/project-pilot/*.test.mjs` และ `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/project-pilot -p 'test_*.py'` ส่วน Emulator ต้องเปิดแยกและใช้โปรเจกต์ demo ตามคำสั่งของแต่ละเครื่องมือ พรีวิวหน้าเว็บด้วยข้อมูลจำลองใช้ `node tools/preview/serve-project-live-preview.mjs`
 
 
 ข้อกำหนดผู้ใช้ล่าสุด (2026-11-14): เมนูจัดการโครงการอยู่เฉพาะโหมดสตาฟ ห้ามเพิ่มในเมนูทั่วไป ทั้ง desktop/mobile; งานรอบต่อไปต้องทดสอบ flow ที่เปลี่ยนบน branch และผ่าน checks ก่อน merge main (main deploy อัตโนมัติ) PR #84 เอาเมนูทั่วไปออกหลังตรวจ routing, build HTML และ CI ผ่าน

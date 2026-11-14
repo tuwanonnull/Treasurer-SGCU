@@ -4,16 +4,16 @@
 
 ## Current Sources
 
-ค่าตั้งต้นของ Google Sheets อยู่ที่ `js/core/app.config.js` ใน `SGCU_APP_CONFIG.sheets`
+ค่าตั้งต้นของ Google Sheets อยู่ที่ `web/js/core/app.config.js` ใน `SGCU_APP_CONFIG.sheets`
 
 | Key | ใช้ทำอะไร | Source ปัจจุบัน | โค้ดที่อ่าน |
 | --- | --- | --- | --- |
-| `projectSources` | รายชื่อชีต Project Status แยกตามปีการศึกษา และ contact sheet | Google Sheets CSV | `js/features/project/app.data.js` |
-| `orgStructure` | แผนผังทีมเหรัญญิกหน้า Home | Google Sheets CSV + `staffProfiles` บางส่วนจาก Firestore | `js/features/org/app.org.js` |
-| `downloads` | รายการเอกสารการเงินและลิงก์ดาวน์โหลด | Google Sheets CSV | `js/features/docs/app.downloads.js` |
-| `news` | ข่าวและประกาศ | Google Sheets CSV | `js/features/news/app.news.js` |
-| `orgFilters` | ประเภทองค์กร ชื่อฝ่าย/ชมรม รหัสองค์กร และข้อมูลเสริมสำหรับ PDF | Google Sheets CSV | `js/features/project/app.data.js`, `js/features/project/app.project-modal.js` |
-| `borrowAssets` | รายการพัสดุให้ยืม | Google Sheets CSV | `js/features/borrow/app.borrow-assets.js` |
+| `projectSources` | รายชื่อชีต Project Status แยกตามปีการศึกษา และ contact sheet | Google Sheets CSV | `web/js/features/project/app.data.js` |
+| `orgStructure` | แผนผังทีมเหรัญญิกหน้า Home | Google Sheets CSV + `staffProfiles` บางส่วนจาก Firestore | `web/js/features/org/app.org.js` |
+| `downloads` | รายการเอกสารการเงินและลิงก์ดาวน์โหลด | Google Sheets CSV | `web/js/features/docs/app.downloads.js` |
+| `news` | ข่าวและประกาศ | Google Sheets CSV | `web/js/features/news/app.news.js` |
+| `orgFilters` | ประเภทองค์กร ชื่อฝ่าย/ชมรม รหัสองค์กร และข้อมูลเสริมสำหรับ PDF | Google Sheets CSV | `web/js/features/project/app.data.js`, `web/js/features/project/app.project-modal.js` |
+| `borrowAssets` | รายการพัสดุให้ยืม | Google Sheets CSV | `web/js/features/borrow/app.borrow-assets.js` |
 
 ข้อมูล workflow ที่เป็นคำขอ/การอนุมัติหลายส่วนอยู่ใน Firestore แล้ว เช่น booking, borrow requests, budget requests, staff profiles และ user profiles
 

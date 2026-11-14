@@ -7,3 +7,7 @@ functions/.env*
 functions/.secret.local
 
 firestore-debug.log
+
+# Local emulator exports and archived development logs
+.local/
+firebase-export-*/

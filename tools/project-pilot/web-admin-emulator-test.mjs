@@ -24,9 +24,9 @@ try{
  await assert.rejects(call(admin,'GET',''),e=>e.status===403);
  await adminRef.create({uid:admin,role:'admin',email:'tuwanon.kimchiang@gmail.com',active:true});
  if(process.argv.includes('--browser')){
-  const partial=await readFile(new URL('../../partials/project-live-staff.html',import.meta.url),'utf8');
-  const script=await readFile(new URL('../../js/features/project/app.project-live.js',import.meta.url),'utf8');
-  const css=await readFile(new URL('../../css/pages/project-live.css',import.meta.url),'utf8');
+  const partial=await readFile(new URL('../../web/partials/project-live-staff.html',import.meta.url),'utf8');
+  const script=await readFile(new URL('../../web/js/features/project/app.project-live.js',import.meta.url),'utf8');
+  const css=await readFile(new URL('../../web/css/pages/project-live.css',import.meta.url),'utf8');
   server=createServer(async(req,res)=>{try{
    const url=new URL(req.url,'http://localhost');
    if(url.pathname.startsWith('/api')){let raw='';for await(const chunk of req)raw+=chunk;const result=await service.handle({authorization:req.headers.authorization,method:req.method,action:url.pathname.slice(4).replace(/^\//,''),body:raw?JSON.parse(raw):undefined,params:url.searchParams});res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;}

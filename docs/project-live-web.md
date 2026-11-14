@@ -26,7 +26,7 @@ The dedicated bucket `sgcu-project-private-departmentwebsite-5aec1` uses uniform
 
 `projectLiveBackup` runs at midnight and noon Bangkok time. A successful upload is downloaded and validated before writing `projectBackupStatus/2568`. Failed jobs retain failure status and retry. The first cloud backup was verified on 2026-11-14 at 06:46:28 UTC: 407 projects, zero financial audit events, checksum `2ea689657c13b9587b89fd1a7d9f16679facc2ed9716eea35fef0f048a6a4770`. It is an off-device copy in the same cloud project, not an independently administered disaster-recovery account.
 
-The frontend API URL is configured in `js/core/app.config.js`. Publish the website only after deploying and checking the API. Public assets exclude server code and Emulator exports; the service worker excludes authenticated and `/api/` requests.
+The frontend API URL is configured in `web/js/core/app.config.js`. Publish the website only after deploying and checking the API. Public assets exclude server code and Emulator exports; the service worker excludes authenticated and `/api/` requests.
 
 ## Verification
 
@@ -34,7 +34,7 @@ The frontend API URL is configured in `js/core/app.config.js`. Publish the websi
 npm run check
 npm run build
 npm --prefix functions test
-GCLOUD_PROJECT=demo-project-pilot FIRESTORE_EMULATOR_HOST=127.0.0.1:8187 node tools/test-project-live-web.mjs /absolute/private/approved-candidate-directory --browser
+GCLOUD_PROJECT=demo-project-pilot FIRESTORE_EMULATOR_HOST=127.0.0.1:8187 node tools/tests/test-project-live-web.mjs /absolute/private/approved-candidate-directory --browser
 ```
 
 The integration test creates isolated Emulator documents and deletes only its own fixtures. Browser testing uses a shared-auth stub and blocks external network access; it does not replace real Google-login acceptance testing. Verify both authorized accounts on the published site without making test balance changes.

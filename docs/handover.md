@@ -28,21 +28,44 @@
 
 ไฟล์สำคัญ:
 
-- `js/core/app.config.js`: config หลักของ sheets, Firestore collections, feature flags
-- `js/integrations/app.firebase-bootstrap.js`: Firebase initialization
-- `js/integrations/app.runtime-config.js`: runtime config จาก `appSettings/global`
-- `js/core/app.audit-log.js`: helper บันทึก activity log ลง `auditLogs`
+- `web/js/core/app.config.js`: config หลักของ sheets, Firestore collections, feature flags
+- `web/js/integrations/app.firebase-bootstrap.js`: Firebase initialization
+- `web/js/integrations/app.runtime-config.js`: runtime config จาก `appSettings/global`
+- `web/js/core/app.audit-log.js`: helper บันทึก activity log ลง `auditLogs`
 - `firestore.rules`: สิทธิ์อ่าน/เขียน Firestore
-- `tools/build-static.mjs`: build static output
+- `tools/build/build-static.mjs`: build static output
 - `docs/data-model.md`: รายละเอียด data source และ collection เป้าหมาย
 - `docs/migration-plan.md`: แผนย้ายข้อมูลจาก Sheets ไป Firestore
 - `docs/operations-monitoring.md`: คู่มือตั้ง budget alert, usage monitoring และ retention
+
+## การจัดเก็บไฟล์
+
+- `web/index.html` และ HTML หน้าเดี่ยวใน `web/`: จุดเข้าเว็บ ตัว build วางไว้ที่ root ของ `dist/` เพื่อรักษา URL เดิม
+- `web/partials/`: ส่วน HTML ที่ build นำมาประกอบเป็นหน้าเว็บ
+- `web/js/core/`, `web/js/integrations/`, `web/js/features/`, `web/js/motion/`: โค้ดพื้นฐาน การเชื่อมต่อ ฟีเจอร์ และแอนิเมชัน
+- `web/css/core/`, `web/css/components/`, `web/css/pages/`: สไตล์แยกตามหน้าที่
+- `web/img/` และ `web/THSarabunNew/`: รูปภาพและฟอนต์ที่เว็บใช้งาน
+- `functions/`: Firebase Functions และชุดทดสอบฝั่ง backend
+- `tools/build/`: สร้างเว็บจาก `web/` ไป `dist/`; `tools/lib/`: โค้ดร่วมของ build
+- `tools/checks/`: ตรวจ audit log และธีม
+- `tools/tests/`: ชุดทดสอบเว็บ
+- `tools/preview/`: เซิร์ฟเวอร์พรีวิวและหน้าเอกสารตัวอย่าง
+- `tools/emulator/`: seed ข้อมูลและเครื่องมือเปิดระบบทดสอบในเครื่อง
+- `tools/project-pilot/`: เครื่องมือโครงการ มีคู่มือและชุดทดสอบของตัวเอง
+- `docs/`: คู่มือระบบและการดูแลต่อ
+- `dist/`: ผลลัพธ์จาก `npm run build` ไม่แก้ไฟล์ในนี้โดยตรง
+- `.local/emulator-exports/`: เก็บโฟลเดอร์ export เดิมของ Emulator แยกตามชื่อเดิม (โฟลเดอร์ที่ว่างไม่ใช่ backup ที่กู้คืนได้)
+- `.local/logs/`: log ที่เก็บจาก root; log ของ Functions อยู่ใน `.local/logs/functions/`
+
+`.local/` ไม่เข้า Git และไม่ถูกสแกนหรือคัดลอกไป `dist/` โดยตัว build
+Firebase อาจสร้าง log ใหม่ที่ตำแหน่งเดิมเมื่อรันครั้งถัดไป ให้ย้ายมาเก็บหลังหยุดโปรเซสแล้ว โดยไม่เขียนทับ log เก่า
+ไฟล์ config ของ npm และ Firebase คงไว้ที่ root ตามตำแหน่งที่เครื่องมือใช้งาน ส่วน CNAME, robots.txt และ sitemap.xml อยู่ใน `web/` และถูกคัดลอกไป root ของ `dist/`
 
 ## Common Tasks
 
 ### เพิ่มหรือแก้ลิงก์ Google Sheets
 
-แก้ที่ `SGCU_APP_CONFIG.sheets` ใน `js/core/app.config.js`
+แก้ที่ `SGCU_APP_CONFIG.sheets` ใน `web/js/core/app.config.js`
 
 ถ้าเป็นลิงก์สำหรับ staff เปิดไปแก้ข้อมูล ให้แก้ที่ `SGCU_APP_CONFIG.managementLinks` ด้วย
 
@@ -134,7 +157,7 @@ appSettings/global
 }
 ```
 
-ตอนนี้ runtime config รองรับเฉพาะค่าที่ normalize ใน `js/integrations/app.runtime-config.js`
+ตอนนี้ runtime config รองรับเฉพาะค่าที่ normalize ใน `web/js/integrations/app.runtime-config.js`
 
 ## Firestore Collections
 
@@ -211,7 +234,7 @@ appSettings/global
 
 เช็กตามลำดับ:
 
-1. ลิงก์ใน `js/core/app.config.js` ยังเปิดแบบ published CSV ได้หรือไม่
+1. ลิงก์ใน `web/js/core/app.config.js` ยังเปิดแบบ published CSV ได้หรือไม่
 2. ชีตถูก unpublish หรือเปลี่ยน permission หรือไม่
 3. column order ในชีตเปลี่ยนจากที่โค้ดอ่านหรือไม่
 4. localStorage cache ยังเป็นข้อมูลเก่าหรือไม่
@@ -259,7 +282,7 @@ appSettings/global
 
 1. login เป็น staff แล้วหรือยัง
 2. `firestore.rules` อนุญาตอ่าน `auditLogs` สำหรับ staff หรือไม่
-3. workflow นั้นเรียก `window.SGCUAuditLog` หรือ helper ใน `js/core/app.audit-log.js` แล้วหรือไม่
+3. workflow นั้นเรียก `window.SGCUAuditLog` หรือ helper ใน `web/js/core/app.audit-log.js` แล้วหรือไม่
 4. ถ้า action สำเร็จแต่ log ไม่ขึ้น ให้ดู console เพราะ logging ถูกออกแบบให้ไม่ block workflow หลัก
 
 ## Long-term Direction
@@ -284,14 +307,14 @@ appSettings/global
 - **เลขเวอร์ชันที่ผู้ใช้เห็น** (`0.x.xx`): นับ revision จาก Git ตามรูปแบบเดิม
 - **รหัสรุ่นไฟล์** (`assetVersion`): hash จากเนื้อหาและชื่อไฟล์เว็บ ใช้กับ URL ของ assets และ cache ของ service worker ไฟล์เหมือนเดิมได้รหัสเดิม แม้ build คนละเวลา แก้ไฟล์ที่เกี่ยวข้องแล้วรหัสเปลี่ยน แม้ build ภายในนาทีเดียวกัน
 
-ไฟล์ที่ใช้คำนวณรหัสประกอบด้วย `js/`, `css/`, `img/`, `THSarabunNew/`, `partials/`, HTML ระดับราก, webmanifest, `sw.js` และตัว build ที่สร้าง output เอง การแก้เฉพาะเอกสารหรือโค้ด Cloud Functions ไม่เปลี่ยนรหัส assets
+ไฟล์ที่ใช้คำนวณรหัสประกอบด้วย `web/js/`, `web/css/`, `web/img/`, `web/THSarabunNew/`, `web/partials/`, HTML ระดับราก, webmanifest, `web/sw.js` และตัว build ที่สร้าง output เอง การแก้เฉพาะเอกสารหรือโค้ด Cloud Functions ไม่เปลี่ยนรหัส assets
 
 ### จุดที่ดูแล
 
-- `tools/build-static.mjs`: ประกอบ HTML/CSS, อ่านข้อมูล Git, ตรวจไฟล์ และสร้าง `dist/`
+- `tools/build/build-static.mjs`: ประกอบ HTML/CSS, อ่านข้อมูล Git, ตรวจไฟล์ และสร้าง `dist/`
 - `tools/lib/build-assets.mjs`: คำนวณ hash และใส่เวอร์ชันให้ลิงก์ รวม static/dynamic import ที่ใช้ path แบบ literal
-- `js/core/app.feature-loader.js`: กำหนดว่าหน้าไหนใช้สคริปต์ใด ใส่ path ปกติโดยไม่ต้องเขียน `?v=`
-- `sw.js`: กำหนดไฟล์ app shell; ค่า `dev` ใน source จะถูกแทนตอน build
+- `web/js/core/app.feature-loader.js`: กำหนดว่าหน้าไหนใช้สคริปต์ใด ใส่ path ปกติโดยไม่ต้องเขียน `?v=`
+- `web/sw.js`: กำหนดไฟล์ app shell; ค่า `dev` ใน source จะถูกแทนตอน build
 - `dist/build-info.json`: ดู `version`, `commit`, `dirty`, `assetVersion` ของ output ชุดนั้น
 
 HTML ระดับรากที่เพิ่มใหม่จะเข้ากระบวนการประกอบ include/ใส่เวอร์ชันและตรวจลิงก์โดยอัตโนมัติ ไม่ต้องเพิ่มชื่อหน้าในรายการ transform แยกอีก

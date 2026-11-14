@@ -5,19 +5,20 @@
   "type": "module",
   "scripts": {
     "meeting:emulators": "firebase emulators:start --only auth,firestore --project demo-budget-meeting --config firebase.budget-meeting-emulator.json",
-    "meeting:seed": "node tools/seed-budget-meeting-emulator.mjs",
-    "test:meeting:roster": "node tools/test-budget-meeting-roster.mjs",
-    "test:meeting:accounts": "node tools/test-budget-meeting-accounts.mjs",
-    "build": "node tools/build-static.mjs",
-    "check": "node tools/build-static.mjs --check && node --test tools/test-build-assets.mjs && node tools/check-audit-log.mjs && node tools/test-meeting-room-catalog.mjs && node tools/test-meeting-cancel-approval.mjs && node tools/test-meeting-manage-success.mjs && node tools/test-staff-access-catalog.mjs && node tools/test-organization-copy-selection.mjs && node tools/test-temporary-login-profile.mjs && node tools/test-staff-directory-placement.mjs && node tools/test-borrow-subscription.mjs && node tools/test-borrow-projects.mjs && node tools/test-borrow-submit.mjs && node tools/test-receipt-documents.mjs && node tools/test-project-live-routing.mjs",
-    "check:audit": "node tools/check-audit-log.mjs",
-    "test:staff-catalog": "node tools/test-staff-access-catalog.mjs",
-    "test:borrow": "node tools/test-borrow-request.mjs",
-    "test:borrow:local": "node tools/start-local-borrow-test.mjs",
+    "meeting:seed": "node tools/emulator/seed-budget-meeting-emulator.mjs",
+    "test:meeting:roster": "node tools/tests/test-budget-meeting-roster.mjs",
+    "test:meeting:accounts": "node tools/tests/test-budget-meeting-accounts.mjs",
+    "build": "node tools/build/build-static.mjs",
+    "check": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs && node tools/checks/check-audit-log.mjs && node tools/tests/test-meeting-room-catalog.mjs && node tools/tests/test-meeting-cancel-approval.mjs && node tools/tests/test-meeting-manage-success.mjs && node tools/tests/test-staff-access-catalog.mjs && node tools/tests/test-organization-copy-selection.mjs && node tools/tests/test-temporary-login-profile.mjs && node tools/tests/test-staff-directory-placement.mjs && node tools/tests/test-borrow-subscription.mjs && node tools/tests/test-borrow-projects.mjs && node tools/tests/test-borrow-submit.mjs && node tools/tests/test-receipt-documents.mjs && node tools/tests/test-project-live-routing.mjs",
+    "check:audit": "node tools/checks/check-audit-log.mjs",
+    "test:staff-catalog": "node tools/tests/test-staff-access-catalog.mjs",
+    "test:borrow": "node tools/tests/test-borrow-request.mjs",
+    "test:borrow:local": "node tools/emulator/start-local-borrow-test.mjs",
     "test:push": "npm --prefix functions test",
     "serve:dist": "python3 -m http.server 4173 --directory dist",
-    "preview:documents": "node tools/serve-receipt-preview.mjs",
-    "test:build": "node tools/build-static.mjs --check && node --test tools/test-build-assets.mjs"
+    "preview:documents": "node tools/preview/serve-receipt-preview.mjs",
+    "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs",
+    "preview:projects": "node tools/preview/serve-project-live-preview.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1"

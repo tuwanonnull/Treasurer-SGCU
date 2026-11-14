@@ -37,8 +37,8 @@ Current source: `SGCU_APP_CONFIG.sheets.news`
 
 Recommended implementation:
 
-- เพิ่ม `firestore.collections.newsItems` ใน `js/core/app.config.js`
-- เพิ่ม reader ใหม่ใน `js/features/news/app.news.js`
+- เพิ่ม `firestore.collections.newsItems` ใน `web/js/core/app.config.js`
+- เพิ่ม reader ใหม่ใน `web/js/features/news/app.news.js`
 - reader อ่าน `newsItems` ที่ `status == "published"`
 - ถ้า Firestore ว่างหรือ permission denied ให้ใช้ Google Sheets path เดิม
 - คง format `newsItems` ใน memory ให้เข้ากับ renderer เดิมก่อน
