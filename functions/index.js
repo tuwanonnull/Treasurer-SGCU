@@ -305,3 +305,6 @@ export const sendMeetingReminders = onSchedule({
     duplicates
   });
 });
+
+// Isolated project management API and offsite backups; no import or grants at startup.
+export { projectLiveApi, projectLiveBackup } from './project-live/cloud.mjs';

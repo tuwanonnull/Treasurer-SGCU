@@ -1,0 +1,19 @@
+<section class="page-view" data-page="project-live-staff">
+  <div class="page project-live-page">
+    <header><p class="page-subtitle">ฝ่ายเหรัญญิก · ข้อมูลใช้งานจริง</p><h1 class="page-title">จัดการโครงการปี 2568</h1><p>ใช้บัญชีที่เข้าสู่ระบบอยู่ การยืนยันบันทึกจะเปลี่ยนข้อมูลโครงการจริงพร้อมประวัติผู้ดำเนินการ</p></header>
+    <p data-live-id="message" role="status" aria-live="polite"></p>
+    <section data-live-id="data" hidden>
+      <form data-live-id="search" class="project-live-toolbar"><label>ค้นหาโครงการ<input data-live-id="query" type="search" maxlength="200"></label><button type="submit">ค้นหา / โหลดล่าสุด</button></form>
+      <p data-live-id="count"></p><p data-live-id="backup-status"></p>
+      <div class="project-live-toolbar"><button data-live-id="backup" type="button">ดาวน์โหลดชุดสำรองทั้งหมด</button><button data-live-id="history" type="button">ดูประวัติ</button></div>
+      <div data-live-id="events" aria-live="polite"></div><div data-live-id="projects"></div>
+      <nav class="project-live-toolbar" aria-label="เปลี่ยนหน้าโครงการ"><button data-live-id="previous" type="button">ก่อนหน้า</button><button data-live-id="next" type="button">ถัดไป</button></nav>
+      <section data-live-id="admin" hidden><h2>จัดการระบบสำหรับแอดมิน</h2>
+        <p>แอดมินดูและแก้ได้ทุกโครงการ ทุกการแก้ไขบันทึกด้วยบัญชีแอดมินจริง</p>
+        <button data-live-id="access-load" type="button">ตรวจสิทธิ์เหรัญญิก</button><p data-live-id="access-state" role="status"></p>
+        <form data-live-id="access-form"><label>สิทธิ์เหรัญญิก<select data-live-id="access-active"><option value="true">เปิดใช้งาน</option><option value="false">ระงับสิทธิ์</option></select></label><label>เหตุผลเปลี่ยนสิทธิ์<textarea data-live-id="access-reason" required minlength="3" maxlength="1000"></textarea></label><button type="submit">บันทึกสิทธิ์</button></form>
+        <details><summary>กู้คืนจากชุดสำรอง</summary><p>ระบบจะสำรองข้อมูลปัจจุบันก่อนกู้ลงชุดใหม่ และคงชุดเดิมไว้ตรวจสอบ</p><form data-live-id="restore-form"><label>ไฟล์สำรองข้อมูลจริง<input data-live-id="restore-file" type="file" accept="application/json,.json" required></label><label>เหตุผลกู้คืน<textarea data-live-id="restore-reason" required minlength="3" maxlength="1000"></textarea></label><button type="submit">ตรวจไฟล์และกู้คืน</button></form></details>
+      </section>
+    </section>
+  </div>
+</section>

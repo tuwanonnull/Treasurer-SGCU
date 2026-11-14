@@ -33,6 +33,7 @@
         "js/features/project/app.data.js"
       ],
       "treasurer-handover-staff": [],
+      "project-live-staff": ["js/features/project/app.project-live.js"],
       "dashboard-staff": [
         "js/features/project/app.project-ui.js",
         "js/features/project/app.advance-loan-pdf.js",

@@ -1377,6 +1377,12 @@ function hasNavigableStaffPages(profile) {
 }
 
 function getAllowedPagesForCurrentState() {
+  const withProjectLive = pages => {
+    const email = (window.sgcuAuth?.auth?.currentUser?.email || "").toLowerCase();
+    if (isUserAuthenticated && globalThis.SGCU_APP_CONFIG?.projectLive?.enabled && ["6534324223@student.chula.ac.th", "tuwanon.kimchiang@gmail.com"].includes(email)) pages.add("project-live-staff");
+    else pages.delete("project-live-staff");
+    return pages;
+  };
   const publicAllowed = new Set(["home", "about", "project-status", "news", "financial-docs", "login"]);
   const isAffairsProfile = currentUserProfileType === "affairs";
   if (!isUserAuthenticated) {
@@ -1422,7 +1428,7 @@ function getAllowedPagesForCurrentState() {
       yyAllowed.delete("borrow-assets");
       yyAllowed.delete("borrow-assets-staff");
     }
-    return yyAllowed;
+    return withProjectLive(yyAllowed);
   }
 
   if (staffViewMode !== "staff") {
@@ -1444,7 +1450,7 @@ function getAllowedPagesForCurrentState() {
     STAFF_FULL_ACCESS_PAGES.forEach((page) => allowed.add(page));
   }
 
-  return allowed;
+  return withProjectLive(allowed);
 }
 
 function getStaffProfileByEmail(email) {

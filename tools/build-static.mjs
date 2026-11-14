@@ -23,7 +23,13 @@ const copyIgnoreNames = new Set([
   "package.json",
   "package-lock.json",
   "partials",
-  "tools"
+  "tools",
+  "functions",
+  ".firebase",
+  ".firebaserc",
+  "firebase.json",
+  "firestore.rules",
+  "firestore.indexes.json"
 ]);
 
 const scanIgnoreNames = new Set([
@@ -35,7 +41,7 @@ const scanIgnoreNames = new Set([
 ]);
 
 function isIgnoredGeneratedDir(name) {
-  return /^dist(?:\s+\d+)?$/.test(name);
+  return /^dist(?:\s+\d+)?$/.test(name) || /^firebase-export-/.test(name);
 }
 
 const textFileExtensions = new Set([
