@@ -43,9 +43,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
+  if (request.method !== "GET" || request.headers.has("Authorization")) return;
   const requestUrl = new URL(request.url);
-  if (requestUrl.origin !== self.location.origin) return;
+  if (requestUrl.origin !== self.location.origin || requestUrl.pathname.startsWith("/api/")) return;
 
   const updateCache = async () => {
     const networkResponse = await fetch(request);

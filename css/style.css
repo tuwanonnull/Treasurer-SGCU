@@ -26,6 +26,7 @@
 @import url("./pages/organization-catalog.css");
 @import url("./pages/about.css");
 @import url("./pages/budget-meeting.css");
+@import url("./pages/project-live.css");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {

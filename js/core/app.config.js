@@ -40,6 +40,10 @@ const SGCU_APP_CONFIG = {
       budgetApprovalSettings: "global"
     }
   },
+  projectLive: {
+    enabled: true,
+    apiUrl: "https://asia-southeast1-departmentwebsite-5aec1.cloudfunctions.net/projectLiveApi"
+  },
   features: {
     borrowAssets: {
       useCsvAssetCatalog: true,
