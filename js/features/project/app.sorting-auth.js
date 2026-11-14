@@ -1577,6 +1577,12 @@ function updateNavForStaff(staffUser) {
   if (staffViewMode !== "staff") return;
 
   const allowedStaffPages = getAllowedStaffPagesByProfile(staffUser);
+  // This page is authorized independently of legacy staff position catalogs.
+  if (getAllowedPagesForCurrentState().has("project-live-staff")) {
+    allowedStaffPages.add("project-live-staff");
+  } else {
+    allowedStaffPages.delete("project-live-staff");
+  }
 
   navLinksAll.forEach((link) => {
     const page = link.dataset.page || "";
