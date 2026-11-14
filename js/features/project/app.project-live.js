@@ -4,7 +4,8 @@ const root=document.querySelector('.page-view[data-page="project-live-staff"]');
 if(!root || root.dataset.liveMounted)return;root.dataset.liveMounted='true';
 let datasetId=null;
 const $=id=>root.querySelector(`[data-live-id="${id}"]`), node=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
-let offset=0,query='',generation=0,busy=false;
+let offset=0,query='',generation=0,busy=false,matchedCount=0;
+function syncPagination(){ $('previous').disabled=busy || offset===0; $('next').disabled=busy || offset+25>=matchedCount; }
 const money=n=>n===null?'—':`${n<0?'-':''}${((BigInt(n)<0n?-BigInt(n):BigInt(n))/100n).toLocaleString('th-TH')}.${String((BigInt(n)<0n?-BigInt(n):BigInt(n))%100n).padStart(2,'0')}`;
 async function api(action='',body){
   const user=window.sgcuAuth?.auth?.currentUser;
@@ -15,10 +16,10 @@ async function api(action='',body){
   if(!response.ok){if([401,403].includes(response.status)){$('data').hidden=true;$('projects').replaceChildren();$('events').replaceChildren();}throw Error(data.error);}
   return data;
 }
-async function operation(task){if(busy)return;busy=true;const current=generation;root.querySelectorAll('button').forEach(b=>b.disabled=true);$('message').textContent='กำลังดำเนินการ…';try{await task(current);if(current===generation)$('message').textContent='ดำเนินการแล้ว';}catch(e){if(current===generation)$('message').textContent=e.message;}finally{busy=false;root.querySelectorAll('button').forEach(b=>b.disabled=false);root.querySelectorAll('[data-preview-required]').forEach(b=>b.disabled=true);}}
+async function operation(task){if(busy)return;busy=true;root.setAttribute('aria-busy','true');const current=generation;root.querySelectorAll('button').forEach(b=>b.disabled=true);$('message').textContent='กำลังดำเนินการ…';try{await task(current);if(current===generation)$('message').textContent='ดำเนินการแล้ว';}catch(e){if(current===generation)$('message').textContent=e.message;}finally{busy=false;root.setAttribute('aria-busy','false');root.querySelectorAll('button').forEach(b=>b.disabled=false);root.querySelectorAll('[data-preview-required]').forEach(b=>b.disabled=true);syncPagination();}}
 function field(form,text,element){const label=node('label',text);label.append(element);form.append(label);return element;}
 function editForm(p,state,status){
-  const form=node('form'),output=node('div');form.append(node('h3',status?'เปลี่ยนสถานะ':'แก้ยอดเงิน'));
+  const form=node('form'),output=node('div');output.setAttribute('aria-live','polite');form.append(node('h3',status?'เปลี่ยนสถานะ':'แก้ยอดเงิน'));
   let patch,controls=[];
   if(status){const group=field(form,'ช่องสถานะ',node('select')),value=field(form,'สถานะใหม่',node('select'));
     const groups=state.statusGroups.filter(g=>g.values.some(v=>v!==p.statuses[g.column] && state.projectStatusPermissions[p.id][g.column][v]==='direct'));
@@ -38,23 +39,30 @@ function editForm(p,state,status){
 }
 async function refresh(){const current=generation,state=await api(`?q=${encodeURIComponent(query)}&offset=${offset}`);if(current!==generation)return;
   $('data').hidden=false;$('admin').hidden=state.user.role!=='admin';datasetId=state.datasetId;$('events').replaceChildren();$('count').textContent=`พบ ${state.matchedCount} จาก ${state.totalCount} โครงการ · หน้า ${Math.floor(offset/25)+1}`;
+  matchedCount=state.matchedCount;
+  $('total').textContent=state.totalCount.toLocaleString('th-TH');$('matched').textContent=matchedCount.toLocaleString('th-TH');
+  $('page').textContent=`หน้า ${Math.floor(offset/25)+1} / ${Math.max(1,Math.ceil(matchedCount/25))}`;
+  $('clear').hidden=!query;$('empty').hidden=matchedCount!==0;$('history').setAttribute('aria-expanded','false');syncPagination();
   const b=state.automaticBackup;$('backup-status').textContent=b?.backupAt?`สำรองนอกเครื่องล่าสุด ${new Date(b.backupAt).toLocaleString('th-TH')} ${b.failed||b.overdue?'· ต้องตรวจสำรอง':''} · เก็บในพื้นที่ส่วนตัวบนคลาวด์`:'ยังไม่มีชุดสำรองอัตโนมัติที่ตรวจผ่าน';
   $('projects').replaceChildren();for(const p of state.projects){
     const card=node('details'),summary=node('summary'),code=node('span',p.code);
-    code.className='project-live-code';summary.append(code,node('span',p.name));card.append(summary);
+    code.className='project-live-code';const title=node('span',p.name);title.className='project-live-name';
+    const heading=node('span');heading.className='project-live-card-heading';heading.append(code,title);
+    const hint=node('span','ดูรายละเอียด / แก้ไข');hint.className='project-live-card-hint';summary.append(heading,hint);card.append(summary);
     const amounts=node('dl');amounts.className='project-live-money';
     for(const col of Object.keys(state.moneyLabels)){
       const item=node('div'),value=node('dd',money(p.money[col]));value.append(node('small','บาท'));
       item.append(node('dt',state.moneyLabels[col]),value);amounts.append(item);
     }
-    const statuses=node('div');statuses.className='project-live-statuses';
-    for(const g of state.statusGroups)statuses.append(node('p',`${g.label}: ${p.statuses[g.column]||'—'}`));
+    const statuses=node('span');statuses.className='project-live-statuses';
+    for(const g of state.statusGroups)statuses.append(node('span',`${g.label}: ${p.statuses[g.column]||'—'}`));
     const editors=node('div');editors.className='project-live-editors';editors.append(editForm(p,state,false),editForm(p,state,true));
-    card.append(amounts,statuses,editors);$('projects').append(card);
+    summary.append(statuses);card.append(amounts,editors);$('projects').append(card);
   }
 }
-$('search').onsubmit=e=>{e.preventDefault();query=$('query').value.trim();offset=0;operation(refresh);};$('previous').onclick=()=>{offset=Math.max(0,offset-25);operation(refresh);};$('next').onclick=()=>{offset+=25;operation(refresh);};
-$('history').onclick=()=>operation(async current=>{const result=await api('/history');if(current!==generation)return;$('events').replaceChildren();for(const event of result.audit.slice().reverse()){$('events').append(node('p',`${event.code} · ${({commit:'แก้ยอดเงิน',status:'เปลี่ยนสถานะ'})[event.action]||event.action} · ${event.actorName} · ${event.reason||''}`));}});
+$('clear').onclick=()=>{if(busy)return;$('query').value='';query='';offset=0;operation(refresh);};
+$('search').onsubmit=e=>{e.preventDefault();if(busy)return;query=$('query').value.trim();offset=0;operation(refresh);};$('previous').onclick=()=>{if(busy || offset===0)return;offset=Math.max(0,offset-25);operation(refresh);};$('next').onclick=()=>{if(busy || offset+25>=matchedCount)return;offset+=25;operation(refresh);};
+$('history').onclick=()=>{if(busy)return;if($('history').getAttribute('aria-expanded')==='true'){$('events').replaceChildren();$('history').setAttribute('aria-expanded','false');return;}operation(async current=>{const result=await api('/history');if(current!==generation)return;$('events').replaceChildren();$('history').setAttribute('aria-expanded','true');if(!result.audit.length)$('events').append(node('p','ยังไม่มีประวัติการแก้ไข'));for(const event of result.audit.slice().reverse()){$('events').append(node('p',`${event.code} · ${({commit:'แก้ยอดเงิน',status:'เปลี่ยนสถานะ'})[event.action]||event.action} · ${event.actorName} · ${event.reason||''}`));}});};
 $('backup').onclick=()=>operation(async current=>{const result=await api('/backup');if(current!==generation)return;const url=URL.createObjectURL(new Blob([JSON.stringify(result)],{type:'application/json'})),link=node('a');link.href=url;link.download='sgcu-year2568-live-backup.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 
 $('access-load').onclick=()=>operation(async current=>{const result=await api('/access');if(current!==generation)return;$('access-active').value=String(result.active);$('access-state').textContent=result.active?'เหรัญญิกเปิดใช้งานอยู่':'สิทธิ์เหรัญญิกถูกระงับ';});

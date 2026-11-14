@@ -53,6 +53,7 @@ try{
   assert.equal((await call(admin,'GET','')).projects[0].money.O,10001);
   await ui('history').click();await ui('events').locator('p').waitFor();assert.match(await ui('events').innerText(),/แอดมินระบบ/);
   const downloaded=page.waitForEvent('download');await ui('backup').click();validateLiveBackup(JSON.parse(await readFile(await (await downloaded).path(),'utf8')));
+  await ui('admin').locator('summary').first().click();
   await ui('access-load').click();await page.waitForFunction(()=>document.querySelector('[data-live-id="access-state"]').textContent==='เหรัญญิกเปิดใช้งานอยู่');
   await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('heading',{name:'จัดการโครงการปี 2568',exact:true}).isVisible());
   await adminRef.update({active:false});await page.getByRole('button',{name:'ค้นหา / โหลดล่าสุด'}).click();await ui('data').waitFor({state:'hidden'});assert.equal(await ui('projects').locator('details').count(),0);await adminRef.update({active:true});assert.deepEqual(errors,[]);
