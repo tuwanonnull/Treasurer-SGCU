@@ -39,7 +39,19 @@ function editForm(p,state,status){
 async function refresh(){const current=generation,state=await api(`?q=${encodeURIComponent(query)}&offset=${offset}`);if(current!==generation)return;
   $('data').hidden=false;$('admin').hidden=state.user.role!=='admin';datasetId=state.datasetId;$('events').replaceChildren();$('count').textContent=`พบ ${state.matchedCount} จาก ${state.totalCount} โครงการ · หน้า ${Math.floor(offset/25)+1}`;
   const b=state.automaticBackup;$('backup-status').textContent=b?.backupAt?`สำรองนอกเครื่องล่าสุด ${new Date(b.backupAt).toLocaleString('th-TH')} ${b.failed||b.overdue?'· ต้องตรวจสำรอง':''} · เก็บในพื้นที่ส่วนตัวบนคลาวด์`:'ยังไม่มีชุดสำรองอัตโนมัติที่ตรวจผ่าน';
-  $('projects').replaceChildren();for(const p of state.projects){const card=node('details'),summary=node('summary',`${p.code} · ${p.name}`);card.append(summary);for(const col of Object.keys(state.moneyLabels))card.append(node('p',`${state.moneyLabels[col]}: ${money(p.money[col])} บาท`));for(const g of state.statusGroups)card.append(node('p',`${g.label}: ${p.statuses[g.column]||'—'}`));card.append(editForm(p,state,false),editForm(p,state,true));$('projects').append(card);}
+  $('projects').replaceChildren();for(const p of state.projects){
+    const card=node('details'),summary=node('summary'),code=node('span',p.code);
+    code.className='project-live-code';summary.append(code,node('span',p.name));card.append(summary);
+    const amounts=node('dl');amounts.className='project-live-money';
+    for(const col of Object.keys(state.moneyLabels)){
+      const item=node('div'),value=node('dd',money(p.money[col]));value.append(node('small','บาท'));
+      item.append(node('dt',state.moneyLabels[col]),value);amounts.append(item);
+    }
+    const statuses=node('div');statuses.className='project-live-statuses';
+    for(const g of state.statusGroups)statuses.append(node('p',`${g.label}: ${p.statuses[g.column]||'—'}`));
+    const editors=node('div');editors.className='project-live-editors';editors.append(editForm(p,state,false),editForm(p,state,true));
+    card.append(amounts,statuses,editors);$('projects').append(card);
+  }
 }
 $('search').onsubmit=e=>{e.preventDefault();query=$('query').value.trim();offset=0;operation(refresh);};$('previous').onclick=()=>{offset=Math.max(0,offset-25);operation(refresh);};$('next').onclick=()=>{offset+=25;operation(refresh);};
 $('history').onclick=()=>operation(async current=>{const result=await api('/history');if(current!==generation)return;$('events').replaceChildren();for(const event of result.audit.slice().reverse()){$('events').append(node('p',`${event.code} · ${({commit:'แก้ยอดเงิน',status:'เปลี่ยนสถานะ'})[event.action]||event.action} · ${event.actorName} · ${event.reason||''}`));}});
