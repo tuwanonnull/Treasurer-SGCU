@@ -1,0 +1,90 @@
+import { chromium } from '@playwright/test';
+import { readFile, mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { createPilotServer } from './server.mjs';
+
+const source = await readFile(process.argv[2], 'utf8'); const snapshot = JSON.parse(source);
+const directory = await mkdtemp(path.join(tmpdir(), 'sgcu-finance-trial-ui-'));
+const trialDirectory = process.argv.includes('--persistent') ? path.join(directory, 'store') : null;
+let server = createPilotServer({ year68Snapshot: snapshot, trialDirectory });
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+let base = `http://127.0.0.1:${server.address().port}`;
+let browser;
+try {
+  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  const first = snapshot.projects[0]; const trialId = first.id.replace('YEAR68:', 'TEST68:');
+  const state = async () => (await page.request.get(base + '/api/year68/trial')).json();
+  const waitMessage = text => page.locator('#message').filter({ hasText: text }).waitFor();
+  const role = async value => { await page.getByLabel('บัญชีทดลอง', { exact: true }).selectOption(value); await waitMessage('เปิดชุดทดลองแล้ว'); };
+  const edit = async (amount, reason, action) => {
+    const card = page.locator('#list details').first();
+    if (!await card.evaluate(el => el.open)) await card.locator('summary').click();
+    await card.getByLabel(snapshot.moneyLabels.O, { exact: true }).fill(amount);
+    await card.getByLabel('เหตุผล', { exact: true }).fill(reason);
+    assert.equal(await card.getByRole('button', { name: action, exact: true }).isDisabled(), true);
+    await card.getByRole('button', { name: 'ดูผลก่อนบันทึก', exact: true }).click();
+    await card.getByText('ผลคำนวณก่อนบันทึก', { exact: true }).waitFor();
+    await card.getByRole('button', { name: action, exact: true }).click();
+  };
+  await page.goto(base + '/year68-trial'); await role('secretary');
+  await page.getByLabel('ค้นหาโครงการ / องค์กร', { exact: true }).fill(first.code);
+  await page.getByRole('button', { name: 'ค้นหา', exact: true }).click(); await waitMessage('โหลดผลค้นหาแล้ว');
+  const amount = ((first.money.O + 123) / 100).toFixed(2);
+  await edit(amount, 'ทดลองเลขาเสนอจากเบราว์เซอร์', 'เสนอให้เหรัญญิกตรวจ');
+  await waitMessage('ส่งคำขอแล้ว');
+  let current = await state(); assert.equal(current.projects.find(p => p.id === trialId).money.O, first.money.O);
+  assert.equal(current.requests.filter(r => r.state === 'pending').length, 1);
+  if (trialDirectory) {
+    const beforeRestart = current;
+    await new Promise(resolve => server.close(resolve));
+    server = createPilotServer({ year68Snapshot: snapshot, trialDirectory });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    base = `http://127.0.0.1:${server.address().port}`;
+    await page.goto(base + '/year68-trial'); await role('secretary');
+    current = await state(); assert.deepEqual(current.requests, beforeRestart.requests); assert.deepEqual(current.audit, beforeRestart.audit); assert.deepEqual(current.totals, beforeRestart.totals);
+    await page.getByLabel('ค้นหาโครงการ / องค์กร', { exact: true }).fill(first.code);
+    await page.getByRole('button', { name: 'ค้นหา', exact: true }).click(); await waitMessage('โหลดผลค้นหาแล้ว');
+  }
+  await role('head');
+  await page.getByRole('button', { name: 'อนุมัติคำขอในชุดทดลอง', exact: true }).click(); await waitMessage('อนุมัติและคำนวณยอดที่เกี่ยวข้องแล้ว');
+  current = await state(); assert.equal(current.totals.O, snapshot.totals.O + 123);
+  assert.equal(current.audit.length, 2);
+  await role('secretary');
+  await edit(((first.money.O + 456) / 100).toFixed(2), 'สร้างคำขอเพื่อทดสอบข้อมูลเก่า', 'เสนอให้เหรัญญิกตรวจ'); await waitMessage('ส่งคำขอแล้ว');
+  await role('head');
+  await edit(((first.money.O + 789) / 100).toFixed(2), 'เหรัญญิกแก้ตรงก่อนตรวจคำขอ', 'บันทึกในชุดทดลอง'); await waitMessage('บันทึกยอดและผลคำนวณในชุดทดลองแล้ว');
+  assert.equal(await page.getByRole('button', { name: 'อนุมัติคำขอในชุดทดลอง', exact: true }).isDisabled(), true);
+  await page.getByLabel('เหตุผลส่งกลับ', { exact: true }).fill('ข้อมูลเปลี่ยนแล้ว ขอให้เสนอใหม่');
+  await page.getByRole('button', { name: 'ส่งกลับคำขอ', exact: true }).click(); await waitMessage('ส่งกลับคำขอแล้ว');
+  current = await state(); assert.equal(current.totals.O, snapshot.totals.O + 789);
+  assert.equal(current.requests.filter(r => r.state === 'pending').length, 0);
+  await page.screenshot({ path: path.join(directory, 'desktop.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.locator('#list summary').first().click();
+  await page.locator('#list form').first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(directory, 'mobile.png') });
+  const beforeReset = await state();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'ล้างการทดลองและเริ่มจากสำเนาเดิม', exact: true }).click(); await waitMessage('เริ่มชุดทดลองใหม่แล้ว');
+  current = await state(); assert.deepEqual(current.totals, snapshot.totals); assert.equal(current.audit.length, 0);
+  if (trialDirectory) {
+    const savedBeforeReset = current.persistence.backups.find(b => !beforeReset.persistence.backups.some(old => old.id === b.id));
+    assert.ok(savedBeforeReset);
+    await page.getByLabel('ชุดสำรอง', { exact: true }).selectOption(savedBeforeReset.id);
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'กู้คืนชุดที่เลือก', exact: true }).click(); await waitMessage('กู้คืนชุดทดลองแล้ว');
+    current = await state(); assert.deepEqual(current.totals, beforeReset.totals); assert.deepEqual(current.requests, beforeReset.requests);
+    assert.equal(current.audit.at(-1).action, 'restore');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.locator('#recovery').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(directory, 'recovery-mobile.png') });
+  }
+  const readonly = await (await page.request.get(base + '/api/year68')).json(); assert.deepEqual(readonly.totals, snapshot.totals);
+  assert.deepEqual(errors, []); assert.equal(await readFile(process.argv[2], 'utf8'), source);
+  console.log(JSON.stringify({ result: 'PASS', persistent: !!trialDirectory, checks: 'secretary proposal, head approval/direct edit, stale request, rejection, totals, reset, desktop/mobile, source unchanged; persistent mode also verifies restart and restore', screenshotDirectory: directory }));
+} finally { if (browser) await browser.close(); await new Promise(resolve => server.close(resolve)); }

@@ -1,0 +1,44 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { createEmulatorIdentity } from './firebase-identity.mjs';
+import { loadProductionCandidate } from './production-candidate.mjs';
+import { acceptBaseline } from './approved-baseline.mjs';
+import { initializeLiveDataset, createLiveStore, validateLiveBackup } from './live-store.mjs';
+import { createLiveApiServer } from './live-api.mjs';
+const candidate=await loadProductionCandidate(process.argv[2]),acceptance=acceptBaseline(candidate),identity=createEmulatorIdentity(),db=identity.db;
+const datasetId=`year2568-browser-${randomUUID()}`,uid=`browser-${randomUUID()}`,users={[uid]:{id:uid,role:'head',name:'Browser test head'}};
+const root=db.collection('projectDatasets').doc(datasetId),grant=identity.grantRef(uid,2568);
+let server,browser;
+try{
+  await initializeLiveDataset({candidate,acceptance,users,datasetId,db});await root.update({active:true});await grant.create({uid,academicYear:2568,active:true,projectRole:'head',datasetId});
+  const store=await createLiveStore({candidate,acceptance,users,datasetId,db});
+  server=createLiveApiServer({authenticate:async header=>{assert.equal(header,'Bearer browser-test-only');return {authenticated:true,id:uid};},store});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}`;
+  browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/*',async route=>{
+    const url=route.request().url();
+    if(url.startsWith(base))return route.continue();
+    if(url.endsWith('/firebase-app.js'))return route.fulfill({contentType:'text/javascript',body:'export const initializeApp=()=>({});'});
+    if(url.endsWith('/firebase-auth.js'))return route.fulfill({contentType:'text/javascript',body:`const user={getIdToken:async()=> 'browser-test-only'};const auth={currentUser:null};export const getAuth=()=>auth;export const inMemoryPersistence={};export const setPersistence=async()=>{};export class GoogleAuthProvider{setCustomParameters(){}}export const signInWithPopup=async()=>{auth.currentUser=user;};export const signOut=async()=>{auth.currentUser=null;};`});
+    return route.abort();
+  });
+  await page.goto(base);await page.getByRole('button',{name:'เข้าสู่ระบบด้วย Google'}).click();await page.locator('#data').waitFor({state:'visible'});
+  assert.match(await page.locator('#count').innerText(),/407/);
+  let card=page.locator('#projects details').first();await card.locator('summary').click();
+  let form=card.locator('form').filter({has:page.getByRole('heading',{name:'แก้ยอดเงิน',exact:true})});
+  assert.equal(await form.getByRole('button',{name:'ยืนยันบันทึก'}).isEnabled(),false);
+  await form.getByLabel('งบอนุมัติ',{exact:true}).fill('100.01');await form.getByLabel('เหตุผล / หมายเหตุ').fill('ซ้อมบันทึกผ่านหน้าเว็บ');
+  await form.getByRole('button',{name:'ดูผลก่อนบันทึก'}).click();await page.waitForFunction(()=>document.querySelector('#message').textContent==='ดำเนินการแล้ว');
+  assert.equal(await form.getByRole('button',{name:'ยืนยันบันทึก'}).isEnabled(),true);
+  await form.getByRole('button',{name:'ยืนยันบันทึก'}).click();await page.waitForFunction(()=>document.querySelector('#message').textContent==='ดำเนินการแล้ว');
+  assert.equal((await store.query(uid)).projects[0].money.O,10001);
+  await page.getByRole('button',{name:'ดูประวัติ',exact:true}).click();await page.locator('#events p').waitFor();assert.match(await page.locator('#events').innerText(),/ซ้อมบันทึกผ่านหน้าเว็บ/);
+  const downloaded=page.waitForEvent('download');await page.getByRole('button',{name:'ดาวน์โหลดชุดสำรองทั้งหมด'}).click();const file=await downloaded;
+  validateLiveBackup(JSON.parse(await readFile(await file.path(),'utf8')));
+  await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('heading',{name:'โครงการปี 2568',exact:true}).isVisible());
+  await grant.update({active:false});await page.getByRole('button',{name:'ค้นหา / โหลดล่าสุด'}).click();await page.locator('#data').waitFor({state:'hidden'});
+  assert.equal(await page.locator('#projects details').count(),0);assert.deepEqual(errors,[]);
+  console.log('PASS: live UI login stub + real Emulator API, preview-required save, audit, downloaded backup validation, mobile heading, revoked grant hides data; no production calls');
+}finally{await browser?.close();if(server)await new Promise(resolve=>{server.close(resolve);server.closeIdleConnections();});await grant.delete();await db.recursiveDelete(root);await identity.close();}

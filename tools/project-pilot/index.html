@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ทดลองจัดการโครงการ | SGCU</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+<div class="notice">พื้นที่ทดลอง • ข้อมูลจำลองเท่านั้น • ปิดเซิร์ฟเวอร์แล้วข้อมูลจะหาย</div>
+<main>
+  <p><a href="/year68">เปิดสำเนาข้อมูลจริงปี 68 แบบอ่านอย่างเดียว →</a></p>
+  <header><div><p class="eyebrow">SGCU · ฝ่ายเหรัญญิก</p><h1>จัดการโครงการ</h1><p>ทดลองเส้นทางการทำงาน ตั้งแต่รับเอกสารจนถึงตรวจอนุมัติยอด</p></div><span class="year">ปีการศึกษา 2568</span></header>
+  <section class="toolbar" aria-label="บัญชีทดลอง"><label for="user">ทดลองในบทบาท</label><select id="user"><option value="">เลือกบัญชีทดลอง</option></select><button id="refresh" type="button">รีเฟรชข้อมูล</button><a id="export" href="/api/export" hidden>ส่งออกข้อมูลทดลอง</a></section>
+  <p id="roleHelp">เลือกบัญชีเพื่อเริ่มทดลอง แต่ละบัญชีจะได้รับสิทธิ์ต่างกัน</p>
+  <p id="message" role="status" aria-live="polite"></p>
+  <section class="metrics" aria-label="ภาพรวม"><div><span>โครงการที่ดูได้</span><strong id="projectCount">—</strong></div><div><span>ยอดอนุมัติรวม (บาท)</span><strong id="total">—</strong></div><div><span>คำขอรอตรวจ</span><strong id="pendingCount">—</strong></div></section>
+  <section><h2>โครงการและเอกสาร</h2><p class="muted">สิทธิ์ตามตารางที่กำหนด • ผู้ช่วยแก้ได้เฉพาะโครงการตัวเอง • ข้อมูลเริ่มต้นเป็นข้อมูลจำลอง</p><div id="projects" class="grid"><p>ยังไม่ได้เลือกบัญชีทดลอง</p></div></section>
+  <section><h2>คำขอแก้ยอดเงินและสถานะ</h2><p class="muted">คำขอจะมีผลเมื่อเหรัญญิกอนุมัติเท่านั้น หากข้อมูลเปลี่ยนหลังเสนอ ต้องส่งคำขอใหม่</p><div id="requests" class="grid"></div></section>
+  <section><h2>ประวัติการเปลี่ยนแปลง</h2><div id="audit" class="audit"></div></section>
+  <footer>รุ่นทดลองนี้ยังไม่เชื่อม Google Sheets หรือ Firebase และยังไม่ใช่ระบบสำรองรายวัน<br>สถานะยังไม่เชื่อมสูตรเงิน • Q1 และ Y8 เปลี่ยนเฉพาะเมื่อเลยกำหนดตามตารางภาพรวมโครงการ โดยใช้วันที่จำลองที่เหรัญญิกกำหนด</footer>
+</main>
+</body></html>

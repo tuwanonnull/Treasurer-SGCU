@@ -1,0 +1,20 @@
+# Local run evidence, not reproducible source. Keep existing files on this machine.
+/candidate-rehearsal-result.json
+/concurrency-results.json
+/drive-roundtrip-recovery-result.json
+/import-plan.json
+/recovery-drill-result.json
+/usage-estimate.json
+
+# Private inputs, checkpoints, credentials and generated caches must stay local.
+/snapshot.json
+/manifest.json
+/acceptance.json
+/approved-import-plan.json
+/backup*.json
+/cloud-backup-*.json
+/*-receipt.json
+/.env*
+/service-account*.json
+__pycache__/
+*.pyc

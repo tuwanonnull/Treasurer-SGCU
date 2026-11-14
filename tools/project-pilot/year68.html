@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ตรวจข้อมูลปี 68 | SGCU</title><link rel="stylesheet" href="/style.css"><script type="module" src="/year68.js"></script></head>
+<body class="year68"><div class="notice">สำเนาข้อมูลปี 68 • อ่านอย่างเดียวในเครื่องนี้ • ไม่ได้เชื่อมฐานข้อมูลจริง</div><main>
+<header><div><p class="eyebrow">SGCU · ตรวจสอบก่อนย้ายข้อมูล</p><h1>โครงการปี 68</h1><p>สถานะเดิมจากไฟล์ · ยอดเงินคำนวณและปัดเป็น 2 ตำแหน่ง</p></div><a href="/">กลับหน้าทดลองสิทธิ์</a></header>
+<section class="toolbar"><label for="user">บัญชีทดลอง</label><select id="user"><option value="">เลือกบัญชี</option><option value="head">เหรัญญิก (ทดลอง)</option><option value="secretary">เลขานุการ (ทดลอง)</option></select></section>
+<p class="muted">ปี 68 เป็นข้อมูลที่จบแล้ว ใช้ทดลองในเครื่องเท่านั้น ชื่อผู้รับผิดชอบอ้างอิง AI “ผู้สอบตรวจสอบเอกสาร” ไม่ผูกกับบัญชีจริง</p>
+<p id="message" role="status" aria-live="polite"></p>
+<p><a href="/year68-trial">เปิดชุดทดลองบันทึกและอนุมัติยอด (แยกจากสำเนานี้)</a></p>
+<section id="data" hidden>
+<div class="metrics"><div><span>โครงการทั้งหมด</span><strong id="count"></strong></div><div><span>ยอดอนุมัติรวมทั้งปี (บาท)</span><strong id="approved"></strong></div><div><span>ยอดใช้จริงรวมทั้งปี (บาท)</span><strong id="actual"></strong></div></div>
+<p class="muted">สูตรเงินหลักตรงกับค่าบันทึกหลังปัด 2 ตำแหน่ง โดยถือเลขเอกสาร “-” ว่าไม่มีเอกสาร ยังไม่ยืนยันข้อมูลล่าสุดจากชีตภายนอก</p>
+<section class="toolbar"><label for="reviewer">ตรวจโครงการแยกตามชื่อใน AI</label><select id="reviewer"><option value="all">ทุกชื่อ</option></select><p id="assignment-summary" class="muted"></p></section>
+<p class="muted">รายชื่อนี้ใช้ตรวจการมอบหมายเท่านั้น ยังไม่ใช่การให้สิทธิ์บัญชี ชื่อที่สะกดต่างกันจะไม่ถูกรวมอัตโนมัติ</p>
+<form id="search" class="toolbar"><label for="query">ค้นหาโครงการ / องค์กร / ผู้ตรวจเอกสาร</label><input id="query" type="search" maxlength="200"><button type="submit">ค้นหา</button></form>
+<p id="results" aria-live="polite"></p><div id="list"></div>
+<nav class="toolbar" aria-label="เปลี่ยนหน้า"><button id="previous" type="button">ก่อนหน้า</button><span id="page"></span><button id="next" type="button">ถัดไป</button></nav>
+</section><footer>ช่องว่างแสดง “—” และยังไม่ถูกแทนด้วยศูนย์ • ยอดติดลบแสดงตามความหมายเดิม • ไม่รันกฎเปลี่ยนสถานะอัตโนมัติกับข้อมูลย้อนหลัง</footer>
+</main></body></html>

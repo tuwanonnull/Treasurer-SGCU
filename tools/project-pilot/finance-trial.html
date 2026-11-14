@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ทดลองบันทึกยอด | SGCU</title><link rel="stylesheet" href="/style.css"><script type="module" src="/finance-trial.js"></script></head>
+<body class="year68"><div class="notice" id="storage-notice">ชุดทดลองจากปี 68 • เลือกบัญชีเพื่อดูสถานะการบันทึก • ไม่ใช่ข้อมูลจริง</div><main>
+<header><div><p class="eyebrow">SGCU · ทดลองขั้นตอนเงินและสถานะ</p><h1>เสนอและอนุมัติยอด</h1><p>ยอดและสถานะที่เกี่ยวข้องเปลี่ยนพร้อมกัน · ร้อยละและเงื่อนไขเอกสารยังใช้ค่าจากไฟล์</p></div><a href="/year68">ดูสำเนาต้นทาง</a></header>
+<section class="toolbar"><label for="user">บัญชีทดลอง</label><select id="user"><option value="">เลือกบัญชี</option><option value="head">เหรัญญิก (ทดลอง)</option><option value="secretary">เลขานุการ (ทดลอง)</option><option value="assistantA">ผู้ช่วย A (ทดลอง)</option><option value="assistantB">ผู้ช่วย B (ทดลอง)</option></select><button id="refresh" type="button">โหลดข้อมูลล่าสุด</button></section>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="data" hidden>
+<p id="trial-scope" class="muted"></p>
+<div class="metrics"><div><span>โครงการในชุดทดลอง</span><strong id="count"></strong></div><div><span>ยอดอนุมัติรวมชุดทดลอง (บาท)</span><strong id="approved"></strong></div><div><span>ยอดใช้จริงรวมชุดทดลอง (บาท)</span><strong id="actual"></strong></div></div>
+<h2>คำขอรอตรวจ</h2><div id="requests"></div>
+<h2>โครงการ</h2><form id="search" class="toolbar"><label for="query">ค้นหาโครงการ / องค์กร</label><input id="query" type="search" maxlength="200"><button type="submit">ค้นหา</button></form>
+<p id="results"></p><div id="list"></div><nav class="toolbar" aria-label="เปลี่ยนหน้า"><button id="previous" type="button">ก่อนหน้า</button><span id="page"></span><button id="next" type="button">ถัดไป</button></nav>
+<h2>ประวัติชุดทดลอง</h2><p class="muted">แสดง 50 เหตุการณ์ล่าสุด การส่งกลับคำขอไม่เปลี่ยนยอดที่บันทึก</p><div id="audit"></div>
+<section id="portable-backup" hidden><h2>ดาวน์โหลดชุดสำรอง</h2><p>รวมข้อมูลตั้งต้นของชุดทดลอง ยอด สถานะ ผู้รับผิดชอบจำลอง คำขอ และประวัติทั้งหมดในไฟล์เดียว เพื่อย้ายหรือกู้คืนชุดทดลองในโฟลเดอร์ใหม่</p><button id="download-backup" type="button">ดาวน์โหลดชุดสำรองทั้งหมด</button><p class="muted">ไฟล์มีข้อมูลโครงการ เก็บในพื้นที่ส่วนตัว เช่น Google Drive ของคุณ การดาวน์โหลดไม่ได้อัปโหลดไป Drive ให้อัตโนมัติ</p></section>
+<section class="toolbar"><button id="reset" type="button">ล้างการทดลองและเริ่มจากสำเนาเดิม</button><span class="muted">ล้างยอดทดลอง คำขอ และประวัติในชุดนี้เท่านั้น</span></section>
+<section id="recovery" hidden><h2>กู้คืนชุดทดลอง</h2><p>เก็บชุดสำรองก่อนเปลี่ยนข้อมูลล่าสุด 20 ชุดในเครื่องเดียวกัน การกู้คืนจะแทนที่ยอด คำขอ และประวัติด้วยชุดที่เลือก พร้อมสำรองข้อมูลปัจจุบันก่อน</p><label for="backup">ชุดสำรอง</label><select id="backup"></select><button id="restore" type="button">กู้คืนชุดที่เลือก</button><p class="muted">ยังไม่ใช่การสำรองนอกเครื่อง หากเครื่องหรือดิสก์เสียอาจสูญเสียทั้งข้อมูลและชุดสำรอง</p></section>
+</section><footer>บัญชีเลือกสลับได้เพื่อทดลอง ไม่ใช่ระบบยืนยันตัวตนจริง · ไม่เชื่อม Firestore และไม่เขียนไฟล์ปี 68 · ช่องว่างแยกจากศูนย์ ผลคำนวณติดลบได้ตามสูตรเดิม</footer>
+</main></body></html>
