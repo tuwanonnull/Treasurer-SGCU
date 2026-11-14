@@ -42,3 +42,7 @@ The integration test creates isolated Emulator documents and deletes only its ow
 ## Rollback
 
 Disable `projectLive.enabled` and republish to hide the main-site entry. To revoke administrator access set only their `projectSystemAdmins` document's `active` to false. Do not delete datasets or reset grants to roll back a frontend release. Existing local tooling fixed to `year2568-initial` must be pointed at the active dataset after a cloud restore. Preserve verified backups and the immutable source.
+
+## Release workflow
+
+User preference (2026-11-14): keep the project menu in staff navigation only, on both desktop and mobile. Develop on a feature branch, test the actual affected user flow and run the applicable checks before merging into `main`. A push to `main` publishes the website; production must not be the first place a change is tested.
