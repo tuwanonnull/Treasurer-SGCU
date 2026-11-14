@@ -1,3 +1,4 @@
+import { filterLiveProjects } from './query-filters.mjs';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { createFinanceTrial } from './finance-trial.mjs';
@@ -59,9 +60,9 @@ export async function createLiveStore(options) {
       return db.runTransaction(async tx => {
         const role = await authorize(tx, uid);
         const overview = (await tx.get(c.overview)).data(); fail(overview, 409, 'ข้อมูลสรุปไม่ครบ');
-        const rows = JSON.parse(overview.payload), q = (params.get('q') || '').trim().slice(0, 200).toLocaleLowerCase('th-TH');
-        const matched = rows.filter(row => { const p = c.sources.get(row.id); fail(p, 409, 'ข้อมูลสรุปไม่ตรงกับต้นฉบับ'); return [p.code,p.name,p.organization].some(v => String(v).toLocaleLowerCase('th-TH').includes(q)); });
-        const requested = Number(params.get('offset') || 0), offset = Number.isSafeInteger(requested) && requested >= 0 ? requested : 0;
+        const rows = JSON.parse(overview.payload);
+        const sources = rows.map(row => { const p = c.sources.get(row.id); fail(p, 409, 'ข้อมูลสรุปไม่ตรงกับต้นฉบับ'); return {...p, id: row.id}; });
+        const {matched, offset, filterOptions} = filterLiveProjects(sources, params);
         const views = [];
         for (const row of matched.slice(offset, offset + 25)) {
           const saved = (await tx.get(c.projectRef(row.id))).data(); fail(saved, 409, 'ข้อมูลโครงการไม่ครบ');
@@ -69,7 +70,7 @@ export async function createLiveStore(options) {
         }
         const template = createFinanceTrial(c.snapshot, { users: c.modelUsers, projectIdPrefix: prefix }).query(uid);
         return { ...template, storage: 'firestore-live', user: {...template.user,role}, sandboxOnly: false, datasetId: options.datasetId, revision: `live-${overview.sequence}`,
-          totalCount: rows.length, matchedCount: matched.length, offset, projects: views.flatMap(v => v.projects),
+          totalCount: rows.length, matchedCount: matched.length, offset, filterOptions, projects: views.flatMap(v => v.projects),
           totals: Object.fromEntries(Object.keys(c.snapshot.totals).map(col => { const sum = rows.reduce((n,r) => n + BigInt(r.money[col] ?? 0), 0n); fail(sum <= 9007199254740991n && sum >= -9007199254740991n, 409, 'ยอดรวมเกินขอบเขต'); return [col, Number(sum)]; })),
           projectStatusPermissions: Object.assign({}, ...views.map(v => v.projectStatusPermissions)), requests: [], audit: [], auditLoaded: false };
       });

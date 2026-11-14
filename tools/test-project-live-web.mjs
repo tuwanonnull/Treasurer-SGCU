@@ -45,18 +45,19 @@ try{
   await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base);const ui=id=>page.locator(`[data-live-id="${id}"]`);
   await ui('data').waitFor({state:'visible'});assert.match(await ui('count').innerText(),/407/);assert.equal(await ui('admin').isVisible(),true);
-  const card=ui('projects').locator('details').first();await card.locator('summary').click();const form=card.locator('form').filter({has:page.getByRole('heading',{name:'แก้ยอดเงิน',exact:true})});
+  await ui('projects').locator('button').first().click();const form=ui('modal').locator('form').filter({has:page.getByRole('heading',{name:'แก้ยอดเงิน',exact:true})});
   await form.getByLabel('งบอนุมัติ',{exact:true}).fill('100.01');await form.getByLabel('เหตุผล / หมายเหตุ').fill('ซ้อมแอดมินผ่านหน้าเว็บหลัก');
   assert.equal(await form.getByRole('button',{name:'ยืนยันบันทึก'}).isEnabled(),false);
   await form.getByRole('button',{name:'ดูผลก่อนบันทึก'}).click();await page.waitForFunction(()=>document.querySelector('[data-live-id="message"]').textContent==='ดำเนินการแล้ว');
   await form.getByRole('button',{name:'ยืนยันบันทึก'}).click();await page.waitForFunction(()=>document.querySelector('[data-live-id="message"]').textContent==='ดำเนินการแล้ว');
   assert.equal((await call(admin,'GET','')).projects[0].money.O,10001);
+  await ui('modal-close').click();
   await ui('history').click();await ui('events').locator('p').waitFor();assert.match(await ui('events').innerText(),/แอดมินระบบ/);
   const downloaded=page.waitForEvent('download');await ui('backup').click();validateLiveBackup(JSON.parse(await readFile(await (await downloaded).path(),'utf8')));
   await ui('admin').locator('summary').first().click();
   await ui('access-load').click();await page.waitForFunction(()=>document.querySelector('[data-live-id="access-state"]').textContent==='เหรัญญิกเปิดใช้งานอยู่');
   await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('heading',{name:'จัดการโครงการปี 2568',exact:true}).isVisible());
-  await adminRef.update({active:false});await page.getByRole('button',{name:'ค้นหา / โหลดล่าสุด'}).click();await ui('data').waitFor({state:'hidden'});assert.equal(await ui('projects').locator('details').count(),0);await adminRef.update({active:true});assert.deepEqual(errors,[]);
+  await adminRef.update({active:false});await page.getByRole('button',{name:'ค้นหา / โหลดล่าสุด'}).click();await ui('data').waitFor({state:'hidden'});assert.equal(await ui('projects').locator('button').count(),0);await adminRef.update({active:true});assert.deepEqual(errors,[]);
   console.log('PASS: main partial mounts with navigation present; shared login, admin edit preview/commit, audit, backup, access, mobile and revocation');
  }
  const first=await call(admin,'GET','');assert.equal(first.user.role,'admin');assert.equal(first.totalCount,407);
