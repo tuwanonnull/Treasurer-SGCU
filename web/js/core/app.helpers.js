@@ -609,6 +609,12 @@ function extractProjectsFromRows(dataRows, headerRow, sourceYear = "") {
         lastWorkDateObj,
         closeDueDateObj,
 
+        // Read-only workbook context; these fields are not part of live financial writes.
+        workbookDetails: Object.fromEntries(Object.entries({
+          A:0,D:3,I:8,J:9,K:10,S:18,T:19,AA:26,AB:27,AF:31,AH:33,
+          AL:37,AM:38,AN:39,AO:40,AP:41,AQ:42,AR:43,AS:44,AT:45,AU:46,AV:47,AW:48,AX:49,AY:50,BB:53,BJ:61,BK:62
+        }).map(([column,index])=>[column,(row[index] ?? '').toString().trim()])),
+
         approvalStatus: statusMainRaw,
         councilSessionText,
         councilMeetingNo: councilMeetNo,

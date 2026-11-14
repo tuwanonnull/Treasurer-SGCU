@@ -80,7 +80,7 @@ body.project-live-modal-open { overflow: hidden; }
 .project-live-modal .modal-title { margin: 0; font-size: 18px; font-weight: 500; overflow-wrap: anywhere; }
 .project-live-modal .modal-close { flex-shrink: 0; }
 .project-live-modal-body { overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding: 4px; }
-.project-live-modal-body > h3 { margin: 18px 0 10px; font-size: 14px; font-weight: 500; }
+.project-live-modal-body > h3, .project-live-modal-body > section > h3 { margin: 18px 0 10px; font-size: 14px; font-weight: 500; }
 .project-live-modal-body > p { font-size: 12px; color: #6b7280; }
 .project-live-modal .project-live-money { padding: 0; }
 .project-live-modal .project-live-editors { padding: 0; }
@@ -94,3 +94,289 @@ body.project-live-modal-open { overflow: hidden; }
  .project-live-detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
  .project-live-modal .modal-title { font-size: 16px; }
 }
+
+.project-live-action-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 16px; border: 1px solid var(--theme-border); border-radius: 16px; background: #fff; }
+.project-live-action-bar h3 { margin: 0 0 4px; font-size: 14px; font-weight: 500; }
+.project-live-action-bar p, .project-live-draft-note { margin: 0; color: #6b7280; font-size: 12px; }
+.project-live-draft-note { margin: 12px 0; }
+.project-live-modal .project-live-single-editor { display: block; }
+.project-live-single-editor form { max-width: 720px; margin-inline: auto; background: #fff; }
+@media (max-width:760px) {
+ .project-live-action-bar .project-live-toolbar { width: 100%; }
+ .project-live-action-bar button { flex: 1; }
+}
+
+/* Complete project record: shared theme, distinct reading and editing surfaces. */
+.project-live-source-note { margin: 12px 0 16px; font-size: 11px; line-height: 1.7; color: #64748b; }
+.project-live-detail-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+.project-live-detail-metrics > div { padding: 16px; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; }
+.project-live-detail-metrics > div:first-child { border-color: var(--theme-border); background: var(--theme-pink-50); }
+.project-live-detail-metrics span { display: block; color: #64748b; font-size: 11px; }
+.project-live-detail-metrics strong { display: block; margin-top: 8px; color: #1f2937; font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.project-live-detail-metrics .is-negative strong { color: #b91c1c; }
+.project-live-info-layout { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.project-live-info-card { min-width: 0; padding: 20px; border: 1px solid #e5e7eb; border-radius: 18px; background: #fff; }
+.project-live-info-card.is-wide { grid-column: 1 / -1; }
+.project-live-info-card > header { display: flex; gap: 12px; align-items: start; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; }
+.project-live-section-number { display: grid; place-items: center; flex: 0 0 32px; height: 32px; border-radius: 10px; color: var(--theme-pink-700); background: var(--theme-pink-50); font-size: 12px; }
+.project-live-info-card h3 { margin: 0 0 3px; font-size: 14px; font-weight: 500; }
+.project-live-info-card header p { margin: 0; color: #64748b; font-size: 11px; }
+.project-live-info-card .project-live-detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 16px; margin: 0; }
+.project-live-info-card.is-wide .project-live-detail-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.project-live-info-card .project-live-detail-status { display: inline-block; padding: 4px 8px; border-radius: 8px; background: var(--theme-pink-50); color: var(--theme-pink-800); font-size: 12px; }
+.project-live-modal [data-live-id="modal-overview"] > .project-live-action-bar { margin-top: 0; background: #fff; }
+@media(max-width:760px) {
+ .project-live-detail-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+ .project-live-detail-metrics > div { padding: 12px; }
+ .project-live-detail-metrics strong { font-size: 15px; }
+ .project-live-info-layout { grid-template-columns: minmax(0,1fr); gap: 12px; }
+ .project-live-info-card { padding: 16px; }
+ .project-live-info-card.is-wide .project-live-detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:380px) {
+ .project-live-info-card .project-live-detail-grid, .project-live-info-card.is-wide .project-live-detail-grid { grid-template-columns: minmax(0,1fr); }
+}
+
+.project-live-modal .project-live-inline-status { margin: 12px 0 18px; }
+.project-live-inline-status form { max-width: none; border-color: var(--theme-border); background: #fff; }
+
+.project-hub-tabs { margin: 0 0 18px; max-width: 100%; flex-wrap: wrap; }
+.project-hub-documents { margin-top: 0; }
+.project-hub-documents .panel { margin-top: 0; }
+
+.project-live-single-editor form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 16px; }
+.project-live-single-editor form > :is(h3,p,div), .project-live-single-editor form > label:has(textarea) { grid-column: 1 / -1; }
+.project-live-single-editor form > label { margin: 0; }
+.project-live-single-editor form > button { margin: 0; min-height: 40px; }
+.project-live-single-editor label small { font-size: 11px; color: #64748b; font-weight: 400; }
+.project-live-current-status { margin: 0; padding: 10px 12px; border-radius: 10px; background: #f8fafc; font-size: 12px; color: #475569; }
+.project-live-review h4 { margin: 0 0 10px; font-size: 13px; font-weight: 500; }
+.project-live-review-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--theme-border); }
+.project-live-review-row strong { font-weight: 500; }
+.project-live-review-after { color: var(--theme-pink-800); font-weight: 500; }
+@media(max-width:600px){
+ .project-live-single-editor form { grid-template-columns: minmax(0,1fr); }
+ .project-live-review-row { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+ .project-live-review-row strong { grid-column: 1 / -1; }
+}
+
+.project-live-page .project-live-single-editor form > label { margin: 0; }
+.project-live-single-editor form > button { grid-column: 1 / -1; justify-self: start; }
+.project-live-review:empty { display: none; }
+@media(max-width:600px){.project-live-single-editor form > button { justify-self: stretch; }}
+
+/* Keep editing beside the record the user is reading. */
+.project-live-info-card > header { flex-wrap: wrap; }
+.project-live-section-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.project-live-section-actions button { min-height: 36px; font-size: 12px; }
+.project-live-info-card .project-live-single-editor form { grid-template-columns: minmax(0,1fr); padding: 14px; }
+.project-live-info-card.is-wide .project-live-single-editor form { grid-template-columns: repeat(2,minmax(0,1fr)); }
+[data-live-form-message]:empty { display: none; }
+@media(max-width:600px){
+ .project-live-info-card.is-wide .project-live-single-editor form { grid-template-columns: minmax(0,1fr); }
+ .project-live-section-actions button { flex: 1; }
+}
+
+/* Project record workspace: permanent navigation and contextual forms. */
+.project-live-modal { width: min(1200px,calc(100% - 40px)); height: 92dvh; max-height: 92dvh; padding: 0; border-radius: 26px; background: radial-gradient(circle at top left,#fdf2ff,#fff); }
+.project-live-modal .modal-header { margin: 0; padding: 22px 26px; border: 0; border-bottom: 1px solid var(--theme-border); border-radius: 0; background: #fff; box-shadow: none; }
+.project-live-modal .modal-title { font-size: 20px; line-height: 1.5; }
+.project-live-modal .page-meta { margin: 5px 0 0; color: #64748b; }
+.project-live-modal .project-live-modal-message { margin: 0; border-radius: 0; }
+.project-live-page .project-live-section-nav { display: flex; flex: 0 0 auto; justify-content: flex-start; gap: 6px; padding: 10px 24px; overflow-x: auto; background: #fff; border-bottom: 1px solid #e5e7eb; }
+.project-live-section-nav button { flex: 0 0 auto; border: 0; border-radius: 8px; padding: 9px 12px; background: transparent; color: #475569; font: inherit; font-size: 12px; }
+.project-live-section-nav button:hover,.project-live-section-nav button:focus-visible { background: var(--theme-pink-50); color: var(--theme-pink-700); }
+.project-live-modal-body { padding: 22px 26px 32px; scroll-padding-top: 16px; }
+.project-live-action-bar { border: 0; padding: 0 0 16px; border-radius: 0; }
+.project-live-modal [data-live-id="modal-overview"] > .project-live-action-bar { background: transparent; }
+.project-live-detail-metrics { gap: 0; border: 1px solid var(--theme-border); border-radius: 14px; overflow: hidden; background: #fff; }
+.project-live-detail-metrics > div { border: 0; border-radius: 0; border-right: 1px solid #f1f5f9; padding: 18px; }
+.project-live-detail-metrics strong { font-size: 21px; }
+.project-live-info-layout { grid-template-columns: minmax(0,1fr); gap: 18px; }
+.project-live-info-card { border-radius: 20px; padding: 22px; box-shadow: 0 10px 28px rgba(148,163,184,.18); }
+.project-live-info-card > header { align-items: center; gap: 12px; margin-bottom: 20px; }
+.project-live-info-card h3 { font-size: 14px; font-weight: 600; }
+.project-live-info-card .project-live-detail-grid,.project-live-info-card.is-wide .project-live-detail-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px 24px; }
+.project-live-detail-grid dt { font-size: 12px; }
+.project-live-detail-grid dd { font-size: 13px; line-height: 1.65; }
+.project-live-section-actions { width: auto; margin-left: auto; }
+.project-live-info-card.is-editing { display: grid; grid-template-columns: minmax(0,1fr) 360px; column-gap: 28px; align-items: start; border-color: var(--theme-border); }
+.project-live-info-card.is-editing > header { grid-column: 1/-1; }
+.project-live-info-card.is-editing > .project-live-detail-grid { grid-column: 1; grid-row: 2; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.project-live-info-card.is-editing > .project-live-editors { grid-column: 2; grid-row: 2; position: sticky; top: 0; margin: 0; }
+.project-live-info-card .project-live-single-editor form,.project-live-info-card.is-wide .project-live-single-editor form { grid-template-columns: minmax(0,1fr); padding: 18px; gap: 14px; background: var(--theme-pink-50); }
+.project-live-other-money { grid-column: 1/-1; border-block: 1px solid var(--theme-border); padding: 10px 0; }
+.project-live-other-money summary { cursor: pointer; font-size: 12px; color: var(--theme-pink-700); }
+.project-live-page .project-live-other-money label { margin-top: 12px; }
+.project-live-editors form > .project-live-form-footer { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--theme-border); border-radius: 0; background: #fff; }
+.project-live-info-card .project-live-editors form > .project-live-form-footer { background: var(--theme-pink-50); }
+.project-live-form-footer button { margin: 0; min-height: 42px; flex: 1 1 130px; font-size: 12px; }
+.project-live-form-footer button:last-child { flex-basis: 100%; }
+.project-live-info-card .project-live-review-row { grid-template-columns: 1fr 1fr; }
+.project-live-info-card .project-live-review-row strong { grid-column: 1/-1; }
+@media(max-width:900px){
+ .project-live-info-card.is-editing { grid-template-columns: minmax(0,1fr); }
+ .project-live-info-card.is-editing > .project-live-editors { grid-column: 1; grid-row: 2; position: static; margin-bottom: 22px; }
+ .project-live-info-card.is-editing > .project-live-detail-grid { grid-row: 3; }
+}
+@media(max-width:600px){
+ .project-live-modal { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; }
+ .project-live-modal .modal-header { padding: 16px; }
+ .project-live-modal .modal-title { font-size: 16px; }
+ .project-live-page .project-live-section-nav { padding: 8px 12px; }
+ .project-live-modal-body { padding: 16px 12px 24px; }
+ .project-live-detail-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .project-live-detail-metrics > div { padding: 14px; }
+ .project-live-detail-metrics strong { font-size: 17px; }
+ .project-live-info-card { padding: 16px; }
+ .project-live-info-card .project-live-detail-grid,.project-live-info-card.is-wide .project-live-detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 12px; }
+ .project-live-section-actions { width: 100%; margin: 0; }
+ .project-live-info-card .project-live-single-editor form { padding: 14px; }
+}
+
+.project-live-modal .modal-close { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--theme-border); border-radius: 50%; background: #fff; font-size: 20px; }
+.project-live-section-nav button[aria-current="location"] { background: var(--theme-pink-50); color: var(--theme-pink-700); font-weight: 500; }
+
+/* Match the Project Status modal surfaces, section markers and theme controls. */
+.project-live-modal .modal-header { background: transparent; }
+.project-live-modal .modal-title { font-size: 18px; font-weight: 600; }
+.project-live-page .project-live-section-nav { background: rgba(255,255,255,.86); border-color: var(--theme-border); }
+.project-live-section-nav button { border-radius: 999px; transition: background var(--motion-fast),color var(--motion-fast); }
+.project-live-section-nav button[aria-current="location"] { background: var(--theme-pink-100); color: var(--theme-pink-800); }
+.project-live-section-number.modal-section-icon { flex-basis: 36px; height: 36px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.project-live-info-card > header { border-color: var(--theme-border); }
+.project-live-info-card header p { color: #9ca3af; }
+.project-live-detail-metrics { border-radius: 20px; box-shadow: 0 8px 24px rgba(148,163,184,.12); }
+.project-live-detail-metrics strong { font-size: 20px; font-weight: 500; }
+.project-live-detail-metrics > div:first-child { background: #fff; }
+.project-live-info-card .project-live-single-editor form,.project-live-info-card.is-wide .project-live-single-editor form { border-radius: 18px; background: linear-gradient(160deg,var(--theme-pink-50),#fff 65%); }
+.project-live-info-card .project-live-editors form > .project-live-form-footer { background: transparent; }
+.project-live-file-link { color: var(--theme-pink-700); text-decoration-color: var(--theme-pink-300); text-underline-offset: 3px; }
+.project-live-page .project-live-modal :is(input,select,textarea):focus { border-color: var(--theme-pink-400); box-shadow: 0 0 0 3px var(--theme-focus); }
+html[data-theme="dark"] .project-live-modal { background: var(--preview-bg); color: var(--preview-text); }
+html[data-theme="dark"] .project-live-modal :is(.modal-header,.project-live-section-nav,.project-live-info-card,.project-live-detail-metrics,.project-live-detail-metrics>div,.project-live-single-editor form,.modal-close) { background: var(--preview-surface); border-color: var(--preview-border); color: var(--preview-text); box-shadow: none; }
+html[data-theme="dark"] .project-live-modal :is(.project-live-detail-metrics strong,.project-live-detail-grid dd,.project-live-info-card h3,.project-live-editors h3) { color: var(--preview-text); }
+html[data-theme="dark"] .project-live-modal :is(.page-meta,.project-live-source-note,.project-live-action-bar p,.project-live-info-card header p,.project-live-detail-grid dt,.project-live-detail-metrics span,.project-live-editors label,.project-live-editors small) { color: var(--preview-muted); }
+html[data-theme="dark"] .project-live-modal :is(input,select,textarea) { background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-modal :is(.project-live-current-status,.project-live-detail-status,.project-live-review,.project-live-modal-message) { background: var(--preview-raised); color: var(--preview-text); }
+html[data-theme="dark"] .project-live-modal :is(.project-live-section-nav button,.project-live-file-link,.project-live-other-money summary,.project-live-review-after) { color: var(--preview-accent); }
+html[data-theme="dark"] .project-live-modal .project-live-section-nav button:is(:hover,[aria-current="location"]) { background: var(--preview-raised); }
+html[data-theme="dark"] .project-live-modal :is(.project-live-info-card>header,.project-live-other-money,.project-live-form-footer,.project-live-review-row) { border-color: var(--preview-border); }
+@media(max-width:600px){
+ .project-live-modal .modal-title { font-size: 16px; }
+ .project-live-detail-metrics strong { font-size: 17px; }
+}
+
+/* One record category at a time, with grouped label/value rows. */
+.project-live-page .project-live-section-nav { margin: 12px 24px 0; padding: 5px; border: 1px solid var(--theme-border); border-radius: 999px; background: var(--theme-pink-50); }
+.project-live-section-nav [role="tab"] { flex: 1 0 auto; min-height: 40px; padding: 9px 16px; }
+.project-live-section-nav [aria-selected="true"] { background: #fff; color: var(--theme-pink-700); box-shadow: 0 2px 8px var(--theme-focus); font-weight: 500; }
+.project-live-modal .project-live-info-card .project-live-detail-groups { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); gap: 20px 28px; align-items: start; }
+.project-live-detail-groups > .project-live-field-group:nth-child(3):last-child { grid-column: 1/-1; }
+.project-live-detail-groups > .project-live-field-group:nth-child(3):last-child .project-live-field-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); column-gap: 28px; }
+.project-live-field-list .project-live-field-wide { grid-column: 1/-1; }
+.project-live-info-card.is-editing > .project-live-detail-groups { grid-template-columns: minmax(0,1fr); }
+.project-live-info-card.is-editing .project-live-field-group:nth-child(3):last-child .project-live-field-list { grid-template-columns: minmax(0,1fr); }
+.project-live-field-group { min-width: 0; }
+.project-live-field-group h4 { margin: 0; padding: 0 0 10px; font-size: 13px; font-weight: 500; color: var(--theme-pink-800); border-bottom: 1px solid var(--theme-border); }
+.project-live-field-list { margin: 0; }
+.project-live-field-list > div { display: grid; grid-template-columns: minmax(120px,.8fr) minmax(0,1fr); gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid #f1f5f9; }
+.project-live-field-list dt { color: #6b7280; font-size: 12px; }
+.project-live-field-list dd { margin: 0; color: #111827; font-size: 13px; }
+.project-live-field-list .project-live-detail-status { justify-self: start; }
+html[data-theme="dark"] .project-live-section-nav [aria-selected="true"] { background: var(--preview-raised); color: var(--preview-accent); box-shadow: none; }
+html[data-theme="dark"] .project-live-field-group h4 { color: var(--preview-accent); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-field-list > div { border-color: var(--preview-border); }
+@media(max-width:600px){
+ .project-live-page .project-live-section-nav { margin: 10px 12px 0; }
+ .project-live-section-nav [role="tab"] { flex: 0 0 auto; }
+ .project-live-field-list > div { grid-template-columns: minmax(0,.85fr) minmax(0,1fr); gap: 12px; }
+}
+
+/* Give the record more room without shrinking touch targets or form controls. */
+.project-live-modal .modal-header { padding: 16px 24px; }
+.project-live-modal-body { padding: 18px 24px 24px; }
+.project-live-detail-metrics { margin-bottom: 16px; }
+.project-live-detail-metrics > div { padding: 12px 18px; }
+.project-live-detail-metrics strong { margin-top: 4px; }
+.project-live-info-card { padding: 18px 20px; }
+.project-live-info-card > header { padding-bottom: 12px; margin-bottom: 16px; }
+@media(max-width:600px){
+ .project-live-modal .modal-header { padding: 14px 16px; }
+ .project-live-modal-body { padding: 12px; }
+ .project-live-info-card { padding: 14px; }
+ .project-live-detail-metrics > div { padding: 10px 12px; }
+ .project-live-modal .project-live-info-card .project-live-detail-groups { grid-template-columns: minmax(0,1fr); gap: 18px; }
+ .project-live-detail-groups > .project-live-field-group:nth-child(3):last-child .project-live-field-list { grid-template-columns: minmax(0,1fr); }
+ .project-live-field-list > .project-live-field-wide { grid-template-columns: minmax(0,1fr); gap: 4px; }
+}
+
+/* Dashboard-style tabs and quieter record cards. */
+.project-live-modal .modal-header { border-bottom: 0; }
+.project-live-modal .modal-close { border: 0; background: transparent; box-shadow: none; }
+.project-live-modal .modal-close:hover { color: var(--theme-pink-700); }
+.project-live-page .project-live-section-nav.tabs { width: auto; min-width: 0; align-self: stretch; margin: 0 24px; padding: 8px; gap: 2px; border: 1px solid rgba(226,232,240,.86); background: rgba(255,255,255,.88); box-shadow: 0 12px 34px rgba(15,23,42,.08); backdrop-filter: blur(14px); }
+.project-live-section-nav .tab-btn { flex: 1 0 auto; padding: 5px 10px; min-height: 36px; font-size: 11px; font-weight: 400; color: #be185d; background: transparent; box-shadow: none; opacity: .75; }
+.project-live-section-nav .tab-btn.is-active { background: #ffe4f1; color: #be185d; box-shadow: none; opacity: 1; }
+.project-live-section-nav .tab-btn:hover { background: #fdf2f8; }
+.project-live-section-nav .tab-btn.is-active:hover { background: #ffe4f1; }
+.project-live-detail-metrics { box-shadow: none; border-color: #e5e7eb; border-radius: 16px; }
+.project-live-detail-metrics > div:first-child { background: #fff; }
+.project-live-info-card { box-shadow: none; border-radius: 16px; }
+.project-live-info-card > header { border-bottom: 0; padding-bottom: 0; margin-bottom: 18px; }
+.project-live-field-group { background: #f9fafb; border-radius: 12px; padding: 14px 16px; }
+.project-live-field-group h4 { border-bottom: 0; color: #374151; padding-bottom: 8px; }
+.project-live-field-list > div { border-bottom: 0; padding: 8px 0; }
+.project-live-field-list dd { font-weight: 400; }
+.project-live-modal .project-live-info-card .project-live-detail-groups { gap: 14px; }
+html[data-theme="dark"] .project-live-modal .modal-close { background: transparent; border: 0; }
+html[data-theme="dark"] .project-live-page .project-live-section-nav.tabs { background: var(--preview-surface); border-color: var(--preview-border); box-shadow: none; }
+html[data-theme="dark"] .project-live-modal .project-live-section-nav .tab-btn { color: var(--preview-accent); background: transparent; }
+html[data-theme="dark"] .project-live-modal .project-live-section-nav .tab-btn:is(.is-active,:hover) { background: var(--preview-raised); }
+html[data-theme="dark"] .project-live-field-group { background: var(--preview-raised); }
+html[data-theme="dark"] .project-live-field-group h4 { color: var(--preview-text); }
+@media(max-width:600px){
+ .project-live-page .project-live-section-nav.tabs { margin: 0 12px; }
+ .project-live-field-group { padding: 12px; }
+}
+
+/* Shared row tracks keep the two detail columns aligned, including wrapped values. */
+.project-live-field-list > div { min-height: 44px; border-bottom: 1px solid #e5e7eb; align-items: center; }
+.project-live-field-list > div:last-child { border-bottom: 0; }
+.project-live-field-group { border: 1px solid #e5e7eb; background: #fff; }
+.project-live-field-list { display: grid; grid-auto-rows: minmax(44px,1fr); }
+.project-live-modal .project-live-info-card .project-live-detail-groups { align-items: stretch; }
+@media(min-width:1100px){
+ .project-live-modal .project-live-info-card:not(.is-editing) .project-live-detail-groups { grid-template-rows: auto repeat(var(--record-rows),minmax(44px,1fr)); row-gap: 0; }
+ .project-live-info-card:not(.is-editing) .project-live-paired-group { display: grid; grid-template-rows: subgrid; grid-row: span var(--record-span); }
+ .project-live-info-card:not(.is-editing) .project-live-paired-group > .project-live-field-list { grid-row: 2/-1; grid-template-rows: subgrid; grid-auto-rows: auto; }
+ .project-live-detail-groups > .project-live-field-group:nth-child(3):last-child { margin-top: 14px; }
+}
+html[data-theme="dark"] .project-live-field-group,html[data-theme="dark"] .project-live-field-list > div { border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-field-group { background: var(--preview-surface); }
+@media(min-width:1100px){
+ .project-live-info-card:not(.is-editing) .project-live-paired-group { padding-block: 0; border: 0; box-shadow: inset 0 0 0 1px #e5e7eb; }
+ .project-live-info-card:not(.is-editing) .project-live-paired-group h4 { padding-top: 14px; }
+ html[data-theme="dark"] .project-live-info-card:not(.is-editing) .project-live-paired-group { box-shadow: inset 0 0 0 1px var(--preview-border); }
+}
+
+/* Keep the project list and operation feedback consistent in both themes. */
+.project-live-table { border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background: #fff; }
+.project-live-table .project-live-columns { border-top: 0; }
+.project-live-table .project-live-row:last-child { border-bottom: 0; }
+.project-live-table .project-live-row:focus-visible { outline-offset: -3px; }
+html[data-theme="dark"] .project-live-page [data-live-id="message"],
+html[data-theme="dark"] .project-live-page .project-live-columns { background: var(--preview-raised); color: var(--preview-text); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-page .project-live-table { background: var(--preview-surface); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-page .project-live-row { color: var(--preview-text); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-page .project-live-row:hover { background: var(--preview-raised); }
+html[data-theme="dark"] .project-live-page .project-live-code { color: var(--preview-accent); }
+
+/* Related workflows share a tab while their local editing controls stay beside the data. */
+.project-live-category { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; min-width: 0; }
+.project-live-follow-up { min-width: 0; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; }
+.project-live-follow-up > summary { padding: 16px 20px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--theme-pink-700); }
+.project-live-follow-up > .project-live-info-card { border: 0; border-top: 1px solid #e5e7eb; border-radius: 0 0 16px 16px; }
+html[data-theme="dark"] .project-live-follow-up { background: var(--preview-surface); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-live-follow-up > summary { color: var(--preview-accent); }
+html[data-theme="dark"] .project-live-follow-up > .project-live-info-card { border-color: var(--preview-border); }

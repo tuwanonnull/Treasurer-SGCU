@@ -10,6 +10,10 @@
   const message = document.getElementById("documentSignerSettingsMessage");
   if (!form || !yearInput || !viceRectorInput || !treasurerInput || !treasurerPhoneInput || !presidentInput || !saveButton || !message) return;
 
+  if(form.dataset.signersMounted)return;form.dataset.signersMounted='true';
+  const canEdit=()=>['tuwanon.kimchiang@gmail.com','treasurer.sgcu68@gmail.com'].includes((window.sgcuAuth?.auth?.currentUser?.email||'').toLowerCase()) || (typeof isHeadStaffProfile==='function' && typeof staffAuthUser!=='undefined' && isHeadStaffProfile(staffAuthUser));
+  function refreshPermissions(){const allowed=canEdit();form.querySelectorAll('input:not(#documentSignerAcademicYear),button').forEach(el=>el.disabled=!allowed);if(!allowed)showMessage('ดูการตั้งค่ารายปีได้ การบันทึกต้องมีสิทธิ์หัวหน้าสตาฟ');}
+  window.sgcuDocumentSigners={refreshPermissions};
   const defaults = {
     treasurerName: "นายธุวานนท์ กิ้มเฉี้ยง",
     treasurerPhone: "094-969-6495",
@@ -68,6 +72,7 @@
 
   const save = async (event) => {
     event.preventDefault();
+    if(!canEdit()){showMessage('การบันทึกต้องมีสิทธิ์หัวหน้าสตาฟ','#b91c1c');return;}
     const year = yearInput.value.trim();
     const viceRectorName = viceRectorInput.value.trim();
     const treasurerName = treasurerInput.value.trim();
@@ -111,15 +116,17 @@
       console.error("document signer settings save failed", error);
       showMessage("บันทึกไม่สำเร็จ กรุณาตรวจสอบสิทธิ์หัวหน้าสตาฟ", "#b91c1c");
     } finally {
-      saveButton.disabled = false;
+      refreshPermissions();
     }
   };
 
-  yearInput.value = getAcademicYear();
+  yearInput.value = form.closest('[data-page="project-live-staff"]')?'2568':getAcademicYear();
   yearInput.addEventListener("change", fillYear);
   form.querySelectorAll('input[name="documentApprovalMeetingBody"]').forEach((input) => {
     input.addEventListener("change", syncMeetingToggle);
   });
   form.addEventListener("submit", save);
-  void loadSettings();
+  window.addEventListener('sgcu:project-hub-tab',e=>{if(e.detail?.tab==='documents')refreshPermissions();});
+  window.sgcuAuth?.onAuthStateChanged(window.sgcuAuth.auth,()=>refreshPermissions());
+  void loadSettings().finally(refreshPermissions);
 })();

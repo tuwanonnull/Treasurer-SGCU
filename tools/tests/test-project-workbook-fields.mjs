@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+const context=vm.createContext({console,Date,Intl});
+vm.runInContext(await readFile(new URL('../../web/js/core/app.helpers.js',import.meta.url),'utf8'),context);
+const columns=['A','D','I','J','K','S','T','AA','AB','AF','AH','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','BB','BJ','BK'];
+const index=col=>[...col].reduce((n,c)=>n*26+c.charCodeAt(0)-64,0)-1;
+const row=Array(78).fill(''),header=Array(78).fill('');header[1]='รหัสโครงการ';header[2]='ชื่อโครงการ';header[14]='งบประมาณที่ได้รับอนุมัติ(100%)';row[1]='SGCU-TEST';row[2]='ทดสอบคอลัมน์';row[4]='หน่วยงาน';row[5]='ฝ่าย';
+for(const c of columns)row[index(c)]=`source-${c}`;
+context.rows=[row];context.header=header;
+const result=vm.runInContext('extractProjectsFromRows(rows,header,"2568")[0]',context);
+for(const c of columns)assert.equal(result.workbookDetails[c],`source-${c}`,c);
+assert.equal(result.year,'2568');assert.equal(result.code,'SGCU-TEST');
+console.log('PASS: all added workbook fields retain their exact Excel column positions.');

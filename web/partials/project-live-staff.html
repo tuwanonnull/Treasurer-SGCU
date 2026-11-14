@@ -1,6 +1,11 @@
 <section class="page-view" data-page="project-live-staff">
   <div class="page project-live-page">
-    <div class="page-header-flex"><div><h1 class="page-title">จัดการโครงการปี 2568</h1><p class="page-meta">ฝ่ายเหรัญญิก · ตรวจสอบยอดเงินและอัปเดตสถานะโครงการ</p></div><span class="pill pill-soft-pink">ปีการศึกษา 2568</span></div>
+    <div class="page-header-flex"><div><h1 class="page-title">จัดการโครงการ</h1><p class="page-meta">โครงการ เอกสาร และผู้ลงนามในพื้นที่เดียวกัน</p></div><span class="pill pill-soft-pink">ฝ่ายเหรัญญิก</span></div>
+    <div class="tabs project-hub-tabs" role="tablist" aria-label="จัดการโครงการและเอกสาร">
+      <button type="button" id="projectHubProjectsTab" class="tab-btn is-active" role="tab" data-project-hub-tab="projects" aria-controls="projectHubProjectsPanel" aria-selected="true">โครงการปี 2568</button>
+      <button type="button" id="projectHubDocumentsTab" class="tab-btn" role="tab" data-project-hub-tab="documents" aria-controls="projectHubDocumentsPanel" aria-selected="false" tabindex="-1">เอกสารและผู้ลงนาม</button>
+    </div>
+    <section id="projectHubProjectsPanel" data-project-hub-panel="projects" role="tabpanel" aria-labelledby="projectHubProjectsTab">
     <p data-live-id="message" role="status" aria-live="polite"></p>
     <section data-live-id="data" hidden>
       <form data-live-id="search" class="filter-bar project-live-search">
@@ -19,9 +24,11 @@
         <div class="project-live-toolbar"><button class="btn-ghost" data-live-id="history" type="button" aria-expanded="false" aria-controls="project-live-events">ดูประวัติ</button><button class="btn-ghost" data-live-id="backup" type="button">ดาวน์โหลดชุดสำรองทั้งหมด</button></div>
       </div>
       <div data-live-id="events" id="project-live-events" aria-live="polite"></div>
+      <div class="project-live-table">
       <div class="project-live-columns" aria-hidden="true"><span>รหัสโครงการ</span><span>ชื่อโครงการ</span><span>สถานะ</span><span>งบอนุมัติ (บาท)</span></div>
       <div data-live-id="projects"></div>
       <div data-live-id="empty" class="project-live-empty" hidden><h3>ไม่พบโครงการที่ตรงกับคำค้น</h3><p>ลองใช้คำค้นที่สั้นลง หรือกดล้างตัวกรองเพื่อดูโครงการทั้งหมด</p></div>
+      </div>
       <nav class="project-live-toolbar" aria-label="เปลี่ยนหน้าโครงการ"><button class="btn-ghost" data-live-id="previous" type="button">ก่อนหน้า</button><span data-live-id="page"></span><button class="btn-ghost" data-live-id="next" type="button">ถัดไป</button></nav>
       </section>
       <p data-live-id="backup-status" class="project-live-backup-note"></p>
@@ -32,6 +39,59 @@
         <details><summary>กู้คืนจากชุดสำรอง</summary><p>ระบบจะสำรองข้อมูลปัจจุบันก่อนกู้ลงชุดใหม่ และคงชุดเดิมไว้ตรวจสอบ</p><form data-live-id="restore-form"><label>ไฟล์สำรองข้อมูลจริง<input data-live-id="restore-file" type="file" accept="application/json,.json" required></label><label>เหตุผลกู้คืน<textarea data-live-id="restore-reason" required minlength="3" maxlength="1000"></textarea></label><button type="submit">ตรวจไฟล์และกู้คืน</button></form></details>
       </details>
     </section>
+    </section>
+          <section id="projectHubDocumentsPanel" role="tabpanel" aria-labelledby="projectHubDocumentsTab" class="dashboard-section document-settings-section project-hub-documents" data-project-hub-panel="documents" hidden>
+            <section class="panel project-staff-workflow-card document-signer-settings-panel">
+              <div class="project-staff-ops-section-head">
+                <div>
+                  <h3 class="panel-title">ตั้งค่าเอกสารยืมรองจ่าย</h3><p class="section-text-sm">ใช้ร่วมกับทุกโครงการในปีการศึกษาที่เลือก การแก้ไขต้องมีสิทธิ์หัวหน้าสตาฟ</p>
+                  <p id="documentSignerSettingsMessage" class="section-text-sm budget-staff-action-message" aria-live="polite">กำลังโหลดการตั้งค่า...</p>
+                </div>
+              </div>
+              <form id="documentSignerSettingsForm" class="budget-staff-controls document-signer-settings-form">
+                <div class="document-signer-settings-grid">
+                  <div class="borrow-form-field document-signer-year-field">
+                    <label class="login-label" for="documentSignerAcademicYear">ปีการศึกษา</label>
+                    <input id="documentSignerAcademicYear" class="login-input" type="number" min="2500" max="2999" step="1" required />
+                  </div>
+                  <div class="borrow-form-field document-signer-vice-rector-field">
+                    <label class="login-label" for="documentSignerViceRectorName">ชื่อรองอธิการบดี (ในวงเล็บ)</label>
+                    <input id="documentSignerViceRectorName" class="login-input" type="text" maxlength="200" required />
+                  </div>
+                  <div class="borrow-form-field document-signer-president-field">
+                    <label class="login-label" for="documentSignerPresidentName">ชื่อนายกสโมสร</label>
+                    <input id="documentSignerPresidentName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field document-signer-treasurer-field">
+                    <label class="login-label" for="documentSignerTreasurerName">ชื่อเหรัญญิก</label>
+                    <input id="documentSignerTreasurerName" class="login-input" type="text" maxlength="160" required />
+                  </div>
+                  <div class="borrow-form-field document-signer-phone-field">
+                    <label class="login-label" for="documentSignerTreasurerPhone">เบอร์โทรเหรัญญิก</label>
+                    <input id="documentSignerTreasurerPhone" class="login-input" type="tel" maxlength="30" placeholder="เช่น 094-969-6495" required />
+                  </div>
+                  <fieldset class="pdf-meeting-body-fieldset document-signer-meeting-field">
+                    <legend class="login-label">กิจกรรมผ่านที่ประชุม</legend>
+                    <div class="tabs document-meeting-body-toggle" role="radiogroup" aria-label="เลือกที่ประชุมอนุมัติกิจกรรม">
+                      <label class="tab-btn view-toggle-btn is-active">
+                        <input type="radio" name="documentApprovalMeetingBody" value="สภานิสิต" checked hidden />
+                        สภานิสิต
+                      </label>
+                      <label class="tab-btn view-toggle-btn">
+                        <input type="radio" name="documentApprovalMeetingBody" value="คณะกรรมการบริหารสโมสรนิสิตจุฬาลงกรณ์มหาวิทยาลัย" hidden />
+                        <span class="document-meeting-label-long">คณะกรรมการบริหารสโมสรนิสิตฯ</span>
+                        <span class="document-meeting-label-short">อบจ.</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <div class="document-signer-actions">
+                    <button id="documentSignerSaveBtn" class="btn-primary" type="submit">บันทึกการตั้งค่า</button>
+                  </div>
+                </div>
+              </form>
+            </section>
+          </section>
+
     <dialog data-live-id="modal" class="project-live-modal" aria-labelledby="projectLiveModalTitle">
       <div class="modal-header"><div><h2 id="projectLiveModalTitle" data-live-id="modal-title" class="modal-title"></h2><p data-live-id="modal-meta" class="page-meta"></p></div><button type="button" data-live-id="modal-close" class="modal-close" aria-label="ปิดรายละเอียดโครงการ" autofocus>×</button></div>
       <p data-live-id="modal-message" class="project-live-modal-message" role="status" aria-live="polite"></p>

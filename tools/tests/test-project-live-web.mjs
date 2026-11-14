@@ -33,19 +33,20 @@ try{
  await adminRef.create({uid:admin,role:'admin',email:'tuwanon.kimchiang@gmail.com',active:true});
  if(process.argv.includes('--browser')){
   const partial=await readFile(new URL('../../web/partials/project-live-staff.html',import.meta.url),'utf8');
+  const detailsScript=await readFile(new URL('../../web/js/features/project/app.project-live-details.js',import.meta.url),'utf8');
   const script=await readFile(new URL('../../web/js/features/project/app.project-live.js',import.meta.url),'utf8');
   const css=await readFile(new URL('../../web/css/pages/project-live.css',import.meta.url),'utf8');
   server=createServer(async(req,res)=>{try{
    const url=new URL(req.url,'http://localhost');
    if(url.pathname.startsWith('/api')){let raw='';for await(const chunk of req)raw+=chunk;const result=await service.handle({authorization:req.headers.authorization,method:req.method,action:url.pathname.slice(4).replace(/^\//,''),body:raw?JSON.parse(raw):undefined,params:url.searchParams});res.setHeader('Content-Type','application/json');res.end(JSON.stringify(result));return;}
-   res.setHeader('Content-Type','text/html');res.end(`<html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>${css}</style><a data-page="project-live-staff">เมนูโครงการ</a>${partial.replace('class="page-view"','class="page-view active"')}<script>window.SGCU_APP_CONFIG={projectLive:{apiUrl:'/api'}};window.sgcuAuth={auth:{currentUser:{uid:${JSON.stringify(admin)},getIdToken:async()=>${JSON.stringify(admin)}}},onAuthStateChanged:(auth,fn)=>fn(auth.currentUser)};</script><script>${script}</script></html>`);
+   res.setHeader('Content-Type','text/html');res.end(`<html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>${css}</style><a data-page="project-live-staff">เมนูโครงการ</a>${partial.replace('class="page-view"','class="page-view active"')}<script>window.SGCU_APP_CONFIG={projectLive:{apiUrl:'/api'}};window.sgcuAuth={auth:{currentUser:{uid:${JSON.stringify(admin)},getIdToken:async()=>${JSON.stringify(admin)}}},onAuthStateChanged:(auth,fn)=>fn(auth.currentUser)};</script><script>${detailsScript}</script><script>${script}</script></html>`);
   }catch(error){res.statusCode=error.status||500;res.end(JSON.stringify({error:error.message}));}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}`;
   browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base);const ui=id=>page.locator(`[data-live-id="${id}"]`);
   await ui('data').waitFor({state:'visible'});assert.match(await ui('count').innerText(),/407/);assert.equal(await ui('admin').isVisible(),true);
-  await ui('projects').locator('button').first().click();const form=ui('modal').locator('form').filter({has:page.getByRole('heading',{name:'แก้ยอดเงิน',exact:true})});
+  await ui('projects').locator('button').first().click();await ui('modal').getByRole('tab',{name:'ข้อมูลและการอนุมัติ',exact:true}).click();await ui('modal').getByRole('button',{name:'แก้ยอดงบอนุมัติ',exact:true}).click();const form=ui('modal').locator('[data-live-editor="money"]');
   await form.getByLabel('งบอนุมัติ',{exact:true}).fill('100.01');await form.getByLabel('เหตุผล / หมายเหตุ').fill('ซ้อมแอดมินผ่านหน้าเว็บหลัก');
   assert.equal(await form.getByRole('button',{name:'ยืนยันบันทึก'}).isEnabled(),false);
   await form.getByRole('button',{name:'ดูผลก่อนบันทึก'}).click();await page.waitForFunction(()=>document.querySelector('[data-live-id="message"]').textContent==='ดำเนินการแล้ว');
@@ -56,7 +57,7 @@ try{
   const downloaded=page.waitForEvent('download');await ui('backup').click();validateLiveBackup(JSON.parse(await readFile(await (await downloaded).path(),'utf8')));
   await ui('admin').locator('summary').first().click();
   await ui('access-load').click();await page.waitForFunction(()=>document.querySelector('[data-live-id="access-state"]').textContent==='เหรัญญิกเปิดใช้งานอยู่');
-  await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('heading',{name:'จัดการโครงการปี 2568',exact:true}).isVisible());
+  await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('heading',{name:'จัดการโครงการ',exact:true}).isVisible());
   await adminRef.update({active:false});await page.getByRole('button',{name:'ค้นหา / โหลดล่าสุด'}).click();await ui('data').waitFor({state:'hidden'});assert.equal(await ui('projects').locator('button').count(),0);await adminRef.update({active:true});assert.deepEqual(errors,[]);
   console.log('PASS: main partial mounts with navigation present; shared login, admin edit preview/commit, audit, backup, access, mobile and revocation');
  }

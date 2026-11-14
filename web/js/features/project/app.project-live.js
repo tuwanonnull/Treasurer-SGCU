@@ -6,7 +6,7 @@ let datasetId=null;
 const $=id=>root.querySelector(`[data-live-id="${id}"]`), node=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
 let offset=0,query='',generation=0,busy=false,matchedCount=0,filterOptions=[],activeProjectId=null,modalDirty=false;
 const filters={year:'2568',group:'all',organization:'all'};
-function message(text){$('message').textContent=text;$('modal-message').textContent=text;}
+function message(text){$('message').textContent=text;$('modal-message').textContent=text;root.querySelectorAll('[data-live-form-message]').forEach(el=>el.textContent=text);}
 function closeModal(force=false){if(!force && (busy || (modalDirty && !confirm('มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดหน้าต่างหรือไม่?'))))return; const opener=[...$('projects').querySelectorAll('button')].find(b=>b.dataset.projectId===activeProjectId);$('modal').close();opener?.focus();$('modal-body').replaceChildren();activeProjectId=null;modalDirty=false;document.body.classList.remove('project-live-modal-open');}
 $('modal-close').onclick=()=>closeModal();
 $('modal').addEventListener('cancel',e=>{e.preventDefault();closeModal();});
@@ -25,44 +25,103 @@ async function api(action='',body){
 }
 async function operation(task){
   if(busy)return;busy=true;const current=generation;
-  const controls=[...root.querySelectorAll('input,select,textarea')].map(el=>[el,el.disabled]);
-  controls.forEach(([el])=>el.disabled=true);root.setAttribute('aria-busy','true');root.querySelectorAll('button').forEach(b=>b.disabled=true);message('กำลังดำเนินการ…');
+  const controls=[...root.querySelectorAll('[data-project-hub-panel="projects"] input,[data-project-hub-panel="projects"] select,[data-project-hub-panel="projects"] textarea,dialog input,dialog select,dialog textarea')].map(el=>[el,el.disabled]);
+  controls.forEach(([el])=>el.disabled=true);root.setAttribute('aria-busy','true');root.querySelectorAll('[data-project-hub-panel="projects"] button,dialog button').forEach(b=>b.disabled=true);message('กำลังดำเนินการ…');
   try{await task(current);if(current===generation)message('ดำเนินการแล้ว');}
   catch(e){if(current===generation)message(e.message);}
-  finally{busy=false;root.setAttribute('aria-busy','false');controls.forEach(([el,disabled])=>{if(el.isConnected)el.disabled=disabled;});root.querySelectorAll('button').forEach(b=>b.disabled=false);root.querySelectorAll('[data-preview-required]').forEach(b=>b.disabled=true);syncPagination();}
+  finally{busy=false;root.setAttribute('aria-busy','false');controls.forEach(([el,disabled])=>{if(el.isConnected)el.disabled=disabled;});root.querySelectorAll('[data-project-hub-panel="projects"] button,dialog button').forEach(b=>b.disabled=false);root.querySelectorAll('[data-preview-required]').forEach(b=>b.disabled=true);syncPagination();}
 }
-function field(form,text,element){const label=node('label',text);label.append(element);form.append(label);return element;}
+function field(form,text,element){element.setAttribute('aria-label',text);const label=node('label',text);label.append(element);form.append(label);return element;}
 function editForm(p,state,status){
-  const form=node('form'),output=node('div');output.setAttribute('aria-live','polite');form.append(node('h3',status?'เปลี่ยนสถานะ':'แก้ยอดเงิน'));
+  const form=node('form'),output=node('div');output.className='project-live-review';output.setAttribute('aria-live','polite');form.append(node('h3',status?'เปลี่ยนสถานะ':'แก้ยอดเงิน'));
   let patch,controls=[];
   if(status){const group=field(form,'ช่องสถานะ',node('select')),value=field(form,'สถานะใหม่',node('select'));
     const groups=state.statusGroups.filter(g=>g.values.some(v=>v!==p.statuses[g.column] && state.projectStatusPermissions[p.id][g.column][v]==='direct'));
     if(!groups.length)return node('p','ไม่มีสถานะที่เปลี่ยนได้');
     for(const g of groups){const o=node('option',g.label);o.value=g.column;group.append(o);}
-    const choices=()=>{value.replaceChildren();for(const v of groups.find(g=>g.column===group.value).values.filter(v=>v!==p.statuses[group.value] && state.projectStatusPermissions[p.id][group.value][v]==='direct')){const o=node('option',v);o.value=v;value.append(o);}};group.onchange=choices;choices();controls=[group,value];patch=()=>({projectId:p.id,version:p.version,field:group.value,value:value.value});
-  }else{const inputs={};for(const col of ['O','V','AJ']){const input=node('input');input.type='text';input.inputMode='decimal';input.value=p.money[col]===null?'':money(p.money[col]).replaceAll(',', '');inputs[col]=field(form,state.moneyLabels[col],input);controls.push(input);}
-    const direction=field(form,'ทิศทางโอน',node('select'));for(const v of ['','เพิ่ม','ลด']){const o=node('option',v||'ยังไม่ระบุ');o.value=v;direction.append(o);}direction.value=p.formulaInputs.transferDirection||'';controls.push(direction);
+    const currentStatus=node('p');currentStatus.className='project-live-current-status';form.insertBefore(currentStatus,group.parentElement);value.required=true;
+    const choices=()=>{currentStatus.textContent=`สถานะปัจจุบัน: ${p.statuses[group.value]||'ไม่ระบุ'}`;value.replaceChildren();const placeholder=node('option','เลือกสถานะใหม่');placeholder.value='';value.append(placeholder);for(const v of groups.find(g=>g.column===group.value).values.filter(v=>v!==p.statuses[group.value] && state.projectStatusPermissions[p.id][group.value][v]==='direct')){const o=node('option',v);o.value=v;value.append(o);}};group.onchange=choices;choices();controls=[group,value];patch=()=>({projectId:p.id,version:p.version,field:group.value,value:value.value});
+  }else{const inputs={};for(const col of ['O','V','AJ']){const input=node('input');input.type='text';input.inputMode='decimal';input.value=p.money[col]===null?'':money(p.money[col]).replaceAll(',', '');input.pattern='[0-9]+([.][0-9]{1,2})?';input.title='ตัวเลขทศนิยมไม่เกิน 2 ตำแหน่ง';inputs[col]=field(form,state.moneyLabels[col],input);input.parentElement.dataset.moneyColumn=col;const previous=node('small',`ปัจจุบัน ${money(p.money[col])} บาท`);previous.id=`projectLiveCurrent-${col}`;input.setAttribute('aria-label',state.moneyLabels[col]);input.setAttribute('aria-describedby',previous.id);input.parentElement.append(previous);controls.push(input);}
+    const direction=field(form,'ทิศทางโอน',node('select'));for(const v of ['','เพิ่ม','ลด']){const o=node('option',v||'ยังไม่ระบุ');o.value=v;direction.append(o);}direction.value=p.formulaInputs.transferDirection||'';direction.parentElement.dataset.moneyColumn='U';controls.push(direction);
     patch=()=>({projectId:p.id,version:p.version,changes:{O:inputs.O.value,V:inputs.V.value,AJ:inputs.AJ.value,U:direction.value}});
   }
   const reason=field(form,'เหตุผล / หมายเหตุ',node('textarea'));reason.maxLength=1000;if(!status){reason.required=true;reason.minLength=3;}
-  const preview=node('button','ดูผลก่อนบันทึก');preview.type='button';preview.className='btn-ghost';const save=node('button','ยืนยันบันทึก');save.type='submit';save.className='btn-primary';save.dataset.previewRequired='true';save.disabled=true;form.append(preview,save,output);
+  const preview=node('button','ดูผลก่อนบันทึก');preview.type='button';preview.className='btn-ghost';const save=node('button','ยืนยันบันทึก');save.type='submit';save.className='btn-primary';save.dataset.previewRequired='true';save.disabled=true;const footer=node('div');footer.className='project-live-form-footer';footer.append(preview,save);form.append(output,footer);
   let reviewed=null;
   const invalidate=()=>{reviewed=null;save.dataset.previewRequired='true';save.disabled=true;output.replaceChildren();};controls.forEach(control=>control.addEventListener('input',invalidate));
-  preview.onclick=()=>operation(async current=>{const body=patch(),result=await api(status?'/status-preview':'/preview',body);if(current!==generation)return;reviewed=JSON.stringify(body);delete save.dataset.previewRequired;output.replaceChildren();if(status)output.append(node('p',`สถานะ: ${p.statuses[body.field]||'—'} → ${body.value}`));for(const col of Object.keys(state.moneyLabels))output.append(node('p',`${state.moneyLabels[col]}: ${money(result.before[col])} → ${money(result.after[col])} บาท`));});
-  form.onsubmit=e=>{e.preventDefault();if(reviewed!==JSON.stringify(patch()))return;operation(async()=>{await api(status?'/status':'/commit',{...patch(),reason:reason.value});modalDirty=false;await refresh();});};return form;
+  preview.onclick=()=>{if(!form.reportValidity())return;operation(async current=>{const body=patch(),result=await api(status?'/status-preview':'/preview',body);if(current!==generation)return;const changes=[];
+    if(status)changes.push(['สถานะ',p.statuses[body.field]||'—',body.value]);
+    else if(body.changes.U!==(p.formulaInputs.transferDirection||''))changes.push(['ทิศทางโอน',p.formulaInputs.transferDirection||'ยังไม่ระบุ',body.changes.U||'ยังไม่ระบุ']);
+    for(const col of Object.keys(state.moneyLabels))if(result.before[col]!==result.after[col])changes.push([state.moneyLabels[col],`${money(result.before[col])} บาท`,`${money(result.after[col])} บาท`]);
+    output.replaceChildren();
+    if(!changes.length){reviewed=null;save.dataset.previewRequired='true';output.append(node('p','ยังไม่มีข้อมูลเปลี่ยนแปลง'));return;}
+    reviewed=JSON.stringify(body);delete save.dataset.previewRequired;output.append(node('h4','ตรวจสอบก่อนบันทึก'));
+    for(const [label,before,after] of changes){const row=node('div');row.className='project-live-review-row';row.append(node('strong',label),node('span',before));const next=node('span',`→ ${after}`);next.className='project-live-review-after';row.append(next);output.append(row);}
+  });};
+  form.onsubmit=e=>{e.preventDefault();if(reviewed!==JSON.stringify(patch()))return;operation(async()=>{const section=form.closest('[data-live-section]'),sectionId=section?.dataset.liveSection;await api(status?'/status':'/commit',{...patch(),reason:reason.value});modalDirty=false;await refresh();if(sectionId){const target=$('modal-body').querySelector(`[data-live-section="${sectionId}"]`);if(target){target.scrollIntoView({block:'start'});const heading=target.querySelector('h3');heading.tabIndex=-1;heading.focus({preventScroll:true});}}});};return form;
 }
 function fillOptions(id,values,label){const select=$(id),value=select.value;select.replaceChildren();for(const name of ['all',...values]){const option=node('option',name==='all'?label:name);option.value=name;select.append(option);}select.value=values.includes(value)?value:'all';}
 function updateOrgOptions(){fillOptions('organization',[...new Set(filterOptions.filter(o=>$('group').value==='all'||o.group===$('group').value).map(o=>o.name).filter(Boolean))],'ทุกฝ่าย / ทุกชมรม');}
 function openProject(p,state){
+ const selectedSection=activeProjectId===p.id?$('modal').querySelector('[role=tab][aria-selected=true]')?.dataset.sectionTarget:'01';
  activeProjectId=p.id;modalDirty=false;$('modal-title').textContent=p.name;$('modal-meta').textContent=`${p.code} · ปีการศึกษา ${p.year||2568}`;$('modal-message').textContent='';
- const info=node('dl');info.className='project-live-detail-grid';
- for(const [label,value] of [['ประเภทองค์กร',p.organizationGroup],['ฝ่าย / ชมรม',p.organization],['ผู้รับผิดชอบตรวจโครงการ',p.responsibleName]]){const item=node('div');item.append(node('dt',label),node('dd',value||'ไม่ระบุ'));info.append(item);}
- const amounts=node('dl');amounts.className='project-live-money';for(const col of Object.keys(state.moneyLabels)){const item=node('div'),value=node('dd',money(p.money[col]));value.append(node('small','บาท'));item.append(node('dt',state.moneyLabels[col]),value);amounts.append(item);}
- const statuses=node('dl');statuses.className='project-live-detail-grid';for(const g of state.statusGroups){const item=node('div');item.append(node('dt',g.label),node('dd',p.statuses[g.column]||'ไม่ระบุ'));statuses.append(item);}
- const editors=node('div');editors.className='project-live-editors';editors.append(editForm(p,state,false),editForm(p,state,true));editors.addEventListener('input',()=>modalDirty=true);
- const heading=node('h3','ดำเนินการโครงการ');heading.className='project-live-action-heading';
- $('modal-body').replaceChildren(info,node('h3','ยอดเงินโครงการ'),amounts,node('h3','สถานะโครงการ'),statuses,heading,node('p','แก้ไขข้อมูล แล้วดูผลก่อนยืนยันบันทึกทุกครั้ง'),editors);
- if(!$('modal').open){$('modal-body').scrollTop=0;$('modal').showModal();document.body.classList.add('project-live-modal-open');}
+ const details=window.sgcuProjectLiveDetails.create(p,state);
+ const overview=node('section');overview.dataset.liveId='modal-overview';
+ overview.append(details);
+ const editors=node('div');editors.className='project-live-editors project-live-single-editor project-live-inline-status';
+ const moneyForm=editForm(p,state,false),statusForm=editForm(p,state,true);
+ moneyForm.dataset.liveEditor='money';statusForm.dataset.liveEditor='status';moneyForm.hidden=true;statusForm.hidden=true;
+ editors.append(moneyForm,statusForm);editors.addEventListener('input',()=>modalDirty=true);overview.insertBefore(editors,details);
+ moneyForm.addEventListener('invalid',event=>{const disclosure=event.target.closest('details');if(disclosure)disclosure.open=true;},true);
+ const extraMoney=node('details');extraMoney.className='project-live-other-money';extraMoney.append(node('summary','ยอดเงินอื่น ๆ ในโครงการ'));moneyForm.querySelector('h3').after(extraMoney);
+ const moneyFields=[...moneyForm.querySelectorAll('[data-money-column]')];
+ const buttons=[];let activeButton=null;
+ function addAction(key,label,form,host,groupColumn){
+  const button=node('button',label);button.type='button';button.className='btn-ghost';button.dataset.liveAction=key;form.id=`projectLiveEditor-${key}`;button.setAttribute('aria-controls',form.id);button.setAttribute('aria-expanded','false');buttons.push({button,form,label});host.append(button);
+  button.onclick=()=>{if(busy)return;
+   const opening=form.hidden||activeButton!==button;
+   const group=form.querySelector('select[aria-label="ช่องสถานะ"]');
+   if(opening&&groupColumn&&group.value!==groupColumn){
+    if(form.querySelector('select[aria-label="สถานะใหม่"]').value&&!confirm('มีสถานะที่เลือกไว้แต่ยังไม่ได้บันทึก ต้องการเปลี่ยนไปแก้สถานะหมวดนี้หรือไม่?'))return;
+    group.value=groupColumn;group.dispatchEvent(new Event('change'));group.dispatchEvent(new Event('input',{bubbles:true}));
+   }
+   const before=button.getBoundingClientRect().top;
+   if(key==='money'){
+    const col=({'02':'O','03':'V','05':'AJ'})[host.closest('section').dataset.liveSection];
+    extraMoney.open=false;extraMoney.hidden=!col;
+    for(const label of moneyFields){if(!col||label.dataset.moneyColumn===col||(col==='V'&&label.dataset.moneyColumn==='U'))extraMoney.before(label);else extraMoney.append(label);}
+    moneyForm.querySelector('h3').textContent=col?label:'แก้ยอดเงิน';
+   }
+   details.querySelectorAll('.is-editing').forEach(el=>el.classList.remove('is-editing'));
+   if(opening)host.closest('section').classList.add('is-editing');
+   host.closest('section').querySelector('header').after(editors);
+   for(const item of buttons){const show=opening&&item.button===button;item.form.hidden=!(opening&&item.form===form);item.button.setAttribute('aria-expanded',String(show));item.button.textContent=show?`ซ่อนฟอร์ม${item.label}`:item.label;}
+   activeButton=opening?button:null;
+   $('modal-body').scrollTop+=button.getBoundingClientRect().top-before;
+   button.focus({preventScroll:true});$('modal-message').textContent='';
+  };return button;
+ }
+ const sectionForStatus={H:'02',Q:'03',Y:'04',AZ:'05',BA:'05'};
+ function localActions(number){const section=details.querySelector(`[data-live-section="${number}"]`);let host=section.querySelector('.project-live-section-actions');if(!host){host=node('div');host.className='project-live-section-actions';section.querySelector('header').append(host);}return host;}
+ for(const [number,label] of [['02','แก้ยอดงบอนุมัติ'],['03','แก้ยอดโอน'],['05','แก้ยอดใช้จริง']])addAction('money',label,moneyForm,localActions(number));
+ for(const g of state.statusGroups){if([...statusForm.querySelectorAll('select[aria-label="ช่องสถานะ"] option')].some(o=>o.value===g.column))addAction('status',`แก้${g.label}`,statusForm,localActions(sectionForStatus[g.column]||'01'),g.column);}
+ for(const form of [moneyForm,statusForm]){if(form.tagName!=='FORM')continue;const feedback=node('p');feedback.dataset.liveFormMessage='';feedback.setAttribute('role','status');form.querySelector('.project-live-form-footer').before(feedback);const close=node('button','เก็บฟอร์ม');close.type='button';close.className='btn-ghost';close.onclick=()=>activeButton?.click();form.querySelector('.project-live-form-footer').append(close);}
+ const navigation=node('div');navigation.className='tabs project-live-section-nav';navigation.setAttribute('role','tablist');navigation.setAttribute('aria-label','หมวดรายละเอียดโครงการ');
+ const sections=[];
+ const layout=details.querySelector('.project-live-info-layout');
+ for(const [number,label,members] of [['01','ข้อมูลและการอนุมัติ',['01','02']],['03','โอนงบประมาณ',['03']],['04','ยืมรองจ่าย',['04']],['05','ปิดโครงการ',['05','06']]]){
+  const panel=node('div');panel.className='project-live-category';panel.dataset.liveCategory=number;panel.dataset.categoryLabel=label;
+  for(const member of members){const section=details.querySelector(`[data-live-section="${member}"]`);if(member==='06'){const disclosure=node('details');disclosure.className='project-live-follow-up';disclosure.append(node('summary','ประวัติติดตามเอกสาร'),section);panel.append(disclosure);}else panel.append(section);}
+  sections.push(panel);
+ }
+ layout.replaceChildren(...sections);
+ function selectTab(number,focus=false){for(const section of sections){const selected=section.dataset.liveCategory===number;section.hidden=!selected;const tab=navigation.querySelector(`[data-section-target="${section.dataset.liveCategory}"]`);tab.setAttribute('aria-selected',String(selected));tab.classList.toggle('is-active',selected);tab.tabIndex=selected?0:-1;if(selected&&focus)tab.focus();}$('modal-body').scrollTop=0;}
+ for(const section of sections){const number=section.dataset.liveCategory,button=node('button',section.dataset.categoryLabel);button.type='button';button.className='tab-btn view-toggle-btn';button.dataset.sectionTarget=number;button.id=`projectLiveTab-${number}`;button.setAttribute('role','tab');button.setAttribute('aria-controls',`projectLivePanel-${number}`);section.id=`projectLivePanel-${number}`;section.setAttribute('role','tabpanel');section.setAttribute('aria-labelledby',button.id);button.onclick=()=>selectTab(number);button.onkeydown=event=>{const index=sections.indexOf(section);let next;if(event.key==='ArrowRight')next=(index+1)%sections.length;if(event.key==='ArrowLeft')next=(index+sections.length-1)%sections.length;if(event.key==='Home')next=0;if(event.key==='End')next=sections.length-1;if(next!==undefined){event.preventDefault();selectTab(sections[next].dataset.liveCategory,true);}};navigation.append(button);}
+ $('modal').querySelector('.project-live-section-nav')?.remove();$('modal-body').before(navigation);
+ $('modal-body').replaceChildren(overview);$('modal-body').onscroll=null;
+ selectTab(selectedSection||'01');
+ if(!$('modal').open){$('modal').showModal();document.body.classList.add('project-live-modal-open');}
+ else{$('modal-title').tabIndex=-1;$('modal-title').focus({preventScroll:true});}
 }
 async function refresh(){const current=generation,state=await api('?'+new URLSearchParams({q:query,offset,...filters}));if(current!==generation)return;
  offset=state.offset??offset;
@@ -101,8 +160,9 @@ $('restore-form').onsubmit=e=>{e.preventDefault();operation(async()=>{
  if(!confirm(`กู้คืนชุดสำรองวันที่ ${bundle.payload?.createdAt || 'ไม่ระบุ'}? ระบบจะเก็บสำรองปัจจุบันก่อน แล้วสลับไปชุดกู้คืนใหม่`))return;
  await api('/restore',{bundle,reason:$('restore-reason').value,expectedDatasetId:datasetId});await refresh();
 });};
-window.addEventListener('sgcu:page-active',event=>{if(event.detail?.page==='project-live-staff')operation(refresh);else closeModal(true);});
+window.addEventListener('sgcu:page-active',event=>{if(event.detail?.page==='project-live-staff'){if(!window.sgcuProjectHub || (window.sgcuProjectHub.canUseProjects() && window.sgcuProjectHub.selected==='projects'))operation(refresh);}else closeModal(true);});
 let currentUid=window.sgcuAuth?.auth?.currentUser?.uid || null;
-window.sgcuAuth?.onAuthStateChanged(window.sgcuAuth.auth,user=>{if((user?.uid||null)!==currentUid){currentUid=user?.uid||null;generation++;closeModal(true);$('data').hidden=true;$('projects').replaceChildren();$('events').replaceChildren();$('admin').hidden=true;if(root.classList.contains('active') && user)operation(refresh);}});
-if(root.classList.contains('active'))operation(refresh);
+window.sgcuAuth?.onAuthStateChanged(window.sgcuAuth.auth,user=>{if((user?.uid||null)!==currentUid){currentUid=user?.uid||null;generation++;closeModal(true);$('data').hidden=true;$('projects').replaceChildren();$('events').replaceChildren();$('admin').hidden=true;if(root.classList.contains('active') && user && (!window.sgcuProjectHub || (window.sgcuProjectHub.canUseProjects() && window.sgcuProjectHub.selected==='projects')))operation(refresh);}});
+window.addEventListener('sgcu:project-hub-tab',event=>{if(event.detail?.tab==='projects' && window.sgcuProjectHub?.canUseProjects())operation(refresh);});
+if(root.classList.contains('active') && (!window.sgcuProjectHub || (window.sgcuProjectHub.canUseProjects() && window.sgcuProjectHub.selected==='projects')))operation(refresh);
 })();

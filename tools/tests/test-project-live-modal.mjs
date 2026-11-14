@@ -1,27 +1,50 @@
 import assert from 'node:assert/strict';
 import {chromium} from '@playwright/test';
 const browser=await chromium.launch({channel:'chrome',headless:true});
-try {
- const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:4175');const ui=id=>page.locator(`[data-live-id="${id}"]`);
+try{
+ const page=await browser.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4175');const ui=id=>page.locator(`[data-live-id="${id}"]`),modal=ui('modal');
  await ui('total').getByText('28',{exact:true}).waitFor();
  await ui('group').selectOption('ชมรมฝ่ายกีฬา');await ui('matched').getByText('14',{exact:true}).waitFor();
- assert.deepEqual(await ui('organization').locator('option').allTextContents(),['ทุกฝ่าย / ทุกชมรม','ชมรมแบดมินตัน','ชมรมฟุตบอล']);
  await ui('organization').selectOption('ชมรมฟุตบอล');await ui('matched').getByText('7',{exact:true}).waitFor();
- await ui('clear').click();await ui('matched').getByText('28',{exact:true}).waitFor();
- await ui('next').click();await ui('page').getByText('หน้า 2 / 2',{exact:true}).waitFor();assert.equal(await ui('next').isEnabled(),false);
- const opener=ui('projects').locator('button').first();await opener.focus();await opener.press('Enter');await ui('modal').waitFor({state:'visible'});
- assert.ok((await ui('modal-body').innerText()).includes('ผู้รับผิดชอบตรวจโครงการ'));
- await page.keyboard.press('Escape');await ui('modal').waitFor({state:'hidden'});assert.ok(await opener.evaluate(e=>document.activeElement===e));
- await opener.click();const form=ui('modal').locator('form').first();
- await form.getByLabel('งบอนุมัติ',{exact:true}).fill('2000');await form.getByLabel('เหตุผล / หมายเหตุ').fill('ทดสอบพรีวิว');
- const save=form.getByRole('button',{name:'ยืนยันบันทึก',exact:true});assert.equal(await save.isEnabled(),false);
- await form.getByRole('button',{name:'ดูผลก่อนบันทึก',exact:true}).click();await save.waitFor({state:'visible'});await page.waitForFunction(()=>!document.querySelector('[data-live-id="modal"] button[type="submit"]').disabled);
- await form.getByLabel('งบอนุมัติ',{exact:true}).fill('2100');assert.equal(await save.isEnabled(),false);
- await form.getByRole('button',{name:'ดูผลก่อนบันทึก',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('[data-live-id="modal"] button[type="submit"]').disabled);await save.click();
- await ui('modal-message').getByText('โหมดพรีวิว: ทดลองดูผลได้ แต่ยังไม่บันทึกหรือเปลี่ยนสิทธิ์ข้อมูล',{exact:true}).waitFor();
- for(const width of [1280,390]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.ok(await ui('modal').evaluate(e=>e.scrollWidth<=e.clientWidth));await page.screenshot({path:`/tmp/project-modal-${width}.png`});}
- page.once('dialog',d=>d.dismiss());await page.keyboard.press('Escape');assert.ok(await ui('modal').isVisible());
- page.once('dialog',d=>d.accept());await ui('modal-close').click();await ui('modal').waitFor({state:'hidden'});
- assert.deepEqual(errors,[]);console.log('PASS: dependent filters across all projects, pagination, modal keyboard/focus, detail fields, preview invalidation, in-modal errors, unsaved close protection, desktop/mobile overflow');
-}finally{await browser.close()}
+ await ui('clear').click();await ui('next').click();await ui('page').getByText('หน้า 2 / 2',{exact:true}).waitFor();
+ const opener=ui('projects').locator('button').first();await opener.click();
+ const tab=name=>modal.getByRole('tab',{name,exact:true});
+ assert.equal(await modal.getByRole('tab').count(),4);assert.equal(await modal.getByRole('tabpanel').count(),1);
+ assert.equal(await modal.locator('.project-live-action-bar').count(),0);
+ await tab('ปิดโครงการ').click();await modal.getByText('ฎีกา-2568/108',{exact:true}).waitFor();
+ assert.equal(await modal.locator('.project-live-source-note').isVisible(),false);
+ const follow=modal.locator('.project-live-follow-up');assert.equal(await follow.getAttribute('open'),null);
+ await follow.locator('summary').click();assert.ok(await follow.getByText('ติดตามส่งปิดโครงการ ครั้งที่ 1',{exact:true}).isVisible());
+ await follow.locator('summary').click();
+ await tab('ข้อมูลและการอนุมัติ').click();assert.ok(await modal.getByRole('heading',{name:'ข้อมูลโครงการ',exact:true}).isVisible());assert.ok(await modal.getByRole('heading',{name:'อนุมัติโครงการ',exact:true}).isVisible());
+ assert.equal(await modal.locator('[data-live-section="05"] h4').count(),3);
+ await tab('ข้อมูลและการอนุมัติ').focus();await page.keyboard.press('ArrowRight');assert.equal(await tab('โอนงบประมาณ').getAttribute('aria-selected'),'true');
+ const money=modal.locator('[data-live-editor="money"]'),status=modal.locator('[data-live-editor="status"]');
+ for(const width of [1280,390]){
+  await page.setViewportSize({width,height:900});await tab('ปิดโครงการ').click();
+  await modal.getByRole('button',{name:'แก้ยอดใช้จริง',exact:true}).click();
+  assert.ok(await money.getByLabel('ยอดใช้จริง',{exact:true}).isVisible());assert.equal(await money.getByLabel('งบอนุมัติ',{exact:true}).isVisible(),false);
+  await money.getByLabel('เหตุผล / หมายเหตุ').fill('แบบร่างทดสอบ');
+  await tab('โอนงบประมาณ').click();assert.equal(await money.isVisible(),false);
+  await tab('ปิดโครงการ').click();assert.equal(await money.getByLabel('เหตุผล / หมายเหตุ').inputValue(),'แบบร่างทดสอบ');
+  assert.ok(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth));await page.screenshot({path:`/tmp/project-tabs-${width}.png`});
+  await money.getByRole('button',{name:'เก็บฟอร์ม',exact:true}).click();
+ }
+ await tab('ข้อมูลและการอนุมัติ').click();await modal.getByRole('button',{name:'แก้ยอดงบอนุมัติ',exact:true}).click();
+ await money.getByRole('button',{name:'ดูผลก่อนบันทึก',exact:true}).click();await money.getByText('ยังไม่มีข้อมูลเปลี่ยนแปลง',{exact:true}).waitFor();
+ await money.getByLabel('งบอนุมัติ',{exact:true}).fill('2000');
+ const preview=money.getByRole('button',{name:'ดูผลก่อนบันทึก',exact:true}),save=money.getByRole('button',{name:'ยืนยันบันทึก',exact:true});
+ await preview.click();await page.waitForFunction(()=>!document.querySelector('[data-live-editor="money"] button[type="submit"]').disabled);
+ await money.getByLabel('งบอนุมัติ',{exact:true}).fill('2100');assert.equal(await save.isEnabled(),false);
+ await preview.click();await page.waitForFunction(()=>!document.querySelector('[data-live-editor="money"] button[type="submit"]').disabled);await save.click();await ui('modal-message').getByText(/โหมดพรีวิว/).waitFor();
+ await tab('ข้อมูลและการอนุมัติ').click();await modal.getByRole('button',{name:'แก้สถานะโครงการ',exact:true}).click();
+ await status.getByLabel('สถานะใหม่',{exact:true}).selectOption({index:1});await status.getByRole('button',{name:'ดูผลก่อนบันทึก',exact:true}).click();await status.getByRole('heading',{name:'ตรวจสอบก่อนบันทึก'}).waitFor();
+ await tab('ข้อมูลและการอนุมัติ').click();await modal.getByRole('button',{name:'แก้ยอดงบอนุมัติ',exact:true}).click();assert.equal(await money.getByLabel('งบอนุมัติ',{exact:true}).inputValue(),'2100');
+ page.once('dialog',d=>d.dismiss());await page.keyboard.press('Escape');assert.ok(await modal.isVisible());
+ await page.route('**/api/commit',route=>route.fulfill({json:{savedInFirestore:true}}));
+ await preview.click();await page.waitForFunction(()=>!document.querySelector('[data-live-editor="money"] button[type="submit"]').disabled);await save.click();await money.waitFor({state:'hidden'});
+ assert.equal(await tab('ข้อมูลและการอนุมัติ').getAttribute('aria-selected'),'true');
+ await ui('modal-close').click();await modal.waitFor({state:'hidden'});assert.ok(await opener.evaluate(e=>document.activeElement===e));assert.deepEqual(errors,[]);
+ console.log('PASS: filters, pagination, accessible tabs, grouped details, mobile/desktop layout, drafts across tabs, preview validation, errors, save retains tab, close protection and focus');
+}finally{await browser.close();}

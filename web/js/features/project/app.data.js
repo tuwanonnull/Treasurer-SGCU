@@ -3,21 +3,25 @@ function isPublishedHtmlSheetUrl(url) {
   return /\/pubhtml(?:$|[/?#])/i.test((url || "").toString());
 }
 
-function parsePublishedSheetRows(htmlText) {
+function parsePublishedSheetRows(htmlText, options = {}) {
   if (typeof DOMParser === "undefined") return [];
   const doc = new DOMParser().parseFromString(htmlText || "", "text/html");
   const table = doc.querySelector("table.waffle") || doc.querySelector("table");
   if (!table) return [];
-
-  return Array.from(table.querySelectorAll("tbody tr")).map((tr) =>
-    Array.from(tr.children)
-      .filter((cell) => cell.tagName.toLowerCase() === "td")
-      .flatMap((cell) => {
-        const span = Math.max(parseInt(cell.getAttribute("colspan") || "1", 10), 1);
-        const text = (cell.textContent || "").replace(/\u200b/g, "").trim();
-        return Array(span).fill(text);
-      })
-  );
+  return Array.from(table.querySelectorAll("tbody tr")).map(tr => {
+    let column = 0;
+    return Array.from(tr.children).filter(cell => cell.tagName.toLowerCase() === "td").flatMap(cell => {
+      const span = Math.max(parseInt(cell.getAttribute("colspan") || "1", 10), 1);
+      let text = (cell.textContent || "").replace(/\u200b/g, "").trim();
+      // Published HTML can preserve Drive hyperlinks which CSV exposes only as labels.
+      if (options.preserveProjectDocumentLinks && [3, 19, 27].includes(column)) {
+        const href = cell.querySelector("a[href]")?.getAttribute("href");
+        try { const url = new URL(href); if (["https:", "http:"].includes(url.protocol)) text = url.href; } catch (_) {}
+      }
+      column += span;
+      return Array(span).fill(text);
+    });
+  });
 }
 
 function parsePublishedSheetIndex(htmlText) {
@@ -311,7 +315,7 @@ async function loadBorrowProjectsFromProjectStatus(academicYear) {
   if (isPublishedHtmlSheetUrl(source.projectUrl)) {
     const { projectSheet } = await getPublishedHtmlWorkbookSheets(source.projectUrl, null, { cache: "no-store" });
     const url = normalizePublishedSheetUrl(projectSheet.pageUrl) || buildPublishedSheetUrl(source.projectUrl, projectSheet.gid);
-    rows = parsePublishedSheetRows(await fetchTextWithProgress(url, null, { cache: "no-store" }));
+    rows = parsePublishedSheetRows(await fetchTextWithProgress(url, null, { cache: "no-store" }), { preserveProjectDocumentLinks: true });
   } else {
     rows = parseCsvRows(await fetchTextWithProgress(source.projectUrl, null, { cache: "no-store" }));
   }

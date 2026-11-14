@@ -20,7 +20,9 @@ for(const mode of ['normal','staff'])for(const staff of [false,true])for(const [
  assert.equal(link.style.display!=='none',allowed,`final menu visibility: ${email} mode=${mode} staff=${staff}`);
  assert.equal(result.has('project-live-staff'),allowed,`${email} authenticated=${authenticated} staff=${staff}`);
 }
-console.log('Project navigation allows only the year 2568 treasurer and administrator in both profile modes.');
+const docsContext={window:{sgcuAuth:{auth:{currentUser:{email:'document-staff@example.com'}}}},SGCU_APP_CONFIG:{projectLive:{enabled:true}},isUserAuthenticated:true,currentUserProfileType:'staff',currentRepresentativeApprovalState:{hasApproved:false},staffAuthUser:{},staffViewMode:'staff',getAllowedStaffPagesByProfile:()=>new Set(['system-data-staff']),isHeadStaffProfile:()=>false,isSecretaryStaffProfile:()=>false,isAssistantStaffProfile:()=>false};
+assert.ok(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,docsContext).has('project-live-staff'));
+console.log('Project hub retains existing year-68 access and admits system-data staff to document settings; project API gating remains separate.');
 
 const html=await readFile(new URL('../../web/index.html',import.meta.url),'utf8');
 for(const role of ['General','Staff']){
