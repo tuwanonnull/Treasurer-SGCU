@@ -20,11 +20,11 @@ Node.js 22 is required. Deploy only the two new functions:
 firebase deploy --only functions:projectLiveApi,functions:projectLiveBackup --project departmentwebsite-5aec1
 ```
 
-Both functions use Singapore (`asia-southeast1`), minimum instances 0, maximum 1. The Bangkok location was rejected by the project Cloud Functions API; the private storage bucket remains in Bangkok. Usage, storage and scheduler charges follow the project's billing plan.
+Both functions use Singapore (`asia-southeast1`), minimum instances 0, maximum 1. The Bangkok location was rejected by the project Cloud Functions API; the private storage bucket remains in Bangkok. Deployment image cleanup retains 30 days of build artifacts; it does not delete project data or backups. Usage, storage and scheduler charges follow the project's billing plan.
 
 The dedicated bucket `sgcu-project-private-departmentwebsite-5aec1` uses uniform bucket access and enforced public access prevention. It is separate from the Firebase client Storage bucket. The source and backup objects are create-only. The deployed service account needs access to this bucket, Firestore and Firebase Auth.
 
-`projectLiveBackup` runs at midnight and noon Bangkok time. A successful upload is downloaded and validated before writing `projectBackupStatus/2568`. Failed jobs retain failure status and retry. Verify the first cloud backup before relying on this schedule. It is an off-device copy in the same cloud project, not an independently administered disaster-recovery account.
+`projectLiveBackup` runs at midnight and noon Bangkok time. A successful upload is downloaded and validated before writing `projectBackupStatus/2568`. Failed jobs retain failure status and retry. The first cloud backup was verified on 2026-11-14 at 06:46:28 UTC: 407 projects, zero financial audit events, checksum `2ea689657c13b9587b89fd1a7d9f16679facc2ed9716eea35fef0f048a6a4770`. It is an off-device copy in the same cloud project, not an independently administered disaster-recovery account.
 
 The frontend API URL is configured in `js/core/app.config.js`. Publish the website only after deploying and checking the API. Public assets exclude server code and Emulator exports; the service worker excludes authenticated and `/api/` requests.
 
