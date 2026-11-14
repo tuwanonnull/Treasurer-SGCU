@@ -62,3 +62,49 @@
   .project-live-editors form { padding: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .project-live-page button { transition: none; } }
+
+/* Workspace overview and scan-friendly project rows. */
+.project-live-page *, .project-live-page *::before, .project-live-page *::after { box-sizing: border-box; }
+.project-live-overview { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 14px; margin: 24px 0; }
+.project-live-overview > div { display: flex; flex-direction: column; padding: 20px; border: 1px solid var(--theme-border); border-radius: 18px; background: #fff; }
+.project-live-overview span { color: #4b5563; font-size: 13px; }
+.project-live-overview strong { font-size: 32px; line-height: 1.5; font-weight: 600; color: var(--theme-pink-800); font-variant-numeric: tabular-nums; }
+.project-live-overview small { color: #6b7280; font-size: 12px; }
+.project-live-overview .project-live-guide { justify-content: center; background: var(--theme-pink-50); }
+.project-live-guide p { margin: 8px 0; font-weight: 500; }
+.project-live-list-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 28px 0 16px; }
+.project-live-list-heading h2 { margin: 0; }
+.project-live-list-heading [data-live-id="count"] { margin: 4px 0 0; color: #6b7280; font-size: 13px; font-weight: 400; }
+.project-live-page [data-live-id="projects"] { margin-top: 0; }
+.project-live-page [data-live-id="projects"] > details { padding: 0; overflow: hidden; }
+.project-live-page [data-live-id="projects"] > details > summary { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px 20px; padding: 20px 46px 20px 20px; list-style: none; }
+.project-live-page [data-live-id="projects"] > details > summary::-webkit-details-marker { display: none; }
+.project-live-page [data-live-id="projects"] > details > summary::after { content: '+'; position: absolute; right: 20px; top: 20px; font-size: 20px; color: var(--theme-pink-700); }
+.project-live-page [data-live-id="projects"] > details[open] > summary::after { content: '−'; }
+.project-live-page [data-live-id="projects"] > details > summary:hover { background: var(--theme-pink-50); }
+.project-live-page [data-live-id="projects"] > details > summary:focus-visible { outline-offset: -4px; }
+.project-live-card-heading { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.project-live-card-heading .project-live-code { flex-shrink: 0; margin: 0; }
+.project-live-name { font-size: 15px; font-weight: 500; }
+.project-live-card-hint { font-size: 12px; font-weight: 400; color: #6b7280; }
+.project-live-statuses { grid-column: 1 / -1; margin: 0; gap: 6px; }
+.project-live-statuses > span { padding: 3px 9px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafbfc; font-size: 12px; font-weight: 400; color: #4b5563; }
+.project-live-page [data-live-id="projects"] .project-live-money { margin: 0; padding: 16px 20px; border-top: 1px solid #edf0f3; }
+.project-live-page [data-live-id="projects"] .project-live-editors { padding: 20px; }
+.project-live-empty { padding: 40px 20px; text-align: center; border: 1px dashed var(--theme-border); border-radius: 18px; background: #fff; }
+.project-live-empty p { margin: 0; color: #6b7280; }
+.project-live-page .project-live-backup-note { text-align: center; padding: 12px; }
+.project-live-page nav [data-live-id="page"] { align-self: center; min-width: 90px; text-align: center; color: #6b7280; font-variant-numeric: tabular-nums; }
+.project-live-page [data-live-id="admin"] > summary { color: var(--theme-pink-800); }
+@media (max-width: 760px) {
+  .project-live-overview { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .project-live-overview > div { padding: 16px; }
+  .project-live-overview .project-live-guide { grid-column: 1 / -1; }
+  .project-live-list-heading { align-items: stretch; }
+  .project-live-list-heading > .project-live-toolbar { width: 100%; }
+  .project-live-list-heading button { flex: 1; padding-inline: 12px; }
+  .project-live-page [data-live-id="projects"] > details > summary { grid-template-columns: minmax(0,1fr); padding: 16px 40px 16px 16px; }
+  .project-live-card-heading { flex-direction: column; gap: 8px; }
+  .project-live-card-hint { display: none; }
+  .project-live-page [data-live-id="projects"] .project-live-money, .project-live-page [data-live-id="projects"] .project-live-editors { padding: 16px; }
+}
