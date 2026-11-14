@@ -282,6 +282,7 @@ function initStaffAccessPages() {
   ];
   const STAFF_PAGE_OPTIONS = [
     { id: "dashboard-staff", label: "ภาพรวมโครงการ" },
+    { id: "project-live-staff", label: "จัดการโครงการ" },
     { id: "treasurer-handover-staff", label: "คู่มือ เหรัญญิก อบจ." },
     { id: "system-data-staff", label: "ข้อมูลระบบ" },
     { id: "budget-approval-staff", label: "คำของบประมาณ" },

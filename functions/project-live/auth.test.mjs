@@ -6,3 +6,12 @@ test('only verified head and designated admin authenticate; current account and 
  for(const email of ['6740193226@student.chula.ac.th','someone@gmail.com'])await assert.rejects(createProjectAuthenticator({verifyIdToken:async()=>({uid:'u',email,email_verified:true}),getUser:async()=>({uid:'u',email,emailVerified:true})})('Bearer signed'),e=>e.status===403);
  await assert.rejects(createProjectAuthenticator({verifyIdToken:async()=>{throw Error('revoked');}})('Bearer signed'),e=>e.status===401);
 });
+
+test('v2 registers secretaries and assistants by UID without allowing an unlisted or renamed admin',async()=>{
+ const user={uid:'s',email:'secretary@example.test',emailVerified:true,disabled:false};
+ const auth={verifyIdToken:async()=>({uid:user.uid,email:user.email,email_verified:true}),getUser:async()=>user};
+ for(const role of ['secretary','assistant'])assert.equal((await createProjectAuthenticator(auth,{registry:{s:{id:'s',role}}})('Bearer signed')).role,role);
+ await assert.rejects(createProjectAuthenticator(auth,{registry:{other:{role:'secretary'}}})('Bearer signed'),e=>e.status===403);
+ await assert.rejects(createProjectAuthenticator(auth,{registry:{s:{role:'admin'}}})('Bearer signed'),e=>e.status===403);
+ user.disabled=true;await assert.rejects(createProjectAuthenticator(auth,{registry:{s:{role:'secretary'}}})('Bearer signed'),e=>e.status===403);
+});

@@ -380,3 +380,78 @@ html[data-theme="dark"] .project-live-page .project-live-code { color: var(--pre
 html[data-theme="dark"] .project-live-follow-up { background: var(--preview-surface); border-color: var(--preview-border); }
 html[data-theme="dark"] .project-live-follow-up > summary { color: var(--preview-accent); }
 html[data-theme="dark"] .project-live-follow-up > .project-live-info-card { border-color: var(--preview-border); }
+
+.project-record-panel { margin-bottom: 16px; }
+.project-record-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 24px; }
+.project-record-panel > .project-live-editors { margin-bottom: 18px; }
+.project-record-follow-body,.project-record-pending { padding: 16px; }
+.project-record-follow-form { display: grid; gap: 12px; padding-bottom: 18px; }
+.project-record-follow-form label { display: grid; gap: 5px; }
+.project-record-follow-form :is(input,select,textarea),.project-record-pending textarea { padding: 10px; border: 1px solid var(--theme-border); border-radius: 10px; font: inherit; max-width: 100%; }
+.project-record-follow-entry { padding: 12px 0; border-bottom: 1px solid #e5e7eb; overflow-wrap: anywhere; }
+.project-record-pending { margin-bottom: 16px; border: 1px solid var(--theme-border); border-radius: 14px; overflow-wrap: anywhere; }
+.project-record-pending button { margin: 8px; }
+.project-record-panel [data-live-form-message] { grid-column: 1/-1; }
+@media(max-width:760px){.project-record-fields { grid-template-columns: minmax(0,1fr); }.project-record-follow-form :is(input,select,textarea) { font-size: 16px; }}
+
+/* Compact record editing: related short fields share a row. */
+.project-record-panel .project-live-single-editor form { max-width: none; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 16px; background: var(--theme-pink-50); }
+.project-record-panel .project-live-single-editor form > label.is-wide { grid-column: 1/-1; }
+.project-record-panel .project-live-single-editor form :is(input,select,textarea) { width: 100%; min-width: 0; box-sizing: border-box; }
+.project-record-panel .project-live-single-editor textarea { min-height: 64px; }
+.project-record-fields[hidden] { display: none; }
+.project-record-follow-form { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
+.project-record-follow-form > :is(label:has(textarea),p,button) { grid-column: 1/-1; }
+.project-record-follow-form > button { justify-self: start; }
+html[data-theme="dark"] .project-record-panel .project-live-single-editor form { background: var(--preview-surface); }
+@media(max-width:600px){
+ .project-record-panel .project-live-single-editor form,.project-record-follow-form { grid-template-columns: minmax(0,1fr); }
+ .project-record-panel .project-live-single-editor form :is(input,select,textarea) { font-size: 16px; }
+}
+/* Match the grouped form used when reviewing budget requests. */
+.project-record-panel .project-live-single-editor form { padding: 0; border: 0; background: transparent; }
+.project-record-form-section { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-column: 1/-1; min-width: 0; margin: 0; padding: 12px; gap: 10px 12px; border: 1px solid rgba(244,114,182,.16); border-radius: 14px; background: #fffafd; }
+.project-record-form-section legend { padding: 0 6px; color: #9d174d; font-size: 12px; font-weight: 700; }
+.project-live-page .project-record-form-section > label { display: grid; align-content: start; gap: 5px; margin: 0; min-width: 0; }
+.project-record-form-section > label.is-wide { grid-column: 1/-1; }
+.project-record-form-section :is(input,select) { min-height: 38px; }
+html[data-theme="dark"] .project-record-form-section { background: var(--preview-raised); border-color: var(--preview-border); }
+html[data-theme="dark"] .project-record-form-section legend { color: var(--preview-accent); }
+@media(max-width:600px){.project-record-form-section { grid-template-columns: minmax(0,1fr); }}
+
+/* Reading mode uses compact cells too, not only the edit form. */
+.project-record-panel > .project-record-fields {
+ grid-template-columns: repeat(3,minmax(0,1fr));
+ grid-auto-rows: auto;
+ column-gap: 20px;
+}
+.project-record-fields > div {
+ grid-template-columns: minmax(0,1fr);
+ align-content: start;
+ align-items: start;
+ gap: 3px;
+ min-width: 0;
+ min-height: 0;
+ padding: 10px 0;
+}
+.project-record-fields :is(dt,dd) { min-width: 0; overflow-wrap: anywhere; line-height: 1.5; }
+.project-record-fields > .project-record-name { grid-column: span 2; }
+.project-record-fields > .project-record-long { grid-column: 1/-1; }
+.project-record-fields > div:last-child { border-bottom: 1px solid #e5e7eb; }
+.project-record-fields dd { white-space: pre-wrap; }
+html[data-theme="dark"] .project-record-fields dt { color: var(--preview-muted); }
+html[data-theme="dark"] .project-record-fields dd { color: var(--preview-text); }
+html[data-theme="dark"] .project-record-fields > div:last-child { border-color: var(--preview-border); }
+@media(max-width:760px){
+ .project-record-panel > .project-record-fields { grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 14px; }
+ .project-record-fields > .project-record-name { grid-column: auto; }
+}
+@media(max-width:360px){.project-record-panel > .project-record-fields { grid-template-columns: minmax(0,1fr); }}
+
+/* Keep page-level tabs aligned with the other staff page headers. */
+.project-live-page > .page-header-flex > .project-hub-tabs { margin: 0; }
+.project-live-statuses { display: grid; justify-items: start; gap: 4px; min-width: 0; }
+.project-live-primary-status { color: #374151; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.project-live-secondary-status { color: #6b7280; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+html[data-theme="dark"] .project-live-primary-status { color: var(--preview-text); }
+html[data-theme="dark"] .project-live-secondary-status { color: var(--preview-muted); }

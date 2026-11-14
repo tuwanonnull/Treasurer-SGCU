@@ -2,7 +2,7 @@
 (function(){
  const root=document.querySelector('[data-page="project-live-staff"].page-view');if(!root)return;
  const tabs=[...root.querySelectorAll('[data-project-hub-tab]')];let selected='projects';
- const canUseProjects=()=>['6534324223@student.chula.ac.th','tuwanon.kimchiang@gmail.com'].includes((window.sgcuAuth?.auth?.currentUser?.email||'').toLowerCase()) && globalThis.SGCU_APP_CONFIG?.projectLive?.enabled!==false;
+ const canUseProjects=()=>((globalThis.SGCU_APP_CONFIG?.projectLive?.recordV2===true && !!window.sgcuAuth?.auth?.currentUser) || ['6534324223@student.chula.ac.th','tuwanon.kimchiang@gmail.com'].includes((window.sgcuAuth?.auth?.currentUser?.email||'').toLowerCase())) && globalThis.SGCU_APP_CONFIG?.projectLive?.enabled!==false;
  const canEditDocuments=()=>typeof isHeadStaffProfile==='function' && typeof staffAuthUser!=='undefined' && isHeadStaffProfile(staffAuthUser);
  function select(name,notify=true){
   selected=name==='projects'&&!canUseProjects()?'documents':name;

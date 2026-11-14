@@ -4,10 +4,11 @@ const root=document.querySelector('.page-view[data-page="project-live-staff"]');
 if(!root || root.dataset.liveMounted)return;root.dataset.liveMounted='true';
 let datasetId=null;
 const $=id=>root.querySelector(`[data-live-id="${id}"]`), node=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
-let offset=0,query='',generation=0,busy=false,matchedCount=0,filterOptions=[],activeProjectId=null,modalDirty=false;
+let offset=0,query='',generation=0,busy=false,matchedCount=0,filterOptions=[],activeProjectId=null,modalDirty=false,pendingOnly=false;
+let recordDrafts={};
 const filters={year:'2568',group:'all',organization:'all'};
 function message(text){$('message').textContent=text;$('modal-message').textContent=text;root.querySelectorAll('[data-live-form-message]').forEach(el=>el.textContent=text);}
-function closeModal(force=false){if(!force && (busy || (modalDirty && !confirm('มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดหน้าต่างหรือไม่?'))))return; const opener=[...$('projects').querySelectorAll('button')].find(b=>b.dataset.projectId===activeProjectId);$('modal').close();opener?.focus();$('modal-body').replaceChildren();activeProjectId=null;modalDirty=false;document.body.classList.remove('project-live-modal-open');}
+function closeModal(force=false){if(!force && (busy || (modalDirty && !confirm('มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดหน้าต่างหรือไม่?'))))return; const opener=[...$('projects').querySelectorAll('button')].find(b=>b.dataset.projectId===activeProjectId);$('modal').close();recordDrafts={};opener?.focus();$('modal-body').replaceChildren();activeProjectId=null;modalDirty=false;document.body.classList.remove('project-live-modal-open');}
 $('modal-close').onclick=()=>closeModal();
 $('modal').addEventListener('cancel',e=>{e.preventDefault();closeModal();});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal')){const r=$('modal').getBoundingClientRect();if(e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom)closeModal();}});
@@ -65,6 +66,11 @@ function updateOrgOptions(){fillOptions('organization',[...new Set(filterOptions
 function openProject(p,state){
  const selectedSection=activeProjectId===p.id?$('modal').querySelector('[role=tab][aria-selected=true]')?.dataset.sectionTarget:'01';
  activeProjectId=p.id;modalDirty=false;$('modal-title').textContent=p.name;$('modal-meta').textContent=`${p.code} · ปีการศึกษา ${p.year||2568}`;$('modal-message').textContent='';
+ if(state.recordSchemaVersion===2){
+  const view=window.sgcuProjectRecordEditor.create({project:p,state,api,run:operation,onSaved:async section=>{recordDrafts=view.getDrafts(section);modalDirty=Object.keys(recordDrafts).length>0;await refresh();},onDirty:()=>modalDirty=true,initialSection:selectedSection||'01',drafts:recordDrafts});
+  $('modal').querySelector('.project-live-section-nav')?.remove();$('modal-body').before(view.navigation);$('modal-body').replaceChildren(view.root);modalDirty=Object.keys(recordDrafts).length>0;$('modal-body').onscroll=null;$('modal-body').scrollTop=0;
+  if(!$('modal').open){$('modal').showModal();document.body.classList.add('project-live-modal-open');}return;
+ }
  const details=window.sgcuProjectLiveDetails.create(p,state);
  const overview=node('section');overview.dataset.liveId='modal-overview';
  overview.append(details);
@@ -123,15 +129,17 @@ function openProject(p,state){
  if(!$('modal').open){$('modal').showModal();document.body.classList.add('project-live-modal-open');}
  else{$('modal-title').tabIndex=-1;$('modal-title').focus({preventScroll:true});}
 }
-async function refresh(){const current=generation,state=await api('?'+new URLSearchParams({q:query,offset,...filters}));if(current!==generation)return;
+async function refresh(){const current=generation,state=await api('?'+new URLSearchParams({q:query,offset,...filters,...(pendingOnly?{pending:'true'}:{})}));if(current!==generation)return;
  offset=state.offset??offset;
+ if(state.recordSchemaVersion===2){$('history').hidden=state.user.role==='assistant';$('backup').hidden=!['head','admin'].includes(state.user.role);let toggle=$('pending-only');if(!toggle){toggle=node('button');toggle.type='button';toggle.className='btn-ghost';toggle.dataset.liveId='pending-only';$('search').querySelector('.project-live-toolbar').append(toggle);toggle.onclick=()=>{if(busy)return;pendingOnly=!pendingOnly;offset=0;operation(refresh);};}toggle.textContent=`คำขอรอตรวจ (${state.pendingRequestsCount||0})`;toggle.setAttribute('aria-pressed',String(pendingOnly));}
+
  filterOptions=state.filterOptions?.organizations||[];
  fillOptions('group',[...new Set(filterOptions.map(o=>o.group).filter(Boolean))],'ทุกประเภทองค์กร');updateOrgOptions();
   $('data').hidden=false;$('admin').hidden=state.user.role!=='admin';datasetId=state.datasetId;$('events').replaceChildren();$('count').textContent=`พบ ${state.matchedCount} จาก ${state.totalCount} โครงการ · หน้า ${Math.floor(offset/25)+1}`;
   matchedCount=state.matchedCount;
   $('total').textContent=state.totalCount.toLocaleString('th-TH');$('matched').textContent=matchedCount.toLocaleString('th-TH');
   $('page').textContent=`หน้า ${Math.floor(offset/25)+1} / ${Math.max(1,Math.ceil(matchedCount/25))}`;
-  $('clear').hidden=!query && filters.year==='2568' && filters.group==='all' && filters.organization==='all';$('empty').hidden=matchedCount!==0;$('history').setAttribute('aria-expanded','false');syncPagination();
+  $('clear').hidden=!pendingOnly && !query && filters.year==='2568' && filters.group==='all' && filters.organization==='all';$('empty').hidden=matchedCount!==0;$('history').setAttribute('aria-expanded','false');syncPagination();
   const b=state.automaticBackup;$('backup-status').textContent=b?.backupAt?`สำรองนอกเครื่องล่าสุด ${new Date(b.backupAt).toLocaleString('th-TH')} ${b.failed||b.overdue?'· ต้องตรวจสำรอง':''} · เก็บในพื้นที่ส่วนตัวบนคลาวด์`:'ยังไม่มีชุดสำรองอัตโนมัติที่ตรวจผ่าน';
   $('projects').replaceChildren();for(const p of state.projects){
     const row=node('button');row.type='button';row.dataset.projectId=p.id;row.className='project-live-row';row.setAttribute('aria-haspopup','dialog');row.setAttribute('aria-label',`ดูรายละเอียดและดำเนินการ ${p.code} ${p.name}`);
@@ -139,13 +147,16 @@ async function refresh(){const current=generation,state=await api('?'+new URLSea
     const heading=node('span');heading.className='project-live-card-heading';heading.append(code,title);
     const budget=node('span',money(p.money.O));budget.className='project-live-row-budget';
     const statuses=node('span');statuses.className='project-live-statuses';
-    for(const g of state.statusGroups){const badge=node('span',`${g.label}: ${p.statuses[g.column]||'—'}`);badge.className='pill pill-soft-gray';statuses.append(badge);}
+    const approval=node('span',p.statuses.H||'ยังไม่ระบุสถานะอนุมัติ');approval.className='project-live-primary-status';statuses.append(approval);
+    if(p.statuses.AZ){const closure=node('span','ปิดโครงการ · '+p.statuses.AZ);closure.className='project-live-secondary-status';statuses.append(closure);}
+    statuses.title=state.statusGroups.map(g=>`${g.label}: ${p.statuses[g.column]||'ไม่ระบุ'}`).join('\n');
+    if(p.pendingRequestId){const pending=node('span','รอตรวจแก้ข้อมูล');pending.className='pill pill-soft-pink';statuses.append(pending);}
     row.append(heading,statuses,budget);row.onclick=()=>openProject(p,state);$('projects').append(row);
   }
   if(activeProjectId){const project=state.projects.find(p=>p.id===activeProjectId);if(project)openProject(project,state);else closeModal(true);}
 }
 function applyFilters(){if(busy)return;query=$('query').value.trim();for(const key of Object.keys(filters))filters[key]=$(key).value;offset=0;operation(refresh);}
-$('clear').onclick=()=>{if(busy)return;$('query').value='';$('year').value='2568';$('group').value='all';updateOrgOptions();$('organization').value='all';applyFilters();};
+$('clear').onclick=()=>{if(busy)return;pendingOnly=false;$('query').value='';$('year').value='2568';$('group').value='all';updateOrgOptions();$('organization').value='all';applyFilters();};
 $('group').onchange=()=>{updateOrgOptions();applyFilters();};$('organization').onchange=applyFilters;$('year').onchange=applyFilters;
 $('search').onsubmit=e=>{e.preventDefault();applyFilters();};
 $('previous').onclick=()=>{if(busy || offset===0)return;offset=Math.max(0,offset-25);operation(refresh);};$('next').onclick=()=>{if(busy || offset+25>=matchedCount)return;offset+=25;operation(refresh);};
@@ -156,7 +167,7 @@ $('access-load').onclick=()=>operation(async current=>{const result=await api('/
 $('access-form').onsubmit=e=>{e.preventDefault();if(!confirm('ยืนยันเปลี่ยนสิทธิ์เหรัญญิกปี 2568?'))return;operation(async()=>{await api('/access',{active:$('access-active').value==='true',reason:$('access-reason').value});$('access-state').textContent='บันทึกการเปลี่ยนสิทธิ์แล้ว';});};
 $('restore-form').onsubmit=e=>{e.preventDefault();operation(async()=>{
  const file=$('restore-file').files[0];if(!file || file.size>8*1024*1024)throw Error('เลือกไฟล์สำรองไม่เกิน 8 MiB');
- const bundle=JSON.parse(await file.text());if(bundle.format!=='SGCU-live-backup')throw Error('ต้องเป็นไฟล์สำรองข้อมูลใช้งานจริง');
+ const bundle=JSON.parse(await file.text());if(!['SGCU-live-backup','SGCU-record-backup'].includes(bundle.format))throw Error('ต้องเป็นไฟล์สำรองข้อมูลใช้งานจริง');
  if(!confirm(`กู้คืนชุดสำรองวันที่ ${bundle.payload?.createdAt || 'ไม่ระบุ'}? ระบบจะเก็บสำรองปัจจุบันก่อน แล้วสลับไปชุดกู้คืนใหม่`))return;
  await api('/restore',{bundle,reason:$('restore-reason').value,expectedDatasetId:datasetId});await refresh();
 });};

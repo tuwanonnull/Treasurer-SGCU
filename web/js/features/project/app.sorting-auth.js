@@ -1139,6 +1139,7 @@ const STAFF_HEAD_OVERRIDES = new Set([
 ]);
 const STAFF_PAGE_OPTIONS = [
   "dashboard-staff",
+  "project-live-staff",
   "treasurer-handover-staff",
   "system-data-staff",
   "borrow-assets-staff",
@@ -1379,7 +1380,7 @@ function hasNavigableStaffPages(profile) {
 function getAllowedPagesForCurrentState() {
   const withProjectLive = pages => {
     const email = (window.sgcuAuth?.auth?.currentUser?.email || "").toLowerCase();
-    if (isUserAuthenticated && ((globalThis.SGCU_APP_CONFIG?.projectLive?.enabled && ["6534324223@student.chula.ac.th", "tuwanon.kimchiang@gmail.com"].includes(email)) || pages.has("system-data-staff"))) pages.add("project-live-staff");
+    if (isUserAuthenticated && (pages.has("project-live-staff") || (globalThis.SGCU_APP_CONFIG?.projectLive?.enabled && (["6534324223@student.chula.ac.th", "tuwanon.kimchiang@gmail.com"].includes(email) || (globalThis.SGCU_APP_CONFIG?.projectLive?.recordV2===true && pages.has("dashboard-staff")))) || pages.has("system-data-staff"))) pages.add("project-live-staff");
     else pages.delete("project-live-staff");
     return pages;
   };

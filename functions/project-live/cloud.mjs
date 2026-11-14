@@ -1,3 +1,4 @@
+import {createRecordStore,validateRecordBackup} from './record-store.mjs';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -26,15 +27,16 @@ function runtime(){
       source=JSON.parse(bytes);if(!isDeepStrictEqual(acceptBaseline(source.candidate),source.acceptance))throw Error('Source approval mismatch');
       sourceCache.clear();sourceCache.set(config.sourceObjectSha256,source);
     }
-    return {...structuredClone(source),users:config.users,datasetId:config.datasetId,db};
+    return {...structuredClone(source),users:config.users,datasetId:config.datasetId,recordSchemaVersion:config.recordSchemaVersion,db};
   };
   const saveBackup=async(bundle,kind='scheduled')=>{
-    const p=validateLiveBackup(bundle),object=`project-live/backups/${p.datasetId}/${kind}-${randomUUID()}.json`;
+    const validate=bundle.format==='SGCU-record-backup'?validateRecordBackup:validateLiveBackup;
+    const p=validate(bundle),object=`project-live/backups/${p.datasetId}/${kind}-${randomUUID()}.json`;
     const file=bucket.file(object);
     await file.save(JSON.stringify(bundle),{resumable:false,preconditionOpts:{ifGenerationMatch:0},metadata:{contentType:'application/json',cacheControl:'private, no-store'}});
-    const [bytes]=await file.download(),disk=JSON.parse(bytes);validateLiveBackup(disk);
+    const [bytes]=await file.download(),disk=JSON.parse(bytes);validate(disk);
     if(disk.checksum!==bundle.checksum)throw Error('Offsite backup changed after upload');
-    const status={object,backupAt:p.createdAt,datasetId:p.datasetId,auditCount:p.auditOrder.length,checksum:bundle.checksum,verified:true,failed:false};
+    const status={object,backupAt:p.createdAt,datasetId:p.datasetId,auditCount:p.auditOrder?.length??p.audit.length,checksum:bundle.checksum,verified:true,failed:false};
     await db.collection('projectBackupStatus').doc('2568').set(status);
     return status;
   };
@@ -49,8 +51,8 @@ export const projectLiveApi=onRequest({region:'asia-southeast1',memory:'512MiB',
   try{
     const rt=runtime(),service=createProjectService(rt);
     const url=new URL(req.originalUrl,'https://local.invalid'),action=url.pathname.replace(/^\/api\/year68\/live\/?/,'').replace(/^\//,'');
-    if(!['','history','backup','preview','commit','status-preview','status','access','restore'].includes(action))return res.status(404).json({error:'ไม่พบคำสั่ง'});
-    if(req.method==='POST' && (!req.is('application/json') || (req.rawBody?.length || 0)>(action==='restore'?8*1024*1024:10000)))return res.status(400).json({error:'รูปแบบหรือขนาดคำขอไม่ถูกต้อง'});
+    if(!['','history','backup','preview','commit','status-preview','status','access','restore','record-preview','record-save','record-approve','record-reject','followup-add','followups','requests'].includes(action))return res.status(404).json({error:'ไม่พบคำสั่ง'});
+    if(req.method==='POST' && (!req.is('application/json') || (req.rawBody?.length || 0)>(action==='restore'?8*1024*1024:['record-preview','record-save'].includes(action)?65536:10000)))return res.status(400).json({error:'รูปแบบหรือขนาดคำขอไม่ถูกต้อง'});
     const result=await service.handle({authorization:req.get('authorization'),method:req.method,action,body:req.body,params:url.searchParams});
     if(action==='backup')res.set('Content-Disposition','attachment; filename="sgcu-year2568-live-backup.json"');
     if(action===''){
@@ -63,7 +65,7 @@ export const projectLiveApi=onRequest({region:'asia-southeast1',memory:'512MiB',
 export const projectLiveBackup=onSchedule({region:'asia-southeast1',schedule:'0 */12 * * *',timeZone:'Asia/Bangkok',memory:'512MiB',timeoutSeconds:300,maxInstances:1,minInstances:0,retryCount:3,minBackoffSeconds:3600},async()=>{
   const rt=runtime();
   try{
-    const options=await rt.loadOptions(),store=await createLiveStore(options);
+    const options=await rt.loadOptions(),store=await (options.recordSchemaVersion===2?createRecordStore:createLiveStore)(options);
     const admin=Object.values(options.users).find(u=>u.role==='admin');
     if(!admin)throw Error('Backup administrator unavailable');
     const account=await rt.auth.getUser(admin.id);

@@ -1,3 +1,4 @@
+import {createRecordStore,validateRecordBackup,restoreRecordBackup} from './record-store.mjs';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { createLiveStore, restoreLiveBackup, validateLiveBackup } from './live-store.mjs';
@@ -13,9 +14,11 @@ export function createProjectService({ db, auth, loadOptions, saveBackup }) {
   };
   return {
     async handle({ authorization, method, action, body, params = new URLSearchParams() }) {
-      const actor = await authenticate(authorization), options = await loadOptions(), store = await createLiveStore({...options,db});
+      const options = await loadOptions(), v2=options.recordSchemaVersion===2;
+      const actor = await (v2?createProjectAuthenticator(auth,{registry:options.users}):authenticate)(authorization), store = await (v2?createRecordStore:createLiveStore)({...options,db,auth});
       if(method === 'GET') {
         if(action === '')return store.query(actor.id,params);
+        if(v2 && ['followups','requests'].includes(action))return store.list(actor.id,action,params);
         if(action === 'history')return store.history(actor.id);
         if(action === 'backup')return store.backup(actor.id);
         if(action === 'access') {
@@ -27,7 +30,8 @@ export function createProjectService({ db, auth, loadOptions, saveBackup }) {
         }
       }
       if(method === 'POST') {
-        if(['preview','commit','status-preview','status'].includes(action))return store.mutate(actor.id,action,body);
+        if(v2 && ['record-preview','record-save','record-approve','record-reject','followup-add'].includes(action))return store.mutate(actor.id,action,body);
+        if(!v2 && ['preview','commit','status-preview','status'].includes(action))return store.mutate(actor.id,action,body);
         fail(actor.role === 'admin',403,'เฉพาะแอดมิน');await requireAdmin(actor.id);
         if(action === 'access') {
           fail(body && Object.keys(body).every(k=>['active','reason'].includes(k)) && typeof body.active==='boolean' && typeof body.reason==='string' && body.reason.trim().length>=3 && body.reason.length<=1000,400,'ระบุสิทธิ์และเหตุผล');
@@ -46,6 +50,19 @@ export function createProjectService({ db, auth, loadOptions, saveBackup }) {
         }
         if(action === 'restore') {
           fail(body && Object.keys(body).every(k=>['bundle','reason','expectedDatasetId'].includes(k)) && body.expectedDatasetId===options.datasetId && typeof body.reason==='string' && body.reason.trim().length>=3 && body.reason.length<=1000,400,'ระบุชุดข้อมูลและเหตุผลกู้คืน');
+          if(v2){
+            const p=validateRecordBackup(body.bundle);fail(isDeepStrictEqual(p.users,options.users),400,'ทะเบียนบัญชีไม่ตรง');
+            const safety=await saveBackup(await store.backup(actor.id),'before-restore'),destination=`year2568-record-recovered-${randomUUID()}`;
+            await restoreRecordBackup({bundle:body.bundle,db,datasetId:destination});
+            await db.runTransaction(async tx=>{
+              await requireAdmin(actor.id,tx);const configRef=db.collection('projectLiveConfig').doc('2568'),oldRef=db.collection('projectRecordDatasets').doc(options.datasetId),newRef=db.collection('projectRecordDatasets').doc(destination);
+              const [config,oldMeta,newMeta,overview]=await Promise.all([tx.get(configRef),tx.get(oldRef),tx.get(newRef),tx.get(oldRef.collection('views').doc('overview'))]);
+              fail(config.data()?.recordSchemaVersion===2&&config.data()?.datasetId===options.datasetId&&oldMeta.data()?.active&&newMeta.data()?.active===false&&newMeta.data()?.status==='ready'&&overview.data()?.sequence===safety.auditCount,409,'ข้อมูลเปลี่ยนระหว่างกู้คืน');
+              const grants=[];for(const user of Object.values(options.users)){if(user.role==='admin')continue;const ref=db.collection('projectAccess').doc('2568').collection('members').doc(user.id),snap=await tx.get(ref);fail(snap.data()?.datasetId===options.datasetId,409,'สิทธิ์เปลี่ยนระหว่างกู้คืน');grants.push(ref);}
+              tx.update(oldRef,{active:false});tx.update(newRef,{active:true});tx.update(configRef,{datasetId:destination});for(const ref of grants)tx.update(ref,{datasetId:destination});
+              tx.create(db.collection('projectAdminAudit').doc(randomUUID()),{actor:actor.id,action:'record-restore',from:options.datasetId,to:destination,safetyBackup:safety.object,reason:body.reason.trim(),at:new Date().toISOString()});
+            });return {datasetId:destination,restored:true};
+          }
           const p=validateLiveBackup(body.bundle);
           fail(isDeepStrictEqual(p.candidate,options.candidate) && isDeepStrictEqual(p.acceptance,options.acceptance) && Object.entries(p.users).every(([id,user])=>isDeepStrictEqual(user,options.users[id])),400,'ไฟล์สำรองไม่ตรงต้นฉบับหรือทะเบียนบัญชี');
           // Persist a verified offsite copy of the current state before starting a restore.

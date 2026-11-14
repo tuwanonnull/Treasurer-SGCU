@@ -1,15 +1,15 @@
 import { PilotError } from './model.mjs';
 export const HEAD_EMAIL = '6534324223@student.chula.ac.th';
 export const ADMIN_EMAIL = 'tuwanon.kimchiang@gmail.com';
-export function createProjectAuthenticator(auth) {
+export function createProjectAuthenticator(auth, { registry = null } = {}) {
   return async header => {
     if (typeof header !== 'string' || !/^Bearer [^\s]+$/.test(header)) throw new PilotError(401,'กรุณาเข้าสู่ระบบด้วยบัญชีเดิม');
     let token,user;
     try { token = await auth.verifyIdToken(header.slice(7),true); user = await auth.getUser(token.uid); }
     catch { throw new PilotError(401,'บัญชีหรือการเข้าสู่ระบบใช้ไม่ได้แล้ว'); }
     const email = user.email?.toLowerCase();
-    if (user.uid !== token.uid || user.disabled || !user.emailVerified || token.email_verified !== true || token.email?.toLowerCase() !== email || ![HEAD_EMAIL,ADMIN_EMAIL].includes(email)) throw new PilotError(403,'บัญชีนี้ยังไม่มีสิทธิ์ใช้งานโครงการปี 2568');
-    return { id:user.uid, email, authenticated:true, role:email === ADMIN_EMAIL ? 'admin' : 'head' };
+    if (user.uid !== token.uid || user.disabled || !user.emailVerified || token.email_verified !== true || token.email?.toLowerCase() !== email || (![HEAD_EMAIL,ADMIN_EMAIL].includes(email) && !(registry&&Object.hasOwn(registry,user.uid)&&['secretary','assistant'].includes(registry[user.uid].role)))) throw new PilotError(403,'บัญชีนี้ยังไม่มีสิทธิ์ใช้งานโครงการปี 2568');
+    return { id:user.uid, email, authenticated:true, role:registry?.[user.uid]?.role || (email === ADMIN_EMAIL ? 'admin' : 'head') };
   };
 }
 export async function loadProjectRegistry(auth) {

@@ -34,3 +34,10 @@ for(const role of ['general','staff']){
  assert.equal(groups.some(([,r,body])=>r===role && body.includes('data-page="project-live-staff"')),role==='staff',`Mobile ${role} entry`);
 }
 console.log('Project entry is present only in staff navigation on desktop and mobile; general navigation has no entry.');
+
+const explicitProjectContext={...docsContext,getAllowedStaffPagesByProfile:()=>new Set(['project-live-staff'])};
+assert.ok(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,explicitProjectContext).has('project-live-staff'));
+assert.equal(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,{...explicitProjectContext,isUserAuthenticated:false}).has('project-live-staff'),false);
+const staffAccessSource=await readFile(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url),'utf8');
+assert.ok(staffAccessSource.includes('{ id: "project-live-staff", label: "จัดการโครงการ" }'));
+console.log('Explicit project page grants are selectable and retained only for authenticated users.');
