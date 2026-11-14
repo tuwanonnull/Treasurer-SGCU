@@ -1,9 +1,10 @@
+import {filterLiveProjects} from '../functions/project-live/query-filters.mjs';
 import http from 'node:http';
 import fs from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const moneyLabels={O:'งบอนุมัติ',V:'ยอดโอน',AJ:'ยอดใช้จริง'};
 const statusGroups=[{column:'S',label:'สถานะโครงการ',values:['รอดำเนินการ','กำลังดำเนินการ','เสร็จสิ้น']}];
-const projects=Array.from({length:28},(_,i)=>({id:String(i),code:`SGCU68-${String(i+1).padStart(3,'0')}`,name:['โครงการสานสัมพันธ์นิสิต','โครงการจิตอาสาพัฒนาชุมชน','โครงการส่งเสริมทักษะผู้นำนิสิต','โครงการกิจกรรมกีฬาเพื่อสุขภาพ'][i%4]+' (ตัวอย่าง '+(i+1)+')',version:1,money:{O:(i+1)*150000,V:0,AJ:i*35000},formulaInputs:{transferDirection:''},statuses:{S:statusGroups[0].values[i%3]}}));
+const projects=Array.from({length:28},(_,i)=>({id:String(i),code:`SGCU68-${String(i+1).padStart(3,'0')}`,name:['โครงการสานสัมพันธ์นิสิต','โครงการจิตอาสาพัฒนาชุมชน','โครงการส่งเสริมทักษะผู้นำนิสิต','โครงการกิจกรรมกีฬาเพื่อสุขภาพ'][i%4]+' (ตัวอย่าง '+(i+1)+')',year:2568,organizationGroup:i%2?'ชมรมฝ่ายกีฬา':'องค์การบริหารสโมสรนิสิต',organization:i%2?(i%4===1?'ชมรมฟุตบอล':'ชมรมแบดมินตัน'):(i%4===0?'ฝ่ายกิจการนิสิต':'ฝ่ายพัฒนาสังคม'),responsibleName:'ผู้ตรวจตัวอย่าง',version:1,money:{O:(i+1)*150000,V:0,AJ:i*35000},formulaInputs:{transferDirection:''},statuses:{S:statusGroups[0].values[i%3]}}));
 const permissions=Object.fromEntries(projects.map(p=>[p.id,{S:Object.fromEntries(statusGroups[0].values.map(v=>[v,'direct']))}]));
 const server=http.createServer(async(req,res)=>{
  try{
@@ -21,14 +22,13 @@ const server=http.createServer(async(req,res)=>{
   if(action==='/history')return res.end(JSON.stringify({audit:[]}));
   if(action==='/access')return res.end(JSON.stringify({active:true}));
   if(action==='/backup'){res.statusCode=400;return res.end(JSON.stringify({error:'โหมดพรีวิวไม่มีชุดสำรองข้อมูลจริง'}));}
-  const q=(url.searchParams.get('q')||'').toLowerCase(),offset=Number(url.searchParams.get('offset')||0);
-  const filtered=projects.filter(p=>(p.code+' '+p.name).toLowerCase().includes(q));
-  return res.end(JSON.stringify({user:{role:'admin'},datasetId:'preview',totalCount:projects.length,matchedCount:filtered.length,projects:filtered.slice(offset,offset+25),moneyLabels,statusGroups,projectStatusPermissions:permissions}));
+  const {matched:filtered,offset,filterOptions}=filterLiveProjects(projects,url.searchParams);
+  return res.end(JSON.stringify({user:{role:'admin'},datasetId:'preview',totalCount:projects.length,matchedCount:filtered.length,offset,filterOptions,projects:filtered.slice(offset,offset+25),moneyLabels,statusGroups,projectStatusPermissions:permissions}));
  }
  if(url.pathname==='/'){
   const partial=await fs.readFile(new URL('partials/project-live-staff.html',root),'utf8');
   res.setHeader('Content-Type','text/html; charset=utf-8');
-  return res.end(`<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>พรีวิวจัดการโครงการ 2568</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/pages/project-live.css"><style>body{display:block;background:#f8f9fc;padding:24px 16px}.page-view{display:block!important}.preview-note{max-width:1120px;margin:0 auto 20px;padding:12px 16px;border:1px solid #ead6df;border-radius:12px;background:#fff4f8;color:#87214f;font-size:14px}.project-live-page{padding:0}</style></head><body><p class="preview-note">พรีวิว UX/UI · ข้อมูลจำลองทั้งหมด · ทดลองค้นหาและดูผลก่อนบันทึกได้ โดยไม่มีการบันทึกข้อมูลจริง</p>${partial.replace('class="page-view"','class="page-view active"')}<script>window.SGCU_APP_CONFIG={projectLive:{apiUrl:'/api'}};window.sgcuAuth={auth:{currentUser:{uid:'preview',getIdToken:async()=> 'preview'}},onAuthStateChanged:()=>{}};</script><script src="/js/features/project/app.project-live.js"></script></body></html>`);
+  return res.end(`<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>พรีวิวจัดการโครงการ 2568</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap"><style>body{display:block;padding:24px 16px}.page-view{display:block!important}.preview-note{max-width:1120px;margin:0 auto 20px;padding:12px 16px;border:1px solid #ead6df;border-radius:12px;background:#fff4f8;color:#87214f;font-size:14px}.project-live-page{padding:0}</style></head><body><p class="preview-note">พรีวิว UX/UI · ข้อมูลจำลองทั้งหมด · ทดลองค้นหาและดูผลก่อนบันทึกได้ โดยไม่มีการบันทึกข้อมูลจริง</p>${partial.replace('class="page-view"','class="page-view active"')}<script>window.SGCU_APP_CONFIG={projectLive:{apiUrl:'/api'}};window.sgcuAuth={auth:{currentUser:{uid:'preview',getIdToken:async()=> 'preview'}},onAuthStateChanged:()=>{}};</script><script src="/js/features/project/app.project-live.js"></script></body></html>`);
  }
  const relative=url.pathname.slice(1);
  if(!/^(css|js|THSarabunNew|img)\//.test(relative)||relative.includes('..')){res.statusCode=404;return res.end();}
