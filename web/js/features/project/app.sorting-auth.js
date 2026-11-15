@@ -1815,6 +1815,10 @@ function initAuthUI() {
     return match ? `${match[1]}@student.chula.ac.th` : normalized;
   }
 
+  function getStudentIdFromEmail(email) {
+    return (email || "").toString().trim().match(/^(\d{10})@(student|alumni)\.chula\.ac\.th$/i)?.[1] || "";
+  }
+
   function isAlumniChulaEmail(email) {
     return /^\d{10}@alumni\.chula\.ac\.th$/i.test((email || "").toString().trim());
   }
@@ -2260,7 +2264,7 @@ function initAuthUI() {
     }
 
     const nickname = (safeProfile.nickname || "").toString().trim();
-    const studentId = (safeProfile.studentId || "").toString().trim();
+    const studentId = getStudentIdFromEmail(safeProfile.authEmail || safeProfile.email) || (safeProfile.studentId || "").toString().trim();
     const phone = (safeProfile.phone || "").toString().trim();
     const lineId = (safeProfile.lineId || "").toString().trim();
     const derived = deriveLoginProfileStudentMeta(studentId, {
@@ -2381,7 +2385,18 @@ function initAuthUI() {
       loginProfileContactRowEl.classList.toggle("is-affairs-contact", !isStudent && !isTemporary);
     }
     if (loginProfileNicknameEl) loginProfileNicknameEl.required = isStudent;
-    if (loginProfileStudentIdEl) loginProfileStudentIdEl.required = isStudent;
+    if (loginProfileStudentIdEl) {
+      const emailStudentId = getStudentIdFromEmail(auth?.currentUser?.email);
+      loginProfileStudentIdEl.required = isStudent;
+      loginProfileStudentIdEl.readOnly = isStudent && !!emailStudentId;
+      if (isStudent && emailStudentId) loginProfileStudentIdEl.value = emailStudentId;
+      const display = document.getElementById("loginProfileStudentIdDisplay");
+      if (display) {
+        display.hidden = !loginProfileStudentIdEl.readOnly;
+        display.textContent = loginProfileStudentIdEl.readOnly ? emailStudentId : "";
+        loginProfileStudentIdEl.hidden = loginProfileStudentIdEl.readOnly;
+      }
+    }
     if (loginProfilePhoneEl) {
       if (isStudent || isTemporary) {
         loginProfilePhoneEl.required = true;
@@ -2458,7 +2473,7 @@ function initAuthUI() {
     const profileType = (safeProfile.profileType || "student").toString().trim().toLowerCase();
     if (profileType === "affairs" || profileType === "temporary") return safeProfile;
 
-    const studentId = (safeProfile.studentId || "").toString().trim();
+    const studentId = getStudentIdFromEmail(safeProfile.authEmail || safeProfile.email) || (safeProfile.studentId || "").toString().trim();
     if (!studentId) return safeProfile;
 
     const derived = deriveLoginProfileStudentMeta(studentId, {
@@ -2466,6 +2481,7 @@ function initAuthUI() {
     });
     return {
       ...safeProfile,
+      studentId,
       faculty: derived.faculty || safeProfile.faculty || "",
       year: derived.year || safeProfile.year || ""
     };
@@ -2473,6 +2489,8 @@ function initAuthUI() {
 
   function updateLoginProfileStudentMeta() {
     if (!loginProfileStudentIdEl || !loginProfileFacultyEl || !loginProfileYearEl) return;
+    const emailStudentId = getStudentIdFromEmail(auth?.currentUser?.email);
+    if (getLoginProfileType() === "student" && emailStudentId) loginProfileStudentIdEl.value = emailStudentId;
     const rawValue = loginProfileStudentIdEl.value || "";
     const digits = rawValue.replace(/\D/g, "");
     const hasNonDigits = rawValue.trim() !== "" && digits.length !== rawValue.replace(/\s/g, "").length;
@@ -2556,8 +2574,8 @@ function initAuthUI() {
       loginProfileNicknameEl.value = (safeProfile.nickname || "").toString();
     }
     if (loginProfileStudentIdEl) {
-      const emailStudentId = authEmail.match(/^(\d{10})@(student|alumni)\.chula\.ac\.th$/)?.[1] || "";
-      loginProfileStudentIdEl.value = (safeProfile.studentId || emailStudentId || "").toString();
+      const emailStudentId = getStudentIdFromEmail(authEmail);
+      loginProfileStudentIdEl.value = (emailStudentId || safeProfile.studentId || "").toString();
     }
     if (loginProfilePhoneEl) {
       loginProfilePhoneEl.value = (safeProfile.phone || "").toString();

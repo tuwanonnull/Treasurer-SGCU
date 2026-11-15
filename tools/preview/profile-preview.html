@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ทดสอบหน้าโปรไฟล์ · Treasurer SGCU</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/components/theme-preview.css">
+  <style>
+    .preview-toolbar { max-width:1200px; margin:20px auto; padding:20px; border:1px dashed var(--preview-border,#f9a8d4); border-radius:16px; background:var(--preview-surface,#fff); color:var(--preview-text,#1f2937); }
+    .preview-toolbar h2 { margin:0 0 8px; font-size:18px; }
+    .preview-toolbar p { margin:0 0 16px; font-size:13px; }
+    .preview-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .preview-controls label { display:flex; flex-direction:column; gap:6px; font-size:13px; min-width:0; }
+    .preview-controls input,.preview-controls select { width:100%; min-width:0; font:inherit; padding:8px; border:1px solid var(--preview-border,#e5e7eb); border-radius:8px; background:var(--preview-raised,#fff); color:inherit; }
+    .preview-toolbar #feedback { margin:12px 0 0; }
+    @media(max-width:720px){.preview-toolbar{margin:12px;padding:14px}.preview-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-controls .preview-wide{grid-column:1/-1}}
+  </style>
+</head>
+<body>
+  <aside class="preview-toolbar" aria-label="ตั้งค่าข้อมูลทดสอบ">
+    <h2>ทดสอบหน้าโปรไฟล์</h2>
+    <p>ใช้ฟอร์มและ CSS จากหน้าจริง ข้อมูลทั้งหมดเป็นข้อมูลสมมติ ปุ่มบันทึกจะไม่ส่งข้อมูลเข้าระบบ</p>
+    <div class="preview-controls">
+      <label class="preview-wide">คณะสำหรับทดสอบ<select id="faculty"></select></label>
+      <label>ชั้นปีสำหรับทดสอบ<select id="year"></select></label>
+      <label>บัญชีจำลอง<select id="domain"><option value="student">อีเมลนิสิต</option><option value="alumni">อีเมลนิสิตเก่า</option><option value="manual">tuwanon.kimchiang@gmail.com</option><option value="temporary">สิทธิ์ชั่วคราว</option></select></label>
+      <label>ปีการศึกษา พ.ศ.<input id="academic" type="number" min="2500" value="2569"></label>
+      <label>เลขนิสิตจำลอง<input id="custom" maxlength="10" inputmode="numeric"></label>
+      <label>ธีม<select id="previewTheme"><option value="light">สว่าง</option><option value="dark">มืด</option></select></label>
+    </div>
+    <p id="feedback" role="status"></p>
+  </aside>
+  <main class="main"><!-- LOGIN_PARTIAL --></main>
+<script>
+const el = id => document.getElementById(id);
+const auth = {currentUser:{email:''}};
+const getCurrentAcademicYearBE = () => Number(el('academic').value);
+const getLoginTemporaryAccess = () => el('domain').value === 'temporary' ? {endsAt:new Date('2026-12-31T16:59:00Z')} : null;
+// PRODUCTION_FUNCTIONS
+for(const [code,name] of Object.entries(loginProfileFacultyMap)){const option=document.createElement('option');option.value=code;option.textContent=name;el('faculty').append(option);}
+for(let i=1;i<=8;i++){const option=document.createElement('option');option.value=i;option.textContent=i;el('year').append(option);}
+document.querySelector('.page-view').classList.add('active');
+document.querySelector('.login-hero').classList.add('is-authenticated');
+el('loginHeroContent').hidden=true;
+el('loginProfileCard').hidden=false;
+el('staffModeToggle').hidden=true;
+el('staffModeToggle').style.display='none';
+el('loginPageGoogleBtn').hidden=true;
+el('loginPageGoogleBtn').style.display='none';
+el('loginPageLogoutBtn').style.display='inline-block';
+el('loginAccountEmail').hidden=false;
+el('loginAccountAvatar').hidden=false;
+el('loginAccountAvatar').textContent='ท';
+el('loginPageStatus').textContent='สวัสดี ทดสอบ ระบบ';
+el('loginNotificationSummary').textContent='การแจ้งเตือน: ยังไม่ได้เปิดใช้งาน';
+for(const [id,value] of Object.entries({loginProfileFirstName:'ทดสอบ',loginProfileLastName:'ระบบ',loginProfileNickname:'ตัวอย่าง',loginProfilePhone:'0812345678',loginProfileLineId:'test.profile',loginProfileOrganization:'หน่วยงานตัวอย่าง'}))el(id).value=value;
+function render(){
+ const domain=el('domain').value;
+ const id=el('custom').value;
+ auth.currentUser.email=domain==='manual'?'tuwanon.kimchiang@gmail.com':domain==='temporary'?'guest@example.com':id+'@'+domain+'.chula.ac.th';
+ el('loginAccountEmail').textContent=auth.currentUser.email;
+ el('loginProfileStudentId').value=id;
+ applyLoginProfileTypeUI();
+ updateLoginProfileStudentMeta();
+ el('feedback').textContent=domain==='temporary'?'กำลังแสดงผู้ใช้งานชั่วคราว':/^\d{10}$/.test(id)&&el('loginProfileFaculty').value&&el('loginProfileYear').value?'':'เลขนิสิตไม่ครบ หรือไม่พบคณะ/ชั้นปี';
+}
+function preset(){const entry=Number(el('academic').value)-Number(el('year').value)+1;el('custom').value=String(entry).slice(-2)+'000001'+el('faculty').value;render();}
+for(const id of ['faculty','year','academic'])el(id).addEventListener('change',preset);
+el('domain').addEventListener('change',render);
+el('custom').addEventListener('input',render);
+for(const id of ['loginProfileTypeStudent','loginProfileTypeAffairs'])el(id).addEventListener('change',render);
+el('loginProfileStudentId').addEventListener('input',()=>{el('custom').value=el('loginProfileStudentId').value;updateLoginProfileStudentMeta();});
+function setTheme(theme){document.documentElement.dataset.theme=theme;el('previewTheme').value=theme;el('themePreference').querySelector('[data-theme-label]').textContent=theme==='dark'?'มืด':'สว่าง';for(const icon of el('themePreference').querySelectorAll('[data-theme-icon]'))icon.hidden=icon.dataset.themeIcon!==theme;}
+el('previewTheme').addEventListener('change',()=>setTheme(el('previewTheme').value));
+el('themePreference').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+for(const id of ['loginProfileSaveBtn','loginPageLogoutBtn','loginNotificationEnableBtn','loginViewConsentBtn'])el(id).onclick=()=>{el('loginProfileStatus').textContent='โหมดทดสอบ: ไม่มีการบันทึกหรือเปลี่ยนข้อมูลบัญชีจริง';};
+setTheme('light');preset();
+</script>
+</body></html>

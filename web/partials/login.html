@@ -132,7 +132,7 @@
                               <input id="loginProfileNickname" class="login-input" type="text" placeholder="ชื่อเล่น" required />
                             </div>
                             <div class="borrow-form-field">
-                              <label class="login-label" for="loginProfileStudentId">เลขประจำตัวนิสิต</label>
+                              <label id="loginProfileStudentIdLabel" class="login-label" for="loginProfileStudentId">เลขประจำตัวนิสิต</label>
                               <input
                                 id="loginProfileStudentId"
                                 class="login-input"
@@ -141,23 +141,24 @@
                                 pattern="^[0-9]{10}$"
                                 required
                               />
+                              <span id="loginProfileStudentIdDisplay" class="login-profile-value" aria-labelledby="loginProfileStudentIdLabel" hidden></span>
                               <div id="loginProfileStudentIdWarning" class="section-text-sm" style="color:#b91c1c;" hidden>
                                 เลขประจำตัวนิสิตไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง
                               </div>
                             </div>
                           </div>
 
-                          <div class="borrow-form-row">
+                          <div class="borrow-form-row login-profile-academic-row">
                             <div class="borrow-form-field">
                               <label class="login-label" for="loginProfileFaculty">คณะ</label>
-                              <input id="loginProfileFaculty" class="login-input" type="text" placeholder="ระบบจะแสดงคณะจากเลขประจำตัวนิสิต" readonly />
+                              <output id="loginProfileFaculty" class="login-profile-value" for="loginProfileStudentId"></output>
                               <div id="loginProfileFacultyWarning" class="section-text-sm" style="color:#b91c1c;" hidden>
                                 ไม่พบคณะจากเลขประจำตัวนิสิต กรุณาตรวจสอบอีกครั้ง
                               </div>
                             </div>
                             <div class="borrow-form-field">
                               <label class="login-label" for="loginProfileYear">ชั้นปี</label>
-                              <input id="loginProfileYear" class="login-input" type="text" placeholder="ระบบจะแสดงชั้นปีจากเลขประจำตัวนิสิต" readonly />
+                              <output id="loginProfileYear" class="login-profile-value" for="loginProfileStudentId"></output>
                               <div id="loginProfileYearWarning" class="section-text-sm" style="color:#b91c1c;" hidden>
                                 ไม่พบชั้นปีจากเลขประจำตัวนิสิต กรุณาตรวจสอบอีกครั้ง
                               </div>

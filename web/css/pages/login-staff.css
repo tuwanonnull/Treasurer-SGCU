@@ -2976,3 +2976,90 @@ body.directory-filter-open { overflow: hidden; }
 #loginProfileOrganizationField[hidden] {
   display: none;
 }
+
+/* Read-only profile details share the same typography and theme as the form. */
+#loginProfileStudentId[hidden],
+#loginProfileStudentIdDisplay[hidden] { display: none !important; }
+#loginProfileStudentFields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+#loginProfileForm .borrow-form-field { min-width: 0; }
+#loginProfileForm .login-input { width: 100%; min-width: 0; }
+.login-profile-value:not([hidden]) {
+  display: inline;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--preview-text, #1f2937);
+  overflow-wrap: anywhere;
+}
+#loginProfileStudentFields .login-profile-value:empty::before { content: "—"; }
+#loginProfileStudentFields .borrow-form-field:has(> .login-profile-value:not([hidden])) {
+  display: block;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--preview-border, #e5e7eb);
+  align-self: stretch;
+}
+#loginProfileStudentFields .borrow-form-field:has(> .login-profile-value:not([hidden])) > .login-label {
+  display: inline;
+  margin-right: 6px;
+}
+#loginProfileStudentFields .borrow-form-field:has(> .login-profile-value:not([hidden])) > .login-label::after {
+  content: " :";
+  white-space: pre;
+}
+#loginProfileStudentFields .login-profile-academic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(100px, 1fr);
+  align-items: stretch;
+  gap: 18px;
+}
+@media (max-width: 720px) {
+  #loginProfileForm .borrow-form-row:not(.login-profile-type-row):not(.login-profile-academic-row) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  #loginProfileStudentFields .login-profile-academic-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+  #loginProfileStudentFields .login-profile-academic-row > .borrow-form-field:last-child {
+    min-width: 76px;
+    white-space: nowrap;
+  }
+  #loginProfileStudentFields .borrow-form-field:has(> .login-profile-value:not([hidden])) {
+    padding: 4px 0 8px;
+  }
+}
+
+@media (min-width: 721px) {
+  #loginProfileStudentFields .borrow-form-field:has(> #loginProfileStudentIdDisplay:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 0;
+    border-bottom: 0;
+  }
+  #loginProfileStudentFields .borrow-form-field:has(> #loginProfileStudentIdDisplay:not([hidden])) > .login-label {
+    display: block;
+    margin-right: 0;
+  }
+  #loginProfileStudentFields .borrow-form-field:has(> #loginProfileStudentIdDisplay:not([hidden])) > .login-label::after {
+    content: none;
+  }
+  #loginProfileStudentIdDisplay:not([hidden]) {
+    display: block;
+    min-height: 41px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--preview-border, #e5e7eb);
+  }
+}
+
+@media (max-width: 720px) {
+  #loginProfileStudentFields .login-profile-academic-row > .borrow-form-field:last-child:has(> .login-profile-value:not([hidden])) {
+    padding-inline-end: 12px;
+  }
+}
