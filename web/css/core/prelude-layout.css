@@ -150,3 +150,7 @@
   color: #111827;
   font-weight: 500;
 }
+
+.mobile-account-link {
+  display: none;
+}

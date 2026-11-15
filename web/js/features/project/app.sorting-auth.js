@@ -2844,7 +2844,36 @@ function initAuthUI() {
         ? `Staff : ${staffLabel}${staffAuthUser.nick ? ` (${staffAuthUser.nick})` : ""}`
         : "";
 
-    if (userInfoEl) userInfoEl.textContent = "";
+    if (userInfoEl) {
+      const accountName = firebaseUser?.displayName || firebaseUser?.email || "บัญชีของฉัน";
+      userInfoEl.textContent = isAuth ? accountName : "เข้าสู่ระบบ";
+      const accountLink = userInfoEl.closest(".mobile-account-link");
+      if (accountLink) {
+        accountLink.setAttribute("aria-label", isAuth ? `บัญชีของ ${accountName}` : "เข้าสู่ระบบ");
+        accountLink.title = isAuth ? accountName : "เข้าสู่ระบบ";
+        accountLink.classList.toggle("is-authenticated", isAuth);
+        const photoURL = [
+          firebaseUser?.providerData?.find(provider => provider.providerId === "google.com")?.photoURL,
+          firebaseUser?.photoURL
+        ].find(value => {
+          try { return new URL(value).protocol === "https:"; }
+          catch { return false; }
+        }) || "";
+        if (accountLink.dataset.photoUrl !== photoURL) {
+          accountLink.dataset.photoUrl = photoURL;
+          accountLink.querySelector(".mobile-account-avatar")?.remove();
+          if (photoURL) {
+            const photo = document.createElement("img");
+            photo.className = "mobile-account-avatar";
+            photo.alt = "";
+            photo.referrerPolicy = "no-referrer";
+            photo.addEventListener("error", () => photo.remove(), { once: true });
+            photo.src = photoURL;
+            accountLink.appendChild(photo);
+          }
+        }
+      }
+    }
     if (logoutBtnEl) logoutBtnEl.style.display = isAuth ? "inline-block" : "none";
     if (mobileLogoutBtnEl) mobileLogoutBtnEl.style.display = isAuth ? "block" : "none";
     if (loginPageStatusEl) loginPageStatusEl.textContent = nameText;

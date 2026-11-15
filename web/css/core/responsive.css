@@ -193,9 +193,9 @@
 
   .header-inner {
     min-height: 56px;
-    padding: 7px max(12px, env(safe-area-inset-right, 0px)) 7px
+    padding: 6px max(12px, env(safe-area-inset-right, 0px)) 6px
       max(12px, env(safe-area-inset-left, 0px));
-    gap: 10px;
+    gap: 8px;
     flex-wrap: nowrap;
   }
 
@@ -206,12 +206,21 @@
   }
 
   .logo-mark {
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    background: transparent;
+    box-shadow: none;
   }
 
-  .logo-mark a,
+  .logo-mark a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
+
   .logo-mark img {
     display: block;
     width: 30px;
@@ -236,14 +245,63 @@
   }
 
   .header-actions {
-    flex: 0 1 auto;
+    flex: 0 0 44px;
     min-width: 0;
     margin-left: auto;
   }
 
   .auth-panel {
-    max-width: 44vw;
+    min-width: 0;
+    max-width: 100%;
     justify-content: flex-end;
+  }
+
+  .mobile-account-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    max-width: 100%;
+    padding: 5px;
+    border-radius: 50%;
+    color: var(--preview-muted, #6b7280);
+    background: transparent;
+    text-decoration: none;
+  }
+
+  .mobile-account-link svg {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+  }
+
+  .mobile-account-link .auth-user {
+    display: none;
+  }
+
+  .mobile-account-avatar {
+    position: absolute;
+    inset: 5px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--theme-pink-50, #fdf2f8);
+  }
+
+  .mobile-account-link:hover {
+    color: var(--preview-text, var(--theme-pink-700, #be185d));
+    background: var(--preview-surface, var(--theme-pink-50, #fdf2f8));
+  }
+
+  .mobile-account-link:focus-visible,
+  .logo-mark a:focus-visible {
+    outline: 2px solid var(--theme-pink-600, #db2777);
+    outline-offset: 2px;
   }
 
   .auth-user {
@@ -501,7 +559,6 @@
 /* Tighter mobile spacing & stacking */
 @media (max-width: 720px) {
   .header-inner {
-    padding: 8px 12px;
     flex-wrap: nowrap;
   }
   .logo {
@@ -524,7 +581,7 @@
     font-size: 11px;
   }
   .auth-user {
-    max-width: 140px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
