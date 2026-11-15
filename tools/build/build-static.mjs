@@ -270,34 +270,6 @@ function buildRouteRedirectHtml(route) {
 `;
 }
 
-function build404RedirectHtml(routes) {
-  const safeRoutes = JSON.stringify(routes);
-  return `<!doctype html>
-<html lang="th">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>กำลังเปิดหน้า...</title>
-    <script>
-      const routes = new Set(${safeRoutes});
-      const parts = window.location.pathname.split("/").filter(Boolean);
-      const route = parts[parts.length - 1] || "";
-      if (routes.has(route)) {
-        const baseParts = parts.slice(0, -1);
-        const basePath = "/" + (baseParts.length ? baseParts.join("/") + "/" : "");
-        window.location.replace(basePath + "#" + route);
-      } else {
-        window.location.replace("./");
-      }
-    </script>
-  </head>
-  <body>
-    <a href="./">กลับหน้าแรก</a>
-  </body>
-</html>
-`;
-}
-
 async function createHashRouteRedirects() {
   const indexPath = path.join(distDir, "index.html");
   if (!(await exists(indexPath))) return;
@@ -309,7 +281,9 @@ async function createHashRouteRedirects() {
     await fs.mkdir(routeDir, { recursive: true });
     await fs.writeFile(path.join(routeDir, "index.html"), buildRouteRedirectHtml(route));
   }
-  await fs.writeFile(path.join(distDir, "404.html"), build404RedirectHtml(routes));
+  const notFoundPath = path.join(distDir, "404.html");
+  const notFoundHtml = await fs.readFile(notFoundPath, "utf8");
+  await fs.writeFile(notFoundPath, notFoundHtml.replace("/* HASH_ROUTES */", JSON.stringify(routes)));
 }
 
 function getLocalAssetRefs(html) {

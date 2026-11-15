@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0f766e" />
+    <script src="/js/core/app.theme.js"></script>
+    <title>404 — ไม่พบหน้าที่คุณต้องการ | Treasurer SGCU</title>
+    <link rel="icon" href="/img/icons/treasurer-icon-512.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/components/theme-preview.css" />
+    <link rel="stylesheet" href="/css/pages/not-found.css" />
+    <script>
+      // Preserve direct links to existing pages; unknown paths stay on this page.
+      const routes = new Set(/* HASH_ROUTES */);
+      const route = window.location.pathname.replace(/^\/+|\/+$/g, "");
+      if (routes.has(route)) window.location.replace("/#" + route);
+    </script>
+  </head>
+  <body class="not-found-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="logo" href="/" aria-label="Treasurer SGCU กลับหน้าหลัก">
+          <span class="logo-mark"><img class="site-logo-img" src="/img/icons/treasurer-icon-512.png" width="34" height="34" alt="" /></span>
+          <span class="logo-text"><span class="logo-title">Treasurer SGCU</span><span class="logo-subtitle">ฝ่ายเหรัญญิก องค์การบริหารสโมสรนิสิตจุฬาฯ</span></span>
+        </a>
+      </div>
+    </header>
+    <main>
+      <div class="error-content">
+        <p class="error-code" aria-hidden="true">404</p>
+        <p class="error-english" lang="en">Page not found</p>
+        <h1>ไม่พบหน้าที่คุณต้องการ</h1>
+        <p class="error-description">ลิงก์อาจไม่ถูกต้อง หรือหน้านี้อาจถูกย้ายหรือลบไปแล้ว</p>
+        <a class="btn-primary home-button" href="/">กลับหน้าหลัก <span aria-hidden="true">→</span></a>
+      </div>
+    </main>
+    <footer class="site-footer"><div class="not-found-footer">ฝ่ายเหรัญญิก · องค์การบริหารสโมสรนิสิตจุฬาลงกรณ์มหาวิทยาลัย</div></footer>
+  </body>
+</html>

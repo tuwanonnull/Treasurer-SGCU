@@ -138,6 +138,18 @@
   html[data-theme="dark"] body .footer-contact a {
     background: var(--preview-raised); color: var(--preview-accent); border-color: var(--preview-border);
   }
+  @media (max-width: 840px) {
+    /* Match the transparent mobile footer instead of giving it a panel surface. */
+    html[data-theme="dark"] body .site-footer {
+      background: transparent;
+      border-top-color: rgba(255, 255, 255, .06);
+    }
+    html[data-theme="dark"] body .footer-contact a,
+    html[data-theme="dark"] body .footer-contact a:is(:hover, :focus-visible) {
+      background: transparent;
+      color: inherit;
+    }
+  }
   /* Keep decorative text and icons neutral; reserve pink for actions. */
   html[data-theme="dark"] body .home-page-view :is(.home-hero-eyebrow, .workflow-kicker, .workflow-phase-label, .home-help-eyebrow, .list-empty-state-icon, .workflow-step-list li, .home-main-action.is-secondary .home-main-action-icon, .home-quick-action-icon, .workflow-icon, .home-faq-toggle) {
     color: var(--preview-muted);

@@ -264,8 +264,15 @@ const centerTextPlugin = {
 
     ctx.save();
     ctx.fillStyle = document.documentElement.dataset.theme === "dark" ? "#f2f2f2" : (options.color || "#111827");
-    ctx.textAlign = "center";
+    // Explicit left edges keep Thai labels centered in Safari's installed Web App,
+    // matching the canvas alignment workaround used by chart exports.
+    ctx.direction = "ltr";
+    ctx.textAlign = "left";
     ctx.textBaseline = "middle";
+    const drawCenteredText = (value, y) => {
+      const width = ctx.measureText(value).width;
+      ctx.fillText(value, centerX - width / 2, y);
+    };
 
     const fontFamily = options.fontFamily || "Kanit";
     const requestedMainSize = options.fontSize || 20;
@@ -288,13 +295,13 @@ const centerTextPlugin = {
       const totalHeight = mainSize + lineGap + subSize;
       const mainY = centerY - totalHeight / 2 + mainSize / 2;
       const subY = centerY + totalHeight / 2 - subSize / 2;
-      ctx.fillText(text, centerX, mainY);
+      drawCenteredText(text, mainY);
 
       ctx.font = `${subSize}px ${fontFamily}`;
-      ctx.fillText(subText, centerX, subY);
+      drawCenteredText(subText, subY);
     } else {
       ctx.font = `${mainSize}px ${fontFamily}`;
-      ctx.fillText(text, centerX, centerY);
+      drawCenteredText(text, centerY);
     }
 
     ctx.restore();

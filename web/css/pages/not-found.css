@@ -1,0 +1,51 @@
+/* Shared application styles own the branding, buttons, and saved light/dark theme. */
+.not-found-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+.not-found-page a { text-decoration: none; }
+.not-found-page .logo { color: inherit; }
+.not-found-page a:focus-visible { outline: 3px solid var(--preview-accent, var(--theme-pink-700)); outline-offset: 6px; }
+.not-found-page main { flex: 1; display: grid; place-items: center; padding: 64px 24px 100px; text-align: center; }
+.error-content { width: 100%; max-width: 620px; }
+.error-code { margin: 0; color: var(--preview-accent, var(--theme-pink-500)); font-size: clamp(120px, 18vw, 200px); font-weight: 600; line-height: 1; letter-spacing: -0.045em; }
+.error-english { margin: 16px 0 24px; color: var(--preview-muted, #6b7280); font-size: 13px; font-weight: 300; letter-spacing: 0.04em; }
+.error-content h1 { margin: 0 0 10px; font-size: clamp(20px, 3vw, 24px); font-weight: 500; }
+.error-description { max-width: 360px; margin: 0 auto; color: var(--preview-muted, #6b7280); font-size: 13px; font-weight: 300; line-height: 1.8; text-wrap: pretty; }
+.not-found-page .home-button {
+  gap: 28px;
+  margin-top: 32px;
+  padding: 12px 24px;
+  font-size: 14px;
+  animation: not-found-button-enter 600ms var(--motion-ease) both;
+  transition: transform 200ms var(--motion-ease), box-shadow 200ms ease, filter 200ms ease;
+}
+.home-button span {
+  display: inline-block;
+  font-size: 22px;
+  line-height: 1;
+  animation: not-found-arrow-nudge 2400ms var(--motion-ease) 600ms infinite;
+}
+.not-found-page .home-button:is(:hover, :focus-visible) { transform: translateY(-3px); }
+.not-found-page .home-button:is(:hover, :focus-visible) span { animation-duration: 1200ms; }
+.not-found-page .home-button:active { transform: translateY(0) scale(0.97); }
+@keyframes not-found-button-enter {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes not-found-arrow-nudge {
+  0%, 20%, 70%, 100% { transform: translateX(0); }
+  45% { transform: translateX(6px); }
+}
+.not-found-footer { max-width: 1120px; margin: 0 auto; padding: 20px 16px; text-align: center; color: var(--preview-muted, #64748b); font-size: 12px; font-weight: 300; }
+@media (max-width: 480px) {
+  .not-found-page main { padding: 52px 24px 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .not-found-page .home-button,
+  .not-found-page .home-button span { animation: none; transition: none; }
+  .not-found-page .home-button:is(:hover, :focus-visible, :active),
+  .not-found-page .home-button:is(:hover, :focus-visible) span { transform: none; }
+}
