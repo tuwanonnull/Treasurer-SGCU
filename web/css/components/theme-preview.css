@@ -345,6 +345,8 @@
   }
   html[data-theme="dark"] body .about-page :is(.home-section-header p, #aboutOrgStructureTitleLabel) { color: var(--preview-muted); }
   html[data-theme="dark"] body .about-page .about-system-timeline time { background: var(--preview-raised); color: var(--preview-muted); }
+  html[data-theme="dark"] body .about-page .about-system-timeline li.is-reached time { background: rgba(236, 72, 153, .1); color: var(--preview-accent); }
+  html[data-theme="dark"] body .about-page .about-system-timeline li.is-current time { background: rgba(236, 72, 153, .2); color: #fce7f3; box-shadow: inset 0 0 0 1px rgba(249, 168, 212, .5), 0 3px 12px rgba(236, 72, 153, .12); }
   html[data-theme="dark"] body :is(.borrow-required) { color: #ffb4b4; }
   html[data-theme="dark"] body .borrow-asset-quick-head { color: var(--preview-muted); }
   html[data-theme="dark"] body :is(.meeting-calendar-nav-btn span, .meeting-calendar-nav-text) { color: var(--preview-accent); }

@@ -62,6 +62,20 @@
   box-shadow: 0 6px 14px var(--theme-shadow);
 }
 
+/* Filter footers have limited space inside clipped dialogs. Keep the glow
+   within their padding, including hover and keyboard-focus states. */
+:is(.project-filter-actions, .mobile-filter-footer) .btn-primary {
+  box-shadow: 0 3px 8px rgba(236, 72, 153, 0.2);
+}
+
+:is(.project-filter-actions, .mobile-filter-footer) .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 10px rgba(236, 72, 153, 0.28);
+}
+
+:is(.project-filter-actions, .mobile-filter-footer) .btn-primary:focus-visible {
+  box-shadow: 0 0 0 4px var(--theme-focus);
+}
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;

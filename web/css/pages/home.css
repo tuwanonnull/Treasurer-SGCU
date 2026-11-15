@@ -43,8 +43,8 @@
   scroll-snap-align: start;
   scroll-snap-stop: normal;
   display: flex;
-  content-visibility: auto;
-  contain-intrinsic-size: 900px;
+  /* Keep hover borders and shadows visible outside the panel edges. */
+  content-visibility: visible;
 }
 
 .home-snap-panel[hidden],
@@ -1140,6 +1140,7 @@
 }
 
 .workflow-section-header {
+  container-type: inline-size;
   max-width: 720px;
   margin: 0 auto clamp(18px, 3vw, 28px);
   text-align: center;
@@ -1161,8 +1162,8 @@
 .workflow-section-header h2 {
   margin: 12px 0 8px;
   color: #111827;
-  font-size: clamp(30px, 4vw, 46px);
-  line-height: 1.06;
+  font-size: clamp(14px, 4.6cqi, 32px);
+  line-height: 1.5;
   letter-spacing: 0;
 }
 
@@ -1334,6 +1335,7 @@
 }
 
 .workflow-card-heading {
+  container-type: inline-size;
   margin-bottom: 12px;
 }
 
@@ -1350,8 +1352,8 @@
 .workflow-card-heading h3 {
   margin: 0 0 6px;
   color: #111827;
-  font-size: 19px;
-  line-height: 1.2;
+  font-size: clamp(11px, 5.8cqi, 17px);
+  line-height: 1.5;
   letter-spacing: 0;
 }
 
@@ -1361,6 +1363,7 @@
   font-size: 12.5px;
   line-height: 1.55;
 }
+
 
 .workflow-step-list {
   display: grid;
@@ -2348,9 +2351,6 @@
     margin-bottom: 22px;
   }
 
-  .workflow-section-header h2 {
-    font-size: 32px;
-  }
 
   .workflow-description {
     font-size: 13px;
@@ -2366,9 +2366,6 @@
     border-radius: 20px;
   }
 
-  .workflow-card-heading h3 {
-    font-size: 19px;
-  }
 
   .home-start-full {
     padding: 16px;
@@ -2749,6 +2746,43 @@
 }
 .home-related .home-help-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .home-related .home-help-header h2 { margin: 0; }
+.home-related-window {
+  --related-edge-width: clamp(28px, 5vw, 64px);
+  position: relative;
+  isolation: isolate;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--related-edge-width), #000 calc(100% - var(--related-edge-width)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--related-edge-width), #000 calc(100% - var(--related-edge-width)), transparent);
+}
+.home-related-window::before,
+.home-related-window::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--related-edge-width);
+  z-index: 1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.home-related-window::before {
+  left: 0;
+  -webkit-mask-image: linear-gradient(to right, #000, transparent);
+  mask-image: linear-gradient(to right, #000, transparent);
+}
+.home-related-window::after {
+  right: 0;
+  -webkit-mask-image: linear-gradient(to left, #000, transparent);
+  mask-image: linear-gradient(to left, #000, transparent);
+}
+/* Keep focused links and the static reduced-motion layout fully readable. */
+.home-related-window:has(:focus-visible) { -webkit-mask-image: none; mask-image: none; }
+.home-related-window:has(:focus-visible)::before,
+.home-related-window:has(:focus-visible)::after { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .home-related-window { -webkit-mask-image: none; mask-image: none; }
+  .home-related-window::before, .home-related-window::after { display: none; }
+}
 .home-related-viewport { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding: 4px 4px var(--home-related-bottom-inset); }
 .home-related-track { display: flex; width: max-content; animation: home-related-scroll 48s linear infinite; }
 .home-related-viewport:has(.home-related-card:focus-visible) .home-related-track { animation: none; }

@@ -1346,3 +1346,24 @@
     backdrop-filter: none;
   }
 }
+
+/* Shared entrance for explicitly marked toggle panels. Display/hidden remains
+   owned by each feature. No forwards fill: sticky/fixed children retain their
+   normal containing block once the short entrance completes. */
+@keyframes view-toggle-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.page-view [data-view-transition]:not([hidden]) {
+  animation: view-toggle-enter 260ms var(--motion-ease) backwards;
+}
+.page-view [data-view-transition].section-appear {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+  will-change: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-view [data-view-transition]:not([hidden]) { animation: none; }
+}

@@ -101,7 +101,27 @@
   margin-top: 22px;
 }
 
-.about-page .about-system-timeline::before { display: none; }
+.about-page .about-system-timeline::before {
+  display: block;
+  top: 13px;
+  bottom: auto;
+  left: 126px;
+  height: var(--timeline-line-height, 0px);
+  width: 4px;
+  border-radius: 999px;
+  transform: translateX(-1.5px) scaleY(var(--timeline-progress, 0));
+  transform-origin: top;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--theme-pink-300), var(--theme-pink-500));
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.22);
+}
+@media (max-width: 640px) {
+  .about-page .about-system-timeline::before { left: 6px; }
+}
+@media (min-width: 960px) {
+  .about-page .about-system-timeline::before { left: 50%; }
+}
 
 .about-page .about-system-timeline li {
   grid-template-columns: 112px minmax(0, 1fr);
@@ -116,30 +136,62 @@
   left: 126px;
   top: 13px;
   bottom: -13px;
-  width: 1px;
-  background: var(--theme-pink-200);
+  width: 4px;
+  transform: translateX(-1.5px);
+  background: rgba(236, 72, 153, 0.14);
 }
 
 .about-page .about-system-timeline li::before {
-  z-index: 1;
+  z-index: 2;
   left: 122px;
   top: 9px;
   width: 9px;
   height: 9px;
-  border: 2px solid #fff;
-  background: var(--theme-pink-400);
-  box-shadow: 0 0 0 1px var(--theme-pink-300);
+  border: 2px solid var(--preview-surface, #fff);
+  background: var(--preview-border, #e5e7eb);
+  box-shadow: 0 0 0 1px var(--preview-border, #d1d5db);
+  transition: background-color 280ms var(--motion-ease), box-shadow 320ms var(--motion-ease), transform 320ms var(--motion-ease);
+}
+
+.about-page .about-system-timeline li.is-reached::before {
+  background: var(--theme-pink-500);
+  box-shadow: 0 0 0 1px var(--theme-pink-400);
+}
+
+.about-page .about-system-timeline li.is-current::before {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px var(--theme-pink-300), 0 0 12px rgba(236, 72, 153, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-page .about-system-timeline li::before { transition: none; }
 }
 
 .about-page .about-system-timeline time {
   width: fit-content;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #fdf2f8;
-  color: var(--theme-pink-700);
+  background: #f3f4f6;
+  color: #6b7280;
+  transition: background-color 320ms var(--motion-ease), color 320ms var(--motion-ease), box-shadow 320ms var(--motion-ease), transform 320ms var(--motion-ease);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.6;
+}
+
+.about-page .about-system-timeline li.is-reached time {
+  background: var(--theme-pink-50);
+  color: var(--theme-pink-700);
+}
+.about-page .about-system-timeline li.is-current time {
+  background: var(--theme-pink-100);
+  color: var(--theme-pink-800);
+  box-shadow: inset 0 0 0 1px var(--theme-pink-300), 0 3px 10px rgba(236, 72, 153, 0.1);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-page .about-system-timeline time { transition: none; }
+  .about-page .about-system-timeline li.is-current time { transform: none; }
 }
 
 .about-page .about-system-timeline div {
@@ -196,7 +248,7 @@
   color: #111827;
 }
 
-/* Team selection changes immediately, without movement or staged text. */
+/* Subtle feedback when switching teams; keep the selection immediate. */
 .about-page .scope-pill,
 .about-page .scope-team-card,
 .about-page .scope-team-card * {
@@ -218,6 +270,42 @@
 
 .about-page .scope-pill-active {
   box-shadow: none;
+}
+
+.about-page .scope-pill {
+  transition: background-color 220ms var(--motion-ease), border-color 220ms var(--motion-ease), color 220ms var(--motion-ease), transform 180ms var(--motion-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .about-page .scope-pill:hover { transform: translateY(-1px); }
+}
+.about-page .scope-pill:active { transform: scale(0.98); }
+.about-page .scope-team-card.scope-team-active {
+  animation: about-team-enter 280ms var(--motion-ease) both;
+}
+.about-page .scope-team-card.scope-team-active li {
+  animation: about-team-item-enter 300ms var(--motion-ease) both;
+}
+.about-page .scope-team-card.scope-team-active li:nth-child(1) { animation-delay: 50ms; }
+.about-page .scope-team-card.scope-team-active li:nth-child(2) { animation-delay: 100ms; }
+.about-page .scope-team-card.scope-team-active li:nth-child(3) { animation-delay: 150ms; }
+@keyframes about-team-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes about-team-item-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-page .scope-pill,
+  .about-page .scope-team-card.scope-team-active,
+  .about-page .scope-team-card.scope-team-active li {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+  .about-page .scope-pill:hover,
+  .about-page .scope-pill:active { transform: none; }
 }
 
 /* Long-form text uses paragraph spacing rather than first-line indentation. */

@@ -116,7 +116,7 @@ function openProject(p,state){
  const sections=[];
  const layout=details.querySelector('.project-live-info-layout');
  for(const [number,label,members] of [['01','ข้อมูลและการอนุมัติ',['01','02']],['03','โอนงบประมาณ',['03']],['04','ยืมรองจ่าย',['04']],['05','ปิดโครงการ',['05','06']]]){
-  const panel=node('div');panel.className='project-live-category';panel.dataset.liveCategory=number;panel.dataset.categoryLabel=label;
+  const panel=node('div');panel.className='project-live-category';panel.dataset.viewTransition='';panel.dataset.liveCategory=number;panel.dataset.categoryLabel=label;
   for(const member of members){const section=details.querySelector(`[data-live-section="${member}"]`);if(member==='06'){const disclosure=node('details');disclosure.className='project-live-follow-up';disclosure.append(node('summary','ประวัติติดตามเอกสาร'),section);panel.append(disclosure);}else panel.append(section);}
   sections.push(panel);
  }

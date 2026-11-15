@@ -384,13 +384,13 @@
                     <button id="closureOrgTabStaff" class="tab-btn view-toggle-btn" type="button" data-dashboard-closure-view="org" role="tab" aria-selected="false" aria-controls="closureOrgPanelStaff">รายองค์กร</button>
                   </div>
                 </header>
-                <div id="closureMonthlyPanelStaff" data-dashboard-closure-panel="monthly" role="tabpanel" aria-labelledby="closureMonthlyTabStaff">
+                <div id="closureMonthlyPanelStaff" data-dashboard-closure-panel="monthly" role="tabpanel" aria-labelledby="closureMonthlyTabStaff" data-view-transition>
                   <div class="dashboard-monthly-chart-scroll" role="region" aria-label="กราฟสถานะการปิดโครงการรายเดือน เลื่อนเพื่อดูครบทุกเดือน" tabindex="0">
                     <div class="chart-inner dashboard-overdue-close-chart-inner"><canvas id="trendLineChartStaff"></canvas></div>
                   </div>
                   <div id="closureMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีสถานะการปิดโครงการ"></div>
                 </div>
-                <div id="closureOrgPanelStaff" data-dashboard-closure-panel="org" role="tabpanel" aria-labelledby="closureOrgTabStaff" hidden>
+                <div id="closureOrgPanelStaff" data-dashboard-closure-panel="org" role="tabpanel" aria-labelledby="closureOrgTabStaff" hidden data-view-transition>
                   <p id="projectOrgComparisonCaptionStaff" class="chart-caption" hidden></p>
                   <div class="project-comparison-chart">
                     <div id="projectOrgClosureChartStaff" class="project-closure-comparison-scroll project-closure-bar-chart" role="region" aria-label="สถานะการปิดโครงการแยกตามองค์กร" tabindex="0"></div>
@@ -419,13 +419,13 @@
                     </button>
                   </div>
                 </header>
-                <div id="budgetMonthlyPanelStaff" data-dashboard-budget-panel="monthly">
+                <div id="budgetMonthlyPanelStaff" data-dashboard-budget-panel="monthly" data-view-transition>
                   <div class="dashboard-monthly-chart-scroll" role="region" aria-label="กราฟงบประมาณรายเดือน เลื่อนเพื่อดูครบทุกเดือน" tabindex="0">
                     <div class="chart-inner dashboard-budget-monthly-chart"><canvas id="homeKpiChart" height="140"></canvas></div>
                   </div>
                   <div id="budgetMonthlyLegendStaff" class="dashboard-chart-legend" aria-label="คำอธิบายสีงบประมาณ"></div>
                 </div>
-                <div id="budgetOrgPanelStaff" class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden>
+                <div id="budgetOrgPanelStaff" class="project-budget-comparison-panel" data-dashboard-budget-panel="org" hidden data-view-transition>
                   <div class="project-budget-comparison-scroll" role="region" aria-label="กราฟงบประมาณแยกองค์กร เลื่อนเพื่อดูรายการทั้งหมด" tabindex="0">
                     <div class="chart-inner project-budget-comparison-chart-inner">
                       <canvas id="projectBudgetComparisonChartStaff"></canvas>
@@ -514,7 +514,7 @@
                     </div>
 
                   </div>
-                <div data-dashboard-debt-panel="summary">
+                <div data-dashboard-debt-panel="summary" data-view-transition>
                   <div id="clubDebtCompactOrgsStaff" class="debt-compact-list" role="region" aria-label="ยอดหนี้ตามองค์กร" tabindex="0"></div>
                 </div>
 
@@ -611,11 +611,10 @@
               <button type="button" class="tab-btn view-toggle-btn" data-system-data-tab="activity" aria-selected="false">
                 Activity Log
               </button>
-              <a class="btn-ghost" href="#project-live-staff" data-project-documents-link>ไปจัดการโครงการและเอกสาร ↗</a>
             </div>
           </div>
 
-          <div id="systemHealthSummary" class="system-health-summary system-data-main-panel" data-system-data-panel="health" aria-live="polite">
+          <div id="systemHealthSummary" class="system-health-summary system-data-main-panel" data-system-data-panel="health" aria-live="polite" data-view-transition>
             <div class="system-health-summary-card">
               <span class="system-health-summary-label">ผ่าน</span>
               <strong id="systemHealthOkCount">0</strong>
@@ -630,7 +629,7 @@
             </div>
           </div>
 
-          <section class="panel section-appear section-delay-1 system-health-panel system-data-main-panel" data-system-data-panel="health">
+          <section class="panel section-appear section-delay-1 system-health-panel system-data-main-panel" data-system-data-panel="health" data-view-transition>
             <header class="panel-header">
               <div>
                 <h3 class="panel-title">Health Check</h3>
@@ -659,7 +658,7 @@
             </div>
           </section>
 
-          <div id="dashboardStaffAuditPanel" class="dashboard-staff-main-panel system-data-main-panel" data-system-data-panel="activity" hidden>
+          <div id="dashboardStaffAuditPanel" class="dashboard-staff-main-panel system-data-main-panel" data-system-data-panel="activity" hidden data-view-transition>
             <div class="filter-bar dashboard-audit-filter-bar" aria-label="ตัวกรอง Activity Log">
               <div class="dashboard-audit-filter-row dashboard-audit-filter-row-primary">
                 <div class="filter-group">

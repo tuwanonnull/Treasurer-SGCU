@@ -194,9 +194,69 @@ function initCountupOnVisible() {
   hasInitCountup = true;
 }
 
+// Fill the timeline as its milestones pass the lower-middle of the viewport.
+const observedSystemTimelines = new WeakSet();
+const systemTimelineMotionState = new WeakMap();
+let systemTimelineScrollInitialized = false;
+let systemTimelineRaf = null;
+function updateSystemTimelineProgress() {
+  systemTimelineRaf = null;
+  let settling = false;
+  const now = performance.now();
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll('.page-view[data-page="about"].active .about-system-timeline').forEach((timeline) => {
+    const first = timeline.firstElementChild;
+    const last = timeline.lastElementChild;
+    if (!first || !last || !timeline.offsetHeight) return;
+    const height = last.offsetTop - first.offsetTop;
+    const start = timeline.getBoundingClientRect().top + first.offsetTop + 13;
+    const travelled = window.innerHeight * 0.65 - start;
+    const progress = height > 0 ? Math.max(0, Math.min(1, travelled / height)) : 0;
+    const state = systemTimelineMotionState.get(timeline) || { progress, time: now };
+    const elapsed = Math.min(32, Math.max(1, now - state.time));
+    const eased = reduceMotion ? progress : state.progress + (progress - state.progress) * (1 - Math.exp(-elapsed / 90));
+    state.progress = Math.abs(progress - eased) < 0.0001 ? progress : eased;
+    state.time = now;
+    systemTimelineMotionState.set(timeline, state);
+    settling ||= state.progress !== progress;
+    const filledDistance = state.progress * height;
+    timeline.style.setProperty("--timeline-line-height", `${height}px`);
+    timeline.style.setProperty("--timeline-progress", state.progress.toFixed(5));
+    const milestones = Array.from(timeline.children);
+    milestones.forEach((milestone, index) => {
+      const reached = (state.progress > 0 || travelled >= 0) && filledDistance >= milestone.offsetTop - first.offsetTop;
+      const next = milestones[index + 1];
+      const current = reached && (!next || filledDistance < next.offsetTop - first.offsetTop);
+      milestone.classList.toggle("is-reached", reached);
+      milestone.classList.toggle("is-current", current);
+    });
+  });
+  if (settling) scheduleSystemTimelineProgress();
+}
+function scheduleSystemTimelineProgress() {
+  if (systemTimelineRaf !== null) return;
+  systemTimelineRaf = requestAnimationFrame(updateSystemTimelineProgress);
+}
+function initSystemTimelineMotion() {
+  if (!systemTimelineScrollInitialized) {
+    window.addEventListener("scroll", scheduleSystemTimelineProgress, { passive: true });
+    window.addEventListener("resize", scheduleSystemTimelineProgress, { passive: true });
+    systemTimelineScrollInitialized = true;
+  }
+  document.querySelectorAll(".about-system-timeline").forEach((timeline) => {
+    if (observedSystemTimelines.has(timeline)) return;
+    const observer = new ResizeObserver(scheduleSystemTimelineProgress);
+    observer.observe(timeline);
+    if (timeline.lastElementChild) observer.observe(timeline.lastElementChild);
+    observedSystemTimelines.add(timeline);
+  });
+  scheduleSystemTimelineProgress();
+}
+
 /* เรียกใหม่ทุกครั้งที่เปลี่ยนหน้า (เผื่อ DOM เปลี่ยน) */
 function refreshMotionForActivePage() {
   initPressMotion();
+  initSystemTimelineMotion();
   initSectionAppearObserver();
   requestAnimationFrame(revealMobileActivePageSections);
   initHomePanelMotion();

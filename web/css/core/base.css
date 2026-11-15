@@ -69,14 +69,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   outline: 2px solid var(--theme-pink-500);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px var(--theme-focus);
-  border-radius: 10px;
 }
 
 .mobile-menu button:focus-visible, .burger:focus-visible {
   outline: 2px solid var(--theme-pink-500);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px var(--theme-focus);
-  border-radius: 10px;
 }
 
 .modal-close:focus-visible, .person-modal-close:focus-visible {
