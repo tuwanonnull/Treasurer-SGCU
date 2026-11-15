@@ -23,7 +23,7 @@
     <div class="preview-controls">
       <label class="preview-wide">คณะสำหรับทดสอบ<select id="faculty"></select></label>
       <label>ชั้นปีสำหรับทดสอบ<select id="year"></select></label>
-      <label>บัญชีจำลอง<select id="domain"><option value="student">อีเมลนิสิต</option><option value="alumni">อีเมลนิสิตเก่า</option><option value="manual">tuwanon.kimchiang@gmail.com</option><option value="temporary">สิทธิ์ชั่วคราว</option></select></label>
+      <label>บัญชีจำลอง<select id="domain"><option value="student">อีเมลนิสิต</option><option value="alumni">อีเมลนิสิตเก่า</option><option value="root">เลขนิสิต @chula.ac.th</option><option value="other">เลขนิสิต @อื่น ๆ.chula.ac.th</option><option value="staff">บุคลากร @chula.ac.th</option><option value="manual">tuwanon.kimchiang@gmail.com</option><option value="temporary">สิทธิ์ชั่วคราว</option></select></label>
       <label>ปีการศึกษา พ.ศ.<input id="academic" type="number" min="2500" value="2569"></label>
       <label>เลขนิสิตจำลอง<input id="custom" maxlength="10" inputmode="numeric"></label>
       <label>ธีม<select id="previewTheme"><option value="light">สว่าง</option><option value="dark">มืด</option></select></label>
@@ -31,9 +31,12 @@
     <p id="feedback" role="status"></p>
   </aside>
   <main class="main"><!-- LOGIN_PARTIAL --></main>
+<!-- STAFF_MODAL -->
+<!-- ORG_MODAL -->
 <script>
 const el = id => document.getElementById(id);
 const auth = {currentUser:{email:''}};
+let currentUserProfileType = 'student';
 const getCurrentAcademicYearBE = () => Number(el('academic').value);
 const getLoginTemporaryAccess = () => el('domain').value === 'temporary' ? {endsAt:new Date('2026-12-31T16:59:00Z')} : null;
 // PRODUCTION_FUNCTIONS
@@ -57,7 +60,7 @@ for(const [id,value] of Object.entries({loginProfileFirstName:'ทดสอบ',
 function render(){
  const domain=el('domain').value;
  const id=el('custom').value;
- auth.currentUser.email=domain==='manual'?'tuwanon.kimchiang@gmail.com':domain==='temporary'?'guest@example.com':id+'@'+domain+'.chula.ac.th';
+ auth.currentUser.email=domain==='manual'?'tuwanon.kimchiang@gmail.com':domain==='temporary'?'guest@example.com':domain==='staff'?'staff@chula.ac.th':domain==='root'?id+'@chula.ac.th':id+'@'+domain+'.chula.ac.th';
  el('loginAccountEmail').textContent=auth.currentUser.email;
  el('loginProfileStudentId').value=id;
  applyLoginProfileTypeUI();
@@ -68,12 +71,67 @@ function preset(){const entry=Number(el('academic').value)-Number(el('year').val
 for(const id of ['faculty','year','academic'])el(id).addEventListener('change',preset);
 el('domain').addEventListener('change',render);
 el('custom').addEventListener('input',render);
-for(const id of ['loginProfileTypeStudent','loginProfileTypeAffairs'])el(id).addEventListener('change',render);
+
 el('loginProfileStudentId').addEventListener('input',()=>{el('custom').value=el('loginProfileStudentId').value;updateLoginProfileStudentMeta();});
 function setTheme(theme){document.documentElement.dataset.theme=theme;el('previewTheme').value=theme;el('themePreference').querySelector('[data-theme-label]').textContent=theme==='dark'?'มืด':'สว่าง';for(const icon of el('themePreference').querySelectorAll('[data-theme-icon]'))icon.hidden=icon.dataset.themeIcon!==theme;}
 el('previewTheme').addEventListener('change',()=>setTheme(el('previewTheme').value));
 el('themePreference').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 for(const id of ['loginProfileSaveBtn','loginPageLogoutBtn','loginNotificationEnableBtn','loginViewConsentBtn'])el(id).onclick=()=>{el('loginProfileStatus').textContent='โหมดทดสอบ: ไม่มีการบันทึกหรือเปลี่ยนข้อมูลบัญชีจริง';};
+el('loginHelpApplyBtn').hidden=false;
+const staffModal=el('staffApplicationModal');
+const staffForm=el('staffApplicationForm');
+staffModal.querySelector('.modal-subtitle').textContent='ทดลองสมัครด้วยข้อมูลสมมติ — ไม่ส่งคำขอเข้าระบบจริง';
+staffModal.querySelector('.panel-caption').textContent='ตัวเลือกด้านล่างเป็นข้อมูลตัวอย่างสำหรับทดสอบหน้าตา';
+el('staffApplicationMyTableBody').innerHTML='<tr><td colspan="4">ยังไม่มีคำขอในโหมดทดสอบ</td></tr>';
+for(const [id,items] of Object.entries({staffApplicationDivision:['ฝ่ายเหรัญญิก (ตัวอย่าง)','ฝ่ายเลขานุการ (ตัวอย่าง)'],staffApplicationLevel:['สตาฟ (ตัวอย่าง)','ผู้ช่วย (ตัวอย่าง)']})) {
+  el(id).required=true;
+  for(const label of items){const option=document.createElement('option');option.value=label;option.textContent=label;el(id).append(option);}
+  el(id).onchange=()=>{el('staffApplicationResolvedPosition').value=[el('staffApplicationDivision').value,el('staffApplicationLevel').value].filter(Boolean).join(' / ');};
+}
+function closeStaffPreview(){staffModal.classList.remove('show');staffModal.setAttribute('aria-hidden','true');document.body.classList.remove('has-modal');el('loginHelpApplyBtn').focus();}
+el('loginHelpApplyBtn').onclick=()=>{
+ el('staffApplicationProfileHint').textContent='บัญชีจำลอง: '+auth.currentUser.email;
+ el('staffApplicationMessage').textContent='';
+ staffModal.classList.add('show');staffModal.setAttribute('aria-hidden','false');document.body.classList.add('has-modal');el('staffApplicationDivision').focus();
+};
+el('staffApplicationModalClose').onclick=closeStaffPreview;
+staffModal.addEventListener('click',event=>{if(event.target===staffModal)closeStaffPreview();});
+staffModal.addEventListener('keydown',event=>{
+ if(event.key==='Escape'){event.preventDefault();closeStaffPreview();}
+ if(event.key==='Tab'){
+  const focusable=[...staffModal.querySelectorAll('button,select,input:not([type="hidden"])')].filter(node=>!node.disabled&&node.getClientRects().length);
+  const first=focusable[0],last=focusable.at(-1);
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+ }
+});
+staffForm.onsubmit=event=>{event.preventDefault();el('staffApplicationMessage').textContent='ทดลองส่งสำเร็จ — ไม่มีการส่งคำขอหรือบันทึกข้อมูลจริง';};
+el('budgetRepresentativeApplyBtn').hidden=false;
+const orgModal=el('budgetRepresentativeApplicationModal');
+orgModal.querySelector('.modal-subtitle').textContent='ทดลองสมัครด้วยข้อมูลสมมติ — ไม่ส่งคำขอเข้าระบบจริง';
+orgModal.querySelector('.panel-caption').textContent='ตัวเลือกองค์กรเป็นข้อมูลตัวอย่างสำหรับทดสอบหน้าตา';
+el('budgetRepresentativeStatusCaption').textContent='แสดงผล 0 รายการ (ข้อมูลจำลอง)';
+el('budgetRepresentativeMyApplicationsBody').innerHTML='<tr><td colspan="4">ยังไม่มีคำขอในโหมดทดสอบ</td></tr>';
+for(const [id,items] of Object.entries({budgetRepresentativeOrgType:['ชมรม (ตัวอย่าง)','ฝ่าย (ตัวอย่าง)'],budgetRepresentativeOrgDept:['องค์กรตัวอย่าง A','องค์กรตัวอย่าง B']})) {
+ for(const label of items){const option=document.createElement('option');option.value=label;option.textContent=label;el(id).append(option);}
+}
+function closeOrgPreview(){orgModal.classList.remove('show');orgModal.setAttribute('aria-hidden','true');document.body.classList.remove('has-modal');el('budgetRepresentativeApplyBtn').focus();}
+el('budgetRepresentativeApplyBtn').onclick=()=>{
+ el('budgetRepresentativeAcademicYearDisplay').textContent=el('academic').value;
+ el('budgetRepresentativeApplicationMessage').textContent='';
+ orgModal.classList.add('show');orgModal.setAttribute('aria-hidden','false');document.body.classList.add('has-modal');el('budgetRepresentativeOrgType').focus();
+};
+for(const id of ['budgetRepresentativeApplicationClose','budgetRepresentativeCancelBtn'])el(id).onclick=closeOrgPreview;
+orgModal.addEventListener('click',event=>{if(event.target===orgModal)closeOrgPreview();});
+orgModal.addEventListener('keydown',event=>{
+ if(event.key==='Escape'){event.preventDefault();closeOrgPreview();}
+ if(event.key==='Tab'){
+  const nodes=[...orgModal.querySelectorAll('button,select,input,textarea')].filter(node=>!node.disabled&&node.getClientRects().length);
+  if(event.shiftKey&&document.activeElement===nodes[0]){event.preventDefault();nodes.at(-1).focus();}
+  else if(!event.shiftKey&&document.activeElement===nodes.at(-1)){event.preventDefault();nodes[0].focus();}
+ }
+});
+el('budgetRepresentativeApplicationForm').onsubmit=event=>{event.preventDefault();el('budgetRepresentativeApplicationMessage').textContent='ทดลองส่งสำเร็จ — ไม่มีการส่งคำขอหรือบันทึกข้อมูลจริง';};
 setTheme('light');preset();
 </script>
 </body></html>

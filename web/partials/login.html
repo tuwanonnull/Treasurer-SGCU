@@ -88,31 +88,14 @@
                   </div>
 
                   <div id="loginProfileCard" class="panel panel-hover login-card login-profile-card" hidden>
-                    <h3 id="loginProfileTitle" class="login-title">ข้อมูลบัญชีผู้ใช้</h3>
+                    <div class="login-profile-heading">
+                      <h3 id="loginProfileTitle" class="login-title">ข้อมูลบัญชีผู้ใช้</h3>
+                      <p id="loginProfileTypeSection" class="login-profile-account-type">บัญชี<span id="loginProfileTypeDisplay"></span></p>
+                    </div>
                     <div id="loginProfileTemporaryInfo" class="login-profile-block" hidden>
                       <p id="loginProfileTemporaryExpiry" class="section-text-sm" aria-live="polite"></p>
-                      <label class="login-label" for="loginProfileTemporaryEmail">อีเมลที่ได้รับสิทธิ์</label>
-                      <input id="loginProfileTemporaryEmail" class="login-input" type="email" readonly />
                     </div>
                     <div id="loginProfileForm" class="login-profile-form">
-                      <section id="loginProfileTypeSection" class="login-profile-block">
-                        <div class="borrow-form-row login-profile-type-row">
-                          <div class="borrow-form-field">
-                            <label class="login-label">ประเภทผู้ใช้งาน</label>
-                            <div class="tabs" id="loginProfileTypeGroup">
-                              <label class="tab-btn view-toggle-btn is-active" style="cursor:pointer;">
-                                <input id="loginProfileTypeStudent" type="radio" name="loginProfileType" value="student" checked style="display:none;" />
-                                นิสิต
-                              </label>
-                              <label class="tab-btn view-toggle-btn" style="cursor:pointer;">
-                                <input id="loginProfileTypeAffairs" type="radio" name="loginProfileType" value="affairs" style="display:none;" />
-                                บุคลากร
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </section>
-
                       <section class="login-profile-block">
                         <div class="borrow-form-row">
                           <div class="borrow-form-field">

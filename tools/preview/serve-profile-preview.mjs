@@ -5,12 +5,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(fileURLToPath(new URL('../../web/', import.meta.url)));
 async function page() {
-  const [source, partial, template] = await Promise.all([
+  const [source, partial, template, index, budget] = await Promise.all([
     readFile(path.join(root, 'js/features/project/app.sorting-auth.js'), 'utf8'),
     readFile(path.join(root, 'partials/login.html'), 'utf8'),
-    readFile(new URL('./profile-preview.html', import.meta.url), 'utf8')
+    readFile(new URL('./profile-preview.html', import.meta.url), 'utf8'),
+    readFile(path.join(root, 'index.html'), 'utf8'),
+    readFile(path.join(root, 'partials/budget-approval-request.html'), 'utf8')
   ]);
-  const names = ['getStudentIdFromEmail', 'isAlumniChulaEmail', 'getLoginProfileType', 'renderLoginProfileTypeTabs', 'applyLoginProfileTypeUI', 'deriveLoginProfileStudentMeta', 'updateLoginProfileStudentMeta'];
+  const names = ['getStudentIdFromEmail', 'isAlumniChulaEmail', 'resolveLoginProfileType', 'getLoginProfileType', 'renderLoginProfileTypeSummary', 'applyLoginProfileTypeUI', 'deriveLoginProfileStudentMeta', 'updateLoginProfileStudentMeta'];
   const functions = names.map(name => {
     const start = source.indexOf(`  function ${name}(`);
     if(start < 0) throw new Error(`Missing production function: ${name}`);
@@ -18,7 +20,10 @@ async function page() {
   }).join('\n');
   const map = source.match(/const loginProfileFacultyMap = \{[\s\S]*?\n  \};/)[0];
   const bindings = [...new Set(functions.match(/\bloginProfile\w+El\b/g))].map(name => `const ${name}=document.getElementById('${name.slice(0,-2)}');`).join('\n');
-  return template.replace('<!-- LOGIN_PARTIAL -->',partial).replace('// PRODUCTION_FUNCTIONS', `${bindings}\n${map}\n${functions}`);
+  const modal = index.slice(index.indexOf('    <!-- STAFF APPLICATION MODAL -->'), index.indexOf('    <script src="js/core/app.config.js"'));
+  const orgStart = budget.lastIndexOf('<div', budget.indexOf('id="budgetRepresentativeApplicationModal"'));
+  const orgModal = budget.slice(orgStart, budget.lastIndexOf('</section>'));
+  return template.replace('<!-- ORG_MODAL -->', orgModal).replace('<!-- STAFF_MODAL -->', modal).replace('<!-- LOGIN_PARTIAL -->',partial).replace('// PRODUCTION_FUNCTIONS', `${bindings}\n${map}\n${functions}`);
 }
 http.createServer(async (req,res) => {
   try {

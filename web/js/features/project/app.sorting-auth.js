@@ -1759,9 +1759,6 @@ function initAuthUI() {
   }
 
   const loginProfileFormEl = document.getElementById("loginProfileForm");
-  const loginProfileTypeGroupEl = document.getElementById("loginProfileTypeGroup");
-  const loginProfileTypeStudentEl = document.getElementById("loginProfileTypeStudent");
-  const loginProfileTypeAffairsEl = document.getElementById("loginProfileTypeAffairs");
   const loginProfileStudentFieldsEl = document.getElementById("loginProfileStudentFields");
   const loginProfileFirstNameEl = document.getElementById("loginProfileFirstName");
   const loginProfileLastNameEl = document.getElementById("loginProfileLastName");
@@ -1816,7 +1813,7 @@ function initAuthUI() {
   }
 
   function getStudentIdFromEmail(email) {
-    return (email || "").toString().trim().match(/^(\d{10})@(student|alumni)\.chula\.ac\.th$/i)?.[1] || "";
+    return (email || "").toString().trim().match(/^(\d{10})@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*chula\.ac\.th$/i)?.[1] || "";
   }
 
   function isAlumniChulaEmail(email) {
@@ -2317,9 +2314,7 @@ function initAuthUI() {
       loginProfileCardEl.classList.toggle("is-first-login", visible);
     }
     if (visible && !getLoginTemporaryAccess()) {
-      if (loginProfileTypeStudentEl) loginProfileTypeStudentEl.checked = true;
-      if (loginProfileTypeAffairsEl) loginProfileTypeAffairsEl.checked = false;
-      currentUserProfileType = "student";
+      currentUserProfileType = getLoginProfileType();
       applyLoginProfileTypeUI();
     }
   }
@@ -2336,25 +2331,28 @@ function initAuthUI() {
     if (loginProfileStudentIdEl) loginProfileStudentIdEl.disabled = disabled;
     if (loginProfilePhoneEl) loginProfilePhoneEl.disabled = disabled;
     if (loginProfileLineIdEl) loginProfileLineIdEl.disabled = disabled;
-    if (loginProfileTypeStudentEl) loginProfileTypeStudentEl.disabled = disabled;
-    if (loginProfileTypeAffairsEl) loginProfileTypeAffairsEl.disabled = disabled;
     if (loginProfileSaveBtnEl) loginProfileSaveBtnEl.disabled = disabled;
   }
 
-  function getLoginProfileType() {
-    if (getLoginTemporaryAccess()) return "temporary";
-    return loginProfileTypeAffairsEl?.checked ? "affairs" : "student";
+  function resolveLoginProfileType(email, storedType = "student") {
+    const normalized = (email || "").toString().trim().toLowerCase();
+    if (getLoginTemporaryAccess(normalized)) return "temporary";
+    if (getStudentIdFromEmail(normalized)) return "student";
+    if (/^[^@]+@chula\.ac\.th$/.test(normalized)) return "affairs";
+    return storedType === "affairs" ? "affairs" : "student";
   }
 
-  function renderLoginProfileTypeTabs() {
-    if (!loginProfileTypeGroupEl) return;
-    const labels = Array.from(loginProfileTypeGroupEl.querySelectorAll("label.tab-btn"));
-    labels.forEach((label) => label.classList.remove("is-active"));
-    const activeInput = loginProfileTypeAffairsEl?.checked
-      ? loginProfileTypeAffairsEl
-      : loginProfileTypeStudentEl;
-    const activeLabel = activeInput ? activeInput.closest("label.tab-btn") : null;
-    if (activeLabel) activeLabel.classList.add("is-active");
+  function getLoginProfileType() {
+    return resolveLoginProfileType(auth.currentUser?.email, currentUserProfileType);
+  }
+
+  function renderLoginProfileTypeSummary() {
+    const display = document.getElementById("loginProfileTypeDisplay");
+    if (!display) return;
+    const email = (auth.currentUser?.email || "").toString().trim().toLowerCase();
+    display.textContent = email === "tuwanon.kimchiang@gmail.com"
+      ? "แอดมิน"
+      : { student: "นิสิต", affairs: "บุคลากร", temporary: "ผู้ใช้งานชั่วคราว" }[getLoginProfileType()];
   }
 
   function applyLoginProfileTypeUI() {
@@ -2367,8 +2365,6 @@ function initAuthUI() {
     if (typeSection) typeSection.hidden = isTemporary;
     const info = document.getElementById("loginProfileTemporaryInfo");
     if (info) info.hidden = !isTemporary;
-    const emailField = document.getElementById("loginProfileTemporaryEmail");
-    if (emailField) emailField.value = isTemporary ? auth.currentUser?.email || "" : "";
     const expiry = document.getElementById("loginProfileTemporaryExpiry");
     if (expiry) {
       const endsAt = temporaryAccess?.endsAt;
@@ -2431,7 +2427,7 @@ function initAuthUI() {
     } else {
       updateLoginProfileStudentMeta();
     }
-    renderLoginProfileTypeTabs();
+    renderLoginProfileTypeSummary();
   }
 
   function deriveLoginProfileStudentMeta(rawStudentId, options = {}) {
@@ -2466,10 +2462,10 @@ function initAuthUI() {
 
   function normalizeLoginProfileAcademicFields(profile) {
     const sourceProfile = profile && typeof profile === "object" ? profile : {};
-    const isTemporary = !!getLoginTemporaryAccess(sourceProfile.authEmail || sourceProfile.email);
-    const safeProfile = isTemporary
+    const resolvedType = resolveLoginProfileType(sourceProfile.authEmail || sourceProfile.email, sourceProfile.profileType);
+    const safeProfile = resolvedType === "temporary"
       ? { ...sourceProfile, profileType: "temporary", studentId: "", faculty: "", year: "", nickname: "" }
-      : sourceProfile.profileType === "temporary" ? { ...sourceProfile, profileType: "student" } : sourceProfile;
+      : { ...sourceProfile, profileType: resolvedType };
     const profileType = (safeProfile.profileType || "student").toString().trim().toLowerCase();
     if (profileType === "affairs" || profileType === "temporary") return safeProfile;
 
@@ -2526,8 +2522,6 @@ function initAuthUI() {
     currentUserProfileType = "student";
     if (loginProfileOrganizationEl) loginProfileOrganizationEl.value = "";
     setFirstLoginPromptVisible(false);
-    if (loginProfileTypeStudentEl) loginProfileTypeStudentEl.checked = true;
-    if (loginProfileTypeAffairsEl) loginProfileTypeAffairsEl.checked = false;
     if (loginProfileFirstNameEl) loginProfileFirstNameEl.value = "";
     if (loginProfileLastNameEl) loginProfileLastNameEl.value = "";
     if (loginProfileNicknameEl) loginProfileNicknameEl.value = "";
@@ -2549,15 +2543,9 @@ function initAuthUI() {
       authEmail,
       email: normalizeAccountEmail(authEmail || profile?.email || "")
     });
-    const storedType = (safeProfile.profileType || "").toString().trim().toLowerCase();
-    const hasSavedData = hasSavedLoginProfileData(safeProfile);
-    const resolvedType = getLoginTemporaryAccess(authEmail) ? "temporary" : storedType === "affairs" || storedType === "student"
-      ? storedType
-      : ((safeProfile.studentId || "").toString().trim() ? "student" : (hasSavedData ? "affairs" : "student"));
+    const resolvedType = resolveLoginProfileType(authEmail, safeProfile.profileType);
     currentUserProfileType = resolvedType;
     if (loginProfileOrganizationEl) loginProfileOrganizationEl.value = safeProfile.organization || "";
-    if (loginProfileTypeStudentEl) loginProfileTypeStudentEl.checked = resolvedType !== "affairs";
-    if (loginProfileTypeAffairsEl) loginProfileTypeAffairsEl.checked = resolvedType === "affairs";
 
     const displayName = (firebaseUser?.displayName || "").toString().trim();
     const parts = displayName ? displayName.split(/\s+/) : [];
@@ -3146,15 +3134,6 @@ function initAuthUI() {
     loginProfileStudentIdEl.addEventListener("blur", updateLoginProfileStudentMeta);
     updateLoginProfileStudentMeta();
   }
-  [loginProfileTypeStudentEl, loginProfileTypeAffairsEl].forEach((input) => {
-    if (!input) return;
-    input.addEventListener("change", () => {
-      applyLoginProfileTypeUI();
-      if (auth.currentUser) {
-        setLoginProfileStatus("มีการเปลี่ยนแปลงข้อมูล กดบันทึกเพื่ออัปเดต", "#6b7280");
-      }
-    });
-  });
   applyLoginProfileTypeUI();
   function handleLogout() {
     staffAuthUser = null;

@@ -19,6 +19,7 @@ assert.equal(await run('isAllowedAuthEmailAsync("guest@example.com")'), true);
 assert.equal(run('getTemporaryAuthAccess("guest@example.com").email'), access.email);
 assert.equal(run('getTemporaryAuthAccess("another@example.com")'), null);
 assert.equal(run('getTemporaryAuthAccess("admin@example.com")'), null);
+context.currentUserProfileType = 'student';
 context.auth = { currentUser: { email: access.email } };
 context.window = { sgcuAuth: { getTemporaryAuthAccess: email => run(`getTemporaryAuthAccess(${JSON.stringify(email)})`) } };
 context.deriveLoginProfileStudentMeta = () => ({ faculty: 'คณะ', year: '1' });
@@ -27,7 +28,7 @@ function addFunction(name) {
   const end = source.indexOf('\n  }', start) + 4;
   run(source.slice(start, end));
 }
-for (const name of ['getStudentIdFromEmail', 'getLoginTemporaryAccess', 'normalizeLoginProfileAcademicFields', 'isLoginProfileComplete', 'hasSavedLoginProfileData', 'getLoginProfileType', 'applyLoginProfileTypeUI']) addFunction(name);
+for (const name of ['resolveLoginProfileType', 'getStudentIdFromEmail', 'getLoginTemporaryAccess', 'normalizeLoginProfileAcademicFields', 'isLoginProfileComplete', 'hasSavedLoginProfileData', 'getLoginProfileType', 'applyLoginProfileTypeUI']) addFunction(name);
 context.profile = { email: access.email, profileType: 'student', firstName: 'Guest', lastName: 'User', organization: 'วิทยากร', phone: '0812345678' };
 assert.equal(run('isLoginProfileComplete(profile)'), true);
 assert.equal(run('isLoginProfileComplete({...profile, organization: " "})'), false);
@@ -35,7 +36,7 @@ assert.equal(run('isLoginProfileComplete({...profile, phone: "bad"})'), false);
 assert.equal(run('isLoginProfileComplete({...profile, firstName: ""})'), false);
 assert.equal(run('hasSavedLoginProfileData(normalizeLoginProfileAcademicFields({email: profile.email}))'), false);
 assert.equal(run('normalizeLoginProfileAcademicFields({...profile, studentId: "1234567890"}).studentId'), '');
-assert.equal(run('isLoginProfileComplete({...profile, email: "student@chula.ac.th"})'), false);
+assert.equal(run('isLoginProfileComplete({...profile, email: "student@chula.ac.th"})'), true);
 assert.equal(run('isLoginProfileComplete({...profile, email: "staff@chula.ac.th", profileType: "affairs"})'), true);
 const controls = new Map();
 const control = id => {
@@ -44,7 +45,7 @@ const control = id => {
 };
 context.document = { getElementById: control };
 for (const name of ['StudentFields', 'ContactRow', 'Nickname', 'StudentId', 'Phone', 'PhoneLabel', 'LineId', 'LineIdLabel', 'StudentIdWarning', 'FacultyWarning', 'YearWarning', 'Organization', 'TypeStudent', 'TypeAffairs']) context[`loginProfile${name}El`] = control(`loginProfile${name}`);
-context.renderLoginProfileTypeTabs = () => {};
+context.renderLoginProfileTypeSummary = () => {};
 context.updateLoginProfileStudentMeta = () => {};
 run('applyLoginProfileTypeUI()');
 assert.equal(control('loginProfileStudentFields').style.display, 'none');
@@ -53,14 +54,12 @@ assert.equal(control('loginProfilePhone').required, true);
 assert.equal(control('loginProfileLineId').required, false);
 assert.equal(control('loginProfileOrganization').required, true);
 assert.equal(control('loginProfileTypeSection').hidden, true);
-assert.equal(control('loginProfileTemporaryEmail').value, access.email);
 assert.match(control('loginProfileTemporaryExpiry').textContent, /เวลาไทย/);
-context.auth.currentUser = { email: 'student@chula.ac.th' };
+context.auth.currentUser = { email: 'student@dept.chula.ac.th' };
 run('applyLoginProfileTypeUI()');
 assert.equal(control('loginProfileStudentId').required, true);
 assert.equal(control('loginProfileOrganization').required, false);
 assert.equal(control('loginProfileTemporaryInfo').hidden, true);
-assert.equal(control('loginProfileTemporaryEmail').value, '');
 // Email identity takes precedence over a previously saved student number.
 for (const domain of ['student', 'alumni']) {
   context.auth.currentUser = { email: `6534324223@${domain}.chula.ac.th` };
@@ -70,19 +69,28 @@ for (const domain of ['student', 'alumni']) {
   assert.equal(control('loginProfileStudentId').readOnly, true);
   assert.equal(run('normalizeLoginProfileAcademicFields({authEmail: auth.currentUser.email, profileType: "student", studentId: "1234567890"}).studentId'), '6534324223');
 }
-context.auth.currentUser = { email: 'student@chula.ac.th' };
+context.auth.currentUser = { email: 'student@dept.chula.ac.th' };
 run('applyLoginProfileTypeUI()');
 assert.equal(control('loginProfileStudentId').readOnly, false);
-// The approved Gmail exception can select either regular profile type.
+// The approved Gmail exception retains its stored regular profile type.
 context.auth.currentUser = { email: 'tuwanon.kimchiang@gmail.com' };
 for (const type of ['student', 'affairs']) {
-  control('loginProfileTypeAffairs').checked = type === 'affairs';
+  context.currentUserProfileType = type;
   run('applyLoginProfileTypeUI()');
   assert.equal(run('getLoginProfileType()'), type);
   assert.equal(control('loginProfileTypeSection').hidden, false);
 }
 assert.equal(run('normalizeLoginProfileAcademicFields({authEmail: "tuwanon.kimchiang@gmail.com", profileType: "affairs"}).profileType'), 'affairs');
-control('loginProfileTypeAffairs').checked = false;
+context.currentUserProfileType = 'student';
+for (const email of ['6534324223@chula.ac.th', '6534324223@dept.chula.ac.th', '6534324223@a.b.chula.ac.th', ' 6534324223@STUDENT.CHULA.AC.TH ']) {
+  assert.equal(run(`getStudentIdFromEmail(${JSON.stringify(email)})`), '6534324223');
+  assert.equal(run(`resolveLoginProfileType(${JSON.stringify(email)}, "affairs")`), 'student');
+}
+for (const email of ['6534324223@evilchula.ac.th', '6534324223@chula.ac.th.evil.com', '123@chula.ac.th']) {
+  assert.equal(run(`getStudentIdFromEmail(${JSON.stringify(email)})`), '');
+}
+assert.equal(run('resolveLoginProfileType("staff@chula.ac.th", "student")'), 'affairs');
+assert.equal(run('resolveLoginProfileType("staff@dept.chula.ac.th", "affairs")'), 'affairs');
 // Cached profile type cannot substitute for an active access record.
 access.endsAt = new Date(Date.now() - 1);
 assert.equal(run('getTemporaryAuthAccess("guest@example.com")'), null);
