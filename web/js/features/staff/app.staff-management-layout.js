@@ -64,7 +64,8 @@ window.addEventListener('DOMContentLoaded', () => {
  const divisionSelect=$('live-division-select');
  const newLabel=nameField.querySelector('label');newLabel.textContent='ชื่อฝ่ายใหม่';
  const note=document.createElement('span');note.className='live-label-note';note.textContent=' (ระบบกำหนดให้อัตโนมัติ)';newLabel.append(note);
- const back=document.createElement('button');back.type='button';back.className='live-text-button';back.textContent='เลือกฝ่ายเดิม';nameField.append(back);
+ const back=document.createElement('button');back.type='button';back.className='live-text-button';back.textContent='เลือกฝ่ายเดิม';
+ const newHeading=document.createElement('div');newHeading.className='live-field-heading';newLabel.before(newHeading);newHeading.append(newLabel,back);
  const fixed=document.createElement('output');fixed.className='login-input live-fixed-level';fixed.hidden=true;level.after(fixed);
  const special=document.createElement('span');special.className='live-label-note';special.textContent=' (ใช้ชื่อตำแหน่งเฉพาะของหมวดนี้)';special.hidden=true;level.closest('.staff-position-field').querySelector('label').append(special);
  const result=originalName.closest('.staff-position-field');result.classList.add('live-result');
