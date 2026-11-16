@@ -310,6 +310,8 @@ function initStaffAccessPages() {
   let unsubscribePendingApplications = null;
   let unsubscribeApprovalHistory = null;
   let unsubscribePositionCatalog = null;
+  let positionCatalogGeneration = 0;
+  let positionCatalogHasListenerError = false;
   let unsubscribeOrgStructureMembers = null;
   let unsubscribeAuthEmailAccess = null;
   let unsubscribeOrgRepresentativeApplications = null;
@@ -6616,7 +6618,13 @@ function initStaffAccessPages() {
     }
   };
 
-  const startPositionCatalogListener = () => {
+  const startPositionCatalogListener = ({ tokenRefreshed = false } = {}) => {
+    const generation = ++positionCatalogGeneration;
+    if (typeof unsubscribePositionCatalog === "function") unsubscribePositionCatalog();
+    unsubscribePositionCatalog = null;
+    const authUser = readCurrentUser();
+    const isCurrentListener = () => generation === positionCatalogGeneration &&
+      Boolean(authUser?.uid) && readCurrentUser()?.uid === authUser.uid;
     if (!resolveStore()) {
       positionCatalogLoadState = "loading";
       currentPositionCatalog = [];
@@ -6626,18 +6634,13 @@ function initStaffAccessPages() {
       scheduleDeferredBootstrap();
       return;
     }
-    if (!getCurrentAuthEmail()) {
+    if (!authUser?.uid || !authUser?.email) {
       positionCatalogLoadState = "signed-out";
       currentPositionCatalog = [];
       renderPositionDatalist();
       renderPositionCatalog();
       renderPositionAllowedPageOptions([], "");
       return;
-    }
-
-    if (typeof unsubscribePositionCatalog === "function") {
-      unsubscribePositionCatalog();
-      unsubscribePositionCatalog = null;
     }
 
     const q = firestore.query(firestore.collection(firestore.db, COLLECTION_POSITIONS));
@@ -6647,6 +6650,11 @@ function initStaffAccessPages() {
     unsubscribePositionCatalog = firestore.onSnapshot(
       q,
       (snapshot) => {
+        if (!isCurrentListener()) return;
+        if (positionCatalogHasListenerError) {
+          setMessage(positionManageMessageEl, "");
+          positionCatalogHasListenerError = false;
+        }
         const fromStore = (snapshot?.docs || [])
           .map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }))
           .map((item) => {
@@ -6691,7 +6699,20 @@ function initStaffAccessPages() {
           console.warn("sync staff profile position access failed - app.staff-access.js:6380", error);
         });
       },
-      (error) => {
+      async (error) => {
+        if (!isCurrentListener()) return;
+        const errorCode = String(error?.code || "").replace(/^firestore\//, "");
+        if (errorCode === "permission-denied" && !tokenRefreshed && typeof authUser.getIdToken === "function") {
+          try {
+            await authUser.getIdToken(true);
+            if (!isCurrentListener()) return;
+            startPositionCatalogListener({ tokenRefreshed: true });
+            return;
+          } catch {
+            if (!isCurrentListener()) return;
+          }
+        }
+        positionCatalogHasListenerError = true;
         console.error("staff position catalog listener failed - app.staff-access.js:6384", error);
         positionCatalogLoadState = "error";
         currentPositionCatalog = [];
@@ -9374,6 +9395,7 @@ function initStaffAccessPages() {
     unsubscribeApprovalHistory = null;
     unsubscribeOrgRepresentativeApplications = null;
     unsubscribePositionCatalog = null;
+    positionCatalogGeneration += 1;
     unsubscribeOrgStructureMembers = null;
     unsubscribeAuthEmailAccess = null;
   });
