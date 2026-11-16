@@ -3,6 +3,18 @@ window.addEventListener('DOMContentLoaded', () => {
  const $=id=>document.getElementById(id);
  const page=document.querySelector('section.page-view[data-page="staff-approval"]');
  if(!page)return;
+ const connectionMessage=$('staffPositionManageMessage');
+ const diagnostic=document.createElement('div');diagnostic.hidden=true;
+ const diagnosticButton=document.createElement('button');diagnosticButton.type='button';diagnosticButton.className='btn-ghost';diagnosticButton.textContent='ตรวจการเชื่อมต่อ';
+ const diagnosticOutput=document.createElement('pre');diagnosticOutput.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;user-select:text';diagnosticOutput.setAttribute('role','status');
+ diagnostic.append(diagnosticButton,diagnosticOutput);connectionMessage.after(diagnostic);
+ new MutationObserver(()=>{diagnostic.hidden=!connectionMessage.textContent.includes('permission-denied')}).observe(connectionMessage,{childList:true,subtree:true});
+ diagnosticButton.onclick=async()=>{
+   diagnosticButton.disabled=true;diagnosticOutput.textContent='กำลังตรวจการอ่านข้อมูล ไม่มีการบันทึกหรือเปลี่ยนสิทธิ์…';
+   try { const result=await window.sgcuStaffConnectionDiagnostics({auth:window.sgcuAuth?.auth,store:window.sgcuFirestore,collection:window.SGCU_APP_CONFIG?.firestore?.collections?.staffPositionCatalog||'staffPositionCatalog'});diagnosticOutput.textContent=JSON.stringify(result,null,2); }
+   catch { diagnosticOutput.textContent='ตรวจไม่สำเร็จ กรุณาลองใหม่'; }
+   finally { diagnosticButton.disabled=false; }
+ };
  const nav=document.createElement('nav');nav.className='mobile-dashboard-action-bar staff-live-nav';nav.setAttribute('aria-label','เมนูย่อยสตาฟและคำขอ');
  for(const [key,label,icon] of [['filters','ตัวกรอง','⌕'],['pending','คำขอ','✓'],['current','สตาฟ','♙'],['positions','ตำแหน่ง','▦'],['select','เลือกรายการ','☑']]){
  const button=document.createElement('button');button.type='button';button.className='mobile-dashboard-action';button.dataset.action=key;

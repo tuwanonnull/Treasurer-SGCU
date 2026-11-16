@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+const context={window:{sgcuAssetVersion:'test'},fetch(){throw Error('No external network in tests')},AbortSignal,setTimeout,clearTimeout};
+vm.createContext(context);vm.runInContext(await fs.readFile(new URL('../../web/js/features/staff/app.staff-connection-diagnostics.js',import.meta.url),'utf8'),context);
+const probe=context.window.sgcuStaffConnectionDiagnostics;
+const secret='NEVER_SHOW_TOKEN';let reads=0;
+const auth={currentUser:{uid:'test',email:'test@example.com',getIdTokenResult:async()=>({token:secret,claims:{email:'test@example.com',aud:'demo-test'},expirationTime:'later'})}};
+const store={db:{app:{options:{projectId:'demo-test'}}},collection:()=>({}),limit:n=>n,query:()=>({}),getDocs:async()=>{reads++}};
+const result=await probe({auth,store,collection:'staffPositionCatalog',request:async(url,options)=>{assert.ok(url.startsWith('https://firestore.googleapis.com/'));assert.equal(options.headers.Authorization,'Bearer '+secret);return {status:403,ok:false,json:async()=>({error:{status:'PERMISSION_DENIED',message:secret}})}}});
+assert.equal(result.sdkRead,'ok');assert.equal(result.directRead,403);assert.equal(result.tokenProject,'demo-test');assert.ok(!JSON.stringify(result).includes(secret));assert.equal(reads,1);
+const signedOut=await probe({auth:{currentUser:null},store,collection:'staffPositionCatalog'});assert.equal(signedOut.signedIn,false);assert.equal(reads,1);
+store.getDocs=async()=>{throw {code:'permission-denied',message:secret}};
+const failure=await probe({auth,store,collection:'staffPositionCatalog',request:async()=>{throw Error(secret)}});assert.equal(failure.sdkRead,'permission-denied');assert.equal(failure.directRead,'network-unavailable');assert.ok(!JSON.stringify(failure).includes(secret));
+console.log('Connection diagnostics: read-only queries, signed-out guard, sanitized results and token redaction passed.');
