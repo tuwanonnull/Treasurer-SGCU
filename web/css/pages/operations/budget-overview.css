@@ -1,0 +1,396 @@
+.budget-request-view-toggle {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+#budgetOrgSummaryCaption {
+  margin-bottom: 18px;
+}
+
+#budgetRequestNormalView,
+#budgetRequestOrgTotalsView {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#budgetRequestNormalView > #budgetApprovalForm,
+#budgetRequestNormalView > .panel,
+#budgetRequestOrgTotalsView > .panel {
+  margin-top: 0 !important;
+  transform: none !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#budgetApprovalForm > .panel:first-child {
+  margin-top: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.budget-request-form {
+  margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#budgetRequestNormalView > .budget-request-list-panel {
+  margin-top: 28px !important;
+}
+
+.budget-request-form .panel-body {
+  display: grid;
+  gap: 14px;
+}
+
+.budget-request-panel-body {
+  align-items: start;
+}
+
+.budget-request-form-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.budget-request-form-section {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(244, 114, 182, 0.16);
+  border-radius: 14px;
+  background: #fffafd;
+}
+
+.budget-request-form-section-title {
+  color: #9d174d;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.budget-request-form .borrow-form-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.budget-request-form .borrow-form-row.is-3 {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.budget-request-form .borrow-form-field {
+  min-width: 0;
+}
+
+.budget-request-form input.login-input[type="date"] {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.budget-request-field-full {
+  grid-column: 1 / -1;
+}
+
+.budget-request-field-full textarea {
+  resize: vertical;
+}
+
+.budget-request-field-hint {
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.budget-request-description-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.budget-request-counter {
+  flex: 0 0 auto;
+  color: #9d174d;
+  font-weight: 700;
+}
+
+.budget-request-form .meeting-form-actions {
+  margin-top: 2px;
+  justify-content: flex-end;
+}
+
+.meeting-form-actions.budget-request-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.budget-request-actions-message {
+  min-width: 0;
+}
+
+.budget-request-actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.budget-request-project-code {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 999px;
+  background: #fff7fc;
+  padding: 4px 10px;
+  color: #9d174d;
+  font-family: Kanit, var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.budget-request-history-project-name {
+  color: #111827;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.budget-request-history-project-meta {
+  margin-top: 3px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.budget-request-history-row.is-editable {
+  cursor: pointer;
+}
+
+.budget-request-history-row.is-editable:hover {
+  background: #fff7fc;
+}
+
+.budget-request-history-row.is-editable:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.28);
+  outline-offset: -3px;
+}
+
+.budget-request-cancel-request-btn {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff7f7;
+}
+
+.budget-org-totals-header {
+  align-items: flex-start;
+}
+
+.budget-org-totals-note {
+  margin-top: 2px;
+  color: #64748b;
+}
+
+.budget-org-totals-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: min(100%, 300px);
+}
+
+.budget-org-totals-inline-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.budget-org-totals-inline-filter label {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.budget-org-totals-inline-filter select {
+  min-width: 220px;
+  max-width: min(360px, 100%);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.budget-org-totals-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.budget-org-totals-table td,
+.budget-org-totals-table th {
+  vertical-align: middle;
+}
+
+.budget-org-totals-table {
+  min-width: 820px;
+}
+
+.budget-org-totals-row-own td {
+  background: #fff1f8;
+}
+
+.budget-org-totals-row-own td:first-child {
+  box-shadow: inset 4px 0 0 #ec4899;
+}
+
+.budget-org-totals-chart-card {
+  margin: 0 0 14px;
+}
+
+.budget-org-totals-table-wrapper {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .budget-org-totals-inline-filter {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .budget-org-totals-inline-filter select {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .page-view[data-page="budget-approval-request"] .budget-org-totals-table-wrapper {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable thead {
+    display: none;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr {
+    display: block;
+    padding: 12px;
+    border: 1px solid rgba(236, 72, 153, 0.18);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 8px 22px rgba(148, 163, 184, 0.14);
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own {
+    position: relative;
+    border-color: rgba(236, 72, 153, 0.34);
+    background: #fff1f8;
+    box-shadow: 0 12px 28px rgba(236, 72, 153, 0.14);
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own::before {
+    content: "";
+    position: absolute;
+    inset: 10px auto 10px 0;
+    width: 4px;
+    border-radius: 0 999px 999px 0;
+    background: #ec4899;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 6px 10px;
+    width: 100%;
+    padding: 7px 0;
+    border: 0;
+    text-align: left !important;
+    white-space: normal;
+    align-items: start;
+    overflow-wrap: anywhere;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own td {
+    background: transparent;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable tr.budget-org-totals-row-own td:first-child {
+    box-shadow: none;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td::before {
+    content: attr(data-label);
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td[data-label="องค์กร"] {
+    display: block;
+    padding-top: 0;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td[data-label="องค์กร"]::before {
+    content: none;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td[data-label="องค์กร"] > * {
+    min-width: 0;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+
+  .page-view[data-page="budget-approval-request"] #budgetOrgTotalsTable td[colspan]::before {
+    content: none;
+  }
+}
+
+.budget-staff-panel .panel-body {
+  display: grid;
+  gap: 14px;
+}
+
+.budget-staff-layout {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+

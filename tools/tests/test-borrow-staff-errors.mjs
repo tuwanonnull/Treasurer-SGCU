@@ -1,7 +1,8 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
-const source = await readFile(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url), 'utf8');
+const source = await readScriptSource(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url));
 const part = (a,b) => source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
 const context = vm.createContext({});
 vm.runInContext(part('  const formatBorrowStatusUpdateError =','  const applyStockDeltasInTransaction =')+'\nglobalThis.format = formatBorrowStatusUpdateError;', context);

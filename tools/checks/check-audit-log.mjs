@@ -1,3 +1,4 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,7 +54,7 @@ const jsFiles = (await listFiles(path.join(rootDir, "web/js")))
 const missing = [];
 
 for (const filePath of jsFiles) {
-  const source = await fs.readFile(filePath, "utf8");
+  const source = readScriptSource(filePath);
   const actions = extractCodeActions(source);
   for (const action of actions) {
     if (!rulesActions.has(action)) {

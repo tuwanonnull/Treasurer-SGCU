@@ -16,7 +16,7 @@ export function hashAssetEntries(entries) {
 }
 
 export function isReleaseInput(name) {
-  return name.startsWith('web/') || name === 'tools/build/build-static.mjs' || name === 'tools/lib/build-assets.mjs';
+  return name.startsWith('web/') || name === 'tools/build/build-static.mjs' || name === 'tools/lib/build-assets.mjs' || name === 'tools/lib/source-includes.mjs';
 }
 
 // Keep other query parameters and fragments; never rewrite CDN/API URLs.

@@ -1,3 +1,4 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
@@ -38,6 +39,6 @@ console.log('Project entry is present only in staff navigation on desktop and mo
 const explicitProjectContext={...docsContext,getAllowedStaffPagesByProfile:()=>new Set(['project-live-staff'])};
 assert.ok(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,explicitProjectContext).has('project-live-staff'));
 assert.equal(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,{...explicitProjectContext,isUserAuthenticated:false}).has('project-live-staff'),false);
-const staffAccessSource=await readFile(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url),'utf8');
+const staffAccessSource=await readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url));
 assert.ok(staffAccessSource.includes('{ id: "project-live-staff", label: "จัดการโครงการ" }'));
 console.log('Explicit project page grants are selectable and retained only for authenticated users.');

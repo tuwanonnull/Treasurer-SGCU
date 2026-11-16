@@ -1,7 +1,8 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-const source=await fs.readFile(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url),'utf8');
+const source=await readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url));
 const start=source.indexOf('  const startPositionCatalogListener =');
 const end=source.indexOf('  const startMyApplicationsListener',start);
 function harness(){

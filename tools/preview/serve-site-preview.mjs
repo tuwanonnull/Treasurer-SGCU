@@ -1,3 +1,4 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -12,7 +13,7 @@ const server=http.createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);return res.end('Preview server accepts reads only');}
  if(pathname==='/preview-data'){
- const [source,json]=await Promise.all([fs.readFile(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url),'utf8'),fs.readFile(new URL('../../.local/staff-position-preview/catalog.json',import.meta.url),'utf8')]);
+ const [source,json]=await Promise.all([readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url)),fs.readFile(new URL('../../.local/staff-position-preview/catalog.json',import.meta.url),'utf8')]);
  const match=source.match(/const STAFF_PAGE_OPTIONS = (\[[\s\S]*?\n  \]);/);
  const pages=vm.runInNewContext(match[1],{},{timeout:1000});res.setHeader('Content-Type','application/json; charset=utf-8');return res.end(JSON.stringify({...JSON.parse(json),pages}));
  }

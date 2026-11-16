@@ -1,3 +1,5 @@
+import { readScriptSource, readCssSource } from "../lib/source-includes.mjs";
+import vm from "node:vm";
 import { constants as fsConstants } from "node:fs";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
@@ -48,6 +50,7 @@ function isIgnoredGeneratedDir(name) {
 }
 
 const textFileExtensions = new Set([
+  ".inc",
   ".css",
   ".html",
   ".js",
@@ -75,7 +78,7 @@ async function copyRecursive(source, target) {
   await fs.mkdir(target, { recursive: true });
 
   for (const entry of entries) {
-    if (copyIgnoreNames.has(entry.name) || isIgnoredGeneratedDir(entry.name)) continue;
+    if (copyIgnoreNames.has(entry.name) || isIgnoredGeneratedDir(entry.name) || entry.name.endsWith(".js.inc")) continue;
 
     const sourcePath = path.join(source, entry.name);
     const targetPath = path.join(target, entry.name);
@@ -189,29 +192,6 @@ async function transformHtml(source, relativePath) {
   return versionHtml(html, buildVersion);
 }
 
-async function transformCssEntrypoint(source) {
-  const styleDir = path.join(distDir, "css");
-  const importRe = /@import\s+url\(["']\.\/([^"']+?\.css)(?:\?v=[^"']*)?["']\);/g;
-  let output = "";
-  let cursor = 0;
-  let match;
-
-  while ((match = importRe.exec(source)) !== null) {
-    output += source.slice(cursor, match.index);
-    const importPath = match[1];
-    const targetPath = path.resolve(styleDir, importPath);
-    if (!targetPath.startsWith(styleDir + path.sep)) {
-      throw new Error(`CSS import path escapes css directory: ${importPath}`);
-    }
-    const importedCss = await fs.readFile(targetPath, "utf8");
-    output += `\n/* ${importPath} */\n${importedCss.trim()}\n`;
-    cursor = importRe.lastIndex;
-  }
-
-  output += source.slice(cursor);
-  return output;
-}
-
 async function applyTextTransforms() {
   const files = await listProjectFiles(distDir);
   for (const filePath of files) {
@@ -219,9 +199,15 @@ async function applyTextTransforms() {
     let transform;
     if (/^[^/]+\.html$/.test(relativePath)) transform = source => transformHtml(source, relativePath);
     else if (relativePath === "sw.js") transform = source => versionServiceWorker(source, buildVersion);
-    else if (relativePath.startsWith("js/") && relativePath.endsWith(".js")) transform = source => versionJavaScript(source, buildVersion);
+    else if (relativePath.startsWith("js/") && relativePath.endsWith(".js")) {
+      transform = before => {
+        const source = readScriptSource(path.join(webDir, relativePath));
+        if (before.includes("/* @include ")) new vm.Script(source, { filename: relativePath });
+        return versionJavaScript(source, buildVersion);
+      };
+    }
     else if (relativePath.startsWith("css/") && relativePath.endsWith(".css")) {
-      transform = async source => versionCss(relativePath === "css/style.css" ? await transformCssEntrypoint(source) : source, buildVersion);
+      transform = () => versionCss(readCssSource(path.join(webDir, relativePath)), buildVersion);
     }
     if (!transform) continue;
     const before = await fs.readFile(filePath, "utf8");

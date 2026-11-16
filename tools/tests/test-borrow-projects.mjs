@@ -1,8 +1,9 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const source = await readFile(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url), 'utf8');
+const source = await readScriptSource(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url));
 const slice = (from, to) => source.slice(source.indexOf(from), source.indexOf(to, source.indexOf(from)));
 const elements = new Map();
 const element = id => {

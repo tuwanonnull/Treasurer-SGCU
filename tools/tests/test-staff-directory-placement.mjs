@@ -1,8 +1,9 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url), 'utf8');
+const source = readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url));
 const controls = Object.fromEntries(['TermInput', 'PositionSelect', 'OrderInput', 'PlacementHint', 'Advanced'].map(name => [`orgStructure${name}`, { value: '', textContent: '', open: false }]));
 const fields = Object.fromEntries(['id', 'positionCode', 'position', 'studentId', 'firstName', 'status'].map(name => [name, { value: '' }]));
 const context = vm.createContext({

@@ -9,7 +9,7 @@
     "test:meeting:roster": "node tools/tests/test-budget-meeting-roster.mjs",
     "test:meeting:accounts": "node tools/tests/test-budget-meeting-accounts.mjs",
     "build": "node tools/build/build-static.mjs",
-    "check": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs && node tools/checks/check-audit-log.mjs && node tools/tests/test-meeting-room-catalog.mjs && node tools/tests/test-meeting-cancel-approval.mjs && node tools/tests/test-meeting-manage-success.mjs && node tools/tests/test-staff-access-catalog.mjs && node tools/tests/test-staff-position-listener.mjs && node tools/tests/test-staff-position-form-sync.mjs && node tools/tests/test-staff-connection-diagnostics.mjs && node tools/tests/test-organization-copy-selection.mjs && node tools/tests/test-temporary-login-profile.mjs && node tools/tests/test-staff-directory-placement.mjs && node tools/tests/test-borrow-subscription.mjs && node tools/tests/test-borrow-projects.mjs && node tools/tests/test-borrow-submit.mjs && node tools/tests/test-receipt-documents.mjs && node tools/tests/test-project-live-routing.mjs",
+    "check": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs tools/tests/test-source-includes.mjs && node tools/checks/check-audit-log.mjs && node tools/tests/test-meeting-room-catalog.mjs && node tools/tests/test-meeting-cancel-approval.mjs && node tools/tests/test-meeting-manage-success.mjs && node tools/tests/test-staff-access-catalog.mjs && node tools/tests/test-staff-position-listener.mjs && node tools/tests/test-staff-position-form-sync.mjs && node tools/tests/test-staff-connection-diagnostics.mjs && node tools/tests/test-organization-copy-selection.mjs && node tools/tests/test-temporary-login-profile.mjs && node tools/tests/test-staff-directory-placement.mjs && node tools/tests/test-borrow-subscription.mjs && node tools/tests/test-borrow-projects.mjs && node tools/tests/test-borrow-submit.mjs && node tools/tests/test-receipt-documents.mjs && node tools/tests/test-project-live-routing.mjs",
     "check:audit": "node tools/checks/check-audit-log.mjs",
     "test:staff-catalog": "node tools/tests/test-staff-access-catalog.mjs",
     "test:borrow": "node tools/tests/test-borrow-request.mjs",
@@ -20,7 +20,7 @@
     "preview:documents": "node tools/preview/serve-receipt-preview.mjs",
     "preview:staff-positions:refresh": "node tools/preview/read-staff-position-catalog.mjs",
     "preview:staff-positions": "node tools/preview/serve-staff-position-preview.mjs",
-    "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs",
+    "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs tools/tests/test-source-includes.mjs",
     "preview:projects": "node tools/preview/serve-project-live-preview.mjs"
   },
   "devDependencies": {

@@ -1,7 +1,8 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
-const source = await readFile(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url), 'utf8');
+const source = await readScriptSource(new URL('../../web/js/features/borrow/app.borrow-assets.js', import.meta.url));
 const fn = source.slice(source.indexOf('  const submitBorrowRequest ='), source.indexOf('  const updateBorrowRequestStatus ='));
 for (const scenario of ['success', 'audit-sync', 'audit-async', 'reset', 'unavailable', 'permission-denied', 'resource-exhausted']) {
   const messages = []; let writes = 0;

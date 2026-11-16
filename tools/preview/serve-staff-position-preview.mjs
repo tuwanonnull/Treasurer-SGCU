@@ -1,3 +1,4 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,7 +17,7 @@ http.createServer(async (req, res) => {
   if (pathname === '/preview-data') {
     try {
       const [source, json] = await Promise.all([
-        readFile(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url), 'utf8'),
+        readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url)),
         readFile(new URL('../../.local/staff-position-preview/catalog.json', import.meta.url), 'utf8')
       ]);
       const match = source.match(/const STAFF_PAGE_OPTIONS = (\[[\s\S]*?\n  \]);/);
@@ -33,7 +34,7 @@ http.createServer(async (req, res) => {
   }
   if (pathname === '/staff-role-policy.js') {
     try {
-      const source = await readFile(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url), 'utf8');
+      const source = await readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js', import.meta.url));
       const start = source.indexOf('const deriveLegacyRoleFromPositions =');
       const end = source.indexOf('\n  };', start) + 5;
       if (start < 0 || end < start) throw new Error('Missing role policy');

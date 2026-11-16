@@ -7,7 +7,7 @@ import { chromium, webkit, devices } from '@playwright/test';
 const origin = process.env.TEST_ORIGIN || 'http://localhost:4173';
 const browserType = process.env.TEST_BROWSER === 'webkit' ? webkit : chromium;
 const markup = await fs.readFile(new URL('../../web/partials/dashboard-staff.html', import.meta.url), 'utf8');
-const init = await fs.readFile(new URL('../../web/js/core/app.init.js', import.meta.url), 'utf8');
+const init = await fs.readFile(new URL('../../web/js/core/mobile/app.mobile-dashboard.js', import.meta.url), 'utf8');
 const sheet = init.split('function initDashboardMobileActionBar')[1].split('sheet.innerHTML = `')[1].split('`;')[0];
 const browser = await browserType.launch();
 try {

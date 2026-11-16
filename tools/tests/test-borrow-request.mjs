@@ -1,3 +1,4 @@
+import { readScriptSource } from "../lib/source-includes.mjs";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
@@ -144,7 +145,7 @@ await expectStatus(200, `/${requestPath}-project`, student);
 await expectStatus(403, ":commit", student, { writes: [write(`${requestPath}-deleted-project`, projectRequest)] });
 
 // Exercise the actual numbering function with a visible request ahead of the counter.
-const source = await readFile(new URL("../../web/js/features/borrow/app.borrow-assets.js", import.meta.url), "utf8");
+const source = await readScriptSource(new URL("../../web/js/features/borrow/app.borrow-assets.js", import.meta.url));
 const start = source.indexOf("  const createBorrowRequestWithNextNumber =");
 const end = source.indexOf("  const readCurrentUserEmail =", start);
 assert.ok(start >= 0 && end > start);
