@@ -2085,3 +2085,24 @@
   #pastUnapprovedTableStaff td[colspan]::before { display: none; }
 
 }
+
+/* The optional bulk-selection cell precedes the applicant cell. Place both
+   identity lines in the value column instead of letting grid auto-placement
+   put the email back into the label column. */
+@media (max-width: 760px) {
+  #staffApprovalHistoryTable td[data-label="ผู้ที่ถูกอนุมัติ"] > div,
+  #staffApprovalPendingTable td[data-label="ผู้สมัคร"] > div {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  #staffApprovalHistoryTable td[data-label="ผู้ที่ถูกอนุมัติ"] > .section-text-sm,
+  #staffApprovalPendingTable td[data-label="ผู้สมัคร"] > .section-text-sm {
+    margin-top: 0;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+}

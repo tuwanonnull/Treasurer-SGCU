@@ -2595,6 +2595,7 @@ function initStaffAccessPages() {
     );
     const levelCodeZZ = normalizeCode2(positionLevelCodeEl?.value || "");
     positionManageInputEl.value = buildPositionNameFromParts(divisionCodeYY, levelCodeZZ, divisionLabel);
+    window.dispatchEvent(new Event("sgcu:position-form-sync"));
   };
 
   const syncPositionManageModeUi = () => {
@@ -2616,6 +2617,7 @@ function initStaffAccessPages() {
     if (positionDivisionCodeEl) positionDivisionCodeEl.value = "";
     if (positionDivisionNameEl) positionDivisionNameEl.value = "";
     if (positionLevelCodeEl) positionLevelCodeEl.value = "";
+    updateManageResolvedPositionName();
     renderPositionAllowedPageOptions([], "");
     syncPositionManageModeUi();
     renderPositionCatalog();
@@ -2826,6 +2828,10 @@ function initStaffAccessPages() {
         return `
           <div
             class="staff-position-chip${isEditing ? " is-editing" : ""}${allowManage ? " is-selectable" : ""}"
+            data-division-code="${yy}"
+            data-division-name="${toSafeText(divisionLabel)}"
+            data-level-code="${zz}"
+            data-page-count="${configuredAllowedPages.length}"
             data-select-position-id="${toSafeText(item.id)}"
             role="${allowManage ? "button" : "group"}"
             tabindex="${allowManage ? "0" : "-1"}"

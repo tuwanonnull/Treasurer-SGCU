@@ -16,7 +16,10 @@
     "test:borrow:local": "node tools/emulator/start-local-borrow-test.mjs",
     "test:push": "npm --prefix functions test",
     "serve:dist": "python3 -m http.server 4173 --directory dist",
+    "preview:site": "npm run build && node tools/preview/serve-site-preview.mjs",
     "preview:documents": "node tools/preview/serve-receipt-preview.mjs",
+    "preview:staff-positions:refresh": "node tools/preview/read-staff-position-catalog.mjs",
+    "preview:staff-positions": "node tools/preview/serve-staff-position-preview.mjs",
     "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs",
     "preview:projects": "node tools/preview/serve-project-live-preview.mjs"
   },

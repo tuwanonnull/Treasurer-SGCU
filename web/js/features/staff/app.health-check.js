@@ -253,7 +253,7 @@
   const normalizeRoleLabel = (role) => {
     const value = normalizeText(role);
     if (!value) return "-";
-    if (value.split(",").map((item) => normalizeText(item)).includes("0")) return `${value} (Head Staff)`;
+    if (value.split(",").map((item) => normalizeText(item)).includes("0")) return `${value} (หัวหน้าสตาฟ)`;
     return value;
   };
 
@@ -294,9 +294,9 @@
       const snap = await withTimeout(store.getDoc(ref));
       if (!snap.exists()) {
         if (STAFF_HEAD_EMAIL_OVERRIDES.has(staffEmail)) {
-          return makeRow("สิทธิ์ staff profile", "ok", `อีเมล ${staffEmail} อยู่ใน bootstrap Head Staff overrides`, "ควรสร้าง staffProfiles ไว้ภายหลังถ้าต้องการ metadata/allowedPages");
+          return makeRow("สิทธิ์ staff profile", "ok", `อีเมล ${staffEmail} อยู่ใน รายชื่อหัวหน้าสตาฟที่กำหนดไว้ในระบบ`, "ควรสร้าง staffProfiles ไว้ภายหลังถ้าต้องการ metadata/allowedPages");
         }
-        return makeRow("สิทธิ์ staff profile", "warn", `อ่าน ${collection}/${staffEmail} ได้ แต่ยังไม่มี document`, "ให้ Head Staff ตรวจ staffProfiles ของอีเมลนี้");
+        return makeRow("สิทธิ์ staff profile", "warn", `อ่าน ${collection}/${staffEmail} ได้ แต่ยังไม่มี document`, "ให้หัวหน้าสตาฟตรวจ staffProfiles ของอีเมลนี้");
       }
       const data = snap.data() || {};
       const isHead = isHeadStaffProfile(data, staffEmail);
@@ -332,7 +332,7 @@
       }
       return makeRow("สิทธิ์ staff profile", "ok", details, "");
     } catch (error) {
-      return makeRow("สิทธิ์ staff profile", "error", toErrorMessage(error), "ให้ Head Staff ตรวจ staffProfiles และ Firestore rules");
+      return makeRow("สิทธิ์ staff profile", "error", toErrorMessage(error), "ให้หัวหน้าสตาฟตรวจ staffProfiles และ Firestore rules");
     }
   };
 

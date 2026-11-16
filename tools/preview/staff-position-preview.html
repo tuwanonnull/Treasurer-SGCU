@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ทดลองจัดการตำแหน่งสตาฟ • SGCU</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="/css/core/base.css">
+  <link rel="stylesheet" href="/css/pages/login-staff.css">
+  <link rel="stylesheet" href="/css/components/ui.css">
+  <link rel="stylesheet" href="/css/components/theme-preview.css">
+  <style>
+    .position-preview{max-width:1000px;margin:0 auto;padding:24px 20px 48px;line-height:1.6}
+    .position-preview [hidden]{display:none!important}
+    .position-preview h1,.position-preview h2,.position-preview p{margin:0}
+    .position-preview h1{font-size:22px;font-weight:600;color:var(--theme-pink-800)}
+    .position-preview .preview-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;font-size:12px;color:#6b7280}
+    .position-preview .preview-bar button{flex-shrink:0}
+    .position-preview .preview-form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;margin-top:16px}
+    .position-preview .field{display:grid;gap:6px;align-content:start;min-width:0}
+    .position-preview .field-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
+    .position-preview .label-with-hint{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 7px}
+    .position-preview .label-note{font-size:11px;font-weight:400;color:#6b7280}
+    .position-preview .fixed-level{display:flex;align-items:center;min-height:44px;padding:9px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;font-size:14px;color:#374151;font-weight:400}
+    .position-preview .login-input{width:100%;min-width:0;min-height:44px;background:#fff;color:#111827}
+    .position-preview .text-button{border:0;background:none;color:var(--theme-pink-700);font:inherit;font-size:12px;padding:6px;cursor:pointer;white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
+    .position-preview .wide{grid-column:1/-1}
+    .position-preview .hint{font-size:12px;color:#6b7280}
+    .position-preview .code-summary{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:12px;color:#374151;background:var(--theme-pink-50);border-radius:10px;padding:10px 12px}
+    .position-preview .code-summary strong{font-variant-numeric:tabular-nums;color:var(--theme-pink-800)}
+    .position-preview .result{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:baseline;border-top:1px solid #f3e8ef;padding-top:14px}
+    .position-preview .result-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;min-width:0}
+    .position-preview .result-codes{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:#6b7280}
+    .position-preview .result-codes strong{color:#374151;font-weight:500;font-variant-numeric:tabular-nums}
+    .position-preview output{font-size:16px;font-weight:500;color:var(--theme-pink-800);overflow-wrap:anywhere}
+    .position-preview .permission-details{border:1px solid #f3e8ef;border-radius:12px;padding:10px 12px}
+    .position-preview .permission-heading{font-size:13px;font-weight:500;color:#374151}
+    .position-preview #permission-count{font-size:12px;font-weight:400;color:#6b7280}
+    .position-preview .staff-position-pages-grid{margin-top:12px}
+    .position-preview .actions{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+    .position-preview .actions button{min-height:40px;min-width:110px}
+    .position-preview #message:empty{display:none}
+    .position-preview #message{font-size:13px;padding:8px 0}
+    .position-preview .list-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+    .position-preview .list-header #count{display:block;margin-top:4px}
+    .position-preview .division-filter{width:360px;max-width:55%;min-width:0;min-height:44px;appearance:none;-webkit-appearance:none;border:1px solid #f3d6e5;border-radius:12px;background-color:#fff;color:var(--theme-pink-800);font-family:inherit;font-size:13px;font-weight:400;padding:10px 36px 10px 14px;cursor:pointer;text-overflow:ellipsis;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ad1457' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+    .position-preview .division-filter:hover{border-color:var(--theme-pink-500)}
+    .position-preview .division-filter:focus-visible{outline:2px solid var(--theme-pink-500);outline-offset:2px}
+    .position-preview .list-header .panel-title{margin:0}
+    .position-preview .permission-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .position-preview .select-all{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--theme-pink-800);cursor:pointer;min-height:36px}
+    .position-preview .permission-scroll{outline-offset:2px}
+    .position-preview .scroll-hint{display:none}
+    .position-preview .department-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+    .position-preview .department-card{min-width:0}
+    .position-preview .department-heading{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3e8ef}
+    .position-preview .division-badge{flex-shrink:0;color:var(--theme-pink-800);font-size:12px;font-weight:500;padding:0;font-variant-numeric:tabular-nums}
+    .position-preview .department-heading h3{margin:0;font-size:13px;font-weight:500;color:#374151;overflow-wrap:anywhere}
+    .position-preview .department-heading small{margin-left:auto;flex-shrink:0;font-size:11px;color:#6b7280}
+    .position-preview .department-positions{list-style:none;margin:0 0 0 32px;padding:0}
+    .position-preview .position-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:14px 12px;border-bottom:1px solid #f3edf0;border-radius:8px}
+    .position-preview .position-entry:last-child{border-bottom:0}
+    .position-preview .position-info{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .position-preview .position-title{font-size:13px;font-weight:400;color:#4b5563;overflow-wrap:anywhere}
+    .position-preview .position-meta{flex-shrink:0}
+    .position-preview .position-meta,.position-preview .position-pages{display:block;font-size:11px;color:#6b7280;margin-top:3px;overflow-wrap:anywhere}
+    .position-preview .position-entry{cursor:pointer;transition:background .15s}
+    .position-preview .position-entry:hover{background:#fff8fb}
+    .position-preview .position-entry:focus-visible{outline:2px solid var(--theme-pink-500);outline-offset:-3px}
+    .position-preview .position-indicator{color:var(--theme-pink-800);font-size:18px}
+    .position-preview .delete-position{border-color:#fecdd3;color:#be123c;background:white}
+    .position-preview .delete-position:hover{background:#fff1f2}
+    .position-preview #delete-edit{margin-right:auto}
+    .position-preview #list-message{font-size:12px;color:#047857;margin-top:10px}
+    .position-preview #list-message:empty{display:none}
+    @media(max-width:760px){.position-preview .department-grid{grid-template-columns:minmax(0,1fr)}}
+    .position-preview .empty{padding:20px;text-align:center;color:#6b7280;font-size:13px}
+    .position-preview button:disabled{cursor:not-allowed}
+    @media(max-width:600px){
+      .position-preview{padding:16px 12px 32px}
+      .position-preview .position-info{display:block}
+      .position-preview .department-heading{flex-wrap:wrap}
+      .position-preview .preview-form{grid-template-columns:minmax(0,1fr);gap:12px}
+      .position-preview .preview-bar{align-items:flex-start}
+      .position-preview .actions{flex-wrap:wrap}
+      .position-preview .actions .btn-primary{flex:1}
+      .position-preview .division-filter{width:100%;max-width:100%;font-size:16px}
+      .position-preview .department-positions{margin-left:20px}
+      .position-preview .list-header{gap:12px;flex-wrap:wrap}
+      .position-preview .staff-position-pages-grid{grid-template-columns:minmax(0,1fr);margin:4px 0}
+      .position-preview .permission-scroll{max-height:300px;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable;padding:3px}
+      .position-preview .scroll-hint{display:block;margin-top:5px;font-size:11px;color:#6b7280}
+      .position-preview .login-input,.position-preview .fixed-level{font-size:16px}
+      .position-preview .result{grid-template-columns:minmax(0,1fr);gap:8px}
+    }
+
+
+    .position-preview .preview-bar{flex-wrap:wrap}
+    .position-preview .preview-bar>span{flex:1;min-width:180px}
+    .position-preview .division-filter-wrap{position:relative;width:360px;max-width:55%;min-width:0}
+    .position-preview .filter-icon{position:absolute;left:11px;top:12px;width:17px;height:17px;color:#be185d;pointer-events:none}
+    .position-preview .filter-icon svg{width:100%;height:100%}
+    .position-preview .division-filter{width:100%;max-width:100%;min-height:40px;height:40px;border-radius:999px;padding:0 34px 0 36px;border-color:rgba(236,72,153,.28);font-size:.86rem;color:#6b6470}
+    .position-preview .division-filter:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.12)}
+    html[data-theme="dark"] .position-preview :is(.panel,.permission-details){background:var(--preview-surface);border-color:var(--preview-border);box-shadow:none}
+    html[data-theme="dark"] .position-preview :is(.login-input,.fixed-level){background-color:var(--preview-raised);color:var(--preview-text);border-color:var(--preview-border)}
+    html[data-theme="dark"] .position-preview :is(h1,output,.text-button,.division-badge,.position-indicator,.filter-icon,.select-all){color:var(--preview-accent)}
+    html[data-theme="dark"] .position-preview :is(.department-heading h3,.position-title,.permission-heading,.result-codes strong){color:var(--preview-text)}
+    html[data-theme="dark"] .position-preview :is(.preview-bar,.hint,.label-note,.position-meta,.department-heading small,.result-codes,#permission-count,.scroll-hint){color:var(--preview-muted)}
+    html[data-theme="dark"] .position-preview :is(.department-heading,.position-entry,.result){border-color:var(--preview-border)}
+    html[data-theme="dark"] .position-preview .position-entry:hover{background:var(--preview-raised)}
+    html[data-theme="dark"] .position-preview .delete-position{background:var(--preview-raised);color:#fda4af;border-color:#895269}
+    html[data-theme="dark"] .position-preview #message{color:var(--preview-accent)!important}
+    @media(max-width:600px){.position-preview .division-filter-wrap{width:100%;max-width:100%}}
+
+  </style>
+</head>
+<body>
+<main class="position-preview">
+  <div class="preview-bar"><span>หน้าทดลอง · ข้อมูลจำลอง บันทึกเฉพาะในเบราว์เซอร์</span><button class="btn-ghost" id="theme-toggle" type="button" aria-pressed="false">Dark mode</button><button class="btn-ghost" id="reset" type="button">คืนค่าชุดทดสอบ</button></div>
+  <h1>จัดการตำแหน่งสตาฟ</h1>
+  <p class="panel-caption">เพิ่มและแก้ไขตำแหน่งสำหรับฟอร์มสมัครสตาฟ</p>
+  <p class="panel-caption" id="data-source" aria-live="polite"></p>
+  <section class="panel staff-access-panel">
+    <div class="panel-header"><h2 class="panel-title" id="form-title">เพิ่มตำแหน่งใหม่</h2></div>
+    <form id="position-form" class="preview-form">
+      <p id="editing-context" class="wide hint" hidden></p>
+      <div class="field" id="existing-fields">
+        <div class="field-heading"><label class="login-label" for="division">ฝ่าย / หมวดงาน</label><button class="text-button" id="new-division" type="button" aria-expanded="false" aria-controls="new-fields">+ เพิ่มฝ่ายใหม่</button></div>
+        <select class="login-input" id="division" required><option value="">เลือกฝ่าย / หมวดงาน</option></select>
+      </div>
+      <div class="field" id="new-fields" hidden>
+        <div class="field-heading"><div class="label-with-hint"><label class="login-label" for="division-name">ชื่อฝ่ายใหม่</label><span class="label-note" id="code-hint">(ระบบกำหนดให้อัตโนมัติ)</span></div><button class="text-button" id="cancel-division" type="button">เลือกฝ่ายเดิม</button></div>
+        <input class="login-input" id="division-name" maxlength="100" placeholder="เช่น สื่อสารองค์กร">
+        <input id="code" type="hidden">
+      </div>
+      <div class="field"><div class="field-heading"><div class="label-with-hint"><label class="login-label" id="level-label" for="level">ระดับตำแหน่ง</label><span id="special" class="label-note" hidden></span></div></div><select class="login-input" id="level" required disabled><option value="">เลือกฝ่ายก่อน</option></select><output id="level-fixed" class="fixed-level" aria-labelledby="level-label" hidden></output></div>
+      <div class="wide result"><div class="result-name"><span class="hint">ชื่อตำแหน่ง</span><output id="result" aria-live="polite">เลือกฝ่ายและระดับตำแหน่ง</output></div><div class="result-codes" aria-live="polite"><span>รหัสฝ่าย: <strong id="selected-division-code">—</strong></span><span>รหัสระดับตำแหน่ง: <strong id="selected-level-code">—</strong></span></div></div>
+      <section class="wide permission-details" id="permissions" aria-labelledby="permission-heading">
+        <div class="permission-toolbar"><h3 class="permission-heading" id="permission-heading" style="margin:0">หน้าที่อนุญาตให้แสดง <span id="permission-count"></span></h3><label class="select-all"><input id="pages-all" class="staff-position-page-checkbox" type="checkbox">แสดงทุกหน้า</label></div>
+        <div class="permission-scroll" id="permission-scroll" tabindex="0" role="group" aria-labelledby="permission-heading"><div class="staff-position-pages-grid" id="permission-options"></div></div>
+        <p class="scroll-hint" id="page-scroll-hint"></p>
+      </section>
+      <p id="message" class="wide" role="status" aria-live="polite"></p>
+      <div class="wide actions"><button class="btn-ghost delete-position" id="delete-edit" type="button" hidden>ลบตำแหน่ง</button><button class="btn-ghost" id="cancel-edit" type="button" hidden>ยกเลิกแก้ไข</button><button class="btn-primary" id="save" type="submit" disabled>เพิ่มตำแหน่ง</button></div>
+    </form>
+  </section>
+  <section class="panel staff-access-panel"><div class="list-header"><div><h2 class="panel-title">ตำแหน่งที่ใช้งาน</h2><span id="count" class="panel-caption" aria-live="polite"></span></div><label class="division-filter-wrap"><span class="filter-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M3 4h14l-5.3 6.1v4.5l-3.4 1.7v-6.2L3 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><select id="division-filter" class="login-input division-filter" aria-label="กรองตามฝ่าย"><option value="">ฝ่าย: ทุกฝ่าย</option></select></label></div><div id="positions" class="department-grid"></div><p id="list-message" role="status" aria-live="polite"></p></section>
+</main>
+<script src="/staff-position-preview.js" type="module"></script>
+</body>
+</html>

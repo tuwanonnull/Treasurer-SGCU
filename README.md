@@ -32,7 +32,10 @@ npm run serve:dist
 
 เปิดเว็บที่ http://localhost:4173 หลัง build แล้ว
 
+- `npm run preview:site`: build และเปิดเว็บทั้งชุดที่ http://127.0.0.1:4181 (เข้าสู่ระบบและใช้ข้อมูลจริง การบันทึกมีผลกับฐานข้อมูลจริง)
 - `npm run preview:documents`: พรีวิวเอกสารที่ http://127.0.0.1:4174
+- `npm run preview:staff-positions`: ทดลองหน้าจัดการตำแหน่งสตาฟที่ http://127.0.0.1:4177 (ชุดตำแหน่งและสิทธิ์ที่อ่านจากระบบจริง แก้ไขเฉพาะในเบราว์เซอร์); รหัสและสิทธิ์ที่จำลองอาจต่างจากระบบจริง
+- `npm run preview:staff-positions:refresh`: อ่าน `staffPositionCatalog` แบบ read-only ผ่านบัญชี Firebase CLI ที่ลงชื่อเข้าใช้ เก็บ snapshot ใน `.local/staff-position-preview/catalog.json` ไม่เขียนฐานข้อมูลจริง; หน้าทดลองใช้รายการหน้าจาก `STAFF_PAGE_OPTIONS` ในโค้ดโดยตรง แต่ละ snapshot มี draft ในเบราว์เซอร์แยกกัน
 - `npm run preview:projects`: พรีวิวโครงการด้วยข้อมูลจำลองที่ http://127.0.0.1:4175
 - หากพอร์ตพรีวิวโครงการไม่ว่าง ใช้ `PORT=4185 npm run preview:projects`
 - `npm run meeting:emulators`: เปิด Auth และ Firestore Emulator (ต้องติดตั้ง Firebase CLI)

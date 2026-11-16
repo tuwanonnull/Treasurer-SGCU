@@ -1,0 +1,88 @@
+.staff-live-nav{display:none}
+.staff-live-filter-dialog{width:min(650px,calc(100% - 24px));border:1px solid var(--theme-border);border-radius:20px;padding:20px;background:#fff;max-height:85dvh;overflow:auto}
+.staff-live-filter-dialog::backdrop{background:#0006}
+.staff-live-filter-dialog #staffApprovalFilters{display:grid!important;grid-template-columns:1fr;position:static;margin:0 0 16px}
+#staffPositionAuthorityHint{display:none}
+#staffPositionList{display:grid;grid-template-columns:1fr;gap:20px}
+#staffPositionList>[hidden]{display:none!important}
+.live-division-heading{font:500 13px Kanit,sans-serif;color:#374151;padding:8px 0;border-bottom:1px solid #f3e8ef;margin:0}
+#staffPositionList .staff-position-chip{margin-left:24px;border:0;border-bottom:1px solid #f3edf0;border-radius:0;background:transparent;box-shadow:none;padding:14px 12px}
+#staffPositionList .staff-position-chip-name{font-weight:400;color:#4b5563}
+#staffPositionList .staff-position-chip-pages{font-size:11px;color:#6b7280;margin-top:4px}
+.live-position-filter{width: min(360px,55%);border-radius:999px;font:400 13px Kanit,sans-serif;color:var(--theme-pink-800)}
+html[data-theme=dark] .staff-live-filter-dialog{background:var(--preview-surface);border-color:var(--preview-border);color:var(--preview-text)}
+html[data-theme=dark] .live-division-heading,html[data-theme=dark] #staffPositionList .staff-position-chip{border-color:var(--preview-border);background:transparent;color:var(--preview-text)}
+html[data-theme=dark] #staffPositionList .staff-position-chip-name{color:var(--preview-text)}
+html[data-theme=dark] #staffPositionList .staff-position-chip-pages{color:var(--preview-muted)}
+@media(max-width:840px){
+body.staff-live-active{padding-bottom:calc(var(--mobile-bottom-nav-height,64px) + 80px + env(safe-area-inset-bottom,0px))}
+.staff-live-nav.is-visible{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important}
+[data-page=staff-approval] .staff-approval-page-toggle,[data-page=staff-approval] .staff-approval-header-actions{display:none!important}
+#staffApprovalFilters{display:none}
+#staffPositionAllowedPages{max-height:300px;overflow-y:auto;overscroll-behavior:contain}
+.staff-live-filter-dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:20px 20px 0 0;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+#staffPositionList .staff-position-chip{margin-left:20px}
+.live-position-filter{width:100%;max-width:100%;font-size:16px}
+}
+/* Match the reviewed position prototype while retaining live feature controls. */
+#staffPositionManageForm{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+#staffPositionManageForm [hidden]{display:none!important}
+#staffPositionManageForm>.staff-position-field{grid-column:auto}
+#staffPositionManageForm>.live-result,#staffPositionManageForm>.staff-position-field-pages,#staffPositionManageForm>.staff-position-field-submit,#staffPositionManageForm>.live-edit-context{grid-column:1/-1}
+#staffPositionManageForm>.live-result{order:3;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:0;border-top:1px solid #f3e8ef;border-radius:0;background:none;padding:14px 0 0}
+#staffPositionManageForm>.live-division-field{order:1}
+#staffPositionManageForm>.staff-position-field:has(#staffPositionDivisionName){order:1}
+#staffPositionManageForm>.staff-position-field:has(#staffPositionLevelCode){order:2}
+#staffPositionManageForm>.staff-position-field-pages{order:4;border:1px solid #f3e8ef;border-radius:12px;padding:12px}
+#staffPositionManageForm>.staff-position-field-submit{order:5;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#staffPositionManageDeleteBtn{margin-right:auto}
+#staffPositionManageInput{flex:1;min-width:180px;background:none!important;border:0!important;box-shadow:none!important;padding:0;color:var(--theme-pink-800);font-size:16px;font-weight:500}
+.live-field-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:32px}
+.live-text-button{background:none;border:0;color:var(--theme-pink-700);font:400 12px Kanit,sans-serif;text-decoration:underline;cursor:pointer;padding:6px}
+.live-label-note,.live-result-codes,.live-edit-context{font-size:12px;font-weight:400;color:#6b7280}
+.live-edit-context{margin:0}
+.live-fixed-level{display:flex;align-items:center;background:#f9fafb;color:#374151;min-height:44px}
+#staffPositionAllowedPages{display:block!important;max-height:none;overflow:visible}
+#staffPositionAllowedPages>.staff-position-page-option-all{margin:0 0 10px auto;width:max-content;border:0;background:none;padding:0;min-height:32px}
+#staffPositionAllowedPages .live-pages-scroll{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0}
+#staffPositionList .staff-position-chip-main{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+#staffPositionList .staff-position-chip-pages{flex-shrink:0}
+#staffPositionList .staff-position-chip::after{content:'›';color:var(--theme-pink-800)}
+#staffPositionList .staff-position-chip:hover{background:var(--theme-pink-50)}
+#staffPositionList .staff-position-chip.is-editing{outline:none;box-shadow:none;background:transparent}
+#staffPositionSettingsView>.staff-position-list-panel>.panel-header{display:flex;justify-content:space-between;align-items:flex-start}
+#staffPositionSettingsView .live-position-filter{appearance:none;padding:10px 34px 10px 36px;border:1px solid rgba(236,72,153,.28);background-repeat:no-repeat;background-position:12px center,right 12px center;background-size:16px,16px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23be185d' stroke-width='1.6'%3E%3Cpath d='M3 4h14l-5.3 6.1v4.5l-3.4 1.7v-6.2Z'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23be185d' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
+html[data-theme=dark] #staffPositionManageForm>:is(.live-result,.staff-position-field-pages){background:none;border-color:var(--preview-border)}
+html[data-theme=dark] #staffPositionManageInput{color:var(--preview-accent)}
+html[data-theme=dark] :is(.live-label-note,.live-result-codes,.live-edit-context){color:var(--preview-muted)}
+html[data-theme=dark] .live-fixed-level{background:var(--preview-raised);color:var(--preview-text);border-color:var(--preview-border)}
+html[data-theme=dark] #staffPositionList .staff-position-chip:hover{background:var(--preview-raised)}
+@media(max-width:600px){
+#staffPositionManageForm{grid-template-columns:minmax(0,1fr)}
+#staffPositionAllowedPages .live-pages-scroll{grid-template-columns:minmax(0,1fr);max-height:300px;overflow-y:auto;overscroll-behavior:contain;padding:3px;scrollbar-gutter:stable}
+#staffPositionList .staff-position-chip-main{display:block}
+#staffPositionSettingsView>.staff-position-list-panel>.panel-header{flex-wrap:wrap}
+#staffPositionManageInput{font-size:16px}
+}
+#staffPositionManageForm{border:0;border-radius:0;background:transparent;box-shadow:none;padding:0;margin-top:16px}
+#staffPositionManagePanel{box-shadow:0 8px 20px rgba(15,23,42,.05)}
+#staffPositionList .staff-position-chip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}
+#staffPositionList .staff-position-chip-pages{font-weight:400}
+#staffPositionManageForm>.staff-position-field-pages{position:relative}
+#staffPositionManageForm>.staff-position-field-pages>label{padding-right:115px}
+#staffPositionAllowedPages>.staff-position-page-option-all{position:absolute;right:12px;top:8px;font-size:12px}
+#staffPositionAllowedPages .live-pages-scroll{margin-top:12px}
+@media(max-width:840px){.staff-live-nav:has([data-action=select][hidden]){grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+/* Same sheet structure and spacing as meeting-room approval filters. */
+.staff-live-filter-dialog:not([open]){display:none!important}
+.staff-live-filter-dialog[open]{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;padding:0;max-height:min(78dvh,620px)}
+.staff-live-filter-dialog #staffApprovalFilters{margin:0!important;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;gap:14px;width:100%;min-width:0}
+.staff-live-filter-dialog #staffApprovalFilters .filter-group{width:100%;min-width:0;grid-column:1/-1}
+.staff-live-filter-dialog #staffApprovalFilters :is(input,select){box-sizing:border-box;width:100%;min-width:0;min-height:44px;font-family:inherit;font-size:16px}
+.staff-live-filter-dialog .search-box{min-width:0;width:100%}
+.staff-live-filter-dialog .mobile-filter-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+html[data-theme=dark] .staff-live-filter-dialog :is(.mobile-filter-header,.mobile-filter-footer){background:var(--preview-surface);border-color:var(--preview-border)}
+html[data-theme=dark] .staff-live-filter-dialog .mobile-filter-title{color:var(--preview-text)}
+html[data-theme=dark] .staff-live-filter-dialog .mobile-filter-caption{color:var(--preview-muted)}
+html[data-theme=dark] .staff-live-filter-dialog .mobile-filter-close{background:var(--preview-raised);color:var(--preview-accent);border-color:var(--preview-border)}
+@media(max-width:840px){.staff-live-filter-dialog[open]{position:fixed;inset:auto 10px max(10px,env(safe-area-inset-bottom,0px));width:auto;max-width:none;margin:0;border-radius:20px}}
