@@ -76,9 +76,14 @@ window.addEventListener('DOMContentLoaded', () => {
  function syncForm(){
   scheduled=false;const editing=!$('staffPositionManageCancelBtn').hidden;
   if(!code.value){adding=false;divisionSelect.value=''}
-  const chosen=divisionSelect.value;divisionSelect.replaceChildren(new Option('เลือกฝ่าย / หมวดงาน',''));
-  for(const d of availableDivisions())divisionSelect.add(new Option(`${d.code} — ${d.name}`,d.code));
-  divisionSelect.value=code.value||chosen;
+  const divisions=availableDivisions();
+  const divisionSignature=JSON.stringify(divisions);
+  if(divisionSelect.dataset.liveChoices!==divisionSignature){
+    divisionSelect.replaceChildren(new Option('เลือกฝ่าย / หมวดงาน',''));
+    for(const d of divisions)divisionSelect.add(new Option(`${d.code} — ${d.name}`,d.code));
+    divisionSelect.dataset.liveChoices=divisionSignature;
+  }
+  if(divisionSelect.value!==code.value)divisionSelect.value=code.value;
   divisionField.hidden=adding;nameField.hidden=!adding;divisionSelect.required=!adding;divisionSelect.disabled=adding||code.disabled;
   const yy=code.value,zz=level.value;const isFixed=['01','09','99'].includes(yy);
   special.hidden=!['00','01','09','99'].includes(yy);
@@ -97,7 +102,10 @@ window.addEventListener('DOMContentLoaded', () => {
  divisionSelect.onchange=()=>{adding=false;code.value=divisionSelect.value;divisionName.value='';level.value='';fire(code,'change');scheduleForm()};
  $('live-add-division').onclick=()=>{const used=new Set(availableDivisions().map(d=>d.code));const next=Array.from({length:94},(_,i)=>String(i+5).padStart(2,'0')).find(n=>!used.has(n)&&n!=='09'&&n!=='99');if(!next)return;adding=true;code.value=next;divisionName.value='';level.value='';fire(code,'change');syncForm();divisionName.focus()};
  back.onclick=()=>{adding=false;code.value='';divisionName.value='';level.value='';fire(code,'change');scheduleForm()};
- form.addEventListener('input',scheduleForm);form.addEventListener('change',scheduleForm);
+ // Native selects emit input before change. Do not restore the old model value
+ // between those events: the change handler still needs the newly selected value.
+ form.addEventListener('input',event=>{if(event.target===divisionName)scheduleForm()});
+ form.addEventListener('change',scheduleForm);
  new MutationObserver(scheduleForm).observe($('staffPositionManageCancelBtn'),{attributes:true,attributeFilter:['hidden']});
  new MutationObserver(scheduleForm).observe(code,{attributes:true,attributeFilter:['disabled']});
  window.addEventListener('sgcu:position-form-sync',scheduleForm);

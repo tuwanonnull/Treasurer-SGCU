@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+const source=await fs.readFile(new URL('../../web/js/features/staff/app.staff-management-layout.js',import.meta.url),'utf8');
+const start=source.indexOf(" form.addEventListener('input',");
+const end=source.indexOf('\n new MutationObserver',start);
+assert.ok(start>0&&end>start);
+const listeners={};const divisionName={};const select={value:'02'};let syncs=0;
+const context={form:{addEventListener:(type,handler)=>{listeners[type]=handler}},divisionName,scheduleForm:()=>{syncs++;select.value=''}};
+vm.runInNewContext(source.slice(start,end),context);
+listeners.input({target:select});
+await Promise.resolve();
+assert.equal(select.value,'02','native input must not overwrite the selection before change');
+assert.equal(syncs,0);
+const savedValue=select.value;listeners.change({target:select});assert.equal(savedValue,'02');assert.equal(syncs,1);
+listeners.input({target:divisionName});assert.equal(syncs,2,'typing a new division name still updates preview');
+console.log('Staff position form: dropdown selection survives input/change boundary; name inputs still sync.');
