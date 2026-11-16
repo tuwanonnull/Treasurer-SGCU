@@ -123,26 +123,16 @@
   box-shadow: none;
 }
 
-.home-page-view .section-appear {
-  transform: translateY(22px) scale(0.992);
-  filter: blur(6px);
-  transition: opacity 0.78s var(--motion-ease), transform 0.78s var(--motion-ease),
-    filter 0.78s var(--motion-ease);
-  will-change: opacity, transform;
-}
-
-.home-page-view .section-appear.section-visible {
-  transform: translateY(0) scale(1);
-  filter: blur(0);
-}
-
+/* Public content must remain readable before scripts or observers run.
+   Keep page visibility controlled by .page-view.active, not reveal effects. */
+.home-page-view.section-appear,
+.home-page-view .section-appear,
 .home-page-view .home-snap-content {
-  opacity: 0;
-  transform: translateY(34px) scale(0.982);
-  filter: blur(10px);
-  transition: opacity 0.9s var(--motion-ease), transform 0.9s var(--motion-ease),
-    filter 0.9s var(--motion-ease);
-  will-change: opacity, transform, filter;
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+  will-change: auto;
 }
 
 .home-page-view .home-panel-visible .home-snap-content {
