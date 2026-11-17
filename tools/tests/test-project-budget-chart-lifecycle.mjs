@@ -118,3 +118,24 @@ for(const index of [0,1]) {
   assert.equal(newChart.options.animation,false);
 }
 console.log('Line series disable positional animation and allow automatic value-axis scaling.');
+
+const dashboard = {dataset:{dashboardClosureView:"monthly",dashboardBudgetView:"monthly"}};
+context.document.querySelector = selector => selector.includes("page-view") ? dashboard : card;
+context.window.matchMedia = query => ({matches:query.includes("min-width")});
+vm.runInContext('syncDashboardComparisonHeights()',context);
+assert.equal(dimensions.grid["--dashboard-monthly-plot-height"],dimensions.grid["--dashboard-plot-height"]);
+dashboard.dataset.dashboardClosureView = "org";
+vm.runInContext('syncDashboardComparisonHeights()',context);
+assert.equal(dimensions.grid["--dashboard-monthly-plot-height"],dimensions.grid["--dashboard-plot-height"]);
+dashboard.dataset.dashboardClosureView = "monthly";
+dashboard.dataset.dashboardBudgetView = "org";
+vm.runInContext('syncDashboardComparisonHeights()',context);
+assert.equal(dimensions.grid["--dashboard-monthly-plot-height"],dimensions.grid["--dashboard-plot-height"]);
+dashboard.dataset.dashboardBudgetView = "monthly";
+vm.runInContext('syncDashboardComparisonHeights()',context);
+assert.equal(dimensions.grid["--dashboard-monthly-plot-height"],dimensions.grid["--dashboard-plot-height"]);
+context.window.matchMedia = query => ({matches:query.includes("max-width")});
+dashboard.dataset.dashboardClosureView = "org";
+vm.runInContext('syncDashboardComparisonHeights()',context);
+assert.equal(dimensions.grid["--dashboard-monthly-plot-height"],"320px");
+console.log("Paired chart height preserves the full plot area across all views, with the original mobile height.");

@@ -355,12 +355,31 @@
 }
 
 /* Six organization rows fit before the comparison charts need scrolling. */
-.dashboard-progress-grid { --dashboard-plot-height: 498px; }
+.dashboard-progress-grid { --dashboard-plot-height: 498px; --dashboard-monthly-plot-height: 498px; }
 .dashboard-monthly-chart-scroll { min-width: 0; max-width: 100%; }
 .dashboard-monthly-chart-scroll:focus-visible { outline: 2px solid var(--theme-pink-400); outline-offset: 2px; border-radius: 8px; }
 @media (max-width: 720px) {
-  .dashboard-monthly-chart-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
-  .dashboard-monthly-chart-scroll > .chart-inner { min-width: 840px; }
+  .dashboard-monthly-chart-scroll > .chart-inner { min-width: 0; width: 100%; }
+  .dashboard-progress-grid .chart-external-axis-month .chart-external-axis-label {
+    min-width: 0;
+    padding: 0;
+    gap: 0;
+    font-size: 10px;
+    line-height: 16px;
+    background: transparent;
+    transform: translateX(-50%);
+  }
+  .dashboard-progress-grid .chart-external-axis-label.is-first { transform: none; }
+  .dashboard-progress-grid .chart-external-axis-label.is-last { transform: translateX(-100%); }
+  .dashboard-progress-grid .chart-external-axis-month .chart-external-axis-label span { color: inherit; font-weight: 500; }
+  .chart-month-year-caption {
+    position: absolute;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--preview-muted, #9ca3af);
+    line-height: 16px;
+  }
 }
 .dashboard-progress-grid .dashboard-overdue-close-chart-inner,
 .dashboard-progress-grid .dashboard-budget-monthly-chart {
@@ -393,7 +412,7 @@
 .dashboard-progress-grid .project-closure-fixed-axis {
   margin-right: var(--closure-value-space);
 }
-.dashboard-progress-grid > .chart-card > .chart-header { min-height: 84px; }
+.dashboard-progress-grid > .chart-card > .chart-header { min-height: 0; }
 .dashboard-section-nav .tab-btn { white-space: nowrap; }
 #dashboardProgressSectionStaff { scroll-margin-top: 166px; }
 @media (max-width: 840px) {
@@ -562,19 +581,19 @@
 
 /* Align secondary cards and let all four age bands remain visible. */
 #dashboardAnalysisSectionStaff .dashboard-analysis-grid { align-items: stretch; gap: 16px; }
-#dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card) {
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) {
   display: flex;
   flex-direction: column;
   padding: 16px 18px;
 }
-#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) > :is(.dashboard-card-header, .chart-header) {
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) > :is(.dashboard-card-header, .chart-header) {
   margin: 0 0 10px;
   min-height: 46px;
   align-items: flex-start;
 }
-#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) .chart-caption { margin: 4px 0 0; }
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) .chart-caption { margin: 4px 0 0; }
 #dashboardAnalysisSectionStaff .dashboard-debt-content { display: contents; }
-#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) .dashboard-debt-metrics {
+#dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) .dashboard-debt-metrics {
   min-height: 0;
   padding: 8px 0 12px;
   margin: 0 0 4px;
@@ -608,11 +627,11 @@
   padding-right: 6px;
 }
 @media (max-width: 840px) {
-  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card) { padding: 14px; }
-  #dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card) > :is(.dashboard-card-header, .chart-header) { min-height: 0; }
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) { padding: 14px; }
+  #dashboardAnalysisSectionStaff :is(.dashboard-debt-redesign, .dashboard-debt-age-card, .dashboard-past-unapproved) > :is(.dashboard-card-header, .chart-header) { min-height: 0; }
 }
 #dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-past-unapproved {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
  .dashboard-past-unapproved { margin: 0; min-width: 0; }
 
@@ -641,3 +660,210 @@
   .past-unapproved-toggle input,
   .past-unapproved-toggle input::before { transition: none; }
 }
+
+/* Keep the scale beside the calendar on desktop, below it on mobile. */
+.dashboard-heatmap-layout { min-width: 0; }
+.dashboard-heatmap-layout:has(.heatmap-year[hidden]) { display: none; }
+@media (min-width: 841px) {
+  .dashboard-heatmap-layout { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 20px; align-items: center; }
+  .dashboard-heatmap-layout .calendar-heatmap-legend { flex-direction: column; margin: 0; gap: 4px; }
+}
+
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card > .dashboard-card-header { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 12px; }
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card > .dashboard-card-header > div:first-child { flex: 1; min-width: 0; }
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card .dashboard-card-header > .dashboard-debt-toggle { flex-shrink: 0; align-self: flex-start; margin: 0 0 0 auto; }
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card .dashboard-debt-toggle .tab-btn { white-space: nowrap; }
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card [data-dashboard-debt-panel][hidden] { display: none; }
+#dashboardAnalysisSectionStaff .dashboard-debt-combined-card [data-dashboard-debt-panel]:not([hidden]) { display: block; }
+
+
+#dashboardAnalysisSectionStaff .dashboard-past-unapproved .dashboard-card-header { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.dashboard-past-unapproved .chart-title { flex: 1; min-width: 0; }
+.dashboard-past-unapproved .dashboard-card-header .chart-caption { flex-basis: 100%; order: 2; }
+.dashboard-past-unapproved .past-unapproved-toggle { flex-shrink: 0; font-size: 11px; }
+#pastUnapprovedListStaff { min-width: 0; width: 100%; }
+
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-past-unapproved-list { grid-column: 1 / -1; min-width: 0; margin: 0; }
+.dashboard-past-unapproved-list .dashboard-card-header { margin-bottom: 8px; }
+.dashboard-past-unapproved-list #pastUnapprovedListStaff { margin-top: 16px; }
+
+#dashboardAnalysisSectionStaff .dashboard-past-unapproved .past-unapproved-view-toggle { flex-shrink: 0; margin-left: auto; align-self: flex-start; }
+#dashboardAnalysisSectionStaff .past-unapproved-view-toggle .tab-btn { padding: 7px 10px; font-size: 11px; white-space: nowrap; }
+.dashboard-past-unapproved-list .dashboard-card-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.dashboard-past-unapproved-list .past-unapproved-toggle { margin-left: auto; flex-shrink: 0; }
+
+/* Both insight cards share the same three rows and controls. */
+#dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-insight-card {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+}
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  margin: 0;
+  min-height: 0;
+}
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .chart-title { margin: 0; min-width: 0; line-height: 1.5; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .tabs { margin: 0; gap: 0; align-self: start; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .tab-btn { padding: 7px 10px; font-size: 11px; white-space: nowrap; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card .chart-caption { margin: 0; font-size: 12px; line-height: 1.6; color: #64748b; }
+.dashboard-insight-description { display: grid; align-content: start; gap: 4px; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-debt-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--preview-border, #f1f5f9);
+  border-bottom: 1px solid var(--preview-border, #f1f5f9);
+}
+.dashboard-insight-plot { min-width: 0; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card .debt-compact-list { display: block; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card .debt-compact-row { padding: 10px 0; }
+@media (min-width: 841px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-insight-card { grid-row: span 3; grid-template-rows: subgrid; }
+}
+@media (max-width: 840px) {
+  #dashboardAnalysisSectionStaff .dashboard-analysis-grid > .dashboard-insight-card { padding: 14px; }
+}
+
+/* Compact segmented controls must not inherit full-width mobile tab sizing. */
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .tabs {
+  display: inline-flex;
+  width: max-content;
+  inline-size: max-content;
+  max-width: 100%;
+  min-width: 0;
+  justify-self: end;
+  overflow: visible;
+  border-radius: 999px;
+  padding: 3px;
+}
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .tab-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 36px;
+  line-height: 1.4;
+  border-radius: 999px;
+}
+@media (max-width: 480px) {
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header { gap: 8px; }
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .chart-title { font-size: 14px; overflow-wrap: anywhere; }
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .tab-btn { padding: 7px 8px; }
+}
+
+/* Compact chart framing and a deliberate list-header layout. */
+.dashboard-progress-grid > .chart-card { padding: 18px; }
+.dashboard-progress-grid > .chart-card > .chart-header { margin-bottom: 12px; }
+.dashboard-progress-grid .dashboard-chart-legend { min-height: 32px; margin-top: 8px; gap: 8px 18px; }
+.dashboard-past-unapproved-list > .dashboard-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 0;
+}
+.dashboard-past-unapproved-list .past-unapproved-heading { min-width: 0; }
+.dashboard-past-unapproved-list .past-unapproved-heading .chart-title { margin: 0; line-height: 1.5; }
+.dashboard-past-unapproved-list .past-unapproved-heading .chart-caption { margin: 4px 0 0; font-size: 12px; line-height: 1.5; }
+.dashboard-past-unapproved-list > .dashboard-card-header .past-unapproved-toggle { margin: 0; }
+@media (max-width: 840px) {
+  .dashboard-progress-grid > .chart-card { padding: 14px; }
+  .dashboard-past-unapproved-list > .dashboard-card-header { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .dashboard-past-unapproved-list > .dashboard-card-header .past-unapproved-toggle {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: 12px;
+    border-top: 1px solid var(--preview-border, #e5e7eb);
+  }
+}
+
+#dashboardAnalysisSectionStaff .dashboard-insight-card .dashboard-insight-heading { min-width: 0; }
+#dashboardAnalysisSectionStaff .dashboard-insight-card .dashboard-insight-heading .chart-caption { margin-top: 4px; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-card-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-card-head > div { min-width: 0; display: grid; gap: 6px; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-card-head .dashboard-skeleton-title { width: 90%; max-width: 230px; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-card-head .dashboard-skeleton-caption { width: 65%; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-card-head .dashboard-skeleton-pill { width: 120px; height: 36px; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-plot { height: 498px; border-radius: 8px; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-insight-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 12px 0; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-insight-card .dashboard-skeleton-value { max-width: 100%; }
+#dashboardOverviewSkeletonStaff .dashboard-skeleton-heatmap { height: 140px; border-radius: 8px; }
+@media (max-width: 840px) {
+  #dashboardOverviewSkeletonStaff .dashboard-skeleton-chart-grid { grid-template-columns: minmax(0, 1fr); }
+  #dashboardOverviewSkeletonStaff .dashboard-skeleton-plot { height: 320px; }
+}
+
+/* Match the closure-status control, including its mobile full-width layout. */
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle {
+  display: inline-flex;
+  grid-template-columns: none;
+  width: auto;
+  inline-size: auto;
+  box-sizing: border-box;
+  gap: 2px;
+  margin: 0;
+  padding: 3px;
+  align-self: start;
+  justify-self: end;
+}
+#dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle .tab-btn {
+  width: auto;
+  flex: 0 0 auto;
+  min-height: auto;
+  padding: 5px 10px;
+  font-size: 11px;
+  line-height: normal;
+}
+@media (max-width: 640px) {
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle {
+    border-radius: 16px;
+  }
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle .tab-btn {
+    flex: 1 0 auto;
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+}
+@media (max-width: 600px) {
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle {
+    width: 100%;
+    inline-size: 100%;
+    gap: 0;
+    justify-self: stretch;
+  }
+  #dashboardAnalysisSectionStaff .dashboard-insight-card > .dashboard-card-header .dashboard-insight-toggle .tab-btn { padding: 7px 9px; }
+}
+
+/* Shared header rows keep both canvases aligned when captions wrap. */
+@media (min-width: 841px) {
+  .dashboard-progress-grid { align-items: stretch; }
+  .dashboard-progress-grid > .chart-card {
+    display: grid;
+    grid-row: span 2;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: subgrid;
+    justify-content: stretch;
+    row-gap: 12px;
+    align-content: start;
+  }
+  .dashboard-progress-grid > .chart-card > .chart-header { margin: 0; }
+}
+.dashboard-progress-grid > .chart-card { padding-bottom: 12px; }
+.dashboard-progress-grid .dashboard-chart-legend {
+  min-height: 0;
+  margin: 4px 0 0;
+  padding: 2px 0;
+}
+.dashboard-progress-grid .dashboard-chart-legend button { padding: 4px 6px; }
+.dashboard-progress-grid .project-closure-toolbar { margin: 0; padding: 0; }

@@ -328,6 +328,8 @@ const externalAxisLabelsPlugin = {
       const className = config.className || "";
       const maxItems = Number(config.maxItems) || labels.length;
       const visibleLabels = labels.slice(0, maxItems);
+      const compactMonths = axis === "x" && config.compactMonths &&
+        window.matchMedia("(max-width: 720px)").matches;
 
       container.className = [
         "chart-external-axis-labels",
@@ -347,7 +349,7 @@ const externalAxisLabelsPlugin = {
           canAlignEdges && index === visibleLabels.length - 1 ? "is-last" : ""
         ].filter(Boolean).join(" ");
         item.title = (label || "").toString();
-        lines.forEach((line) => {
+        (compactMonths ? [formatNumericMonthAxisLabel(lines[0])] : lines).forEach((line) => {
           const lineEl = document.createElement("span");
           lineEl.textContent = line;
           item.appendChild(lineEl);
@@ -362,7 +364,7 @@ const externalAxisLabelsPlugin = {
         } else {
           const x = scale.getPixelForValue(index);
           const rowGap = Number(config.rowGap) || 14;
-          const yOffset = config.stagger ? rowGap * (index % 2) : 0;
+          const yOffset = !compactMonths && config.stagger ? rowGap * (index % 2) : 0;
           item.style.left = `${x}px`;
           item.style.top = `${chartArea.bottom + (Number(config.gap) || 8) + yOffset}px`;
           if (config.rotate) item.style.setProperty("--axis-label-rotate", `${Number(config.rotate) || 0}deg`);
@@ -370,6 +372,19 @@ const externalAxisLabelsPlugin = {
 
         container.appendChild(item);
       });
+      if (compactMonths) {
+        const years = [...new Set(visibleLabels.flatMap((label, index) =>
+          normalizeExternalAxisLines(formatter(label, index, chart)).slice(1)))];
+        if (years.length) {
+          const caption = document.createElement("span");
+          caption.className = "chart-month-year-caption";
+          caption.textContent = "เดือน · " + years.join(" · ");
+          caption.style.left = `${chartArea.left}px`;
+          caption.style.width = `${chartArea.right - chartArea.left}px`;
+          caption.style.top = `${chartArea.bottom + 28}px`;
+          container.appendChild(caption);
+        }
+      }
     };
 
     parent.classList.add("has-external-axis-labels");
@@ -387,6 +402,12 @@ function normalizeExternalAxisLines(value) {
   return lines
     .map((line) => (line || "").toString().replace(/\s+/g, " ").trim())
     .filter(Boolean);
+}
+
+function formatNumericMonthAxisLabel(month) {
+  const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const index = months.indexOf(month);
+  return index >= 0 ? String(index + 1).padStart(2, "0") : month;
 }
 
 function formatMonthAxisLabel(label) {

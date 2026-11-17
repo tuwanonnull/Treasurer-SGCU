@@ -278,11 +278,7 @@ function getDueClosureProjects(filtered, today = new Date()) {
 function updateDashboardClosureCaption() {
   const caption = document.getElementById("dashboardClosureCaptionStaff");
   if (!caption) return;
-  const root = document.querySelector('.page-view[data-page="dashboard-staff"]');
-  const grouping = root?.dataset.dashboardClosureView === "org"
-    ? (getStaffProjectTrackingFilters().level === "orgGroup" ? "องค์กรใหญ่" : "ฝ่าย / ชมรม")
-    : "เดือนสิ้นสุดงาน";
-  caption.textContent = `${Number(caption.dataset.count || 0).toLocaleString("th-TH")} โครงการตามตัวกรอง · ถึงวันสิ้นสุดงานแล้ว · สถานะปัจจุบันแยกตาม${grouping}`;
+  caption.textContent = `${Number(caption.dataset.count || 0).toLocaleString("th-TH")} โครงการตามตัวกรอง`;
 }
 
 function animateDashboardChartPanel(panel) {
@@ -311,6 +307,7 @@ function initDashboardClosureToggle() {
     updateDashboardClosureCaption();
     window.requestAnimationFrame(() => {
       if (root.dataset.dashboardClosureView !== view) return;
+      if (typeof syncDashboardComparisonHeights === "function") syncDashboardComparisonHeights();
       if (view === "monthly") {
         const chart = projectStatusContexts.staff?.trendLineChart;
         chart?.resize?.();
@@ -798,17 +795,13 @@ function updateClubDebtSummary(filtered) {
   const projectCount = rows.reduce((sum, row) => sum + row.projectCount, 0);
   const activeDebtRows = rows.filter((row) => row.totalDebt !== 0 || row.projectCount > 0);
   const countEl = document.getElementById("clubDebtProjectCountStaff");
-  const oldestEl = document.getElementById("clubDebtOldestDaysStaff");
   if (countEl) countEl.textContent = projectCount.toLocaleString("th-TH");
-  if (oldestEl) oldestEl.textContent = Math.max(0, ...rows.map((row) => row.maxOverdueDays)).toLocaleString("th-TH");
 
   if (totalEl) {
     totalEl.textContent = formatMoney(totalDebt);
   }
   if (captionEl) {
-    captionEl.textContent = activeDebtRows.length
-      ? `แสดงผล ${projectCount.toLocaleString("th-TH")} โครงการ จาก ${activeDebtRows.length.toLocaleString("th-TH")} ${unit}ที่มีหนี้`
-      : "ไม่มีรายการที่เข้าเงื่อนไข";
+    captionEl.textContent = `แสดงผล ${projectCount.toLocaleString("th-TH")} โครงการ`;
   }
   if (chartCaptionEl) {
     chartCaptionEl.textContent = "ยอดหนี้ค้างส่งเอกสารแยกตามองค์กร · หน่วยบาท";
@@ -829,16 +822,15 @@ function updateClubDebtSummary(filtered) {
 function renderCompactDebtRows(rows, container) {
   if (!container) return;
   const total = rows.reduce((sum, row) => sum + Math.abs(row.amount), 0);
-  const maximum = Math.max(1, ...rows.map((row) => Math.abs(row.amount)));
   if (!rows.some((row) => row.count > 0)) {
-    container.innerHTML = '<p class="debt-compact-empty">ไม่มีหนี้ค้างส่งเอกสารตามตัวกรอง</p>';
+    container.innerHTML = '<p class="debt-compact-empty">ไม่มีเงินยืมค้างปิดตามตัวกรอง</p>';
     return;
   }
   container.innerHTML = rows.map((row) => {
     const percent = total ? Math.abs(row.amount) / total * 100 : 0;
     return `<div class="debt-compact-row">
       <div class="debt-compact-label"><span>${escapeHtml(row.label)}</span><strong>${formatMoney(row.amount)} <small>บาท</small></strong></div>
-      <div class="debt-compact-track" aria-hidden="true"><span style="width:${Math.abs(row.amount) / maximum * 100}%;background:${row.color}"></span></div>
+      <div class="debt-compact-track" aria-hidden="true"><span style="width:${percent}%;background:${row.color}"></span></div>
       <div class="debt-compact-meta"><span>${row.count.toLocaleString("th-TH")} โครงการ${row.note ? ` · ${escapeHtml(row.note)}` : ""}</span><span>${percent.toFixed(1)}%</span></div>
     </div>`;
   }).join("");
@@ -856,6 +848,7 @@ function initDashboardDebtToggle() {
     btns.forEach((btn) => {
       const isActive = btn.dataset.dashboardDebtView === nextView;
       btn.classList.toggle("is-active", isActive);
+      btn.tabIndex = isActive ? 0 : -1;
       btn.setAttribute("aria-selected", isActive ? "true" : "false");
     });
     panels.forEach((panel) => {
@@ -870,8 +863,16 @@ function initDashboardDebtToggle() {
     });
   };
 
-  btns.forEach((btn) => {
+  btns.forEach((btn, index) => {
     btn.addEventListener("click", () => setView(btn.dataset.dashboardDebtView));
+    btn.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === "Home" ? 0 : event.key === "End" ? btns.length - 1
+        : (index + (event.key === "ArrowRight" ? 1 : -1) + btns.length) % btns.length;
+      setView(btns[next].dataset.dashboardDebtView);
+      btns[next].focus();
+    });
   });
   root.dataset.dashboardDebtToggleReady = "true";
   setView("summary");
@@ -1076,7 +1077,7 @@ function updateClubDebtSummaryChart(rows, chartCanvasEl, chartInnerEl) {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { right: isMobile ? 78 : 115 } },
+    layout: { padding: { right: isMobile ? 54 : 115 } },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -1168,6 +1169,66 @@ function getPastUnapprovedProjects(filtered, now = new Date(), hideNoClose = tru
   }).sort((a, b) => b.days - a.days);
 }
 
+function buildPastUnapprovedAgeBuckets(items) {
+  const buckets = [
+    { label: "1–7 วัน", min: 1, max: 7, color: "#fbcfe8", count: 0 },
+    { label: "8–14 วัน", min: 8, max: 14, color: "#f9a8d4", count: 0 },
+    { label: "15–30 วัน", min: 15, max: 30, color: "#ec4899", count: 0 },
+    { label: "มากกว่า 30 วัน", min: 31, max: Infinity, color: "#9d174d", count: 0 }
+  ];
+  for (const item of items) {
+    const bucket = buckets.find((row) => item.days >= row.min && item.days <= row.max);
+    if (bucket) bucket.count += 1;
+  }
+  return buckets;
+}
+
+function buildPastUnapprovedOrgBuckets(items, level = "orgGroup") {
+  const buckets = new Map();
+  for (const { project } of items) {
+    const label = (level === "orgName" ? project.orgName || "" : project.orgGroup || project.orgName || "").toString().trim() || "ไม่ระบุองค์กร";
+    if (!buckets.has(label)) buckets.set(label, { label, count: 0, color: "#f9a8d4" });
+    buckets.get(label).count += 1;
+  }
+  return [...buckets.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "th"));
+}
+
+function renderPastUnapprovedChart(items) {
+  const chart = document.getElementById("pastUnapprovedChartStaff");
+  if (!chart) return;
+  const view = chart.dataset.view === "org" ? "org" : "age";
+  const level = typeof getStaffProjectTrackingFilters === "function"
+    ? getStaffProjectTrackingFilters().level : "orgGroup";
+  const buckets = view === "org"
+    ? buildPastUnapprovedOrgBuckets(items, level) : buildPastUnapprovedAgeBuckets(items);
+  const description = view === "org"
+    ? `แยกตาม${level === "orgName" ? "ฝ่าย / ชมรม" : "ประเภทองค์กร"}`
+    : "แบ่งตามวันที่ผ่านวันปฏิบัติงานวันสุดท้าย";
+  chart.setAttribute("aria-label", "จำนวนโครงการที่ยังไม่อนุมัติ " + description);
+  document.querySelectorAll("[data-past-unapproved-view]").forEach((button) => {
+    const active = button.dataset.pastUnapprovedView === view;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+    button.onclick = () => {
+      chart.dataset.view = button.dataset.pastUnapprovedView;
+      renderPastUnapprovedChart(items);
+    };
+  });
+  const total = document.getElementById("pastUnapprovedTotalStaff");
+  const oldest = document.getElementById("pastUnapprovedOldestStaff");
+  if (total) total.textContent = items.length.toLocaleString("th-TH");
+  if (oldest) oldest.textContent = Math.max(0, ...items.map((item) => item.days)).toLocaleString("th-TH");
+  chart.innerHTML = items.length ? buckets.map((bucket) => {
+    const percent = bucket.count / items.length * 100;
+    return `<div class="debt-compact-row">
+      <div class="debt-compact-label"><span>${escapeHtml(bucket.label)}</span><strong>${bucket.count.toLocaleString("th-TH")} <small>โครงการ</small></strong></div>
+      <div class="debt-compact-track" aria-hidden="true"><span style="width:${percent}%;background:${bucket.color}"></span></div>
+      <div class="debt-compact-meta"><span>ของโครงการที่ต้องตรวจสอบ</span><span>${percent.toFixed(1)}%</span></div>
+    </div>`;
+  }).join("") : '<p class="chart-caption">ไม่พบโครงการที่เลยกำหนดจัดและยังไม่อนุมัติตามตัวกรอง</p>';
+
+}
+
 function updatePastUnapprovedProjects(filtered) {
   const body = document.getElementById("pastUnapprovedTableBodyStaff");
   const count = document.getElementById("pastUnapprovedCountStaff");
@@ -1189,6 +1250,7 @@ function updatePastUnapprovedProjects(filtered) {
   const hideNoClose = toggle ? toggle.checked : true;
   const items = getPastUnapprovedProjects(filtered, new Date(), hideNoClose);
   count.textContent = `แสดงผล ${items.length.toLocaleString("th-TH")} โครงการ`;
+  renderPastUnapprovedChart(items);
   body.replaceChildren();
   if (!items.length) {
     const row = document.createElement("tr");
@@ -2218,10 +2280,11 @@ function renderHomeKpis(sourceProjects = projects) {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { autoPadding: false, padding: { top: 8 } },
     scales: {
       x: {
         afterFit(scale) {
-          scale.height = Math.max(scale.height || 0, 44);
+          scale.height = 54;
         },
         ticks: { display: false }
       },
@@ -2233,6 +2296,7 @@ function renderHomeKpis(sourceProjects = projects) {
         ticks: {
           maxTicksLimit: 5,
           padding: 8,
+          font: { size: 11 },
           callback(value) { return formatProjectMoneyAxisTick(value, this); }
         }
       }
@@ -2245,7 +2309,8 @@ function renderHomeKpis(sourceProjects = projects) {
           height: 38,
           gap: 6,
           className: "chart-external-axis-month chart-external-axis-month-compact",
-          formatter: (label) => formatMonthAxisLabel(label)
+          compactMonths: true,
+              formatter: (label) => formatMonthAxisLabel(label)
         }
       },
       tooltip: {

@@ -37,7 +37,7 @@ function initDashboardMobileActionBar() {
   const targetByAction = {
     checks: "projectStaffOpsPanelStaff",
     metrics: "dashboardMetricsSectionStaff",
-    followup: "dashboardFollowupSectionStaff",
+    progress: "dashboardProgressSectionStaff",
     analysis: "dashboardAnalysisSectionStaff"
   };
 

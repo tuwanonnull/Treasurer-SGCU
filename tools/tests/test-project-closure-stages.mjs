@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const ui = fs.readFileSync(new URL('../../web/js/features/project/app.project-ui.js', import.meta.url), 'utf8');
+const helpers = fs.readFileSync(new URL('../../web/js/core/app.helpers.js', import.meta.url), 'utf8');
+const ctx = vm.createContext({escapeHtml: String, formatMoney: String});
+vm.runInContext(helpers.slice(helpers.indexOf('function isProjectClosed'), helpers.indexOf('function isProjectApproved')), ctx);
+vm.runInContext(ui.slice(ui.indexOf('function renderCompactDebtRows'), ui.indexOf('function initDashboardDebtToggle')), ctx);
+ctx.container = {};
+vm.runInContext('renderCompactDebtRows([{label:"A",amount:60,count:1,color:"pink"},{label:"B",amount:40,count:1,color:"pink"}],container)', ctx);
+assert.match(ctx.container.innerHTML, /width:60%/);
+assert.match(ctx.container.innerHTML, /60.0%/);
+assert.match(ctx.container.innerHTML, /width:40%/);
+assert.match(ctx.container.innerHTML, /40.0%/);
+console.log('Debt bar widths match total-share labels.');
+
+vm.runInContext(ui.slice(ui.indexOf('function buildPastUnapprovedAgeBuckets'), ui.indexOf('function updatePastUnapprovedProjects')), ctx);
+ctx.items = [1,7,8,14,15,30,31,100].map(days=>({days}));
+assert.deepEqual(Array.from(vm.runInContext('buildPastUnapprovedAgeBuckets(items).map(row=>row.count)', ctx)), [2,2,2,2]);
+const chart = {innerHTML:'',dataset:{},setAttribute(){}};
+ctx.document = {querySelectorAll:()=>[],getElementById: id => ({pastUnapprovedChartStaff:chart})[id]};
+vm.runInContext('renderPastUnapprovedChart(items)',ctx);
+assert.equal((chart.innerHTML.match(/width:25%/g)||[]).length,4);
+vm.runInContext('renderPastUnapprovedChart([])',ctx);
+assert.match(chart.innerHTML,/ไม่พบโครงการ/);
+console.log('Past-unapproved chart: age boundaries, percentage bars and empty-filter reset passed.');
+
+ctx.items = [{days:1,project:{orgGroup:"A",orgName:"A1"}},{days:8,project:{orgGroup:"A",orgName:"A2"}},{days:31,project:{orgGroup:"B",orgName:"B1"}},{days:2,project:{}}];
+assert.deepEqual(Array.from(vm.runInContext('buildPastUnapprovedOrgBuckets(items).map(row=>row.count)',ctx)),[2,1,1]);
+assert.equal(vm.runInContext('buildPastUnapprovedOrgBuckets(items,"orgName").length',ctx),4);
+chart.dataset.view = "org";
+vm.runInContext('renderPastUnapprovedChart(items)',ctx);
+assert.match(chart.innerHTML,/width:50%/);
+vm.runInContext('renderPastUnapprovedChart([])',ctx);
+assert.equal(chart.dataset.view,"org");
+assert.match(chart.innerHTML,/ไม่พบโครงการ/);
+console.log('Organization grouping, missing organizations, total-share percentages and retained view passed.');

@@ -371,6 +371,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { autoPadding: false, padding: { top: 8 } },
         plugins: {
           legend: { display: false },
           tooltip: { enabled: true },
@@ -381,6 +382,7 @@ function initCharts(ctxKey = activeProjectStatusContext) {
               gap: 6,
               alignEdges: true,
               className: "chart-external-axis-month",
+              compactMonths: true,
               formatter: (label) => formatMonthAxisLabel(label)
             }
           }
@@ -388,13 +390,13 @@ function initCharts(ctxKey = activeProjectStatusContext) {
         scales: {
           x: {
             afterFit(scale) {
-              scale.height = Math.max(scale.height || 0, 54);
+              scale.height = 54;
             },
             ticks: { display: false, font: { size: 11 } }
           },
           y: {
             beginAtZero: true,
-            ticks: { precision: 0, font: { size: 11 } }
+            ticks: { precision: 0, padding: 8, font: { size: 11 } }
           }
         }
       }
@@ -556,6 +558,7 @@ function syncDashboardComparisonHeights() {
   const chartChrome = plotHeight > 0 ? Math.max(0, chart.height - plotHeight) : 10;
   const viewportHeight = visibleRows * rowHeight + chartChrome;
   const grid = card.closest(".dashboard-progress-grid");
+  // Preserve the original plot area; only the card footer is compact.
   const monthlyHeight = isMobile ? Math.min(320, viewportHeight + 32) : viewportHeight + 32;
   grid?.style.setProperty("--dashboard-plot-height", `${viewportHeight + 32}px`);
   grid?.style.setProperty("--dashboard-monthly-plot-height", `${monthlyHeight}px`);
@@ -728,7 +731,7 @@ function updateProjectBudgetComparisonChart(filtered) {
 
   if (captionEl) {
     captionEl.textContent = isStaffComparison
-      ? `${comparisonLevel === "orgName" ? "ฝ่าย / ชมรม" : "องค์กรใหญ่"}ตามตัวกรอง · หน่วยบาท · ลำดับเดียวกับหน้าสถานะโครงการ`
+      ? `เปรียบเทียบงบที่อนุมัติและใช้จริงตาม${comparisonLevel === "orgName" ? "ฝ่าย / ชมรม" : "องค์กรใหญ่"}`
       : "";
   }
 
