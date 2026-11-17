@@ -741,7 +741,47 @@ function getClubDebtSummaryScope(sourceProjects) {
   };
 }
 
+function getInsightOrganization(project, level) {
+  const orgGroup = String(project.orgGroup || "").trim() || "ไม่ระบุองค์กรใหญ่";
+  const orgName = String(project.orgName || "").trim() || "ไม่ระบุฝ่าย / ชมรม";
+  return {
+    key: level === "orgName" ? JSON.stringify([orgGroup, orgName]) : orgGroup,
+    name: level === "orgName" ? `${orgName} · ${orgGroup}` : orgGroup,
+    orgGroup, orgName
+  };
+}
+
+function getInsightOrganizationLevel() {
+  const filters = typeof getStaffProjectTrackingFilters === "function"
+    ? getStaffProjectTrackingFilters() : { level: "orgGroup", orgs: [] };
+  return filters.level === "orgGroup" && new Set(filters.orgs || []).size === 1
+    ? "orgName" : filters.level;
+}
+
+function sortInsightOrganizations(rows, level) {
+  return rows.sort(getProjectStatusOrgComparator(level));
+}
+
 function buildClubDebtSummaryRows(sourceProjects) {
+  if (typeof activeProjectStatusContext !== "undefined" && activeProjectStatusContext === "staff") {
+    const level = getInsightOrganizationLevel();
+    const groups = new Map();
+    for (const project of sourceProjects || []) {
+      if (!isClubDebtProject(project)) continue;
+      const organization = getInsightOrganization(project, level);
+      if (!groups.has(organization.key)) groups.set(organization.key, {
+        ...organization, totalDebt: 0, projectCount: 0, maxOverdueDays: 0
+      });
+      const row = groups.get(organization.key);
+      row.totalDebt += Number(project.advanceAmount || 0);
+      row.projectCount += 1;
+      row.maxOverdueDays = Math.max(row.maxOverdueDays, Math.abs(Number(project.daysToDeadline)));
+    }
+    return {
+      rows: sortInsightOrganizations([...groups.values()], level).map(row => ({ ...row, orgName: row.name })),
+      unit: level === "orgName" ? "ฝ่าย / ชมรม" : "ประเภทองค์กร"
+    };
+  }
   const scope = getClubDebtSummaryScope(sourceProjects);
   const rowsByLabel = new Map();
   scope.labels.forEach((label) => {
@@ -824,6 +864,7 @@ function renderCompactDebtRows(rows, container) {
   const total = rows.reduce((sum, row) => sum + Math.abs(row.amount), 0);
   if (!rows.some((row) => row.count > 0)) {
     container.innerHTML = '<p class="debt-compact-empty">ไม่มีเงินยืมค้างปิดตามตัวกรอง</p>';
+    fitInsightChartViewport(container);
     return;
   }
   container.innerHTML = rows.map((row) => {
@@ -834,6 +875,25 @@ function renderCompactDebtRows(rows, container) {
       <div class="debt-compact-meta"><span>${row.count.toLocaleString("th-TH")} โครงการ${row.note ? ` · ${escapeHtml(row.note)}` : ""}</span><span>${percent.toFixed(1)}%</span></div>
     </div>`;
   }).join("");
+  fitInsightChartViewport(container);
+}
+
+function fitInsightChartViewport(container) {
+  if (!container?.querySelectorAll) return;
+  container.insightRowsObserver?.disconnect();
+  const rows = Array.from(container.querySelectorAll(".debt-compact-row"));
+  const measure = () => {
+    const height = rows.slice(0, 6).reduce((sum, row) => sum + row.getBoundingClientRect().height, 0);
+    container.style.maxHeight = rows.length > 6 && height > 0 ? `${height}px` : "none";
+    container.style.overflowY = rows.length > 6 ? "auto" : "visible";
+    container.style.paddingRight = rows.length > 6 ? "6px" : "0";
+    container.style.scrollbarGutter = rows.length > 6 ? "stable" : "auto";
+  };
+  measure();
+  if (rows.length > 6 && typeof ResizeObserver !== "undefined") {
+    container.insightRowsObserver = new ResizeObserver(measure);
+    rows.slice(0, 6).forEach(row => container.insightRowsObserver.observe(row));
+  }
 }
 
 function initDashboardDebtToggle() {
@@ -1186,19 +1246,20 @@ function buildPastUnapprovedAgeBuckets(items) {
 function buildPastUnapprovedOrgBuckets(items, level = "orgGroup") {
   const buckets = new Map();
   for (const { project } of items) {
-    const label = (level === "orgName" ? project.orgName || "" : project.orgGroup || project.orgName || "").toString().trim() || "ไม่ระบุองค์กร";
-    if (!buckets.has(label)) buckets.set(label, { label, count: 0, color: "#f9a8d4" });
-    buckets.get(label).count += 1;
+    const organization = getInsightOrganization(project, level);
+    if (!buckets.has(organization.key)) buckets.set(organization.key, {
+      ...organization, label: organization.name, count: 0, color: "#f9a8d4"
+    });
+    buckets.get(organization.key).count += 1;
   }
-  return [...buckets.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "th"));
+  return sortInsightOrganizations([...buckets.values()], level);
 }
 
 function renderPastUnapprovedChart(items) {
   const chart = document.getElementById("pastUnapprovedChartStaff");
   if (!chart) return;
-  const view = chart.dataset.view === "org" ? "org" : "age";
-  const level = typeof getStaffProjectTrackingFilters === "function"
-    ? getStaffProjectTrackingFilters().level : "orgGroup";
+  const view = chart.dataset.view === "age" ? "age" : "org";
+  const level = getInsightOrganizationLevel();
   const buckets = view === "org"
     ? buildPastUnapprovedOrgBuckets(items, level) : buildPastUnapprovedAgeBuckets(items);
   const description = view === "org"
@@ -1226,7 +1287,7 @@ function renderPastUnapprovedChart(items) {
       <div class="debt-compact-meta"><span>ของโครงการที่ต้องตรวจสอบ</span><span>${percent.toFixed(1)}%</span></div>
     </div>`;
   }).join("") : '<p class="chart-caption">ไม่พบโครงการที่เลยกำหนดจัดและยังไม่อนุมัติตามตัวกรอง</p>';
-
+  fitInsightChartViewport(chart);
 }
 
 function updatePastUnapprovedProjects(filtered) {
