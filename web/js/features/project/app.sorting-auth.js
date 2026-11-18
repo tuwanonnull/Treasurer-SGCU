@@ -3135,27 +3135,56 @@ function initAuthUI() {
     updateLoginProfileStudentMeta();
   }
   applyLoginProfileTypeUI();
-  function handleLogout() {
-    staffAuthUser = null;
-    staffViewMode = "normal";
-    refreshAuthDisplay(auth.currentUser);
-    clearAuthSession();
-    signOut(auth).catch((err) => {
-      console.error("logout error  app.js:3632 - app.sorting-auth.js:2658", err);
-    });
-    loginProfileLoadedForEmail = "";
-    setLoginProfileStatus("ออกจากระบบแล้ว", "#6b7280");
-
-    const hamburger = document.getElementById("hamburgerBtn");
-    const mobileMenu = document.getElementById("mobileMenu");
-    if (hamburger && mobileMenu) {
-      if (typeof setMobileMenuState === "function") {
-        setMobileMenuState(mobileMenu, hamburger, false);
-      } else {
-        mobileMenu.classList.remove("show");
-        mobileMenu.setAttribute("aria-hidden", "true");
-        hamburger.setAttribute("aria-expanded", "false");
+  let logoutInProgress = false;
+  async function handleLogout() {
+    if (logoutInProgress) return;
+    logoutInProgress = true;
+    const buttons = [logoutBtnEl, loginPageLogoutBtnEl, mobileLogoutBtnEl].filter(Boolean);
+    buttons.forEach(button => { button.disabled = true; });
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const outgoing = document.querySelector(".page-view.active .page");
+    let exitAnimation;
+    try {
+      if (!reduceMotion && outgoing?.animate) {
+        exitAnimation = outgoing.animate(
+          [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(4px)" }],
+          { duration: 120, easing: "ease-in", fill: "forwards" }
+        );
+        await exitAnimation.finished.catch(() => {});
       }
+      await signOut(auth);
+      staffAuthUser = null;
+      staffViewMode = "normal";
+      clearAuthSession();
+      loginProfileLoadedForEmail = "";
+      refreshAuthDisplay(null);
+      setLoginProfileStatus("ออกจากระบบแล้ว", "#6b7280");
+
+      const hamburger = document.getElementById("hamburgerBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+      if (hamburger && mobileMenu) {
+        if (typeof setMobileMenuState === "function") {
+          setMobileMenuState(mobileMenu, hamburger, false);
+        } else {
+          mobileMenu.classList.remove("show");
+          mobileMenu.setAttribute("aria-hidden", "true");
+          hamburger.setAttribute("aria-expanded", "false");
+        }
+      }
+      exitAnimation?.cancel();
+      if (!reduceMotion) {
+        document.querySelector(".page-view.active .page")?.animate?.(
+          [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "translateY(0)" }],
+          { duration: 220, easing: "ease-out" }
+        );
+      }
+    } catch (err) {
+      console.error("logout error - app.sorting-auth.js", err);
+      setLoginProfileStatus("ออกจากระบบไม่สำเร็จ กรุณาลองอีกครั้ง", "#b91c1c");
+    } finally {
+      exitAnimation?.cancel();
+      buttons.forEach(button => { button.disabled = false; });
+      logoutInProgress = false;
     }
   }
 

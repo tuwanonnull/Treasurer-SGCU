@@ -1,5 +1,11 @@
        <!-- ============ HOME PAGE (PUBLIC) ============ -->
       <section class="page-view active section-appear home-page-view" data-page="home">
+        <nav class="home-section-indicators" aria-label="เลือกช่วงของหน้าแรก" hidden>
+          <button type="button" data-home-section="0" aria-label="แนะนำฝ่ายเหรัญญิก"><span class="home-indicator-label">แนะนำฝ่ายเหรัญญิก</span></button>
+          <button type="button" data-home-section="1" aria-label="ข่าวและประกาศ"><span class="home-indicator-label">ข่าวและประกาศ</span></button>
+          <button type="button" data-home-section="2" aria-label="ขั้นตอนการอนุมัติ"><span class="home-indicator-label">ขั้นตอนการอนุมัติ</span></button>
+          <button type="button" data-home-section="3" aria-label="ข้อมูลช่วยเหลือและติดต่อ"><span class="home-indicator-label">ข้อมูลช่วยเหลือและติดต่อ</span></button>
+        </nav>
         <div class="home-snap-container">
           <!-- 1) Hero -->
           <section class="home-snap-panel" aria-label="ช่วงหลัก 1">
@@ -281,7 +287,8 @@
               </div>
             </div>
           </section>
-          <!-- 4) ระบบและเว็บไซต์ที่เกี่ยวข้อง -->
+          <!-- 4) Related resources, FAQ and contact share one paging section. -->
+          <section class="home-support-panel" aria-label="ข้อมูลช่วยเหลือและช่องทางติดต่อ">
           <section class="home-related" id="related-websites" aria-labelledby="homeRelatedTitle">
             <header class="home-help-header">
               <h2 id="homeRelatedTitle">ระบบและเว็บไซต์ที่เกี่ยวข้อง</h2>
@@ -370,27 +377,32 @@
               <header class="home-contact-heading">
                 <span class="home-help-eyebrow">ช่องทางติดต่อ</span>
                 <h3 id="homeContactTitle">ยังมีข้อสงสัย?</h3>
-                <p>เรื่องบิลและเอกสารเบิกเงิน เลือกผู้รับผิดชอบตามโครงการ</p>
+                <p>สอบถามเรื่องบิลและเอกสารเบิกเงินได้ตามประเภทโครงการ</p>
               </header>
               <div class="home-contact-options">
+                <div class="home-contact-projects" role="group" aria-label="ติดต่อเรื่องบิลและเอกสารโครงการ">
                 <div class="home-contact-group">
                   <h4>โครงการ อบจ.</h4>
-                  <p>ติดต่อผู้ช่วยเหรัญญิกจากส่วนกลางที่ดูแลโครงการ โดยประสานงานโดยตรงภายในโครงการ</p>
+                  <p>ติดต่อผู้ช่วยเหรัญญิกจากส่วนกลางที่ดูแลโครงการ หากไม่มีผู้ช่วยฯ ให้ติดต่อเหรัญญิกผู้ตรวจสอบเอกสาร</p>
                 </div>
                 <div class="home-contact-group">
                   <h4>โครงการของสภานิสิตหรือชมรม</h4>
                   <p>ติดต่อเหรัญญิกผู้ตรวจสอบเอกสาร</p>
+                </div>
+                <div class="home-contact-lookup">
                   <button class="btn-secondary home-contact-cta" type="button" data-goto-page="project-status" aria-describedby="homeContactHint">ดูข้อมูลติดต่อผู้ตรวจสอบ</button>
-                  <p id="homeContactHint" class="home-contact-hint">เปิดโครงการในหน้า “สถานะโครงการ” แล้วดูข้อมูลติดต่อท้ายหน้าต่างรายละเอียด</p>
+                  <p id="homeContactHint" class="home-contact-hint">เลือกโครงการในหน้า “สถานะโครงการ” ข้อมูลติดต่ออยู่ท้ายรายละเอียดโครงการ</p>
+                </div>
                 </div>
                 <div class="home-contact-general">
                   <h4>สอบถามเรื่องอื่น ๆ</h4>
-                  <p>เรื่องที่ไม่เกี่ยวกับโครงการ ติดต่อผ่าน LINE หรือ Instagram</p>
+                  <p>ติดต่อฝ่ายเหรัญญิกผ่านช่องทางด้านล่างได้เลย</p>
                   <div id="homeTreasurerLine" aria-live="polite"></div>
                   <a class="btn-secondary home-contact-instagram" href="https://www.instagram.com/treasurer.sgcu/" target="_blank" rel="noopener noreferrer" aria-label="ติดต่อ Instagram @treasurer.sgcu (เปิดแท็บใหม่)">ติดต่อผ่าน Instagram</a>
                 </div>
               </div>
             </aside>
+          </section>
           </section>
         </div>
       </section>

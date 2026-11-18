@@ -36,5 +36,67 @@ export function setupTemporaryAccessList() {
     const target = document.getElementById(id);
     if (target) observer.observe(target, { childList: true });
   }
+  setupTemporaryAccessMobileFilters(search, status);
   apply();
+}
+
+function setupTemporaryAccessMobileFilters(search, status) {
+  const button = document.getElementById('staffAuthAccessFilterOpen');
+  const filters = search.closest('.staff-auth-filters');
+  if (!button || !filters) return;
+  const section = filters.closest('.page-view');
+  const mobile = window.matchMedia('(max-width: 840px)');
+  const sheet = document.createElement('dialog');
+  sheet.id = 'staffAuthAccessFilterSheet';
+  sheet.className = 'mobile-filter-dialog directory-mobile-filter-dialog';
+  sheet.setAttribute('aria-labelledby', 'staffAuthAccessFilterTitle');
+  sheet.innerHTML = `<header class="mobile-filter-header">
+    <h2 id="staffAuthAccessFilterTitle" class="mobile-filter-title">ค้นหาและกรอง</h2>
+    <button type="button" class="mobile-filter-close" aria-label="ปิดตัวกรอง">×</button>
+    </header><div class="mobile-filter-body"></div>
+    <footer class="mobile-filter-footer"><button type="button" class="btn-ghost">ล้างตัวกรอง</button><button type="button" class="btn-primary">ดูรายการ</button></footer>`;
+  document.body.appendChild(sheet);
+  let placeholder;
+  const syncLabel = () => {
+    const count = Number(!!search.value.trim()) + Number(status.value !== 'all');
+    button.textContent = count ? `ค้นหาและกรอง (${count})` : 'ค้นหาและกรอง';
+  };
+  const close = () => {
+    if (!sheet.open) return;
+    sheet.close();
+    placeholder.replaceWith(filters);
+    filters.removeAttribute('data-mobile-filter-mounted');
+    document.body.classList.remove('auth-access-filter-open');
+    button.setAttribute('aria-expanded', 'false');
+    syncLabel();
+    if (mobile.matches && section.classList.contains('active')) button.focus();
+  };
+  button.addEventListener('click', () => {
+    if (!mobile.matches || sheet.open) return;
+    placeholder = document.createComment('temporary-access-filters');
+    filters.before(placeholder);
+    sheet.querySelector('.mobile-filter-body').appendChild(filters);
+    filters.dataset.mobileFilterMounted = 'true';
+    sheet.showModal();
+    document.body.classList.add('auth-access-filter-open');
+    button.setAttribute('aria-expanded', 'true');
+  });
+  sheet.querySelector('.mobile-filter-close').addEventListener('click', close);
+  sheet.querySelector('.btn-primary').addEventListener('click', close);
+  sheet.querySelector('.btn-ghost').addEventListener('click', () => {
+    document.getElementById('staffAuthAccessFilterReset').click(); syncLabel();
+  });
+  sheet.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  let outside = false;
+  const isOutside = event => {
+    const box = sheet.getBoundingClientRect();
+    return event.target === sheet && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom);
+  };
+  sheet.addEventListener('pointerdown', event => { outside = isOutside(event); });
+  sheet.addEventListener('click', event => { if (outside && isOutside(event)) close(); outside = false; });
+  filters.addEventListener('input', syncLabel);
+  filters.addEventListener('change', syncLabel);
+  mobile.addEventListener('change', () => { if (!mobile.matches) close(); });
+  new MutationObserver(() => { if (!section.classList.contains('active')) close(); }).observe(section, { attributes: true, attributeFilter: ['class'] });
+  syncLabel();
 }

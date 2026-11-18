@@ -126,6 +126,7 @@
 /* Public content must remain readable before scripts or observers run.
    Keep page visibility controlled by .page-view.active, not reveal effects. */
 .home-page-view.section-appear,
+.home-page-view.section-appear.section-visible,
 .home-page-view .section-appear,
 .home-page-view .home-snap-content {
   opacity: 1;
@@ -137,8 +138,8 @@
 
 .home-page-view .home-panel-visible .home-snap-content {
   opacity: 1;
-  transform: translateY(0) scale(1);
-  filter: blur(0);
+  transform: none;
+  filter: none;
 }
 
 .home-page-view .home-snap-panel:nth-child(2) .home-snap-content {
@@ -2914,8 +2915,20 @@
 .home-contact-heading h3 { margin: 12px 0; color: #111827; font-size: 22px; line-height: 1.3; letter-spacing: normal; }
 .home-contact-card p { font-size: 14px; }
 .home-contact-options { display: grid; min-width: 0; }
-.home-contact-group { padding: 14px 0; border-bottom: 1px solid #eadfe5; }
-.home-contact-group:first-child { padding-top: 0; }
+.home-contact-projects {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--preview-raised, #ffffff);
+}
+.home-contact-group { padding: 0; }
+.home-contact-lookup { padding: 0; }
+.home-contact-projects .home-contact-cta { margin-top: 0; }
+.home-contact-projects .home-contact-group h4 { margin-bottom: 4px; }
+.home-contact-projects .home-contact-hint { margin-top: 8px; }
 .home-contact-group h4, .home-contact-general h4 { margin: 0 0 8px; font-size: 15px; font-weight: 600; line-height: 1.6; color: #111827; }
 .home-contact-group p, .home-contact-general > p { font-size: 12px; line-height: 1.8; }
 .home-contact-card .home-contact-hint { margin: 10px 0 0; font-size: 12px; line-height: 1.7; }
@@ -2939,7 +2952,7 @@
   .home-contact-card { padding: 28px 0 0; border-left: 0; border-top: 1px solid #eadfe5; }
 }
 
-.home-contact-general { padding: 16px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.home-contact-general { padding: 16px 0 0; border-top: 1px solid var(--preview-border, #eadfe5); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .home-contact-general h4, .home-contact-general > p { flex-basis: 100%; margin: 0; }
 .home-contact-general #homeTreasurerLine { display: contents; }
 .home-contact-general #homeTreasurerLine p { flex-basis: 100%; margin: 2px 0; font-size: 12px; }
@@ -2955,3 +2968,156 @@
 .home-contact-cta { margin-top: 8px; }
 .home-contact-instagram { margin-top: 0; }
 .home-contact-cta:focus-visible, .home-contact-line:focus-visible, .home-contact-instagram:focus-visible { outline: 2px solid #be185d; outline-offset: 3px; }
+
+/* Leave room for the sticky header when the mobile news shortcut scrolls. */
+@media (max-width: 960px), (pointer: coarse) {
+  .home-page-view .home-snap-panel {
+    scroll-margin-top: var(--home-header-height, 56px);
+  }
+}
+
+/* Desktop section paging preserves the original content width. */
+@media (min-width: 961px) and (pointer: fine) {
+  main.main:has(.home-page-view.active) {
+    padding-top: 0;
+  }
+
+  .home-page-view {
+    --home-header-height: 80px;
+    --home-screen-height: calc(100vh - var(--home-header-height));
+  }
+
+  @supports (height: 100dvh) {
+    .home-page-view {
+      --home-screen-height: calc(100dvh - var(--home-header-height));
+    }
+  }
+
+  .home-page-view .home-snap-panel,
+  .home-page-view .home-support-panel {
+    min-height: var(--home-screen-height);
+    scroll-margin-top: var(--home-header-height);
+  }
+
+  .home-page-view .home-support-panel {
+    padding-block: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  .home-page-view .home-related {
+    margin-top: 0;
+  }
+
+  .home-page-view .home-help {
+    width: 100%;
+    padding-block: 0;
+    align-content: start;
+  }
+}
+
+/* Floating vertical section navigation, using the site's pink palette. */
+.home-section-indicators {
+  display: none;
+}
+
+@media (min-width: 961px) and (pointer: fine) {
+  body:has(.home-page-view.active) > .home-section-indicators:not([hidden]) {
+    position: fixed;
+    z-index: 35;
+    top: 50%;
+    right: clamp(12px, 1.8vw, 32px);
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+  }
+
+  .home-section-indicators button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--preview-accent, var(--theme-pink-700));
+  }
+
+  .home-section-indicators button[hidden] { display: none; }
+
+  .home-section-indicators button::after {
+    content: "";
+    width: 4px;
+    height: 5px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.6;
+    transition: height 320ms ease, opacity 200ms ease;
+  }
+
+  .home-section-indicators button[aria-current="step"]::after {
+    height: 24px;
+    opacity: 1;
+  }
+
+  .home-section-indicators button:hover::after,
+  .home-section-indicators button:focus-visible::after { opacity: 1; }
+
+  .home-section-indicators button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 0;
+  }
+
+  .home-indicator-label {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 16px);
+    padding: 7px 12px;
+    border: 1px solid var(--menu-glass-border);
+    border-radius: 10px;
+    background: var(--preview-surface, #fff);
+    color: var(--preview-text, var(--theme-pink-800));
+    box-shadow: 0 4px 16px rgb(131 24 67 / 8%);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(4px, -50%);
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  }
+
+  .home-section-indicators button:hover .home-indicator-label,
+  .home-section-indicators button:focus-visible .home-indicator-label {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, -50%);
+  }
+
+  /* Only show one label when another destination is being explored. */
+  .home-section-indicators:has(button:hover, button:focus-visible)
+    button:not(:hover):not(:focus-visible) .home-indicator-label {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+}
+
+@media (min-width: 961px) and (max-width: 1280px) and (pointer: fine) {
+  main.main:has(.home-page-view.active) { padding-right: 80px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-section-indicators button::after,
+  .home-indicator-label { transition: none; }
+}
