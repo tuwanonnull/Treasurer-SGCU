@@ -169,22 +169,24 @@ function initProjectMobileActionBar() {
   };
 
   const goToCalendarToday = () => {
+    setActiveProjectStatusContext("public");
     if (typeof currentCalendarDate === "undefined") return;
     const today = new Date();
-    currentCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    currentCalendarDate.setTime(new Date(today.getFullYear(), today.getMonth(), 1).getTime());
     if (typeof selectedCalendarDate !== "undefined") {
       selectedCalendarDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     }
     if (typeof generateCalendar === "function") {
-      generateCalendar();
+      generateCalendar({ showEmptyMonthNotice: true });
     }
   };
 
   const shiftCalendarMonth = (amount) => {
+    setActiveProjectStatusContext("public");
     if (typeof currentCalendarDate === "undefined") return;
     currentCalendarDate.setMonth(currentCalendarDate.getMonth() + amount);
     if (typeof generateCalendar === "function") {
-      generateCalendar();
+      generateCalendar({ showEmptyMonthNotice: true });
     }
   };
 

@@ -1207,8 +1207,10 @@
   html[data-theme="dark"] body :is(.org-directory-mobile-position, .org-directory-mobile-meta, .org-directory-mobile-code) { color: var(--preview-muted); border-color: var(--preview-border); }
   html[data-theme="dark"] body .org-directory-mobile-card:is(:hover, :focus-visible, :active) { background: var(--preview-raised); border-color: #895269; box-shadow: none; }
   html[data-theme="dark"] body .org-directory-member-row:is(:hover, :focus-visible) { background: var(--preview-raised); }
-  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
-  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary:hover:not(:disabled) { background: #49313e; }
+  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary,
+  html[data-theme="dark"] body #staffAuthAccessAddBtn { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
+  html[data-theme="dark"] body .page-view[data-page="staff-directory-staff"] .btn-primary:hover:not(:disabled),
+  html[data-theme="dark"] body #staffAuthAccessAddBtn:hover:not(:disabled) { background: #49313e; }
   html[data-theme="dark"] body #orgStructureEditor .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
   html[data-theme="dark"] body #orgStructureEditor .btn-primary:hover:not(:disabled) { background: #49313e; }
 }
@@ -1229,8 +1231,6 @@
   html[data-theme="dark"] body .staff-auth-status.is-pending { background: #3c3220; color: #f5d18a; }
   html[data-theme="dark"] body .staff-auth-status.is-expired { background: #3c2529; color: #ffb4b4; }
   html[data-theme="dark"] body .staff-auth-status.is-inactive { background: var(--preview-raised); color: var(--preview-muted); }
-  html[data-theme="dark"] body #staffAuthAccessSubmitBtn { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
-  html[data-theme="dark"] body #staffAuthAccessSubmitBtn:hover:not(:disabled) { background: #49313e; }
   html[data-theme="dark"] body #staffAuthAccessDeleteBtn { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
 }
 

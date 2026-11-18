@@ -328,7 +328,7 @@ function updateCalendarRowHeight() {
 /**
  * วาดปฏิทินตาม currentCalendarDate
  */
-function generateCalendar() {
+function generateCalendar({ showEmptyMonthNotice = false } = {}) {
   const container = calendarContainerEl;
   if (!container) return;
 
@@ -345,6 +345,26 @@ function generateCalendar() {
   syncSelectedCalendarDateToMonth(year, month);
 
   const monthEvents = getFilteredCalendarEventsForMonth(year, month);
+  const notice = container.closest(".panel")?.querySelector(".calendar-filter-notice");
+  if (notice) {
+    const filteredYear = calendarYearSelectEl?.value;
+    const showNotice = showEmptyMonthNotice && monthEvents.length === 0 && filteredYear && filteredYear !== "all";
+    const monthLabel = new Date(year, month, 1).toLocaleDateString("th-TH", {
+      month: "long", year: "numeric"
+    });
+    notice.hidden = !showNotice;
+    notice.textContent = showNotice
+      ? `ยังไม่พบโครงการในเดือน${monthLabel} ตามตัวกรองที่เลือก คุณกำลังดูปีการศึกษา ${filteredYear} หากต้องการดูโครงการของปีอื่น สามารถเปลี่ยนปีการศึกษาได้ในตัวกรอง`
+      : "";
+    notice.getAnimations?.().forEach((animation) => animation.cancel());
+    if (showNotice && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      notice.animate?.([
+        { opacity: 0, transform: "translateY(-6px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ], { duration: 220, easing: "ease-out" });
+    }
+  }
+
   const maxEventsInDay = monthEvents.reduce((max, ev) => {
     const dayCount = getEventsForDate(ev.start).length;
     return Math.max(max, dayCount);
@@ -545,6 +565,7 @@ function initCalendar(ctxKey = activeProjectStatusContext) {
   setActiveProjectStatusContext(ctxKey);
 
   const prevBtn = prevMonthBtnEl;
+  const todayBtn = calendarTodayBtnEl;
   const nextBtn = nextMonthBtnEl;
   const modal = document.getElementById("calendarModal");
   const modalClose = document.getElementById("calendarModalClose");
@@ -560,14 +581,23 @@ function initCalendar(ctxKey = activeProjectStatusContext) {
     prevBtn.addEventListener("click", () => {
       setActiveProjectStatusContext(ctxKey);
       currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-      generateCalendar();
+      generateCalendar({ showEmptyMonthNotice: true });
+    });
+  }
+  if (todayBtn) {
+    todayBtn.addEventListener("click", () => {
+      setActiveProjectStatusContext(ctxKey);
+      const today = new Date();
+      currentCalendarDate.setTime(today.getTime());
+      selectedCalendarDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      generateCalendar({ showEmptyMonthNotice: true });
     });
   }
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
       setActiveProjectStatusContext(ctxKey);
       currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-      generateCalendar();
+      generateCalendar({ showEmptyMonthNotice: true });
     });
   }
 

@@ -1,9 +1,13 @@
+import { setupAccessRequests } from "./app.auth-access-requests.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
+  setPersistence,
+  inMemoryPersistence,
   connectAuthEmulator,
   onAuthStateChanged,
   signInWithPopup,
+  updateCurrentUser,
   GoogleAuthProvider,
   signOut,
   signInWithEmailAndPassword
@@ -20,6 +24,7 @@ import {
   collection,
   addDoc,
   getDoc,
+  getDocFromServer,
   getDocs,
   setDoc,
   onSnapshot,
@@ -97,6 +102,7 @@ function isTemporaryAuthAccessActive(data, email, nowMs = Date.now()) {
   const endsAtMs = readDateMs(data.endsAt);
   return (
     data.active === true &&
+    (!data.status || data.status === 'approved') &&
     storedEmail === normalized &&
     Number.isFinite(startsAtMs) &&
     Number.isFinite(endsAtMs) &&
@@ -256,3 +262,21 @@ window.sgcuVisitorCounter.syncDailyVisitorCount = async () => {
     };
   });
 };
+
+// Keep request-only Google verification separate from the application's login session.
+const applicantApp = initializeApp(meetingEmulator ? { apiKey: 'demo-budget-meeting', projectId: 'demo-budget-meeting', authDomain: 'demo-budget-meeting.firebaseapp.com' } : firebaseConfig, 'access-requests');
+const applicantAuth = getAuth(applicantApp);
+const applicantDb = getFirestore(applicantApp);
+if (meetingEmulator) {
+  connectAuthEmulator(applicantAuth, 'http://127.0.0.1:9098', { disableWarnings: true });
+  connectFirestoreEmulator(applicantDb, '127.0.0.1', 8089);
+}
+setPersistence(applicantAuth, inMemoryPersistence).then(() => setupAccessRequests({
+  doc, getDocFromServer, getDocs, collection, query, where, runTransaction, serverTimestamp,
+  GoogleAuthProvider, signInWithPopup, updateCurrentUser, signOut, onAuthStateChanged,
+  isAllowedAuthEmail, isTemporaryAuthAccessActive
+}, applicantAuth, applicantDb, auth, db)).catch(error => {
+  console.error('Access request initialization failed', error);
+  const status = document.getElementById('authAccessStatus');
+  if (status) status.textContent = 'เปิดระบบคำร้องไม่สำเร็จ กรุณาโหลดหน้าใหม่';
+});

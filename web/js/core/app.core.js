@@ -223,6 +223,7 @@ let calendarStatusSelectEl;
 let calendarPanelTitleEl;
 let calendarContainerEl;
 let prevMonthBtnEl;
+let calendarTodayBtnEl;
 let nextMonthBtnEl;
 let isUserAuthenticated = false;
 let currentUserProfileType = "student";
@@ -538,6 +539,7 @@ function buildProjectStatusContext(suffix = "", key = "public") {
     calendarPanelTitleEl: get("calendarPanelTitle"),
     calendarContainerEl: get("calendarContainer"),
     prevMonthBtnEl: get("prevMonthBtn"),
+    calendarTodayBtnEl: get("calendarTodayBtn"),
     nextMonthBtnEl: get("nextMonthBtn"),
     viewToggleBtns: sectionEl
       ? Array.from(sectionEl.querySelectorAll(".view-toggle-btn"))
@@ -616,6 +618,7 @@ function setActiveProjectStatusContext(key) {
   calendarPanelTitleEl = ctx.calendarPanelTitleEl;
   calendarContainerEl = ctx.calendarContainerEl;
   prevMonthBtnEl = ctx.prevMonthBtnEl;
+  calendarTodayBtnEl = ctx.calendarTodayBtnEl;
   nextMonthBtnEl = ctx.nextMonthBtnEl;
   // sync chart refs if already created
   budgetByMonthChart = ctx.budgetByMonthChart || null;

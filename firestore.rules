@@ -26,6 +26,7 @@ service cloud.firestore {
 
     function validTemporaryAuthEmailAccessData(data) {
       return data.active == true &&
+        (!("status" in data) || data.status == "approved") &&
         data.email == rawAuthEmail() &&
         data.startsAt is timestamp &&
         data.endsAt is timestamp &&
@@ -536,11 +537,49 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    function validAccessApplication(email) {
+      let d = request.resource.data;
+      return request.auth != null && request.auth.token.email_verified == true &&
+        email == rawAuthEmail() && !allowedAuthenticatedEmail() &&
+        d.email == email && d.uid == request.auth.uid && d.status == "pending" && d.active == false &&
+        d.requestedAt == request.time && d.updatedAt == request.time &&
+        d.name is string && d.name.size() > 0 && d.name.size() <= 120 &&
+        d.organization is string && d.organization.size() > 0 && d.organization.size() <= 160 &&
+        d.requestReason is string && d.requestReason.size() > 0 && d.requestReason.size() <= 240;
+    }
+
+    function validManagedAccess(email) {
+      let d = request.resource.data;
+      return d.email == email && d.status in ["approved", "rejected", "pending"] &&
+        d.active is bool &&
+        (d.status == "approved" ? (
+          d.startsAt is timestamp && d.endsAt is timestamp && d.startsAt < d.endsAt
+        ) : d.active == false);
+    }
+
+    // One record per email contains the application, decision, and granted interval.
     match /authEmailAccess/{email} {
-      allow get: if request.auth != null &&
-        email == rawAuthEmail() &&
-        hasValidTemporaryAuthEmailAccess(email);
-      allow list, create, update, delete: if isHeadStaff();
+      allow get: if (request.auth != null && email == rawAuthEmail()) || isHeadStaff();
+      allow list, delete: if isHeadStaff();
+      allow create: if (isHeadStaff() && validManagedAccess(email)) || (
+        validAccessApplication(email) && request.resource.data.createdAt == request.time &&
+        request.resource.data.keys().hasOnly([
+          "email", "uid", "name", "organization", "requestReason", "status", "active", "requestedAt", "createdAt", "updatedAt"
+        ])
+      );
+      allow update: if (isHeadStaff() && validManagedAccess(email)) || (
+        !("requestedAt" in resource.data) &&
+        (!("status" in resource.data) || resource.data.status == "approved") &&
+        validAccessApplication(email) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "uid", "name", "organization", "requestReason", "status", "active", "requestedAt", "updatedAt"
+        ])
+      );
+    }
+
+    // Legacy applications are frozen during migration; new clients use authEmailAccess only.
+    match /authAccessRequests/{email} {
+      allow read: if isHeadStaff();
+      allow write: if false;
     }
 
     match /staffProfiles/{email} {

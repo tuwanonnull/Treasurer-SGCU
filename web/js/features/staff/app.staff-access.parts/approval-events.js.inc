@@ -222,11 +222,34 @@
   }
 
   staffAuthAccessFormEl?.addEventListener("submit", (event) => {
-    void saveAuthEmailAccess(event);
+    event.preventDefault();
+    void runAuthAccessMutation(() => saveAuthEmailAccess(event));
   });
+  document.getElementById("staffAuthAccessDecision")?.addEventListener("change", syncAuthAccessDecision);
   staffAuthAccessDeleteBtnEl?.addEventListener("click", () => {
     const email = normalizeAuthAccessEmail(staffAuthAccessFields.id?.value || staffAuthAccessFields.email?.value || "");
-    void deleteAuthEmailAccess(email);
+    void runAuthAccessMutation(() => deleteAuthEmailAccess(email));
+  });
+  document.getElementById("staffAuthAccessAddBtn")?.addEventListener("click", () => {
+    resetAuthAccessForm();
+    openAuthAccessEditor();
+  });
+  document.getElementById("staffAuthAccessEditorClose")?.addEventListener("click", () => closeAuthAccessEditor());
+  document.getElementById("staffAuthAccessEditor")?.addEventListener("cancel", event => {
+    event.preventDefault();
+    closeAuthAccessEditor();
+  });
+  const authAccessEditorEl = document.getElementById("staffAuthAccessEditor");
+  const isOutsideAuthAccessEditor = event => {
+    const rect = authAccessEditorEl.getBoundingClientRect();
+    return event.target === authAccessEditorEl &&
+      (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom);
+  };
+  let authAccessBackdropStarted = false;
+  authAccessEditorEl?.addEventListener("pointerdown", event => { authAccessBackdropStarted = isOutsideAuthAccessEditor(event); });
+  authAccessEditorEl?.addEventListener("click", event => {
+    if (authAccessBackdropStarted && isOutsideAuthAccessEditor(event)) closeAuthAccessEditor();
+    authAccessBackdropStarted = false;
   });
   staffAuthAccessResetBtnEl?.addEventListener("click", resetAuthAccessForm);
   staffAuthAccessRefreshBtnEl?.addEventListener("click", () => {
@@ -255,7 +278,7 @@
     const entry = currentAuthEmailAccessEntries.find((item) => normalizeAuthAccessEmail(item.email || item.id || "") === email);
     if (entry) {
       fillAuthAccessForm(entry);
-      staffAuthAccessFormEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+      openAuthAccessEditor();
     }
   });
   staffAuthAccessListPanelEl?.addEventListener("keydown", (event) => {
@@ -270,7 +293,7 @@
     const entry = currentAuthEmailAccessEntries.find((item) => normalizeAuthAccessEmail(item.email || item.id || "") === email);
     if (entry) {
       fillAuthAccessForm(entry);
-      staffAuthAccessFormEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+      openAuthAccessEditor();
     }
   });
 

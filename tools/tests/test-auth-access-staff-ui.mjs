@@ -1,0 +1,108 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const browser = await chromium.launch();
+try {
+ const page = await browser.newPage();
+ await page.setContent(await fs.readFile('web/partials/staff-approval.html','utf8'));
+ await page.locator('.page-view').evaluateAll(nodes=>nodes.forEach(node=>{node.style.display='block';}));
+ await page.addScriptTag({content:`
+ const staffAuthAccessFields = Object.fromEntries(Object.entries({id:'Id',email:'Email',startsAt:'StartsAt',endsAt:'EndsAt',active:'Active',reason:'Reason'}).map(([key,suffix])=>[key,document.getElementById('staffAuthAccess'+suffix)]));
+ const staffAuthAccessTableBodyEl=document.getElementById('staffAuthAccessTableBody'), staffAuthAccessMobileListEl=document.getElementById('staffAuthAccessMobileList'), staffAuthAccessListCaptionEl=document.getElementById('staffAuthAccessListCaption'), staffAuthAccessMessageEl=document.getElementById('staffAuthAccessMessage'), staffAuthAccessProfilePreviewEl=document.getElementById('staffAuthAccessProfilePreview'), staffAuthAccessDeleteBtnEl=document.getElementById('staffAuthAccessDeleteBtn');
+ const COLLECTION_AUTH_EMAIL_ACCESS='authEmailAccess',COLLECTION_USER_PROFILES='userProfiles';
+ const resolveStore=()=>true,isSuperStaff=()=>true,readCurrentUser=()=>({uid:'head',email:'head@chula.ac.th'});
+ const setMessage=(el,text)=>{el.textContent=text;};
+ const buildActionErrorText=(_label,error)=>error.message;
+ const escapeStaffHtml=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+ const formatDateTime=value=>value ? new Date(value).toISOString() : '-';
+ const records = window.staffRecords = new Map();
+ const firestore={db:{},doc:(_db,collection,id)=>collection+'/'+id,collection:()=>'',query:()=>'',where:()=>'',getDocs:async()=>({docs:[]}),serverTimestamp:()=>new Date(),deleteDoc:async ref=>records.delete(ref),runTransaction:async(_db,callback)=>{
+   const changes=[]; await callback({get:async ref=>({exists:()=>records.has(ref),data:()=>records.get(ref)}),set:(ref,data)=>changes.push([ref,{...records.get(ref),...data}]),update:(ref,data)=>changes.push([ref,{...records.get(ref),...data}])});
+   for(const [ref,data] of changes)records.set(ref,data);
+ }};
+ let currentAuthEmailAccessEntries=[];
+ `+(await fs.readFile('web/js/features/staff/app.staff-access.parts/temporary-access.js.inc','utf8'))+`
+ window.renderEntries=async()=>{currentAuthEmailAccessEntries=Array.from(records,([ref,data])=>({id:ref.split('/')[1],...data}));await renderAuthEmailAccessRows();};
+ window.editEntry=email=>{fillAuthAccessForm(currentAuthEmailAccessEntries.find(entry=>entry.email===email));openAuthAccessEditor();};
+ document.getElementById('staffAuthAccessForm').onsubmit=event=>{event.preventDefault();void runAuthAccessMutation(()=>saveAuthEmailAccess(event));};
+ document.getElementById('staffAuthAccessDecision').onchange=syncAuthAccessDecision;
+ document.getElementById('staffAuthAccessEditorClose').onclick=()=>closeAuthAccessEditor(true);
+ `});
+ await page.evaluate(async()=>{
+  staffRecords.set('authEmailAccess/pending@example.com',{email:'pending@example.com',uid:'guest',name:'Pending User',organization:'Org',requestReason:'Visit',requestedAt:new Date(),createdAt:new Date(),status:'pending',active:false});
+  staffRecords.set('authEmailAccess/approved@example.com',{email:'approved@example.com',name:'Approved User',status:'approved',active:true,startsAt:new Date(Date.now()-60000),endsAt:new Date(Date.now()+86400000)});
+  await renderEntries();
+ });
+ assert.equal(await page.locator('#staffAuthAccessTableBody > tr[data-auth-access-email]').count(),2);
+ assert.equal(await page.locator('#staffAuthAccessMobileList > button[data-auth-access-email]').count(),2);
+ await page.evaluate(()=>editEntry('pending@example.com'));
+ assert.equal(await page.locator('#staffAuthAccessEmail').getAttribute('readonly'),'');
+ assert.equal(await page.locator('#staffAuthAccessSubmitBtn').textContent(),'บันทึกผลพิจารณา');
+ assert.equal(await page.locator('#staffAuthAccessDecision option[value=deleted]').count(),1);
+ assert.equal(await page.locator('#staffAuthAccessProfilePreview').isVisible(),false);
+ assert.equal(await page.locator('#staffAuthAccessActiveField').isVisible(),false);
+ assert.equal(await page.locator('#staffAuthAccessResetBtn').isVisible(),false);
+ assert.equal(await page.locator('#staffAuthAccessReason').inputValue(),'');
+ await page.locator('#staffAuthAccessDecision').selectOption('approved');
+ assert.equal(await page.locator('#staffAuthAccessReason').evaluate(el=>el.required),false);
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ assert.deepEqual(await page.evaluate(()=>({size:staffRecords.size,status:staffRecords.get('authEmailAccess/pending@example.com').status,reason:staffRecords.get('authEmailAccess/pending@example.com').requestReason})),{size:2,status:'approved',reason:'Visit'});
+ await page.evaluate(async()=>{await renderEntries();editEntry('pending@example.com');});
+ assert.equal(await page.locator('#staffAuthAccessSubmitBtn').textContent(),'บันทึกสิทธิ์');
+ await page.locator('#staffAuthAccessEditorClose').click();
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ await page.evaluate(async()=>{
+  staffRecords.set('authEmailAccess/reject@example.com',{email:'reject@example.com',name:'Rejected User',status:'pending',active:false,requestReason:'Request',requestedAt:new Date()});await renderEntries();editEntry('reject@example.com');
+ });
+ await page.locator('#staffAuthAccessDecision').selectOption('rejected');
+ assert.equal(await page.locator('#staffAuthAccessReason').evaluate(el=>el.required),true);
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ assert.equal(await page.evaluate(()=>staffRecords.get('authEmailAccess/reject@example.com').status),'pending');
+ await page.locator('#staffAuthAccessReason').fill('Not eligible');
+ assert.equal(await page.locator('#staffAuthAccessStartsAt').isDisabled(),true);
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ assert.equal(await page.evaluate(()=>staffRecords.get('authEmailAccess/reject@example.com').status),'rejected');
+ assert.equal(await page.evaluate(()=>staffRecords.get('authEmailAccess/reject@example.com').active),false);
+ await page.evaluate(async()=>{
+  staffRecords.set('authEmailAccess/stale@example.com',{email:'stale@example.com',name:'Stale User',status:'pending',active:false,requestReason:'Request',requestedAt:new Date()});await renderEntries();editEntry('stale@example.com');
+  staffRecords.set('authEmailAccess/stale@example.com',{...staffRecords.get('authEmailAccess/stale@example.com'),status:'rejected'});
+ });
+ await page.locator('#staffAuthAccessDecision').selectOption('approved');
+ await page.locator('#staffAuthAccessReason').fill('Approved for activity');
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.getByText('คำร้องนี้ถูกพิจารณาแล้ว กรุณาโหลดใหม่',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>staffRecords.get('authEmailAccess/stale@example.com').status),'rejected');
+ await page.locator('#staffAuthAccessEditorClose').click();
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ await page.evaluate(async()=>{
+  staffRecords.set('authEmailAccess/delete@example.com',{email:'delete@example.com',name:'Delete User',status:'pending',active:false,requestReason:'Request',requestedAt:new Date()});await renderEntries();editEntry('delete@example.com');
+ });
+ await page.locator('#staffAuthAccessDecision').selectOption('deleted');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ assert.equal(await page.evaluate(()=>staffRecords.has('authEmailAccess/delete@example.com')),true);
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ assert.equal(await page.evaluate(()=>staffRecords.has('authEmailAccess/delete@example.com')),false);
+ const events = await fs.readFile('web/js/features/staff/app.staff-access.parts/approval-events.js.inc','utf8');
+ await page.addScriptTag({content:events.slice(events.indexOf('  const authAccessEditorEl ='),events.indexOf('  staffAuthAccessResetBtnEl?.addEventListener'))});
+ await page.evaluate(()=>editEntry('approved@example.com'));
+ const box = await page.locator('#staffAuthAccessEditor').boundingBox();
+ await page.mouse.click(box.x+box.width/2,box.y+5);
+ assert.equal(await page.locator('#staffAuthAccessEditor').evaluate(el=>el.open),true);
+ await page.mouse.click(2,2);
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ await page.evaluate(()=>editEntry('approved@example.com'));
+ await page.locator('#staffAuthAccessReason').fill('Unsaved draft');
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.mouse.click(2,2);
+ assert.equal(await page.locator('#staffAuthAccessEditor').evaluate(el=>el.open),true);
+ page.once('dialog',dialog=>dialog.accept());
+ await page.mouse.click(2,2);
+ await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ console.log('Decision dropdown, rejection without dates, confirmed deletion, backdrop close, close delay, and dirty-draft protection passed.');
+ console.log('Unified staff UI: same rows/cards/editor for pending and approved, in-place approval/rejection, immutable email, preserved application details and stale-decision guard passed.');
+} finally {await browser.close();}

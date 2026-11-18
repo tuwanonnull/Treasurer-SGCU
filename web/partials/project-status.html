@@ -297,14 +297,19 @@
                   </p>
                 </div>
                 <div class="calendar-controls">
-                  <button id="prevMonthBtn" type="button" class="btn-ghost">
-                    ‹ เดือนก่อนหน้า
+                  <button id="prevMonthBtn" type="button" class="btn-ghost" aria-label="เดือนก่อนหน้า" title="เดือนก่อนหน้า">
+                    &lt;
                   </button>
-                  <button id="nextMonthBtn" type="button" class="btn-ghost">
-                    เดือนถัดไป ›
+                  <button id="calendarTodayBtn" type="button" class="btn-ghost">
+                    วันนี้
+                  </button>
+                  <button id="nextMonthBtn" type="button" class="btn-ghost" aria-label="เดือนถัดไป" title="เดือนถัดไป">
+                    &gt;
                   </button>
                 </div>
               </header>
+
+              <div class="calendar-filter-notice" role="status" aria-live="polite" hidden></div>
 
               <div class="calendar-grid-scroll">
                 <!-- Skeleton ระหว่างโหลดปฏิทิน -->

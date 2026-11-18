@@ -102,6 +102,8 @@
   };
 
   const readAuthAccessStatus = (entry = {}) => {
+    if (entry.status === "pending") return "รออนุมัติ";
+    if (entry.status === "rejected") return "ปฏิเสธ";
     const nowMs = Date.now();
     const startsAt = typeof entry.startsAt?.toDate === "function" ? entry.startsAt.toDate() : new Date(entry.startsAt);
     const endsAt = typeof entry.endsAt?.toDate === "function" ? entry.endsAt.toDate() : new Date(entry.endsAt);
@@ -153,6 +155,9 @@
   const refreshAuthAccessProfilePreview = async () => {
     const email = normalizeAuthAccessEmail(staffAuthAccessFields.email?.value || "");
     if (!staffAuthAccessProfilePreviewEl) return;
+    const hasApplication = !document.getElementById("staffAuthAccessRequestInfo").hidden;
+    staffAuthAccessProfilePreviewEl.hidden = hasApplication || !email;
+    if (hasApplication) return;
     if (!email) {
       staffAuthAccessProfilePreviewEl.textContent = "กรอกอีเมลเพื่อดูข้อมูลโปรไฟล์ที่เคยบันทึกไว้";
       staffAuthAccessProfilePreviewEl.style.color = "var(--auth-preview-muted, #6b7280)";
@@ -173,11 +178,72 @@
     }
   };
 
+  let authAccessEditorSnapshot = "";
+  let authAccessReturnFocus = null;
+  let authAccessEditorClosing = false;
+  let authAccessMutationBusy = false;
+  const syncAuthAccessDecision = () => {
+    const decision = document.getElementById("staffAuthAccessDecision");
+    const reviewing = document.getElementById("staffAuthAccessDecisionField").dataset.reviewing === "true";
+    decision.required = true;
+    const rejecting = reviewing && decision.value === "rejected";
+    const deleting = decision.value === "deleted";
+    staffAuthAccessFields.reason.required = rejecting;
+    document.getElementById("staffAuthAccessReasonLabel").textContent = rejecting ? "เหตุผลที่ปฏิเสธ" : "หมายเหตุ (ไม่บังคับ)";
+    staffAuthAccessFields.reason.placeholder = rejecting ? "ระบุเหตุผลที่ปฏิเสธคำร้อง" : "ระบุเพิ่มเติมได้ (ไม่บังคับ)";
+    document.getElementById("staffAuthAccessSubmitBtn").textContent = deleting ? "ลบรายการ" : rejecting ? "ยืนยันการปฏิเสธ" : decision.value === "approved" ? "อนุมัติสิทธิ์" : "บันทึกสิทธิ์";
+    for (const input of [staffAuthAccessFields.startsAt, staffAuthAccessFields.endsAt]) {
+      input.required = !rejecting && !deleting;
+      input.disabled = rejecting || deleting;
+      input.parentElement.hidden = rejecting || deleting;
+    }
+  };
+  const runAuthAccessMutation = async action => {
+    if (authAccessMutationBusy || authAccessEditorClosing) return;
+    authAccessMutationBusy = true;
+    const buttons = document.querySelectorAll("#staffAuthAccessEditor button");
+    buttons.forEach(button => { button.disabled = true; });
+    try { await action(); }
+    finally { authAccessMutationBusy = false; buttons.forEach(button => { button.disabled = false; }); }
+  };
+  const readAuthAccessEditorSnapshot = () => JSON.stringify([...Object.values(staffAuthAccessFields).map(field => field?.value || ""), document.getElementById("staffAuthAccessDecision").value]);
+  const openAuthAccessEditor = () => {
+    const editor = document.getElementById("staffAuthAccessEditor");
+    if (!editor || editor.open || authAccessEditorClosing) return;
+    authAccessReturnFocus = document.activeElement;
+    authAccessEditorSnapshot = readAuthAccessEditorSnapshot();
+    editor.classList.remove("is-closing");
+    editor.showModal();
+    staffAuthAccessFields.email?.focus();
+  };
+  const closeAuthAccessEditor = (force = false) => {
+    const editor = document.getElementById("staffAuthAccessEditor");
+    if (!editor?.open || authAccessEditorClosing || (authAccessMutationBusy && !force)) return;
+    if (!force && readAuthAccessEditorSnapshot() !== authAccessEditorSnapshot &&
+      !window.confirm("มีข้อมูลที่ยังไม่ได้บันทึก ต้องการปิดฟอร์มหรือไม่?")) return;
+    authAccessEditorClosing = true;
+    const finish = () => {
+      editor.close();
+      editor.classList.remove("is-closing");
+      authAccessEditorClosing = false;
+      authAccessReturnFocus?.focus();
+    };
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) finish();
+    else { editor.classList.add("is-closing"); window.setTimeout(finish, 180); }
+  };
+
   const resetAuthAccessForm = () => {
     const title = document.getElementById("staffAuthAccessEditorTitle");
     if (title) title.textContent = "เพิ่มสิทธิ์เข้าใช้ชั่วคราว";
     if (staffAuthAccessFields.id) staffAuthAccessFields.id.value = "";
-    if (staffAuthAccessFields.email) staffAuthAccessFields.email.value = "";
+    if (staffAuthAccessFields.email) { staffAuthAccessFields.email.value = ""; staffAuthAccessFields.email.readOnly = false; }
+    document.getElementById("staffAuthAccessDecisionField").dataset.reviewing = "false";
+    document.getElementById("staffAuthAccessDecision").innerHTML = '<option value="saved">บันทึกสิทธิ์</option>';
+    syncAuthAccessDecision();
+    document.getElementById("staffAuthAccessRequestInfo").hidden = true;
+    document.getElementById("staffAuthAccessActiveField").hidden = false;
+    document.getElementById("staffAuthAccessResetBtn").hidden = false;
+    document.getElementById("staffAuthAccessSubmitBtn").textContent = "บันทึกสิทธิ์";
     if (staffAuthAccessFields.startsAt) staffAuthAccessFields.startsAt.value = toDateInputValue(new Date());
     if (staffAuthAccessFields.endsAt) staffAuthAccessFields.endsAt.value = toDateInputValue(new Date(Date.now() + 24 * 60 * 60 * 1000));
     if (staffAuthAccessFields.active) staffAuthAccessFields.active.value = "true";
@@ -189,28 +255,53 @@
 
   const fillAuthAccessForm = (entry = {}) => {
     const title = document.getElementById("staffAuthAccessEditorTitle");
-    if (title) title.textContent = "แก้ไขสิทธิ์เข้าใช้ชั่วคราว";
+    const pending = entry.status === "pending";
+    if (title) title.textContent = pending ? "พิจารณาสิทธิ์เข้าใช้งาน" : "แก้ไขสิทธิ์เข้าใช้ชั่วคราว";
+    staffAuthAccessFields.email.readOnly = true;
+    document.getElementById("staffAuthAccessDecisionField").dataset.reviewing = String(pending);
+    document.getElementById("staffAuthAccessDecision").innerHTML = (pending
+      ? '<option value="">เลือกการดำเนินการ</option><option value="approved">อนุมัติสิทธิ์</option><option value="rejected">ปฏิเสธคำร้อง</option>'
+      : '<option value="saved">บันทึกสิทธิ์</option>') + '<option value="deleted">ลบรายการ</option>';
+    syncAuthAccessDecision();
+    document.getElementById("staffAuthAccessSubmitBtn").textContent = pending ? "บันทึกผลพิจารณา" : "บันทึกสิทธิ์";
+    const requestInfo = document.getElementById("staffAuthAccessRequestInfo");
+    requestInfo.hidden = !entry.requestedAt;
+    requestInfo.textContent = [
+      [entry.name, entry.organization].filter(Boolean).join(" · "),
+      entry.requestReason ? `เหตุผลที่ขอ: ${entry.requestReason}` : ""
+    ].filter(Boolean).join("\n");
+    document.getElementById("staffAuthAccessActiveField").hidden = pending;
+    document.getElementById("staffAuthAccessResetBtn").hidden = true;
     if (staffAuthAccessFields.id) staffAuthAccessFields.id.value = entry.id || normalizeAuthAccessEmail(entry.email || "");
     if (staffAuthAccessFields.email) staffAuthAccessFields.email.value = normalizeAuthAccessEmail(entry.email || entry.id || "");
-    if (staffAuthAccessFields.startsAt) staffAuthAccessFields.startsAt.value = toDateInputValue(entry.startsAt);
-    if (staffAuthAccessFields.endsAt) staffAuthAccessFields.endsAt.value = toDateInputValue(entry.endsAt);
-    if (staffAuthAccessFields.active) staffAuthAccessFields.active.value = entry.active === false ? "false" : "true";
-    if (staffAuthAccessFields.reason) staffAuthAccessFields.reason.value = (entry.reason || "").toString();
+    if (staffAuthAccessFields.startsAt) staffAuthAccessFields.startsAt.value = toDateInputValue(entry.startsAt || new Date());
+    if (staffAuthAccessFields.endsAt) staffAuthAccessFields.endsAt.value = toDateInputValue(entry.endsAt || new Date(Date.now() + 86400000));
+    if (staffAuthAccessFields.active) staffAuthAccessFields.active.value = pending ? "true" : entry.active === false ? "false" : "true";
+    if (staffAuthAccessFields.reason) staffAuthAccessFields.reason.value = pending ? "" : (entry.reason || entry.reviewReason || "").toString();
     if (staffAuthAccessDeleteBtnEl) staffAuthAccessDeleteBtnEl.hidden = false;
-    setMessage(staffAuthAccessMessageEl, "โหลดรายการเข้าแบบฟอร์มแล้ว", "#6b7280");
+    setMessage(staffAuthAccessMessageEl, "");
     void refreshAuthAccessProfilePreview();
   };
 
+  const replaceAuthAccessRows = (desktop, mobile) => {
+    if (staffAuthAccessTableBodyEl) {
+      staffAuthAccessTableBodyEl.innerHTML = desktop;
+      staffAuthAccessTableBodyEl.dataset.loaded = "true";
+    }
+    if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = mobile;
+    window.dispatchEvent(new CustomEvent("sgcu:auth-access-list-rendered"));
+  };
+  let authAccessRenderVersion = 0;
+
   const renderAuthEmailAccessRows = async () => {
+    const version = ++authAccessRenderVersion;
     if (!staffAuthAccessTableBodyEl) return;
     if (!currentAuthEmailAccessEntries.length) {
-      staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3" class="list-empty-cell">${renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กรอกแบบฟอร์มด้านบนเพื่อเพิ่มสิทธิ์เข้าใช้ชั่วคราว", "document")}</td></tr>`;
-      if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = renderListEmptyState("ยังไม่มีสิทธิ์ชั่วคราว", "กรอกแบบฟอร์มด้านบนเพื่อเพิ่มสิทธิ์เข้าใช้ชั่วคราว", "document");
-      if (staffAuthAccessListCaptionEl) staffAuthAccessListCaptionEl.textContent = "แสดงผล 0 รายการ";
+      replaceAuthAccessRows("", "");
       return;
     }
     if (staffAuthAccessListCaptionEl) {
-      staffAuthAccessListCaptionEl.textContent = `แสดงผล ${currentAuthEmailAccessEntries.length} รายการ`;
+      staffAuthAccessListCaptionEl.textContent = `ทั้งหมด ${currentAuthEmailAccessEntries.length} รายการ`;
     }
     const rows = await Promise.all(currentAuthEmailAccessEntries.map(async (entry) => {
       const email = normalizeAuthAccessEmail(entry.email || entry.id || "");
@@ -221,34 +312,42 @@
         console.warn("auth access row profile lookup failed - app.staff-access.js:6158", error);
       }
       const status = readAuthAccessStatus(entry);
-      const tone = ({ "ใช้งานได้": "active", "รอเริ่ม": "pending", "หมดอายุ": "expired", "ปิดสิทธิ์": "inactive" })[status] || "inactive";
+      const tone = ({ "รออนุมัติ": "pending", "ปฏิเสธ": "rejected", "ใช้งานได้": "active", "รอเริ่ม": "scheduled", "หมดอายุ": "expired", "ปิดสิทธิ์": "inactive" })[status] || "inactive";
       const badge = `<span class="staff-auth-status is-${tone}">${escapeStaffHtml(status)}</span>`;
-      const profileSummary = renderAuthAccessProfileSummary(profile);
-      const mobile = `<button type="button" class="staff-auth-mobile-card" data-auth-access-email="${escapeStaffHtml(email)}" aria-label="แก้ไขสิทธิ์เข้าใช้ของ ${escapeStaffHtml(email)}">
-        <strong>${escapeStaffHtml(email || "-")}</strong>
+      const profileSummary = entry.name || entry.organization
+        ? `<div>${escapeStaffHtml([entry.name, entry.organization].filter(Boolean).join(" · "))}</div>`
+        : renderAuthAccessProfileSummary(profile);
+      const periodStart = ["pending", "rejected"].includes(entry.status) ? "ยังไม่กำหนดช่วงเวลา" : `เริ่ม ${formatDateTime(entry.startsAt)}`;
+      const periodEnd = ["pending", "rejected"].includes(entry.status) ? "" : `ถึง ${formatDateTime(entry.endsAt)}`;
+      const detail = entry.status === "rejected"
+        ? (entry.reviewReason || entry.reason || entry.requestReason || "")
+        : (entry.reason || entry.requestReason || "");
+      const detailLabel = entry.status === "rejected" ? "เหตุผลที่ปฏิเสธ" : entry.reason ? "หมายเหตุ" : "เหตุผลที่ขอ";
+      const detailMarkup = detail ? `<span class="staff-auth-detail-label">${detailLabel}</span><span>${escapeStaffHtml(detail)}</span>` : '<span class="staff-auth-detail-empty">ไม่มีหมายเหตุ</span>';
+      const mobile = `<button type="button" class="staff-auth-mobile-card" data-auth-access-email="${escapeStaffHtml(email)}" data-access-status="${tone}" aria-label="ดูรายละเอียด ${escapeStaffHtml(email)} สถานะ${escapeStaffHtml(status)}">
+        <span class="staff-auth-card-heading"><strong>${escapeStaffHtml(email || "-")}</strong>${badge}</span>
         <span class="staff-auth-mobile-profile">${profileSummary.replaceAll("<div>", "<span>").replaceAll("</div>", "</span>")}</span>
-        ${badge}
-        <span class="staff-auth-mobile-period"><span>เริ่ม ${escapeStaffHtml(formatDateTime(entry.startsAt))}</span><span>สิ้นสุด ${escapeStaffHtml(formatDateTime(entry.endsAt))}</span></span>
-        <span class="staff-auth-mobile-reason">${escapeStaffHtml(entry.reason || "-")}</span>
+        <span class="staff-auth-mobile-period"><span>${escapeStaffHtml(periodStart)}</span><span>${escapeStaffHtml(periodEnd)}</span></span>
+        <span class="staff-auth-mobile-reason">${detailMarkup}</span>
       </button>`;
       const desktop = `
-        <tr data-auth-access-email="${escapeStaffHtml(email)}" tabindex="0" role="button" aria-label="แก้ไขสิทธิ์เข้าใช้ของ ${escapeStaffHtml(email)}">
+        <tr data-auth-access-email="${escapeStaffHtml(email)}" data-access-status="${tone}" tabindex="0" role="button" aria-label="ดูรายละเอียด ${escapeStaffHtml(email)} สถานะ${escapeStaffHtml(status)}">
           <td data-label="บัญชี">
             <strong>${escapeStaffHtml(email || "-")}</strong>
             <div class="section-text-sm">${profileSummary}</div>
-            ${badge}
           </td>
+          <td data-label="สถานะ">${badge}</td>
           <td data-label="ช่วงเวลา">
-            <div>${escapeStaffHtml(formatDateTime(entry.startsAt))}</div>
-            <div class="section-text-sm">ถึง ${escapeStaffHtml(formatDateTime(entry.endsAt))}</div>
+            <div>${escapeStaffHtml(periodStart)}</div>
+            <div class="section-text-sm">${escapeStaffHtml(periodEnd)}</div>
           </td>
-          <td data-label="เหตุผล">${escapeStaffHtml(entry.reason || "-")}</td>
+          <td data-label="รายละเอียด" class="staff-auth-detail">${detailMarkup}</td>
         </tr>
       `;
       return { desktop, mobile };
     }));
-    staffAuthAccessTableBodyEl.innerHTML = rows.map((row) => row.desktop).join("");
-    if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.innerHTML = rows.map((row) => row.mobile).join("");
+    if (version !== authAccessRenderVersion) return;
+    replaceAuthAccessRows(rows.map(row => row.desktop).join(""), rows.map(row => row.mobile).join(""));
   };
 
   const startAuthEmailAccessListener = () => {
@@ -258,9 +357,10 @@
       return;
     }
     if (!getCurrentAuthEmail()) {
+      authAccessRenderVersion++;
       currentAuthEmailAccessEntries = [];
       if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.textContent = "กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้";
-      staffAuthAccessTableBodyEl.innerHTML = '<tr><td colspan="3">กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้</td></tr>';
+      staffAuthAccessTableBodyEl.innerHTML = '<tr><td colspan="4">กรุณาเข้าสู่ระบบก่อนใช้งานหน้านี้</td></tr>';
       if (staffAuthAccessListCaptionEl) staffAuthAccessListCaptionEl.textContent = "ยังไม่ได้เข้าสู่ระบบ";
       return;
     }
@@ -282,7 +382,7 @@
         console.error("auth email access listener failed - app.staff-access.js:6205", error);
         const msg = buildListenerErrorText("โหลดสิทธิ์เข้าใช้ชั่วคราวไม่สำเร็จ", error);
         if (staffAuthAccessMobileListEl) staffAuthAccessMobileListEl.textContent = msg;
-        staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="3">${toSafeText(msg)}</td></tr>`;
+        staffAuthAccessTableBodyEl.innerHTML = `<tr><td colspan="4">${toSafeText(msg)}</td></tr>`;
         setMessage(staffAuthAccessMessageEl, msg, "#b91c1c");
       }
     );
@@ -290,6 +390,11 @@
 
   const saveAuthEmailAccess = async (event) => {
     event?.preventDefault?.();
+    const reviewing = document.getElementById("staffAuthAccessDecisionField").dataset.reviewing === "true";
+    const decision = document.getElementById("staffAuthAccessDecision").value;
+    if (decision === "deleted") return deleteAuthEmailAccess(staffAuthAccessFields.id.value);
+    if (reviewing && !decision) { setMessage(staffAuthAccessMessageEl, "กรุณาเลือกผลการพิจารณา", "#b91c1c"); return; }
+    if (reviewing && decision === "rejected") return rejectAuthEmailAccess();
     if (!resolveStore()) {
       setMessage(staffAuthAccessMessageEl, "ระบบฐานข้อมูลยังไม่พร้อมใช้งาน", "#b91c1c");
       return;
@@ -311,33 +416,29 @@
       setMessage(staffAuthAccessMessageEl, "กรุณากำหนดช่วงเวลาให้ถูกต้อง", "#b91c1c");
       return;
     }
-    if (!reason) {
-      setMessage(staffAuthAccessMessageEl, "กรุณาระบุเหตุผล", "#b91c1c");
-      return;
-    }
     try {
       const actor = readCurrentUser();
       const previousEmail = normalizeAuthAccessEmail(staffAuthAccessFields.id?.value || "");
       const previousEntry = currentAuthEmailAccessEntries.find((item) =>
         normalizeAuthAccessEmail(item.email || item.id || "") === (previousEmail || email)
       );
-      await firestore.setDoc(
-        firestore.doc(firestore.db, COLLECTION_AUTH_EMAIL_ACCESS, email),
-        {
-          email,
-          active,
-          startsAt,
-          endsAt,
-          reason,
-          updatedAt: firestore.serverTimestamp(),
-          updatedByEmail: (actor?.email || "").toString().trim().toLowerCase(),
-          createdAt: previousEntry?.createdAt || firestore.serverTimestamp()
-        },
-        { merge: true }
-      );
-      if (previousEmail && previousEmail !== email) {
-        await firestore.deleteDoc(firestore.doc(firestore.db, COLLECTION_AUTH_EMAIL_ACCESS, previousEmail));
-      }
+      if (previousEmail && previousEmail !== email) throw new Error("ไม่สามารถเปลี่ยนอีเมลของรายการเดิมได้");
+      await firestore.runTransaction(firestore.db, async tx => {
+        const ref = firestore.doc(firestore.db, COLLECTION_AUTH_EMAIL_ACCESS, email);
+        const snap = await tx.get(ref);
+        const current = snap.exists() ? snap.data() : null;
+        if (!previousEmail && current) throw new Error("อีเมลนี้มีรายการแล้ว กรุณาเปิดรายการเดิม");
+        if (previousEmail && !current) throw new Error("รายการนี้ถูกลบแล้ว กรุณาโหลดใหม่");
+        if (previousEntry?.status === "pending" && current?.status !== "pending") throw new Error("คำร้องนี้ถูกพิจารณาแล้ว กรุณาโหลดใหม่");
+        if (current?.status === "pending" && previousEntry?.status !== "pending") throw new Error("รายการเปลี่ยนเป็นคำร้องแล้ว กรุณาโหลดใหม่");
+        if (current?.status === "pending" && (!active || endsAt <= new Date())) throw new Error("การอนุมัติต้องเปิดใช้งานและวันหมดอายุอยู่ในอนาคต");
+        tx.set(ref, {
+          email, active, startsAt, endsAt, reason, status: "approved",
+          updatedAt: firestore.serverTimestamp(), updatedByEmail: actor.email.toLowerCase(),
+          createdAt: current?.createdAt || firestore.serverTimestamp(),
+          ...(current?.status === "pending" ? { reviewedAt: firestore.serverTimestamp(), reviewedBy: actor.email.toLowerCase(), reviewReason: reason } : {})
+        }, { merge: true });
+      });
       setMessage(staffAuthAccessMessageEl, "บันทึกสิทธิ์เข้าใช้เรียบร้อยแล้ว", "#047857");
       void window.sgcuAuditLog?.write?.({
         action: "staff.auth_access.upsert",
@@ -349,6 +450,7 @@
         source: "web_app_staff"
       });
       resetAuthAccessForm();
+      closeAuthAccessEditor(true);
     } catch (error) {
       console.error("save auth email access failed - app.staff-access.js:6275", error);
       const msg = buildActionErrorText("บันทึกสิทธิ์เข้าใช้ไม่สำเร็จ", error, email);
@@ -356,10 +458,28 @@
     }
   };
 
+  const rejectAuthEmailAccess = async () => {
+    if (!resolveStore() || !isSuperStaff()) return;
+    const email = normalizeAuthAccessEmail(staffAuthAccessFields.id?.value);
+    const reviewReason = (staffAuthAccessFields.reason?.value || "").trim();
+    if (!email || !reviewReason) { setMessage(staffAuthAccessMessageEl, "กรุณาระบุเหตุผลการปฏิเสธ", "#b91c1c"); return; }
+    try {
+      const actor = readCurrentUser();
+      await firestore.runTransaction(firestore.db, async tx => {
+        const ref = firestore.doc(firestore.db, COLLECTION_AUTH_EMAIL_ACCESS, email);
+        const snap = await tx.get(ref);
+        if (!snap.exists() || snap.data().status !== "pending") throw new Error("คำร้องนี้ถูกพิจารณาแล้ว กรุณาโหลดใหม่");
+        tx.update(ref, { status: "rejected", active: false, reviewReason, reviewedAt: firestore.serverTimestamp(),
+          reviewedBy: actor.email.toLowerCase(), updatedAt: firestore.serverTimestamp(), updatedByEmail: actor.email.toLowerCase() });
+      });
+      resetAuthAccessForm(); closeAuthAccessEditor(true);
+    } catch (error) { setMessage(staffAuthAccessMessageEl, error.message || "ปฏิเสธคำร้องไม่สำเร็จ", "#b91c1c"); }
+  };
+
   const deleteAuthEmailAccess = async (email) => {
     const normalizedEmail = normalizeAuthAccessEmail(email);
     if (!normalizedEmail || !resolveStore() || !isSuperStaff()) return;
-    const ok = window.confirm(`ยืนยันลบสิทธิ์เข้าใช้ของ ${normalizedEmail} ?`);
+    const ok = window.confirm(`ยืนยันลบรายการของ ${normalizedEmail}?\nคำร้องและสิทธิ์ของบัญชีนี้จะถูกลบ และไม่สามารถกู้คืนจากหน้านี้ได้`);
     if (!ok) return;
     const previousEntry = currentAuthEmailAccessEntries.find((item) =>
       normalizeAuthAccessEmail(item.email || item.id || "") === normalizedEmail
@@ -376,6 +496,7 @@
       });
       if (normalizeAuthAccessEmail(staffAuthAccessFields.id?.value || "") === normalizedEmail) {
         resetAuthAccessForm();
+        closeAuthAccessEditor(true);
       }
     } catch (error) {
       console.error("delete auth email access failed - app.staff-access.js:6303", error);

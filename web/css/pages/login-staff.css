@@ -3092,3 +3092,278 @@ body.directory-filter-open { overflow: hidden; }
 .login-hero.is-authenticated .login-help-actions:has(> .login-help-cta[hidden]) {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* Access applications share the staff dialog and form styling. */
+#authAccessModal .modal-dialog { max-width: 620px; padding-bottom: 12px; }
+#authAccessModal [hidden] { display: none; }
+#authAccessModal #authAccessStatus { margin: 2px 0 0; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+#authAccessModal #authAccessStatus:empty { display: none; }
+#authAccessModal #authAccessResultActions { display: flex; justify-content: flex-end; margin: 0; gap: 8px; }
+#authAccessModal #authAccessResultActions:not(:has(> button:not([hidden]))) { display: none; }
+#authAccessModal .login-help-actions { flex-wrap: wrap; }
+html[data-theme="dark"] #authAccessModal .modal-dialog {
+  background: var(--preview-surface, #1f2937);
+  color: var(--preview-text, #f3f4f6);
+}
+
+#authAccessModal .staff-access-form > div { min-width: 0; }
+#authAccessModal .login-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+#authAccessModal .login-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--theme-pink-200, #fbcfe8);
+  border-radius: 12px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#authAccessModal textarea.login-input { min-height: 76px; resize: vertical; }
+#authAccessModal .login-input[readonly] {
+  background: var(--theme-pink-50, #fdf2f8);
+  color: #64748b;
+}
+#authAccessModal .login-input:focus {
+  border-color: var(--theme-pink-500);
+  outline: 2px solid var(--theme-pink-300);
+  outline-offset: 2px;
+}
+#authAccessModal .login-input:disabled { opacity: .7; }
+@media screen {
+  html[data-theme="dark"] body #authAccessModal .login-input {
+    background: var(--preview-bg);
+    color: var(--preview-text);
+    border-color: var(--preview-border);
+    color-scheme: dark;
+  }
+  html[data-theme="dark"] body #authAccessModal .login-input[readonly] {
+    background: var(--preview-raised);
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] body #authAccessModal .login-input:focus {
+    border-color: var(--preview-accent);
+    outline-color: var(--preview-accent);
+  }
+}
+
+#authAccessModal .auth-access-account {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+#authAccessModal .auth-access-account-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+#authAccessModal #authAccessIdentity { flex: 1 1 220px; min-width: 0; }
+#authAccessModal #authAccessCheck { flex: 0 0 auto; min-height: 42px; }
+#authAccessModal #authAccessAccountTitle { margin-bottom: 6px; font-weight: 500; }
+html[data-theme="dark"] body #authAccessModal .auth-access-account {
+  background: transparent;
+  border: 0;
+}
+#authAccessModal button[type="submit"]:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+/* Temporary access follows the directory's list-first page and dialog editor. */
+.filter-bar.staff-auth-filters:not([data-mobile-filter-mounted]) {
+  grid-template-columns: minmax(160px, 1fr) minmax(260px, 3fr);
+}
+#staffAuthAccessListPanel [hidden] { display: none !important; }
+#staffAuthAccessFilterCaption:empty { display: none; }
+#staffAuthAccessEditor {
+  position: fixed;
+  inset: 0;
+  width: min(760px, calc(100% - 48px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  color: inherit;
+  box-shadow: 0 24px 80px rgb(15 23 42 / 24%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#staffAuthAccessEditor:not([open]) { display: none; }
+#staffAuthAccessEditor::backdrop { background: rgb(15 23 42 / 48%); backdrop-filter: blur(6px); }
+#staffAuthAccessEditor > .panel-header { align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; }
+#staffAuthAccessEditor .staff-auth-form-actions { position: sticky; bottom: -24px; padding-block: 14px; margin-top: 12px; background: #fff; }
+#staffAuthAccessMessage:empty { display: none; }
+body:has(#staffAuthAccessEditor[open]) { overflow: hidden; }
+html[data-theme="dark"] body #staffAuthAccessEditor,
+html[data-theme="dark"] body #staffAuthAccessEditor .staff-auth-form-actions { background: var(--preview-surface); color: var(--preview-text); border-color: var(--preview-border); }
+html[data-theme="dark"] body #staffAuthAccessEditor :is(.panel-header, .staff-auth-form-heading) { border-color: var(--preview-border); }
+html[data-theme="dark"] body #staffAuthAccessEditor .login-input { background: var(--preview-bg); color: var(--preview-text); border-color: var(--preview-border); }
+@media (max-width: 640px) {
+  .filter-bar.staff-auth-filters:not([data-mobile-filter-mounted]) { grid-template-columns: 1fr; gap: 10px; }
+  #staffAuthAccessEditor { width: calc(100% - 24px); max-height: calc(100dvh - 24px); padding: 16px; }
+  #staffAuthAccessEditor .staff-auth-form-actions { bottom: -16px; }
+}
+#staffAuthAccessEditor > .panel-header { display: flex; flex-direction: row; gap: 16px; }
+#staffAuthAccessEditor > .panel-header > div { flex: 1; min-width: 0; }
+#staffAuthAccessEditorClose { flex: 0 0 auto; }
+html[data-theme="dark"] body #staffAuthAccessListPanel {
+  background: var(--preview-surface);
+  border-color: var(--preview-border);
+  color: var(--preview-text);
+}
+html[data-theme="dark"] body #staffAuthAccessListPanel .btn-ghost {
+  background: var(--preview-raised);
+  border-color: var(--preview-border);
+  color: var(--preview-text);
+}
+
+/* Scroll the form body, keeping the dialog heading and actions visible. */
+#staffAuthAccessEditor { overflow: hidden; }
+#staffAuthAccessEditor[open] { display: flex; flex-direction: column; }
+#staffAuthAccessEditor > .panel-header { flex: 0 0 auto; margin-bottom: 0; }
+#staffAuthAccessForm { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+#staffAuthAccessForm > .staff-auth-form-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 6px 12px 2px;
+  scrollbar-gutter: stable;
+}
+#staffAuthAccessEditor .staff-auth-form-actions { position: static; flex: 0 0 auto; margin-top: 0; padding-block: 12px 0; }
+#staffAuthAccessMessage { flex: 0 0 auto; margin-top: 8px; }
+
+#staffAuthAccessRequestInfo[hidden] { display: none; }
+.staff-auth-status.is-scheduled { background: #e0e7ff; color: #3730a3; }
+.staff-auth-status.is-rejected { background: #fee2e2; color: #991b1b; }
+html[data-theme="dark"] body .staff-auth-status.is-rejected { background: #442323; color: #ffb4b4; }
+html[data-theme="dark"] body .staff-auth-status.is-scheduled { background: #292d48; color: #c7d2fe; }
+
+#staffAuthAccessEditor [hidden] { display: none !important; }
+#staffAuthAccessEditor #staffAuthAccessRequestInfo {
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--theme-pink-200);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+html[data-theme="dark"] body #staffAuthAccessEditor #staffAuthAccessRequestInfo { border-color: var(--preview-border); background: transparent; color: var(--preview-text); }
+#staffAuthAccessEditor textarea.login-input { min-height: 76px; }
+
+#staffAuthAccessEditor[open] { animation: org-directory-modal-in 220ms ease-out both; }
+#staffAuthAccessEditor[open]::backdrop { animation: org-directory-backdrop-in 220ms ease-out both; }
+#staffAuthAccessEditor.is-closing { animation: org-directory-modal-out 180ms ease-in both; pointer-events: none; }
+#staffAuthAccessEditor.is-closing::backdrop { animation: org-directory-backdrop-out 180ms ease-in both; }
+@media (prefers-reduced-motion: reduce) {
+  #staffAuthAccessEditor[open], #staffAuthAccessEditor[open]::backdrop { animation: none; }
+}
+
+/* Use the same controls and action row as meeting booking details. */
+#staffAuthAccessEditor .staff-auth-form-actions {
+  flex: 0 0 auto;
+  border: 0;
+  margin-top: 6px;
+  padding: 12px 4px 14px;
+  gap: 10px;
+  align-items: stretch;
+}
+#staffAuthAccessEditor #staffAuthAccessResetBtn { margin-right: auto; }
+#staffAuthAccessDecision { width: 230px; max-width: 100%; font-family: inherit; }
+#staffAuthAccessEditor .staff-auth-form-actions > button { flex: 0 0 auto; }
+@media (max-width: 640px) {
+  #staffAuthAccessDecision { width: 100%; }
+  #staffAuthAccessEditor #staffAuthAccessResetBtn { margin-right: 0; }
+}
+
+#staffAuthAccessTable { width: 100%; table-layout: fixed; }
+#staffAuthAccessTable th, #staffAuthAccessTable td { padding: 16px; text-align: left; }
+#staffAuthAccessTable th:nth-child(1), #staffAuthAccessTable td:nth-child(1) { width: 32%; }
+#staffAuthAccessTable th:nth-child(2), #staffAuthAccessTable td:nth-child(2) { width: 15%; }
+#staffAuthAccessTable th:nth-child(3), #staffAuthAccessTable td:nth-child(3) { width: 26%; }
+#staffAuthAccessListPanel .staff-auth-status { margin-top: 0; flex-shrink: 0; }
+#staffAuthAccessTable tr[data-auth-access-email]:hover { background: var(--theme-pink-50, #fdf2f8); }
+.staff-auth-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.staff-auth-card-heading strong { min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+.staff-auth-detail-label { display: block; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+.staff-auth-detail-empty { color: #64748b; }
+.staff-auth-detail > span:last-child, .staff-auth-mobile-reason > span:last-child { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+html[data-theme="dark"] body #staffAuthAccessListPanel :is(th, td, .staff-auth-mobile-card, .staff-auth-mobile-period) { border-color: var(--preview-border); }
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-mobile-card { background: var(--preview-surface); color: var(--preview-text); }
+html[data-theme="dark"] body #staffAuthAccessListPanel tr[data-auth-access-email]:hover,
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-mobile-card:hover { background: var(--preview-raised); }
+html[data-theme="dark"] body #staffAuthAccessListPanel :is(.staff-auth-mobile-profile, .staff-auth-detail-label, .staff-auth-detail-empty) { color: var(--preview-muted); }
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-status.is-active { background: #19392b; color: #a7f3d0; }
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-status.is-pending { background: #40331d; color: #fde68a; }
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-status.is-expired { background: #44232e; color: #fda4af; }
+html[data-theme="dark"] body #staffAuthAccessListPanel .staff-auth-status.is-inactive { background: var(--preview-raised); color: var(--preview-muted); }
+
+/* Match the notification/theme controls at the bottom of the login help. */
+#authAccessSelfService .login-access-request-controls {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+/* A concise introduction and consistent account-help rows. */
+#loginHeroContent { justify-content: flex-start; gap: 16px; padding: 0 12px 0 0; }
+#loginHeroContent .login-hero-title { max-width: none; line-height: 1.35; font-size: clamp(26px, 2.4vw, 32px); text-wrap: balance; }
+#loginHeroContent .login-hero-lead { max-width: 44ch; margin-top: -8px; line-height: 1.65; }
+.login-service-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 4px; }
+.login-service-item { padding: 16px; border: 1px solid var(--theme-pink-200, #fbcfe8); border-radius: 16px; background: rgb(255 255 255 / 65%); }
+.login-service-item h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #334155; }
+.login-service-item p { margin: 0; font-size: 13px; line-height: 1.7; color: #64748b; }
+#authAccessSelfService[hidden] { display: none; }
+.login-access-description { margin: 4px 0 0; line-height: 1.7; color: #64748b; }
+.login-application-heading { display: none; }
+.login-help:has(.login-help-cta:not([hidden])) .login-application-heading { display: block; }
+.login-help:not(:has(.login-help-cta:not([hidden]))) .login-help-actions { display: none; }
+html[data-theme="dark"] body .login-service-item { border-color: var(--preview-border); background: var(--preview-raised); }
+html[data-theme="dark"] body .login-service-item h3 { color: var(--preview-text); }
+html[data-theme="dark"] body :is(.login-service-item p, .login-access-description) { color: var(--preview-muted); }
+@media (max-width: 900px) {
+  #loginHeroContent { padding: 0; gap: 16px; }
+  #loginHeroContent .login-hero-title { max-width: none; }
+}
+@media (max-width: 380px) {
+  .login-service-grid { grid-template-columns: 1fr; }
+}
+
+
+.login-service-symbol { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-bottom: 10px; border-radius: 10px; background: var(--theme-pink-100, #fce7f3); color: var(--theme-pink-700, #be185d); }
+.login-service-symbol svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+html[data-theme="dark"] body .login-service-symbol { background: #382630; color: var(--preview-accent); }
+
+/* Balance the account column against the introduction on wide screens. */
+@media (min-width: 901px) {
+  .login-hero:not(.is-authenticated) .login-hero-panel { gap: 16px; }
+  .login-hero:not(.is-authenticated) .login-grid { flex: 1; }
+  .login-hero:not(.is-authenticated) .login-intro-card {
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 24px;
+  }
+  .login-hero:not(.is-authenticated) .login-help { padding: 16px 24px; }
+}
+
+@media (max-width: 640px) {
+  .login-service-grid { display: none; }
+}
+
+.login-access-copy-mobile { display: none; }
+@media (max-width: 640px) {
+  .login-access-copy-desktop { display: none; }
+  .login-access-copy-mobile { display: inline; }
+}
