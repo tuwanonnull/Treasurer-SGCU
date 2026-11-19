@@ -893,7 +893,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Read-only readiness and guarded navigation for the onboarding tour.
   window.sgcuTourNavigation = {
     consentReady: () => isConsentCheckReady() && hasGlobalConsent(),
-    navigate: (page) => switchPage(page)
+    navigate: (page) => switchPage(page),
+    setMode: (mode) => {
+      if (mode === "normal" || (mode === "staff" && staffAuthUser)) setStaffViewMode(mode);
+    }
   };
 
   const updateGlobalConsentState = () => {

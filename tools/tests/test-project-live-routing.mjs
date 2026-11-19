@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 const source=await readFile(new URL('../../web/js/features/project/app.sorting-auth.js',import.meta.url),'utf8');
-const start=source.indexOf('function getAllowedPagesForCurrentState()'),end=source.indexOf('\nfunction ',start+1);
+const start=source.indexOf('function getAllowedPagesForCurrentState('),end=source.indexOf('\nfunction ',start+1);
 assert.ok(start>=0 && end>start);
 const fn=source.slice(start,end);
 const navStart=source.indexOf('function updateNavForStaff('),navEnd=source.indexOf('\nfunction ',navStart+1);
@@ -42,3 +42,10 @@ assert.equal(vm.runInNewContext(`${fn}\ngetAllowedPagesForCurrentState()`,{...ex
 const staffAccessSource=await readScriptSource(new URL('../../web/js/features/staff/app.staff-access.js',import.meta.url));
 assert.ok(staffAccessSource.includes('{ id: "project-live-staff", label: "จัดการโครงการ" }'));
 console.log('Explicit project page grants are selectable and retained only for authenticated users.');
+
+// Reading replay permissions for another mode must not switch the user's mode.
+const tourContext = vm.createContext({ ...explicitProjectContext, staffViewMode: 'normal' });
+vm.runInContext(fn, tourContext);
+assert.equal(vm.runInContext("getAllowedPagesForCurrentState('staff').has('project-live-staff')", tourContext), true);
+assert.equal(vm.runInContext("getAllowedPagesForCurrentState('normal').has('meeting-room-booking')", tourContext), true);
+assert.equal(tourContext.staffViewMode, 'normal');

@@ -241,15 +241,23 @@
     const token = ++generation;
     const step = active.steps[active.index];
     if (!step) { finish(); return; }
+    active.started = true;
     transitioning = true;
     target?.classList.remove('sgcu-tour-anchor');
     dialog.classList.add('is-transitioning');
     card.setAttribute('aria-busy', 'true');
     card.querySelectorAll('button').forEach(button => { button.disabled = true; });
     target = null;
-    if (!account().pages.includes(step.page)) { advanceUnavailable(direction); return; }
     try {
       menuRestore?.(); menuRestore = null;
+      if (step.mode && account().mode !== step.mode) {
+        await window.sgcuTourNavigation.setMode(step.mode);
+        if (token !== generation) return;
+        active.mode = account().mode;
+      }
+      if ((step.mode && account().mode !== step.mode) || !account().pages.includes(step.page)) {
+        advanceUnavailable(direction); return;
+      }
       if (step.nav) target = revealNav(step);
       else {
         if (document.querySelector('.page-view.active')?.dataset.page !== step.page) {
@@ -338,9 +346,9 @@
       }
       const enabled = globalThis.SGCU_APP_CONFIG?.onboarding?.enabled !== false;
       if (!uid || !enabled) { close(); return; }
-      if (active && (active.owner !== uid || active.mode !== a.mode || blocked())) { close(); return; }
+      if (active && (active.owner !== uid || (!transitioning && active.mode !== a.mode) || blocked())) { close(); return; }
       if (active) {
-        if (!active.finished && !a.pages.includes(active.steps[active.index]?.page)) advanceUnavailable(1);
+        if (active.started && !transitioning && !active.finished && !a.pages.includes(active.steps[active.index]?.page)) advanceUnavailable(1);
         return;
       }
       if (!a.ready || blocked() || dirty) return;

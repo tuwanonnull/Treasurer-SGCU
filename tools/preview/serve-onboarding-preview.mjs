@@ -45,7 +45,7 @@ const rolloutTime = Date.parse(SGCU_APP_CONFIG.onboarding.rolloutAt);
 const oldAccount = specialPersona || params.get('legacy') === '1';
 const approvalTime = params.get('legacy') === '1' ? rolloutTime - 60000 : rolloutTime + 60000;
 window.demoAccount = { user: { uid: 'demo-' + persona, metadata: { creationTime: new Date(rolloutTime + (oldAccount ? -60000 : 60000)).toISOString() } }, type: selectedPersona.type, staffApproved: !!selectedPersona.staff && approved, representativeApproved: !!selectedPersona.representative && approved, representativeApprovedAt: approved ? approvalTime : 0, staffPages: approved ? selectedPersona.staff || [] : [], staffPageApprovedAt: Object.fromEntries((selectedPersona.staff || []).map(page => [page, approvalTime])), mode: initialMode, pages: demoPages(initialMode), ready: true };
-window.sgcuTourAccount = () => window.demoAccount;
+window.sgcuTourAccount = () => ({ ...window.demoAccount, generalPages: demoPages('normal'), replayStaffPages: demoAccount.staffApproved ? demoPages('staff') : [] });
 window.sgcuLoginProfileState = { isAuthenticated: true, isComplete: true, isLoading: false };
 window.demoConsent = true;
 window.demoWrites = [];
@@ -132,11 +132,12 @@ function demoLogin() { sessionStorage.setItem('tour-demo-auth',persona); renderD
 function demoLogout() { sessionStorage.removeItem('tour-demo-auth'); renderDemoAuth(false); sgcuTourNavigation.navigate('login'); }
 document.querySelector('#loginPageGoogleBtn').onclick = demoLogin;
 document.querySelector('#loginPageLogoutBtn').onclick = demoLogout;
-document.querySelectorAll('[data-staff-mode]').forEach(btn => btn.onclick = () => {
+sgcuTourNavigation.setMode = mode => {
   if (!demoAccount.user || !selectedPersona.staff || !approved) return;
-  demoAccount.mode = btn.dataset.staffMode; demoAccount.pages = demoPages(demoAccount.mode);
+  demoAccount.mode = mode; demoAccount.pages = demoPages(demoAccount.mode);
   renderDemoAuth(true); sgcuTourNavigation.navigate('login');
-});
+};
+document.querySelectorAll('[data-staff-mode]').forEach(btn => btn.onclick = () => sgcuTourNavigation.setMode(btn.dataset.staffMode));
 const bar = document.createElement('section'); bar.className = 'demo-controls'; bar.setAttribute('aria-labelledby','demoTitle');
 bar.innerHTML='<div class="demo-heading"><div><span class="demo-badge">พื้นที่ทดลอง</span><h2 id="demoTitle">ทดลองล็อกอินและทัวร์</h2><p>เลือกบัญชีเพื่อทดลองเมนูและคำแนะนำตามสิทธิ์ ใช้ข้อมูลจำลองทั้งหมด</p></div></div><div class="demo-form"><div><label for="demoPersona">ประเภทบัญชี</label><select id="demoPersona" class="login-input"></select><p id="demoDescription"></p></div><button type="button" id="demoLogin" class="btn-primary">เข้าสู่ระบบจำลอง</button></div><div class="demo-theme"><label for="demoTheme">ธีมที่ทดลอง</label><select id="demoTheme" class="login-input"><option value="light">สว่าง</option><option value="dark">มืด (Dark mode)</option><option value="system">ตามอุปกรณ์</option></select></div><div class="demo-footer"><p id="demoState" role="status"></p><div><button type="button" id="demoApprove" class="btn-primary" hidden>จำลองได้รับอนุมัติ</button><button type="button" id="demoLogout" class="btn-ghost">ออกจากระบบจำลอง</button><button type="button" id="demoReset" class="btn-ghost">เริ่มทัวร์ใหม่</button></div></div>';
 // Keep controls next to the login page, in normal flow so they never cover its buttons.

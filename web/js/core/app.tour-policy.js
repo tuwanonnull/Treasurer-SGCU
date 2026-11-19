@@ -31,6 +31,17 @@
     'content-documents-staff': 'เอกสารการเงิน'
   };
   function build(account, replay = false) {
+    if (replay) {
+      const normalPages = account.generalPages || account.pages;
+      const normal = new Set(normalPages);
+      const base = account.type === 'affairs' ? meeting : general;
+      const steps = base.filter(s => normal.has(s.page)).map(s => ({ ...s, mode: 'normal' }));
+      if (account.staffApproved === true) {
+        const staff = build({ ...account, mode: 'staff', pages: account.replayStaffPages || account.staffPages || account.pages });
+        steps.push(...staff.steps.map(s => ({ ...s, mode: 'staff' })));
+      }
+      return { key: 'replay_v1', steps };
+    }
     const allowed = new Set(account.pages);
     if (account.mode !== 'staff') {
       if (account.representativeApproved === true && account.type !== 'affairs') return {
