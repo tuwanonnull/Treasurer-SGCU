@@ -35,6 +35,7 @@ try {
       serverTimestamp: () => 'server',
       signOut: async () => { auth.currentUser = null; }, signInWithPopup: async () => { state.popups++; auth.currentUser = state.user; return { user: state.user }; },
       updateCurrentUser: async (main, user) => {
+        if (main === auth) { auth.currentUser = user; return; }
         state.transfers++; state.transferredEmail = user.email; main.currentUser = user;
         state.authCallbacks.forEach(callback => callback(user));
       },
@@ -150,5 +151,15 @@ try {
   await page.evaluate(() => fixture.authCallbacks.forEach(callback => callback(null)));
   assert.equal(await page.locator('#authAccessOpen').isVisible(), true);
   assert.equal(await page.locator('#authAccessStatus').textContent(), '');
+  await page.locator('#authAccessOpen').click();
+  const popupsBeforeHandoff = await page.evaluate(() => fixture.popups);
+  await page.evaluate(() => {
+    fixture.record = null;
+    window.dispatchEvent(new CustomEvent('sgcu:request-access-with-user', { detail: { user: fixture.user } }));
+  });
+  await page.waitForFunction(() => !document.querySelector('#authAccessRequestForm button[type=submit]').disabled);
+  assert.equal(await page.locator('#authAccessEmail').inputValue(), 'different@example.com');
+  assert.equal(await page.locator('#authAccessCheck').textContent(), 'เปลี่ยนบัญชี');
+  assert.equal(await page.evaluate(() => fixture.popups), popupsBeforeHandoff);
   console.log('Applicant flow: single-record reads and writes, immediate checks, duplicates, failures, and account switching passed.');
 } finally { await browser.close(); }

@@ -269,7 +269,11 @@
                   <button id="staffAuthAccessRefreshBtn" class="btn-ghost" type="button">รีเฟรช</button>
                 </div>
               </div>
-              <p id="staffAuthAccessNoResults" class="panel-caption" hidden>ไม่พบรายการที่ตรงกับตัวกรอง ลองเปลี่ยนสถานะหรือคำค้น</p>
+              <div id="staffAuthAccessNoResults" class="list-empty-state" role="status" hidden>
+                <span class="list-empty-state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
+                <strong>ยังไม่มีคำร้องหรือสิทธิ์ชั่วคราว</strong>
+                <p>เมื่อมีคำร้องหรือเพิ่มสิทธิ์ใหม่ รายการจะแสดงในส่วนนี้</p>
+              </div>
               <div id="staffAuthAccessMobileList" class="staff-auth-mobile-list"><p class="panel-caption">กำลังโหลดรายการ...</p></div>
               <div class="project-table-wrapper staff-auth-access-table-wrapper">
                 <table id="staffAuthAccessTable" class="staff-auth-access-table">

@@ -3010,7 +3010,9 @@ function initAuthUI() {
     );
   });
 
+  let accessRequestVerifiedUser = null;
   function handleGoogleLogin() {
+    accessRequestVerifiedUser = null;
     function getAuthErrorMessage(err) {
       const code = err?.code || "";
       const host = window.location.host;
@@ -3049,13 +3051,17 @@ function initAuthUI() {
       }
     }
 
-    function showAuthAlert(message) {
+    function showAuthAlert(message, suggestAccess = false) {
       const safeMessage = (message || "ไม่สามารถเข้าสู่ระบบได้ กรุณาลองอีกครั้ง").toString();
       if (!authAlertModalEl || !authAlertMessageEl) {
         alert(safeMessage);
         return;
       }
       authAlertMessageEl.textContent = safeMessage;
+      const requestAccess = document.getElementById("authAlertRequestAccess");
+      if (requestAccess) requestAccess.hidden = !suggestAccess;
+      authAlertCloseEl?.classList.toggle("btn-primary", !suggestAccess);
+      authAlertCloseEl?.classList.toggle("btn-ghost", suggestAccess);
       if (typeof openDialog === "function") {
         openDialog(authAlertModalEl, { focusSelector: "#authAlertClose" });
       } else {
@@ -3072,6 +3078,20 @@ function initAuthUI() {
       authAlertModalEl.dataset.authAlertBound = "true";
       authAlertModalEl.addEventListener("click", (event) => {
         if (event.target === authAlertModalEl) closeAuthAlert();
+      });
+    }
+
+    const requestAccess = document.getElementById("authAlertRequestAccess");
+    if (requestAccess && !requestAccess.dataset.authAlertBound) {
+      requestAccess.dataset.authAlertBound = "true";
+      requestAccess.addEventListener("click", () => {
+        closeAuthAlert();
+        window.location.hash = "login";
+        document.getElementById("authAccessOpen")?.click();
+        if (accessRequestVerifiedUser) {
+          window.dispatchEvent(new CustomEvent("sgcu:request-access-with-user", { detail: { user: accessRequestVerifiedUser } }));
+          accessRequestVerifiedUser = null;
+        }
       });
     }
 
@@ -3095,13 +3115,18 @@ function initAuthUI() {
           await signOut(auth).catch((err) => {
             console.error("logout error (email domain not allowed) - app.sorting-auth.js:2601", err);
           });
+          accessRequestVerifiedUser = user?.emailVerified ? user : null;
           const err = new Error(getAuthEmailRequirementMessage(user?.email));
           err.code = "auth/email-domain-not-allowed";
           throw err;
         }
       })
       .catch((err) => {
-        showAuthAlert(getAuthErrorMessage(err));
+        const suggestAccess = err?.code === "auth/email-domain-not-allowed";
+        const message = suggestAccess
+          ? `${getAuthErrorMessage(err)}\n\nหากต้องการเข้าใช้งาน สามารถกด “ขอสิทธิ์เข้าใช้งาน” เพื่อส่งคำร้องให้ฝ่ายเหรัญญิกพิจารณา`
+          : getAuthErrorMessage(err);
+        showAuthAlert(message, suggestAccess);
       });
   }
 

@@ -284,6 +284,12 @@
   };
 
   const replaceAuthAccessRows = (desktop, mobile) => {
+    const empty = document.getElementById("staffAuthAccessNoResults");
+    if (empty) {
+      empty.querySelector("strong").textContent = "ยังไม่มีคำร้องหรือสิทธิ์ชั่วคราว";
+      empty.querySelector("p").textContent = "เมื่อมีคำร้องหรือเพิ่มสิทธิ์ใหม่ รายการจะแสดงในส่วนนี้";
+      empty.hidden = !!desktop;
+    }
     if (staffAuthAccessTableBodyEl) {
       staffAuthAccessTableBodyEl.innerHTML = desktop;
       staffAuthAccessTableBodyEl.dataset.loaded = "true";
@@ -476,10 +482,57 @@
     } catch (error) { setMessage(staffAuthAccessMessageEl, error.message || "ปฏิเสธคำร้องไม่สำเร็จ", "#b91c1c"); }
   };
 
+  const confirmAuthAccessDeletion = email => new Promise(resolve => {
+    const dialog = document.createElement("dialog");
+    dialog.className = "meeting-settings-dialog staff-auth-delete-dialog";
+    dialog.setAttribute("aria-labelledby", "staffAuthAccessDeleteTitle");
+    dialog.setAttribute("aria-describedby", "staffAuthAccessDeleteDescription");
+    dialog.innerHTML = `
+      <div class="meeting-settings-dialog-card">
+        <div class="meeting-settings-dialog-header staff-auth-delete-heading">
+          <div>
+            <h3 id="staffAuthAccessDeleteTitle" class="panel-title">ยืนยันการลบรายการ</h3>
+            <p class="panel-caption">ลบคำร้องและสิทธิ์เข้าใช้ของบัญชีนี้</p>
+          </div>
+          <button type="button" class="modal-close staff-auth-delete-close" aria-label="ปิด">×</button>
+        </div>
+        <div class="meeting-delete-warning">
+          <span class="meeting-delete-warning-icon" aria-hidden="true">!</span>
+          <div>
+            <strong class="staff-auth-delete-email"></strong>
+            <p id="staffAuthAccessDeleteDescription">เมื่อลบแล้วจะไม่สามารถกู้คืนจากหน้านี้ได้ กรุณาตรวจสอบบัญชีก่อนยืนยัน</p>
+          </div>
+        </div>
+        <div class="meeting-settings-dialog-actions staff-auth-delete-actions">
+          <button type="button" class="btn-ghost" data-delete-cancel>ยกเลิก</button>
+          <button type="button" class="btn-primary meeting-delete-confirm-btn" data-delete-confirm>ลบรายการ</button>
+        </div>
+      </div>`;
+    dialog.querySelector(".staff-auth-delete-email").textContent = email;
+    document.body.appendChild(dialog);
+    dialog.querySelector("[data-delete-cancel]").onclick = () => dialog.close("cancel");
+    dialog.querySelector(".staff-auth-delete-close").onclick = () => dialog.close("cancel");
+    dialog.querySelector("[data-delete-confirm]").onclick = () => dialog.close("confirm");
+    let outside = false;
+    const isOutside = event => {
+      const rect = dialog.getBoundingClientRect();
+      return event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom);
+    };
+    dialog.addEventListener("pointerdown", event => { outside = isOutside(event); });
+    dialog.addEventListener("click", event => { if (outside && isOutside(event)) dialog.close("cancel"); outside = false; });
+    dialog.addEventListener("close", () => {
+      const confirmed = dialog.returnValue === "confirm";
+      dialog.remove();
+      resolve(confirmed);
+    }, { once: true });
+    dialog.showModal();
+    dialog.querySelector("[data-delete-cancel]").focus();
+  });
+
   const deleteAuthEmailAccess = async (email) => {
     const normalizedEmail = normalizeAuthAccessEmail(email);
     if (!normalizedEmail || !resolveStore() || !isSuperStaff()) return;
-    const ok = window.confirm(`ยืนยันลบรายการของ ${normalizedEmail}?\nคำร้องและสิทธิ์ของบัญชีนี้จะถูกลบ และไม่สามารถกู้คืนจากหน้านี้ได้`);
+    const ok = await confirmAuthAccessDeletion(normalizedEmail);
     if (!ok) return;
     const previousEntry = currentAuthEmailAccessEntries.find((item) =>
       normalizeAuthAccessEmail(item.email || item.id || "") === normalizedEmail

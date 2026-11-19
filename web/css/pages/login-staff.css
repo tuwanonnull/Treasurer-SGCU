@@ -3511,3 +3511,39 @@ html[data-theme="dark"] body #staffAuthAccessPanel #staffAuthAccessEditorClose,
 html[data-theme="dark"] body #staffAuthAccessFilterSheet .mobile-filter-close { color: var(--preview-muted); }
 #staffAuthAccessPanel #staffAuthAccessEditorClose:focus-visible,
 #staffAuthAccessFilterSheet .mobile-filter-close:focus-visible { outline: 2px solid var(--theme-pink-500); outline-offset: 2px; }
+
+#authAlertRequestAccess[hidden] { display: none !important; }
+#authAlertModal .auth-alert-actions { gap: 10px; flex-wrap: wrap; }
+#authAlertModal .auth-alert-actions > button { min-height: 44px; }
+
+#authAlertModal .auth-alert-actions:has(#authAlertRequestAccess:not([hidden])) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+#authAlertModal .auth-alert-actions:has(#authAlertRequestAccess:not([hidden])) > button {
+  width: 100%; min-width: 0; margin: 0; padding: 10px 8px;
+  white-space: normal; overflow-wrap: anywhere;
+}
+
+/* Match regular form select typography; make empty and destructive states explicit. */
+#staffAuthAccessEditor #staffAuthAccessDecision { font-weight: 400; }
+.staff-auth-delete-dialog {
+  box-sizing: border-box; margin: auto;
+  max-height: calc(100dvh - 32px); overflow-y: auto;
+  background: #fff; color: #334155; font-family: inherit;
+}
+.staff-auth-delete-dialog[open] { animation: org-directory-modal-in 180ms ease-out both; }
+.staff-auth-delete-dialog .staff-auth-delete-heading { align-items: center; }
+.staff-auth-delete-heading .panel-title { margin: 0; }
+.staff-auth-delete-heading .panel-caption { margin: 4px 0 0; }
+.staff-auth-delete-close { flex: 0 0 44px; width: 44px; height: 44px; padding: 0; }
+.staff-auth-delete-email { overflow-wrap: anywhere; }
+.staff-auth-delete-dialog .staff-auth-delete-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.staff-auth-delete-actions button { min-height: 44px; white-space: normal; }
+html[data-theme="dark"] body .staff-auth-delete-dialog { background: var(--preview-surface); color: var(--preview-text); border: 1px solid var(--preview-border); }
+html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-warning :is(strong, p) { color: #ffb4b4; }
+html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-warning-icon { background: #5a2d32; color: #ffb4b4; }
+html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-confirm-btn { background: #3c2529; color: #ffb4b4; border: 1px solid #71444c; box-shadow: none; }
+@media (max-width: 640px) { .staff-auth-delete-dialog .meeting-settings-dialog-card { padding: 18px; } }
+@media (prefers-reduced-motion: reduce) { .staff-auth-delete-dialog[open] { animation: none; } }

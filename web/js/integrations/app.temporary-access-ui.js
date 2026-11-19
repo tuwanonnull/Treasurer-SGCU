@@ -22,8 +22,10 @@ export function setupTemporaryAccessList() {
     const complete = loaded.loaded === 'true';
     document.getElementById('staffAuthAccessFilterCaption').textContent = total || complete ? `แสดง ${visible} จาก ${total} รายการ` : '';
     const empty = document.getElementById('staffAuthAccessNoResults');
-    empty.textContent = total ? 'ไม่พบรายการที่ตรงกับตัวกรอง ลองเปลี่ยนสถานะหรือคำค้น' : 'ยังไม่มีคำร้องหรือสิทธิ์ชั่วคราว';
+    empty.querySelector('strong').textContent = total ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ยังไม่มีคำร้องหรือสิทธิ์ชั่วคราว';
+    empty.querySelector('p').textContent = total ? 'ลองเปลี่ยนสถานะหรือคำค้น หรือล้างตัวกรองเพื่อดูรายการทั้งหมด' : 'เมื่อมีคำร้องหรือเพิ่มสิทธิ์ใหม่ รายการจะแสดงในส่วนนี้';
     empty.hidden = visible > 0 || (!total && !complete);
+    panel.querySelector('.staff-auth-access-table-wrapper').hidden = !empty.hidden;
   };
   search.addEventListener('input', apply);
   status.addEventListener('change', apply);

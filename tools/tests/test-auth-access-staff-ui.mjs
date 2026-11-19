@@ -80,11 +80,12 @@ try {
   staffRecords.set('authEmailAccess/delete@example.com',{email:'delete@example.com',name:'Delete User',status:'pending',active:false,requestReason:'Request',requestedAt:new Date()});await renderEntries();editEntry('delete@example.com');
  });
  await page.locator('#staffAuthAccessDecision').selectOption('deleted');
- page.once('dialog',dialog=>dialog.dismiss());
  await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.locator('[data-delete-cancel]').click();
+ await page.waitForFunction(()=>!document.querySelector('.staff-auth-delete-dialog'));
  assert.equal(await page.evaluate(()=>staffRecords.has('authEmailAccess/delete@example.com')),true);
- page.once('dialog',dialog=>dialog.accept());
  await page.locator('#staffAuthAccessSubmitBtn').click();
+ await page.locator('[data-delete-confirm]').click();
  await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
  assert.equal(await page.evaluate(()=>staffRecords.has('authEmailAccess/delete@example.com')),false);
  const events = await fs.readFile('web/js/features/staff/app.staff-access.parts/approval-events.js.inc','utf8');
@@ -103,6 +104,9 @@ try {
  page.once('dialog',dialog=>dialog.accept());
  await page.mouse.click(2,2);
  await page.waitForFunction(()=>!document.getElementById('staffAuthAccessEditor').open);
+ await page.evaluate(async()=>{staffRecords.clear();await renderEntries();});
+ assert.equal(await page.locator('#staffAuthAccessNoResults').isVisible(),true);
+ assert.equal(await page.locator('#staffAuthAccessNoResults strong').textContent(),'ยังไม่มีคำร้องหรือสิทธิ์ชั่วคราว');
  console.log('Decision dropdown, rejection without dates, confirmed deletion, backdrop close, close delay, and dirty-draft protection passed.');
  console.log('Unified staff UI: same rows/cards/editor for pending and approved, in-place approval/rejection, immutable email, preserved application details and stale-decision guard passed.');
 } finally {await browser.close();}

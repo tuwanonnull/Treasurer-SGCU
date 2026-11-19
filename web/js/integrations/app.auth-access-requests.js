@@ -147,6 +147,24 @@ export function setupAccessRequests(api, applicantAuth, applicantDb, mainAuth, m
     status.textContent = 'กำลังตรวจสอบสิทธิ์อีเมล...';
     return readAccessRequestState(api, applicantDb, user);
   }, 'กำลังยืนยันบัญชี Google...'));
+  window.addEventListener('sgcu:request-access-with-user', event => {
+    const user = event.detail?.user;
+    if (!user?.emailVerified) return;
+    void perform(async () => {
+      // Copy the actual Firebase user into the isolated request session.
+      // Email text alone is never used as proof of identity.
+      await api.updateCurrentUser(applicantAuth, user);
+      const verifiedUser = applicantAuth.currentUser;
+      if (!verifiedUser?.emailVerified) throw Error('กรุณายืนยันบัญชี Google อีกครั้ง');
+      form.reset();
+      byId('authAccessName').value = verifiedUser.displayName || '';
+      byId('authAccessEmail').value = verifiedUser.email.toLowerCase();
+      identity.hidden = fields.hidden = false;
+      check.textContent = 'เปลี่ยนบัญชี';
+      canSubmit = false;
+      return readAccessRequestState(api, applicantDb, verifiedUser);
+    }, 'กำลังตรวจสอบสิทธิ์บัญชี Google...');
+  });
   retry.addEventListener('click', () => perform(
     () => readAccessRequestState(api, applicantDb, applicantAuth.currentUser), 'กำลังตรวจสอบสถานะคำร้อง...'
   ));
