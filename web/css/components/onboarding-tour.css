@@ -1,0 +1,45 @@
+.sgcu-tour { --tour-accent:var(--theme-pink-600,#db2777); --tour-ink:#263044; --tour-muted:#697386; --tour-surface:#fff; --tour-border:var(--theme-border,#f5dce8); position:fixed; inset:0; width:100vw; height:100dvh; max-width:none; max-height:none; margin:0; padding:0; border:0; background:transparent; color:var(--tour-ink); overflow:hidden; }
+.sgcu-tour::backdrop { background:transparent; }
+.sgcu-tour:not(.has-spotlight), .sgcu-tour.is-transitioning { background:rgba(23,29,45,.43); }
+.sgcu-tour-ring { position:fixed; pointer-events:none; box-sizing:border-box; border:2px solid var(--theme-pink-300,#f9a8d4); border-radius:14px; box-shadow:0 0 0 4px #fff5,0 0 0 100vmax rgba(23,29,45,.43); transition:left 320ms cubic-bezier(.22,1,.36,1),top 320ms cubic-bezier(.22,1,.36,1),width 320ms ease,height 320ms ease,opacity 160ms ease; }
+.sgcu-tour-card { position:fixed; width:min(400px,calc(100vw - 24px)); max-height:calc(100dvh - 32px); overflow:auto; padding:20px; box-sizing:border-box; border:1px solid var(--tour-border); border-radius:24px; background:var(--tour-surface); box-shadow:0 20px 64px #17203330,0 3px 12px #1720330a; font-family:inherit; transition:left 320ms cubic-bezier(.22,1,.36,1),top 320ms cubic-bezier(.22,1,.36,1),opacity 160ms ease; animation:tour-card-in 260ms ease-out; }
+.sgcu-tour-card h2 { margin:0; font-size:1rem; font-weight:600; line-height:1.5; letter-spacing:-.02em; outline:none; color:var(--tour-ink); }
+.sgcu-tour-card p { font-size:.875rem; line-height:1.7; margin:0 0 14px; color:var(--tour-muted); }
+.sgcu-tour-progress { display:inline-flex; padding:5px 11px; border-radius:99px; background:var(--theme-pink-50,#fff1f2); color:var(--theme-pink-700,#be185d); font-size:.75rem; font-weight:600; }
+.sgcu-tour-track { display:flex; gap:6px; height:4px; margin:10px 0 14px; }
+.sgcu-tour-track[hidden] { display:none; }
+.sgcu-tour-track span { display:block; flex:1; min-width:0; height:100%; border-radius:99px; background:#e5e7eb; transition:flex-grow 280ms ease,background 180ms ease; }
+.sgcu-tour-track span.is-current { flex-grow:1.5; background:var(--theme-gradient); }
+.sgcu-tour-track span.is-complete { background:var(--theme-pink-300,#f9a8d4); }
+.sgcu-tour-hint { margin-top:14px; font-size:.75rem; line-height:1.6; color:var(--tour-muted); }
+.sgcu-tour-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-top:0; }
+.sgcu-tour-actions button { min-height:44px; padding:10px 18px; border-radius:999px; font:inherit; font-size:.875rem; box-shadow:none; transition:background 150ms ease,color 150ms ease; transform:none; }
+.sgcu-tour-actions .btn-primary { margin-left:auto; color:#fff; background:var(--theme-gradient); border:1px solid var(--tour-accent); }
+.sgcu-tour-actions .btn-ghost { background:transparent; color:var(--tour-ink); border:1px solid var(--tour-border); }
+.sgcu-tour-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:2px; }
+.sgcu-tour-footer .sgcu-tour-skip { min-height:44px; padding:4px 0; border:0; background:none; box-shadow:none; color:var(--tour-muted); font:inherit; font-size:.75rem; text-decoration:underline; text-underline-offset:3px; }
+.sgcu-tour-footer .sgcu-tour-hint { margin:0; margin-inline-start:auto; text-align:right; }
+.sgcu-tour-actions button:hover { transform:none; box-shadow:none; filter:brightness(.97); }
+.sgcu-tour-actions button:focus-visible { outline:3px solid #f294bf; outline-offset:3px; }
+.sgcu-tour-actions button:disabled { opacity:.4; cursor:default; }
+.sgcu-tour.is-transitioning .sgcu-tour-ring { opacity:0; }
+.sgcu-tour.is-transitioning .sgcu-tour-card { opacity:.7; }
+.sgcu-tour-anchor { scroll-margin-block:100px; }
+
+html[data-theme="dark"] .sgcu-tour { --tour-surface:var(--preview-surface,#222); --tour-ink:var(--preview-text,#f2f2f2); --tour-muted:var(--preview-muted,#b8b8b8); --tour-border:var(--preview-border,#404040); }
+html[data-theme="dark"] .sgcu-tour-progress { background:var(--preview-raised,#2c2c2c); color:var(--preview-accent,#f9a8d4); }
+@media(max-width:600px) { .sgcu-tour-card { padding:16px; border-radius:20px; } .sgcu-tour-card h2 { font-size:1rem; } .sgcu-tour-anchor { scroll-margin-block:90px; } }
+@keyframes tour-card-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes tour-backdrop-in { from { background:rgba(23,29,45,0); } to { background:rgba(23,29,45,.43); } }
+@media(prefers-reduced-motion:reduce) { .sgcu-tour::backdrop,.sgcu-tour-card,.sgcu-tour-ring,.sgcu-tour-track span,.sgcu-tour-actions button { animation:none; transition:none; } .sgcu-tour-anchor { scroll-behavior:auto; } }
+
+html[data-theme="dark"] .sgcu-tour-track span:not(.is-current):not(.is-complete) { background:var(--preview-border,#404040); }
+.sgcu-tour-footer .sgcu-tour-skip { cursor:pointer; }
+.sgcu-tour-footer .sgcu-tour-skip:focus-visible { outline:2px solid var(--theme-pink-300); outline-offset:3px; border-radius:4px; }
+
+.sgcu-tour-header { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; column-gap:12px; row-gap:8px; }
+.sgcu-tour-header h2 { grid-column:1; grid-row:1; }
+.sgcu-tour-header .sgcu-tour-progress { grid-column:2; grid-row:1; white-space:nowrap; padding:4px 9px; }
+.sgcu-tour-card:has(.sgcu-tour-track[hidden]) .sgcu-tour-header { margin-bottom:12px; }
+@media(max-width:380px) { .sgcu-tour-header { column-gap:8px; } }
+@media(pointer:coarse) { .sgcu-tour-footer .sgcu-tour-hint { display:none; } }

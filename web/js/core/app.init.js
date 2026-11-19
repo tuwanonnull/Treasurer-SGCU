@@ -890,6 +890,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     return hasGlobalConsent();
   };
 
+  // Read-only readiness and guarded navigation for the onboarding tour.
+  window.sgcuTourNavigation = {
+    consentReady: () => isConsentCheckReady() && hasGlobalConsent(),
+    navigate: (page) => switchPage(page)
+  };
+
   const updateGlobalConsentState = () => {
     if (!globalConsentConfirm || !globalConsentRules || !globalConsentPdpa) return;
     globalConsentConfirm.disabled = !(globalConsentRules.checked && globalConsentPdpa.checked);

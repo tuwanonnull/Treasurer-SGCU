@@ -489,6 +489,24 @@
   }
 }
 
+.login-profile-help-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  width: 100%;
+  margin-top: 0;
+}
+.login-profile-help-links .login-consent-link {
+  font-family: inherit;
+  text-align: left;
+}
+.login-profile-help-links .sgcu-tour-replay {
+  margin-inline-start: auto;
+  text-align: right;
+}
+
 .login-consent-link {
   margin-top: 8px;
   padding: 2px 0;

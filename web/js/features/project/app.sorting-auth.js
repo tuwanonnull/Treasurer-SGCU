@@ -1168,6 +1168,7 @@ const currentStaffApprovalState = {
 const currentRepresentativeApprovalState = {
   email: "",
   hasApproved: false,
+  approvedAt: 0,
   loaded: false
 };
 
@@ -1805,6 +1806,40 @@ function initAuthUI() {
   const profileStore = window.sgcuFirestore || {};
   const STAFF_PROFILE_COLLECTION = firestoreCollections.staffProfiles || "staffProfiles";
   const remoteStaffProfileLoadingEmails = new Set();
+  let tourStaffApprovalReady = false;
+  let tourCatalogReady = false;
+  window.sgcuTourAccount = () => ({
+    user: auth.currentUser,
+    type: currentUserProfileType,
+    mode: staffViewMode,
+    staffApproved: !!staffAuthUser,
+    representativeApproved: currentRepresentativeApprovalState.loaded && currentRepresentativeApprovalState.hasApproved,
+    representativeApprovedAt: currentRepresentativeApprovalState.approvedAt,
+    staffPages: staffAuthUser ? Array.from(getAllowedStaffPagesByProfile(staffAuthUser)) : [],
+    staffPageApprovedAt: getTourStaffApprovalTimes(),
+    pages: Array.from(getAllowedPagesForCurrentState()),
+    ready: tourStaffApprovalReady && currentRepresentativeApprovalState.loaded &&
+      (!staffAuthUser || tourCatalogReady) && remoteStaffProfileLoadingEmails.size === 0
+  });
+
+
+  function getTourStaffApprovalTimes() {
+    const email = (auth.currentUser?.email || '').toLowerCase();
+    const profile = staffProfilesByEmail[email] || {};
+    const positions = Array.isArray(profile.positions) ? profile.positions : [];
+    const grants = positions.length ? positions.map(entry => ({
+      pages: Array.from(getAllowedStaffPagesByProfile({ positions: [entry] })),
+      approvedAt: entry.approvedAt
+    })) : [{ pages: staffAuthUser ? Array.from(getAllowedStaffPagesByProfile(staffAuthUser)) : [], approvedAt: profile.approvedAt }];
+    const times = {};
+    grants.forEach(grant => {
+      const value = grant.approvedAt;
+      const date = typeof value?.toMillis === 'function' ? value.toMillis() :
+        typeof value?.seconds === 'number' ? value.seconds * 1000 : Date.parse(value || '') || 0;
+      grant.pages.forEach(page => { times[page] = page in times ? Math.min(times[page], date) : date; });
+    });
+    return times;
+  }
 
   function normalizeAccountEmail(email) {
     const normalized = (email || "").toString().trim().toLowerCase();
@@ -1863,6 +1898,7 @@ function initAuthUI() {
           if (nameKey) nextByName[nameKey] = pages;
           if (yy && zz) nextByCode[`${yy}.${zz}`] = pages;
         });
+        tourCatalogReady = true;
         staffPositionAccessByName = nextByName;
         staffPositionAccessByCode = nextByCode;
         if (auth.currentUser) {
@@ -1870,6 +1906,7 @@ function initAuthUI() {
         }
       },
       () => {
+        tourCatalogReady = true;
         staffPositionAccessByName = {};
         staffPositionAccessByCode = {};
       }
@@ -1885,6 +1922,7 @@ function initAuthUI() {
       }
     }
     unsubscribeCurrentStaffApproval = null;
+    tourStaffApprovalReady = false;
     currentStaffApprovalState.email = "";
     currentStaffApprovalState.hasApproved = false;
     currentStaffApprovalState.approvedDivisionCodesYY = [];
@@ -1900,13 +1938,14 @@ function initAuthUI() {
     }
     unsubscribeCurrentRepresentativeApproval = null;
     currentRepresentativeApprovalState.email = "";
+    currentRepresentativeApprovalState.approvedAt = 0;
     currentRepresentativeApprovalState.hasApproved = false;
     currentRepresentativeApprovalState.loaded = false;
   }
 
   function applyRepresentativeApprovalRows(normalizedEmail, rows = []) {
     currentRepresentativeApprovalState.email = normalizedEmail;
-    currentRepresentativeApprovalState.hasApproved = rows.some((item) => {
+    const approvedRows = rows.filter((item) => {
       const status = (item.status || "").toString().trim().toLowerCase();
       const requestType = (item.requestType || "").toString().trim();
       const applicantEmail = (item?.applicant?.email || item.applicantEmail || "").toString().trim().toLowerCase();
@@ -1917,6 +1956,12 @@ function initAuthUI() {
         isCurrentRepresentativeAcademicYear(item)
       );
     });
+    currentRepresentativeApprovalState.hasApproved = approvedRows.length > 0;
+    currentRepresentativeApprovalState.approvedAt = Math.max(0, ...approvedRows.map(item => {
+      const value = item.reviewedAt || item.approvedAt;
+      return typeof value?.toMillis === 'function' ? value.toMillis() :
+        typeof value?.seconds === 'number' ? value.seconds * 1000 : Date.parse(value || '') || 0;
+    }));
     currentRepresentativeApprovalState.loaded = true;
     refreshAuthDisplay(auth.currentUser || null);
   }
@@ -1938,6 +1983,7 @@ function initAuthUI() {
     ) {
       resetCurrentRepresentativeApprovalWatcher();
       currentRepresentativeApprovalState.email = normalizedEmail;
+      currentRepresentativeApprovalState.approvedAt = 0;
       currentRepresentativeApprovalState.hasApproved = false;
       currentRepresentativeApprovalState.loaded = true;
       refreshAuthDisplay(firebaseUser);
@@ -1952,6 +1998,7 @@ function initAuthUI() {
 
     resetCurrentRepresentativeApprovalWatcher();
     currentRepresentativeApprovalState.email = normalizedEmail;
+    currentRepresentativeApprovalState.approvedAt = 0;
     currentRepresentativeApprovalState.hasApproved = false;
     currentRepresentativeApprovalState.loaded = false;
 
@@ -1970,6 +2017,7 @@ function initAuthUI() {
       },
       () => {
         currentRepresentativeApprovalState.email = normalizedEmail;
+        currentRepresentativeApprovalState.approvedAt = 0;
         currentRepresentativeApprovalState.hasApproved = false;
         currentRepresentativeApprovalState.loaded = true;
         refreshAuthDisplay(auth.currentUser || firebaseUser || null);
@@ -1994,6 +2042,7 @@ function initAuthUI() {
       !firestore.onSnapshot
     ) {
       currentStaffApprovalState.email = normalizedEmail;
+      tourStaffApprovalReady = true;
       currentStaffApprovalState.hasApproved = true;
       currentStaffApprovalState.approvedDivisionCodesYY = [];
       refreshAuthDisplay(firebaseUser);
@@ -2008,8 +2057,10 @@ function initAuthUI() {
     currentStaffApprovalState.hasApproved = false;
     currentStaffApprovalState.approvedDivisionCodesYY = [];
     const snapshotByKey = new Map();
+    const tourResolvedQueries = new Set();
 
     const applyMergedState = () => {
+      tourStaffApprovalReady = tourResolvedQueries.size >= (normalizedUid ? 2 : 1);
       const mergedDocs = Array.from(snapshotByKey.values()).flatMap((snap) => snap?.docs || []);
       const unique = new Map();
       mergedDocs.forEach((docSnap) => {
@@ -2029,10 +2080,12 @@ function initAuthUI() {
       const unsub = firestore.onSnapshot(
         queryRef,
         (snapshot) => {
+          tourResolvedQueries.add(key);
           snapshotByKey.set(key, snapshot);
           applyMergedState();
         },
         () => {
+          tourResolvedQueries.add(key);
           snapshotByKey.delete(key);
           applyMergedState();
         }
@@ -2098,7 +2151,8 @@ function initAuthUI() {
           divisionCodeYY: remoteDivisionCodeYY,
           positionCodeYY: remoteDivisionCodeYY,
           allowedPages: normalizeAllowedStaffPages(data.allowedPages, remoteDivisionCodeYY),
-          positions: remotePositions
+          positions: remotePositions,
+          approvedAt: data.approvedAt || null
         };
 
         if ((auth.currentUser?.email || "").toString().trim().toLowerCase() === normalizedEmail) {

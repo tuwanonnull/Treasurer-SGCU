@@ -1,5 +1,6 @@
 /* App configuration (loaded before app.core.js) */
 const SGCU_APP_CONFIG = {
+  onboarding: { enabled: true, rolloutAt: "2026-11-19T15:25:47Z" },
   sheets: {
     projectSources:
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQoybDIWotYcgg-UWuRAUvbEkmWrdIbKbHWANHRyzta4i7CCNR5dKPVi_40ruIxrvbVMtsxrUUagrEx/pub?output=csv",
