@@ -289,7 +289,26 @@ try {
   await page.getByRole('button',{name:'เริ่มแนะนำ',exact:true}).click();
   await page.getByRole('heading',{name:'หาแบบฟอร์มได้ที่นี่'}).waitFor();
   assert.equal(await page.locator('#hamburgerBtn').getAttribute('aria-expanded'),'true');
+  assert.equal(await page.locator('#mobileMenu details[open]:not(.is-single)').count(),0);
+  assert.equal(await page.locator('#mobileMenu').evaluate(el => el.getAnimations({subtree:true}).some(a => a.playState === 'running')),false);
+  const initialRing = await page.locator('.sgcu-tour-ring').boundingBox();
+  await page.waitForTimeout(450);
+  const settledRing = await page.locator('.sgcu-tour-ring').boundingBox();
+  assert.ok(Math.abs(initialRing.y - settledRing.y) < 1, 'Spotlight must not drift after menu animation');
   for(let i=0;i<6;i++) {await page.keyboard.press('Tab'); assert.equal(await page.evaluate(()=>!!document.activeElement.closest('.sgcu-tour')),true);}
+  await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+  await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+  await page.getByRole('heading',{name:'ต้องการยืมพัสดุ เริ่มที่นี่'}).waitFor();
+  assert.equal(await page.locator('#mobileMenu details[open]:not(.is-single) summary').textContent(),'ยื่นคำขอ');
+  assert.match(await page.locator('.sgcu-tour-card').textContent(),/ยื่นคำขอ → ยืม-คืนพัสดุ/);
+  await page.setViewportSize({width:1280,height:900});
+  await page.waitForFunction(() => document.querySelector('#desktopNavGeneral [data-page="borrow-assets"]').closest('.nav-group-menu').classList.contains('show'));
+  assert.equal(await page.locator('#mobileMenu').isVisible(),false);
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForFunction(() => document.querySelector('#hamburgerBtn').getAttribute('aria-expanded') === 'true');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#mobileMenu').getAttribute('aria-hidden'),'true');
+  assert.equal(await page.locator('#mobileMenu details[data-mobile-nav="general"]').first().getAttribute('open'),'');
   // Staff mode and permission loss do not leave a blocking overlay.
   await page.setViewportSize({width:1280,height:900});
   await page.goto(`${url}/?persona=staff&autologin=1&mode=staff&approval=approved`);

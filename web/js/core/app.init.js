@@ -1,4 +1,75 @@
 /* App init + wiring (DOMContentLoaded) */
+function initMobileMenuViewport(menu, button, setState = setMobileMenuState) {
+  const desktop = window.matchMedia("(min-width: 841px)");
+  const closeOnDesktop = () => {
+    if (desktop.matches && (menu.classList.contains("show") || button.getAttribute("aria-expanded") === "true")) {
+      setState(menu, button, false);
+    }
+  };
+  desktop.addEventListener("change", closeOnDesktop);
+  closeOnDesktop();
+}
+
+function initMobileMenuGroups(groups) {
+  const controllers = new Map();
+  groups.forEach((group) => {
+    const summary = group.querySelector("summary");
+    if (!summary) return;
+    let animation = null;
+    let expanded = group.open;
+    const setExpanded = (next) => {
+      const startHeight = group.getBoundingClientRect().height;
+      expanded = next;
+      if (animation) {
+        animation.onfinish = null;
+        animation.cancel();
+        animation = null;
+      }
+      group.style.overflow = "";
+      group.classList.toggle("is-closing", !expanded);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !group.animate) {
+        group.open = expanded;
+        group.classList.remove("is-closing");
+        return;
+      }
+      group.open = expanded;
+      const endHeight = group.getBoundingClientRect().height;
+      group.open = true;
+      group.style.overflow = "hidden";
+      animation = group.animate(
+        [{ height: `${startHeight}px` }, { height: `${endHeight}px` }],
+        { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
+      );
+      animation.onfinish = () => {
+        group.open = group.classList.contains("is-single") || expanded;
+        group.style.overflow = "";
+        group.classList.remove("is-closing");
+        animation = null;
+      };
+    };
+    controllers.set(group, {
+      isExpanded: () => animation ? expanded : group.open,
+      close: () => setExpanded(false)
+    });
+    summary.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (group.classList.contains("is-single")) {
+        group.open = true;
+        return;
+      }
+      const next = !(animation ? expanded : group.open);
+      if (next) {
+        controllers.forEach((controller, other) => {
+          if (other !== group && !other.classList.contains("is-single") && controller.isExpanded()) {
+            controller.close();
+          }
+        });
+      }
+      setExpanded(next);
+    });
+  });
+}
+
 (function installMeetingRoomAccessGuard() {
   let hasConfirmedStaffAccess =
     typeof staffAuthUser !== "undefined" && !!staffAuthUser;
@@ -1340,6 +1411,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   if (hamburgerBtn && mobileMenu) {
+    initMobileMenuViewport(mobileMenu, hamburgerBtn);
     hamburgerBtn.setAttribute("aria-expanded", "false");
     mobileMenu.setAttribute("aria-hidden", "true");
 
@@ -1351,26 +1423,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       setMobileMenuState(mobileMenu, hamburgerBtn, false);
     });
   }
-  if (mobileMenuGroups.length) {
-    mobileMenuGroups.forEach((group) => {
-      const summary = group.querySelector("summary");
-      if (!summary) return;
-      summary.addEventListener("click", (event) => {
-        if (group.classList.contains("is-single")) {
-          event.preventDefault();
-          group.setAttribute("open", "");
-          return;
-        }
-        const willOpen = !group.hasAttribute("open");
-        if (!willOpen) return;
-        mobileMenuGroups.forEach((otherGroup) => {
-          if (otherGroup !== group && !otherGroup.classList.contains("is-single")) {
-            otherGroup.removeAttribute("open");
-          }
-        });
-      });
-    });
-  }
+  initMobileMenuGroups(mobileMenuGroups);
   if (navGroupToggles.length) {
     closeDesktopNavGroups();
 

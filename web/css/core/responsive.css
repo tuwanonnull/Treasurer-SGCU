@@ -3,6 +3,10 @@
 ========================================= */
 
 @media (min-width: 841px) {
+  #mobileMenu {
+    display: none;
+  }
+
   .desktop-nav {
     display: flex;
   }

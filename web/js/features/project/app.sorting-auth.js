@@ -1519,22 +1519,6 @@ function isNavPageVisible(page) {
   return getAllowedPagesForCurrentState().has(page);
 }
 
-function getModeMappedPage(currentPage, mode) {
-  const toStaff = {
-    "project-status": "dashboard-staff",
-    "borrow-assets": "borrow-assets-staff",
-    "meeting-room-booking": "meeting-room-staff"
-  };
-  const toNormal = {
-    "project-status-staff": "project-status",
-    "treasurer-handover-staff": "project-status",
-    "borrow-assets-staff": "borrow-assets",
-    "meeting-room-staff": "meeting-room-booking"
-  };
-  const map = mode === "staff" ? toStaff : toNormal;
-  return map[currentPage] || "";
-}
-
 function applyStaffViewMode() {
   const canShowStaffMode = hasNavigableStaffPages(staffAuthUser);
   if (!canShowStaffMode && staffViewMode === "staff") {
@@ -1564,11 +1548,6 @@ function setStaffViewMode(mode) {
   const previousPage = getCurrentPageFromHash();
   staffViewMode = mode;
   applyStaffViewMode();
-  const mappedPage = getModeMappedPage(previousPage, staffViewMode);
-  if (mappedPage) {
-    goToFirstVisibleNavPageWithPreference(mappedPage);
-    return;
-  }
   if (!isNavPageVisible(previousPage)) {
     goToFirstVisibleNavPageWithPreference(null);
   }

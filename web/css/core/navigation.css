@@ -165,18 +165,18 @@
 
 .nav-group-menu {
   position: absolute;
-  top: calc(100% + 14px);
+  top: calc(100% + 8px);
   left: 0;
-  min-width: 240px;
+  min-width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  border: 1px solid rgba(236, 72, 153, 0.2);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
+  gap: 0;
+  padding: 6px;
+  border: 1px solid rgba(236, 72, 153, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
   backdrop-filter: blur(8px);
-  box-shadow: 0 18px 30px rgba(17, 24, 39, 0.14);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.1);
   z-index: 70;
   opacity: 0;
   visibility: hidden;
@@ -195,27 +195,38 @@
 }
 
 .nav-group-menu a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
   text-decoration: none;
   color: #374151;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
-  padding: 9px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(236, 72, 153, 0.16);
-  transition: background 0.14s ease, color 0.14s ease, transform 0.14s ease;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--preview-border, #cbd5e1) 40%, transparent);
+  transition: background 0.14s ease, color 0.14s ease;
 }
 
-.nav-group-menu a:hover {
+.nav-group-menu a:nth-last-child(1 of :not([hidden], [style*="display: none"])) {
+  border-bottom-width: 0;
+}
+
+.nav-group-menu a:is(:hover, :focus-visible) {
   background: #fff1f2;
   color: #111827;
-  transform: translateX(1px);
 }
 
 .nav-group-menu a.active {
-  background: linear-gradient(135deg, #fff7fb 0%, #ffe4f1 100%);
+  background: #fdf2f8;
   color: #9d174d;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+@media (pointer: coarse) {
+  .nav-group-menu a { min-height: 44px; }
 }
 
 /* Mobile nav */
@@ -535,21 +546,93 @@
   }
 
   .mobile-menu.show {
-    max-height: min(72vh, 560px);
-    max-height: min(72dvh, 560px);
+    max-height: min(65vh, 480px);
+    max-height: min(65dvh, 480px);
     transform: translateY(0) scale(1);
   }
 
   .mobile-menu nav {
     padding: 0;
+    gap: 0;
   }
 
   .mobile-menu.show nav {
-    padding: 10px;
+    padding: 6px 8px;
   }
 
   .mobile-menu a {
     border-radius: 10px;
+  }
+
+  /* Compact groups with subtle dividers between headings and list rows. */
+  #mobileMenu .mobile-menu-group {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  #mobileMenu .mobile-menu-group + .mobile-menu-group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 1px solid color-mix(in srgb, var(--preview-border, #cbd5e1) 55%, transparent);
+  }
+
+  #mobileMenu .mobile-menu-group summary {
+    min-height: 44px;
+    padding: 8px 10px;
+    background: transparent;
+    font-weight: 500;
+  }
+
+  #mobileMenu .mobile-menu-group.is-closing summary::after {
+    transform: rotate(45deg);
+  }
+
+  #mobileMenu .mobile-menu-links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0 2px 4px 12px;
+  }
+
+  #mobileMenu .mobile-menu-links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 44px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--preview-border, #cbd5e1) 40%, transparent);
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+
+  #mobileMenu .mobile-menu-links a:is(:hover, :focus-visible, .active) {
+    background: var(--preview-raised, var(--theme-pink-50));
+    color: var(--preview-accent, var(--theme-pink-800));
+  }
+
+  #mobileMenu .mobile-menu-links a.active {
+    font-weight: 500;
+  }
+
+  /* Access filtering hides links inline; omit the rule on the last visible row. */
+  #mobileMenu .mobile-menu-links a:nth-last-child(1 of :not([hidden], [style*="display: none"])) {
+    border-bottom: 0;
+  }
+
+  #mobileMenu .mobile-menu-group.is-single .mobile-menu-links {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 2px;
+  }
+
+  #mobileMenu .mobile-menu-group.is-single a {
+    border-bottom: 0;
   }
 
   .mobile-bottom-nav {

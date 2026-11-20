@@ -219,6 +219,12 @@
     menuRestore = () => {
       saved.forEach(([el, attrs]) => attrs.forEach(([attr, value]) => value === null ? el.removeAttribute(attr) : el.setAttribute(attr, value)));
       document.body.classList.toggle('mobile-menu-open', wasOpen);
+      if (window.matchMedia('(min-width: 841px)').matches) {
+        document.getElementById('mobileMenu')?.classList.remove('show');
+        document.getElementById('mobileMenu')?.setAttribute('aria-hidden', 'true');
+        document.getElementById('hamburgerBtn')?.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('mobile-menu-open');
+      }
     };
     const mobile = visible(document.getElementById('hamburgerBtn'));
     const scope = document.querySelector(mobile ? '#mobileMenu' : (account().mode === 'staff' ? '#desktopNavStaff' : '#desktopNavGeneral'));
@@ -229,7 +235,10 @@
       const button = document.getElementById('hamburgerBtn');
       menu.classList.add('show'); menu.setAttribute('aria-hidden', 'false');
       button.setAttribute('aria-expanded', 'true'); document.body.classList.add('mobile-menu-open');
-      const group = link.closest('details'); if (group) group.open = true;
+      const group = link.closest('details');
+      menu.querySelectorAll('details').forEach(item => {
+        item.open = item === group || item.classList.contains('is-single');
+      });
     } else {
       const toggle = link.closest('.nav-group')?.querySelector('.nav-group-toggle');
       if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
@@ -267,7 +276,7 @@
         if (token !== generation) return;
         target = document.querySelector(step.selector);
       }
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await settleTarget(target, token);
       if (token !== generation) return;
       if (blocked()) { close(); return; }
       if (!visible(target)) { advanceUnavailable(direction); return; }
@@ -297,6 +306,26 @@
       ], `ขั้นที่ ${active.index + 1} จาก ${active.steps.length}`);
     } catch { if (token === generation) advanceUnavailable(direction); }
     finally { if (token === generation) transitioning = false; }
+  }
+  function settleTarget(element, token = generation) {
+    if (!element) return Promise.resolve();
+    return new Promise(resolve => {
+      const start = performance.now();
+      const scope = element.closest('#mobileMenu, .nav-group') || element;
+      let previous = null, stable = 0;
+      function frame() {
+        if (!element.isConnected || !active || token !== generation) { resolve(); return; }
+        const r = element.getBoundingClientRect();
+        const next = [r.top, r.left, r.width, r.height];
+        stable = previous && next.every((value, i) => Math.abs(value - previous[i]) < .5) ? stable + 1 : 0;
+        previous = next;
+        const moving = (scope.getAnimations?.({ subtree: true }) || []).some(animation =>
+          animation.playState === 'running' && Number.isFinite(animation.effect?.getComputedTiming().endTime));
+        if ((!moving && stable >= 4 && performance.now() - start > 80) || performance.now() - start > 1200) resolve();
+        else requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
   }
   function settleScroll(element) {
     return new Promise(resolve => {
@@ -371,8 +400,13 @@
   });
   window.addEventListener('sgcu:page-active', () => { dirty = false; });
   window.addEventListener('sgcu:user-profile-updated', () => { dirty = false; });
-  window.addEventListener('resize', () => {
-    if (active && !active.finished && active.steps[active.index]?.nav && target) target = revealNav(active.steps[active.index]);
+  window.addEventListener('resize', async () => {
+    if (active && !active.finished && active.steps[active.index]?.nav && target) {
+      target = revealNav(active.steps[active.index]);
+      const resizedTarget = target;
+      await settleTarget(resizedTarget);
+      if (resizedTarget !== target) return;
+    }
     position();
   });
   window.addEventListener('scroll', position, true);

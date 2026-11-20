@@ -9,11 +9,11 @@
     ['requests', '#meetingMyRequestsPanel', 'ติดตามผลการจอง', 'ตรวจสอบสถานะและจัดการคำขอได้ที่นี่ การส่งคำขอยังไม่ถือว่าได้รับอนุมัติ']
   ].map(([id, selector, title, text]) => ({ id, selector, title, text, page: 'meeting-room-booking' }));
   const general = [
-    nav('financial-docs', 'หาแบบฟอร์มได้ที่นี่', 'ค้นหาแบบฟอร์มและเอกสารการเงินที่ต้องใช้ ก่อนเริ่มดำเนินงาน'),
-    nav('project-status', 'ติดตามโครงการ', 'ตรวจสอบสถานะและข้อมูลโครงการได้จากหน้านี้'),
-    nav('borrow-assets', 'ต้องการยืมพัสดุ เริ่มที่นี่', 'ดูรายการพัสดุ กรอกคำขอยืม และติดตามคำขอของคุณ'),
-    nav('meeting-room-booking', 'วางแผนใช้ห้องประชุม', 'ตรวจสอบตารางการจอง ส่งคำขอใช้ห้อง และติดตามผลได้ที่นี่'),
-    nav('budget-approval-request', 'ยื่นคำขอขององค์กร', 'คุณมีสิทธิ์ยื่นของบประมาณ เริ่มกรอกคำขอและติดตามผลการพิจารณาได้จากหน้านี้')
+    nav('financial-docs', 'หาแบบฟอร์มได้ที่นี่', 'เลือก “แบบฟอร์มการเงิน” จากเมนูหลัก เพื่อค้นหาแบบฟอร์มและเอกสารที่ต้องใช้'),
+    nav('project-status', 'ติดตามโครงการ', 'เลือก “สถานะโครงการ” จากเมนูหลัก เพื่อติดตามสถานะและข้อมูลโครงการ'),
+    nav('borrow-assets', 'ต้องการยืมพัสดุ เริ่มที่นี่', 'ไปที่ “ยื่นคำขอ → ยืม-คืนพัสดุ” เพื่อดูรายการพัสดุ ส่งคำขอยืม และติดตามผล'),
+    nav('meeting-room-booking', 'วางแผนใช้ห้องประชุม', 'ไปที่ “ยื่นคำขอ → จองห้องประชุม” เพื่อตรวจสอบตาราง ส่งคำขอใช้ห้อง และติดตามผล'),
+    nav('budget-approval-request', 'ยื่นคำขอขององค์กร', 'คุณมีสิทธิ์ยื่นของบประมาณ ไปที่ “ยื่นคำขอ → ยื่นของบประมาณ” เพื่อกรอกคำขอและติดตามผล')
   ];
   const staffGroups = [
     ['overview', 'เข้าถึงงานโครงการและข้อมูล', ['dashboard-staff', 'project-live-staff', 'treasurer-handover-staff', 'system-data-staff']],
@@ -55,7 +55,7 @@
       };
     }
     if (account.staffApproved !== true) return { key: 'staff_v1', steps: [] };
-    const steps = [{ id: 'mode', page: 'login', selector: '#staffModeToggle', title: 'ขณะนี้คุณอยู่ในโหมดสตาฟ', text: 'เมนูในโหมดนี้ใช้จัดการงานตามสิทธิ์ของคุณ สามารถสลับกลับไปใช้บริการทั่วไปได้' }];
+    const steps = [{ id: 'mode', page: 'login', selector: '#staffModeToggle', title: 'ขณะนี้คุณอยู่ในโหมดสตาฟ', text: 'เมนูในโหมดนี้ใช้จัดการงานตามสิทธิ์ของคุณ สลับทั่วไป/สตาฟได้ที่หน้าบัญชีผู้ใช้' }];
     staffGroups.forEach(([id, title, pages]) => {
       const visible = pages.filter(p => allowed.has(p));
       if (visible.length) steps.push({ id: `${id}:${visible.join(',')}`, page: visible[0], pageIds: visible, nav: true, group: true, title, text: `เมนูที่คุณใช้ได้: ${visible.map(p => labels[p]).join(' · ')} เปิดเมนูเพื่อดูรายละเอียดและดำเนินการตามสิทธิ์ของคุณ` });

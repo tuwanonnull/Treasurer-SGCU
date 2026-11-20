@@ -96,6 +96,9 @@
     background: var(--preview-raised); color: var(--preview-accent);
   }
   html[data-theme="dark"] body .burger span { background: var(--preview-accent); }
+  html[data-theme="dark"] body .desktop-nav .nav-group-menu a {
+    border-color: color-mix(in srgb, var(--preview-border) 40%, transparent);
+  }
   html[data-theme="dark"] body :is(.nav-group-menu, .staff-action-menu) {
     box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
   }
