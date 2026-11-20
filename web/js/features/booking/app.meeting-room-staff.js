@@ -35,6 +35,7 @@ function initMeetingRoomStaffApproval() {
   const holidayManageDialogMessage = document.getElementById("meetingHolidayManageDialogMessage");
   const holidayManageCountEl = document.getElementById("meetingHolidayManageCount");
   const holidayCalendarEl = document.getElementById("meetingHolidayCalendar");
+  const holidayMobileListEl = document.getElementById("meetingHolidayMobileList");
   const holidayCalendarTitleEl = document.getElementById("meetingHolidayCalendarTitle");
   const holidayCalendarPrevBtn = document.getElementById("meetingHolidayCalendarPrev");
   const holidayCalendarNextBtn = document.getElementById("meetingHolidayCalendarNext");
@@ -117,6 +118,10 @@ function initMeetingRoomStaffApproval() {
       if (dialog === roomAddDialog && roomManageDialogMessage) roomManageDialogMessage.textContent = "";
       if (dialog === roomAddDialog) setAccessToggleValue(roomManageAccessFieldset, "public");
       if (dialog === holidayAddDialog && holidayManageDialogMessage) holidayManageDialogMessage.textContent = "";
+      if (dialog === holidayAddDialog) {
+        if (holidayManageDateInput) holidayManageDateInput.value = selectedHolidayDate;
+        if (holidayManageNameInput) holidayManageNameInput.value = "";
+      }
       dialog.showModal();
       window.setTimeout(() => focusTarget?.focus(), 0);
     });
@@ -639,6 +644,7 @@ function initMeetingRoomStaffApproval() {
   if (staffCalendarViewToggle && staffCalendarHeader) staffCalendarHeader.appendChild(staffCalendarViewToggle);
   let staffCalendarRoomFilterValue = "all";
   let holidayCalendarCursor = new Date();
+  let selectedHolidayDate = toDateKey(new Date());
   let activeStaffDayModalDate = "";
   let historyStartDateFilter = "";
   let historyEndDateFilter = "";
@@ -1010,10 +1016,13 @@ function initMeetingRoomStaffApproval() {
         const isToday = dateKey === toDateKey(new Date());
         cells.push(`
           <button
-            class="meeting-holiday-day${item ? " is-closed" : ""}${isToday ? " is-today" : ""}"
+            class="meeting-holiday-day${item ? " is-closed" : ""}${isToday ? " is-today" : ""}${selectedHolidayDate === dateKey ? " is-selected" : ""}"
             type="button"
             data-action="select-holiday-date"
+            aria-pressed="${selectedHolidayDate === dateKey}"
             data-date="${dateKey}"
+            aria-label="${escapeText(formatDate(dateKey))}: ${item ? escapeText(item.name || "วันปิดให้บริการ") : "ไม่มีวันปิดให้บริการเพิ่มเติม"}"
+            ${isToday ? 'aria-current="date"' : ""}
             title="${item ? escapeText(item.name || "วันปิดให้บริการ") : "เพิ่มวันปิดให้บริการ"}"
           >
             <span class="meeting-holiday-day-number">${day}</span>
@@ -1023,6 +1032,61 @@ function initMeetingRoomStaffApproval() {
       }
       holidayCalendarEl.innerHTML = cells.join("");
     }
+    if (holidayMobileListEl) {
+      const selected = monthHolidays.find((item) => item.date === selectedHolidayDate);
+      const dateText = new Date(`${selectedHolidayDate}T00:00:00`).toLocaleDateString("th-TH", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+      holidayMobileListEl.innerHTML = `
+        <div class="calendar-selected-day-header">
+          <div>
+            <h3 class="calendar-selected-day-title">${escapeText(dateText)}</h3>
+            <p class="calendar-selected-day-caption">รายการวันปิดให้บริการในวันที่เลือก</p>
+          </div>
+          <span class="calendar-selected-day-count">${selected ? 1 : 0} รายการ</span>
+        </div>
+        <div class="calendar-selected-day-list">
+          ${selected ? `
+            <button type="button" class="calendar-selected-item" data-action="manage-holiday-date" data-date="${escapeText(selectedHolidayDate)}" aria-label="ลบวันปิด ${escapeText(selected.name || "วันปิดให้บริการ")}">
+              <span class="calendar-selected-main">
+                <span class="calendar-selected-title">${escapeText(selected.name || "วันปิดให้บริการ")}</span>
+                <span class="calendar-selected-meta">${escapeText(dateText)} · แตะเพื่อจัดการ</span>
+              </span>
+              <span class="calendar-selected-day-count">ปิดให้บริการ</span>
+            </button>` : `
+            ${renderListEmptyState("ไม่มีวันปิดให้บริการเพิ่มเติม", "เลือกวันอื่นเพื่อดูรายการ หรือเพิ่มวันปิดในวันที่เลือก", "calendar")}
+            <button type="button" class="btn-ghost" data-action="manage-holiday-date" data-date="${escapeText(selectedHolidayDate)}">+ เพิ่มวันปิด</button>`}
+        </div>`;
+    }
+  };
+
+  const confirmDeleteHoliday = (holiday) => {
+    const dialog = document.getElementById("meetingHolidayDeleteDialog");
+    if (!dialog || dialog.open) return Promise.resolve(false);
+    document.getElementById("meetingHolidayDeleteName").textContent = holiday.name || "วันปิดให้บริการ";
+    document.getElementById("meetingHolidayDeleteDate").textContent = formatDate(holiday.date);
+    document.getElementById("meetingHolidayDeleteClose").onclick = () => dialog.close("cancel");
+    dialog.returnValue = "cancel";
+    return new Promise((resolve) => {
+      dialog.addEventListener("close", () => resolve(dialog.returnValue === "delete"), { once: true });
+      dialog.showModal();
+    });
+  };
+
+  const animateHolidaySelection = (date) => {
+    const day = holidayCalendarEl?.querySelector(`[data-date="${date}"]`);
+    day?.focus({ preventScroll: true });
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const animation = day?.animate?.([
+      { transform: "scale(1)" },
+      { transform: "scale(0.92)", offset: 0.35 },
+      { transform: "scale(1)" }
+    ], { duration: 220, easing: "ease-out" });
+    holidayMobileListEl?.animate?.([
+      { opacity: 0, transform: "translateY(6px)" },
+      { opacity: 1, transform: "translateY(0)" }
+    ], { duration: 180, easing: "ease-out" });
+    return animation?.finished.catch(() => {});
   };
 
   const setStaffActionMessage = (text = "", color = "#374151") => {
@@ -2608,7 +2672,9 @@ function initMeetingRoomStaffApproval() {
       });
     }
 
-    root.addEventListener("click", (event) => {
+    let holidayInteractionVersion = 0;
+    root.addEventListener("click", async (event) => {
+      const interactionVersion = ++holidayInteractionVersion;
       const clickedElement = event.target;
       if (!(clickedElement instanceof HTMLElement)) return;
 
@@ -2643,14 +2709,21 @@ function initMeetingRoomStaffApproval() {
       }
       const action = button.dataset.action;
       const id = button.dataset.id;
-      if (action === "select-holiday-date") {
+      if (action === "select-holiday-date" || action === "manage-holiday-date") {
         const date = button.dataset.date || "";
+        if (action === "select-holiday-date") {
+          selectedHolidayDate = date;
+          renderHolidayManageList();
+          const animationFinished = animateHolidaySelection(date);
+          if (window.matchMedia?.("(max-width: 840px)").matches) return;
+          await animationFinished;
+          if (interactionVersion !== holidayInteractionVersion || !root.isConnected) return;
+        }
         const existingHoliday = customHolidays.find((item) => item.date === date);
         if (existingHoliday) {
-          const shouldRemove = window.confirm(
-            `ลบวันปิดให้บริการ “${existingHoliday.name}” วันที่ ${formatDate(date)} ใช่หรือไม่`
-          );
-          if (shouldRemove) void removeHoliday(existingHoliday.id);
+          void confirmDeleteHoliday(existingHoliday).then((confirmed) => {
+            if (confirmed) void removeHoliday(existingHoliday.id);
+          });
         } else if (holidayAddDialog) {
           if (holidayManageDateInput) holidayManageDateInput.value = date;
           if (holidayManageNameInput) holidayManageNameInput.value = "";
@@ -2928,6 +3001,7 @@ function initMeetingRoomStaffApproval() {
         holidayCalendarCursor.getMonth() - 1,
         1
       );
+      selectedHolidayDate = toDateKey(holidayCalendarCursor);
       renderHolidayManageList();
     });
   }
@@ -2939,9 +3013,16 @@ function initMeetingRoomStaffApproval() {
         holidayCalendarCursor.getMonth() + 1,
         1
       );
+      selectedHolidayDate = toDateKey(holidayCalendarCursor);
       renderHolidayManageList();
     });
   }
+
+  document.getElementById("meetingHolidayCalendarToday")?.addEventListener("click", () => {
+    holidayCalendarCursor = new Date();
+    selectedHolidayDate = toDateKey(holidayCalendarCursor);
+    renderHolidayManageList();
+  });
 
   if (roomEditForm) {
     roomEditForm.addEventListener("submit", async (event) => {

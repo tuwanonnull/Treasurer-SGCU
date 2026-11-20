@@ -703,10 +703,10 @@
   html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.approved, .status-approved, .pill-soft-pink) { background: #382630; color: #f9a8d4; }
   html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.closed, .status-closed, .pill-soft-green) { background: #17382b; color: #91e3b5; }
   html[data-theme="dark"] body :is(#calendarView, #calendarModal) :is(.calendar-event.cancelled, .status-cancelled, .pill-soft-red) { background: #442323; color: #ffb4b4; }
-  html[data-theme="dark"] body #calendarView :is(.calendar-selected-item, .calendar-selected-empty) { background: var(--preview-surface); border-color: var(--preview-border); }
-  html[data-theme="dark"] body #calendarView :is(.calendar-selected-day-title, .calendar-selected-title) { color: var(--preview-text); }
-  html[data-theme="dark"] body #calendarView :is(.calendar-selected-day-caption, .calendar-selected-meta, .calendar-selected-empty) { color: var(--preview-muted); }
-  html[data-theme="dark"] body #calendarView .calendar-selected-day-count { background: #382630; color: var(--preview-accent); }
+  html[data-theme="dark"] body :is(#calendarView, #meetingHolidayMobileList) :is(.calendar-selected-item, .calendar-selected-empty) { background: var(--preview-surface); border-color: var(--preview-border); }
+  html[data-theme="dark"] body :is(#calendarView, #meetingHolidayMobileList) :is(.calendar-selected-day-title, .calendar-selected-title) { color: var(--preview-text); }
+  html[data-theme="dark"] body :is(#calendarView, #meetingHolidayMobileList) :is(.calendar-selected-day-caption, .calendar-selected-meta, .calendar-selected-empty) { color: var(--preview-muted); }
+  html[data-theme="dark"] body :is(#calendarView, #meetingHolidayMobileList) .calendar-selected-day-count { background: #382630; color: var(--preview-accent); }
   html[data-theme="dark"] body #calendarView .calendar-selected-day-panel { border-color: var(--preview-border); }
 }
 @media screen and (max-width: 640px) {
@@ -1155,7 +1155,15 @@
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-room-manage-name { color: var(--preview-text); }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] :is(.meeting-staff-period-time, .meeting-row-meta, .meeting-holiday-weekdays span, .meeting-access-help) { color: var(--preview-muted); }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-room-manage-access-pill { background: var(--preview-raised); color: var(--preview-muted); }
-  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day:is(:hover, .is-closed) { background: #382630; border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day:hover { background: var(--preview-raised); border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-closed { background: #382630; color: var(--preview-accent); border-color: #895269; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-today::after { background: var(--preview-accent); }
+  html[data-theme="dark"] body #meetingHolidayMobileList { border-color: var(--preview-border); }
+  html[data-theme="dark"] body .meeting-holiday-mobile-hint { color: var(--preview-muted); }
+  html[data-theme="dark"] body #meetingHolidayMobileList .calendar-selected-item:is(:hover, :focus-visible) { background: var(--preview-raised); border-color: var(--preview-accent); }
+  html[data-theme="dark"] body #meetingHolidayDeleteDialog .meeting-delete-warning :is(strong, p) { color: #ffb4b4; }
+  html[data-theme="dark"] body #meetingHolidayDeleteDialog .meeting-delete-warning-icon { background: #622f35; color: #ffb4b4; }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-today { border-color: var(--preview-accent); }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-empty { background: transparent; border-color: transparent; }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day-label { color: var(--preview-accent); }
@@ -1168,6 +1176,7 @@
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .btn-primary { background: #382630; color: var(--preview-accent); border: 1px solid #895269; box-shadow: none; }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .btn-primary:hover:not(:disabled) { background: #49313e; }
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] :is(.meeting-delete-confirm-btn, .meeting-room-delete-action) { background: #3c2529; color: #ffb4b4; border-color: #71444c; }
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-delete-confirm-btn:hover:not(:disabled) { background: #542f35; color: #ffb4b4; border-color: #a6606a; }
   html[data-theme="dark"] body .mobile-meeting-action { background: transparent; color: var(--preview-muted); box-shadow: none; }
   html[data-theme="dark"] body .mobile-meeting-action:is(:hover, :focus-visible, .is-active, [aria-expanded="true"]) { background: #382630; color: var(--preview-accent); box-shadow: none; }
   html[data-theme="dark"] body .mobile-meeting-action:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: -2px; }
@@ -1353,4 +1362,8 @@
     background: var(--preview-bg);
     color: var(--preview-text);
   }
+}
+
+@media screen and (max-width: 840px) {
+  html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-selected { border-color: var(--preview-accent); }
 }

@@ -186,6 +186,16 @@
   transition: opacity 0.14s ease, transform 0.14s ease, visibility 0s linear 0.14s;
 }
 
+/* Keep the pointer inside the group while crossing the gap below its toggle. */
+.nav-group-menu::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 0;
+  right: 0;
+  height: 9px;
+}
+
 .nav-group-menu.show {
   opacity: 1;
   visibility: visible;

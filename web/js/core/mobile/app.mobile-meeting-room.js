@@ -48,6 +48,18 @@ function initMeetingRoomMobileActionBar() {
   const resetBtn = sheet.querySelector(".mobile-filter-reset");
   const doneBtn = sheet.querySelector(".mobile-filter-done");
   let activeFilterPlaceholder = null;
+  let previousView = "requests";
+  let previousScrollY = 0;
+  let wasSettingsActive = false;
+  const defaultActions = actionBtns.map((btn) => ({
+    action: btn.dataset.meetingMobileAction,
+    icon: btn.children[0].textContent,
+    label: btn.children[1].textContent
+  }));
+
+  mainSettingsTab?.addEventListener("click", () => {
+    if (!section.classList.contains("is-settings-view")) previousScrollY = window.scrollY;
+  }, true);
 
   const isMobile = () =>
     !window.matchMedia || window.matchMedia("(max-width: 840px)").matches;
@@ -89,20 +101,42 @@ function initMeetingRoomMobileActionBar() {
     }
 
     const meetingSettingsActive = section.classList.contains("is-settings-view");
+    if (meetingSettingsActive && !wasSettingsActive) {
+      if (previousView !== "calendar") previousView = isHistoryActive() ? "history" : "requests";
+    }
+    wasSettingsActive = meetingSettingsActive;
+    const settingsActions = [
+      ["back", "↶", "กลับ", "กลับไปหน้าก่อนเข้าตั้งค่า"],
+      ["holiday-prev", "‹", "เดือนก่อน", "เดือนก่อนหน้า"],
+      ["holiday-today", "◎", "วันนี้", "กลับไปเดือนปัจจุบัน"],
+      ["holiday-next", "›", "เดือนหน้า", "เดือนถัดไป"],
+      ["holiday-add", "＋", "เพิ่มวันปิด", "เพิ่มวันปิดให้บริการ"]
+    ];
+    actionBtns.forEach((btn, index) => {
+      const original = defaultActions[index];
+      const [action, icon, label, description] = meetingSettingsActive
+        ? settingsActions[index]
+        : [original.action, original.icon, original.label, original.label];
+      btn.dataset.meetingMobileEffectiveAction = action;
+      if (btn.children[0].textContent !== icon) btn.children[0].textContent = icon;
+      if (btn.children[1].textContent !== label) btn.children[1].textContent = label;
+      btn.setAttribute("aria-label", description);
+    });
     bar.classList.toggle("is-visible", activePage === "meeting-room-staff");
     actionBtns.forEach((btn) => {
-      const action = btn.dataset.meetingMobileAction;
+      const action = btn.dataset.meetingMobileEffectiveAction;
       btn.classList.toggle(
         "is-active",
-        (action === "requests" && !meetingSettingsActive && !isHistoryActive()) ||
-          (action === "history" && !meetingSettingsActive && isHistoryActive()) ||
+        (action === "requests" && !meetingSettingsActive && previousView !== "calendar" && !isHistoryActive()) ||
+          (action === "history" && !meetingSettingsActive && previousView !== "calendar" && isHistoryActive()) ||
+          (action === "calendar" && !meetingSettingsActive && previousView === "calendar") ||
           (action === "settings" && meetingSettingsActive)
       );
       btn.classList.remove("has-active-filters");
       btn.dataset.filterCount = "";
     });
 
-    const filterBtn = actionBtns.find((btn) => btn.dataset.meetingMobileAction === "filters");
+    const filterBtn = actionBtns.find((btn) => btn.dataset.meetingMobileEffectiveAction === "filters");
     if (filterBtn) {
       const count = getFilterCount();
       filterBtn.classList.toggle("has-active-filters", count > 0);
@@ -166,18 +200,33 @@ function initMeetingRoomMobileActionBar() {
 
   actionBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const action = btn.dataset.meetingMobileAction;
-      if (action === "requests") {
+      const action = btn.dataset.meetingMobileEffectiveAction;
+      if (action === "back") {
+        mainRequestsTab?.click();
+        window.scrollTo({ top: previousScrollY, behavior: "smooth" });
+      } else if (action.startsWith("holiday-")) {
+        const targets = {
+          "holiday-prev": "meetingHolidayCalendarPrev",
+          "holiday-today": "meetingHolidayCalendarToday",
+          "holiday-next": "meetingHolidayCalendarNext",
+          "holiday-add": "meetingHolidayAddOpenBtn"
+        };
+        document.getElementById(targets[action])?.click();
+        if (action !== "holiday-add") scrollToPanel(section.querySelector(".meeting-room-holiday-panel"));
+      } else if (action === "requests") {
+        previousView = "requests";
         closeFilterSheet();
         mainRequestsTab?.click();
         requestsTab?.click();
         scrollToPanel(listPanel);
       } else if (action === "history") {
+        previousView = "history";
         closeFilterSheet();
         mainRequestsTab?.click();
         historyTab?.click();
         scrollToPanel(listPanel);
       } else if (action === "calendar") {
+        previousView = "calendar";
         closeFilterSheet();
         mainRequestsTab?.click();
         scrollToPanel(calendarPanel);

@@ -1397,6 +1397,145 @@
   -webkit-line-clamp: 2;
 }
 
+#meetingHolidayCalendarToday {
+  display: none;
+}
+
+.meeting-holiday-day:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meeting-holiday-day {
+    transition: none;
+  }
+  .meeting-holiday-day:active {
+    transform: none;
+  }
+}
+
+.meeting-holiday-calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.meeting-holiday-calendar-heading .btn-ghost {
+  font-size: 0.875rem;
+}
+
+.meeting-holiday-mobile-list,
+.meeting-holiday-mobile-hint {
+  display: none;
+}
+
+@media (max-width: 840px) {
+  .meeting-room-holiday-panel .panel-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .meeting-room-holiday-panel .panel-body {
+    padding: 12px;
+    min-width: 0;
+  }
+
+  .meeting-room-holiday-panel .panel-header > .btn-primary {
+    display: none;
+  }
+
+  .meeting-holiday-calendar-toolbar {
+    display: block;
+  }
+
+  .meeting-holiday-calendar-toolbar .btn-ghost {
+    display: none;
+  }
+
+  .meeting-holiday-calendar-title {
+    font-size: 1rem;
+  }
+
+  .meeting-holiday-weekdays,
+  .meeting-holiday-calendar {
+    min-width: 0;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .meeting-holiday-weekdays span,
+  .meeting-holiday-day-number {
+    font-size: 0.875rem;
+  }
+
+  .meeting-holiday-day {
+    position: relative;
+    min-width: 0;
+    min-height: 46px;
+    padding: 4px;
+    border-radius: 8px;
+    text-align: center;
+    background: #f9fafb;
+  }
+
+  .meeting-holiday-day-label {
+    display: none;
+  }
+
+  .meeting-holiday-day.is-closed {
+    background: #fce7f3;
+    border-color: #fbcfe8;
+    color: #831843;
+  }
+
+  .meeting-holiday-day.is-today::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--theme-pink-600, #db2777);
+  }
+
+  .meeting-holiday-day.is-selected {
+    border-color: var(--theme-pink-600, #db2777);
+  }
+
+  .meeting-holiday-mobile-hint {
+    display: block;
+    margin: 12px 0;
+    font-size: 0.875rem;
+  }
+
+  .meeting-holiday-mobile-list {
+    display: block;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--theme-pink-100, #fce7f3);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .meeting-holiday-mobile-list .calendar-selected-item {
+    align-items: flex-start;
+    min-height: 64px;
+  }
+
+  .meeting-holiday-mobile-list .calendar-selected-main {
+    overflow-wrap: anywhere;
+  }
+
+  .meeting-holiday-mobile-list .btn-ghost {
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 .meeting-room-manage-form {
   margin-bottom: 12px;
   padding-bottom: 8px;
@@ -2436,4 +2575,16 @@
     flex-basis: 100%;
     margin-left: 0;
   }
+}
+
+@media (min-width: 841px) and (prefers-reduced-motion: no-preference) {
+  #meetingHolidayAddDialog[open],
+  #meetingHolidayDeleteDialog[open] {
+    animation: meeting-holiday-dialog-enter 180ms ease-out;
+  }
+}
+
+@keyframes meeting-holiday-dialog-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

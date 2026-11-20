@@ -1397,8 +1397,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const mobileMenuGroups = Array.from(document.querySelectorAll(".mobile-menu-group"));
   const navGroupToggles = Array.from(document.querySelectorAll(".nav-group-toggle"));
   const navGroupMenus = Array.from(document.querySelectorAll(".nav-group-menu"));
+  let navHoverOpenTimer;
+  let navHoverCloseTimer;
+  const clearNavHoverTimers = () => {
+    clearTimeout(navHoverOpenTimer);
+    clearTimeout(navHoverCloseTimer);
+  };
 
   const closeDesktopNavGroups = () => {
+    clearNavHoverTimers();
     navGroupToggles.forEach((btn) => {
       btn.setAttribute("aria-expanded", "false");
       const host = btn.closest(".nav-group");
@@ -1428,19 +1435,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     closeDesktopNavGroups();
 
     navGroupToggles.forEach((btn) => {
+      const host = btn.closest(".nav-group");
+      const menu = host?.querySelector(".nav-group-menu");
+      if (!host || !menu) return;
+      const openGroup = () => {
+        closeDesktopNavGroups();
+        btn.setAttribute("aria-expanded", "true");
+        host.classList.add("is-open");
+        menu.classList.add("show");
+        menu.setAttribute("aria-hidden", "false");
+      };
+      host.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "mouse") return;
+        clearNavHoverTimers();
+        if (!menu.classList.contains("show")) {
+          navHoverOpenTimer = setTimeout(openGroup, 180);
+        }
+      });
+      host.addEventListener("pointerleave", (event) => {
+        if (event.pointerType !== "mouse") return;
+        clearNavHoverTimers();
+        navHoverCloseTimer = setTimeout(() => {
+          if (!host.contains(document.activeElement)) closeDesktopNavGroups();
+        }, 250);
+      });
+      host.addEventListener("focusout", (event) => {
+        if (!host.contains(event.relatedTarget)) closeDesktopNavGroups();
+      });
+      host.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        closeDesktopNavGroups();
+        btn.focus();
+      });
       btn.addEventListener("click", (event) => {
         event.preventDefault();
-        const host = btn.closest(".nav-group");
-        const menu = host?.querySelector(".nav-group-menu");
-        if (!host || !menu) return;
         const isOpen = menu.classList.contains("show");
         closeDesktopNavGroups();
-        if (!isOpen) {
-          btn.setAttribute("aria-expanded", "true");
-          host.classList.add("is-open");
-          menu.classList.add("show");
-          menu.setAttribute("aria-hidden", "false");
-        }
+        if (!isOpen) openGroup();
       });
     });
 

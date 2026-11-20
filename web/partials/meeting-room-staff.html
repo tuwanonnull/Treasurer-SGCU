@@ -177,7 +177,7 @@
               <div id="meetingHolidayManageMessage" class="section-text-sm" aria-live="polite"></div>
               <div class="meeting-holiday-calendar-toolbar">
                 <button id="meetingHolidayCalendarPrev" class="btn-ghost" type="button" aria-label="เดือนก่อน">‹</button>
-                <div id="meetingHolidayCalendarTitle" class="meeting-holiday-calendar-title"></div>
+                <div class="meeting-holiday-calendar-heading"><div id="meetingHolidayCalendarTitle" class="meeting-holiday-calendar-title" aria-live="polite"></div><button id="meetingHolidayCalendarToday" hidden class="btn-ghost" type="button">วันนี้</button></div>
                 <button id="meetingHolidayCalendarNext" class="btn-ghost" type="button" aria-label="เดือนถัดไป">›</button>
               </div>
               <div class="meeting-holiday-calendar-scroll">
@@ -186,6 +186,8 @@
                 </div>
                 <div id="meetingHolidayCalendar" class="meeting-holiday-calendar"></div>
               </div>
+              <p class="meeting-holiday-mobile-hint">สีชมพู = วันปิดให้บริการ · แตะวันที่เพื่อดูรายละเอียด</p>
+              <div id="meetingHolidayMobileList" class="meeting-holiday-mobile-list" aria-live="polite"></div>
             </div>
           </div>
 
@@ -279,6 +281,27 @@
                 <button id="meetingRoomDeleteConfirmBtn" class="btn-primary meeting-delete-confirm-btn" type="button">ลบห้องประชุม</button>
               </div>
             </div>
+          </dialog>
+
+          <dialog id="meetingHolidayDeleteDialog" class="meeting-settings-dialog" aria-labelledby="meetingHolidayDeleteTitle" aria-describedby="meetingHolidayDeleteDescription">
+            <form method="dialog" class="meeting-settings-dialog-card">
+              <div class="meeting-settings-dialog-header">
+                <div class="panel-title" id="meetingHolidayDeleteTitle">ลบวันปิดให้บริการ?</div>
+                <button id="meetingHolidayDeleteClose" class="modal-close" type="button" aria-label="ปิด">✕</button>
+              </div>
+              <div class="meeting-delete-warning">
+                <span class="meeting-delete-warning-icon" aria-hidden="true">!</span>
+                <div>
+                  <strong id="meetingHolidayDeleteName"></strong>
+                  <p id="meetingHolidayDeleteDate"></p>
+                </div>
+              </div>
+              <p id="meetingHolidayDeleteDescription" class="section-text-sm">รายการวันปิดนี้จะถูกลบออก การจองในวันนี้จะเป็นไปตามวันและเวลาให้บริการปกติของห้องประชุม</p>
+              <div class="meeting-settings-dialog-actions">
+                <button class="btn-ghost" type="submit" value="cancel" autofocus>ยกเลิก</button>
+                <button class="btn-primary meeting-delete-confirm-btn" type="submit" value="delete">ลบวันปิด</button>
+              </div>
+            </form>
           </dialog>
 
           <dialog id="meetingHolidayAddDialog" class="meeting-settings-dialog">
