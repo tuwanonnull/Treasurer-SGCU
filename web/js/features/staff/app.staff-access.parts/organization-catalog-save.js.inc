@@ -220,7 +220,7 @@
     const id = normalizeOrganizationCatalogText(organizationCatalogFields.id?.value);
     if (!id) return;
     const name = normalizeOrganizationCatalogText(organizationCatalogFields.name?.value) || "รายการนี้";
-    const ok = window.confirm(`ยืนยันลบ "${name}" ออกจากทะเบียนองค์กร?`);
+    const ok = await SGCU_DIALOG.confirmDeletion({ title: "ยืนยันลบออกจากทะเบียนองค์กร", message: `ยืนยันลบ "${name}" ออกจากทะเบียนองค์กร?`, confirmLabel: "ลบออกจากทะเบียน" });
     if (!ok) return;
     if (!resolveStore() || !firestore.updateDoc || !firestore.doc) {
       setMessage(organizationCatalogFormMessageEl, "ระบบยังไม่พร้อมลบข้อมูล", "#b91c1c");

@@ -1109,10 +1109,11 @@ function initMeetingRoomStaffApproval() {
       modal.setAttribute("role", "dialog");
       modal.setAttribute("aria-modal", "true");
       modal.setAttribute("aria-hidden", "true");
+      modal.setAttribute("aria-labelledby", "meetingStaffDeleteConfirmTitle");
       modal.innerHTML = `
-        <div class="modal-dialog" style="max-width:460px;">
+        <div class="modal-dialog">
           <div class="modal-header">
-            <div class="modal-title">ยืนยันการลบคำขอ</div>
+            <div id="meetingStaffDeleteConfirmTitle" class="modal-title">ยืนยันการลบคำขอ</div>
             <button id="meetingStaffDeleteConfirmClose" class="modal-close" type="button" aria-label="ปิด">×</button>
           </div>
           <div class="modal-body">
@@ -1147,6 +1148,7 @@ function initMeetingRoomStaffApproval() {
         } else {
           modal.classList.remove("show");
           modal.setAttribute("aria-hidden", "true");
+      modal.setAttribute("aria-labelledby", "meetingStaffDeleteConfirmTitle");
         }
         resolve(!!value);
       };

@@ -455,7 +455,7 @@
     const target = currentPositionCatalog.find((item) => item.id === safeId);
     if (!target) return;
 
-    const ok = window.confirm(`ยืนยันลบตำแหน่ง "${target.name}" ?`);
+    const ok = await SGCU_DIALOG.confirmDeletion({ title: "ยืนยันลบตำแหน่ง", message: `ยืนยันลบตำแหน่ง "${target.name}" ?`, confirmLabel: "ลบตำแหน่ง" });
     if (!ok) return;
 
     try {

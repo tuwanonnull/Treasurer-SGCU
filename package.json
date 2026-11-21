@@ -22,6 +22,7 @@
     "preview:documents": "node tools/preview/serve-receipt-preview.mjs",
     "preview:staff-positions:refresh": "node tools/preview/read-staff-position-catalog.mjs",
     "preview:staff-positions": "node tools/preview/serve-staff-position-preview.mjs",
+    "test:dialogs": "node tools/tests/test-delete-confirmation.mjs",
     "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs tools/tests/test-source-includes.mjs",
     "preview:projects": "node tools/preview/serve-project-live-preview.mjs",
     "preview:tour": "npm run build && node tools/preview/serve-onboarding-preview.mjs",

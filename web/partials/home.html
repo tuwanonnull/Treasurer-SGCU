@@ -290,6 +290,14 @@
           <!-- 4) Related resources, FAQ and contact share one paging section. -->
           <section class="home-support-panel" aria-label="ข้อมูลช่วยเหลือและช่องทางติดต่อ">
           <section class="home-related" id="related-websites" aria-labelledby="homeRelatedTitle">
+            <!-- Map white marks on pink to pink marks on white without changing source artwork. -->
+            <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;pointer-events:none">
+              <defs>
+                <filter id="home-related-white-background" color-interpolation-filters="sRGB">
+                  <feColorMatrix type="matrix" values="0 -0.3556 0 0 1.1956  0 -1.4667 0 0 1.8067  0 -1 0 0 1.55  0 0 0 1 0"/>
+                </filter>
+              </defs>
+            </svg>
             <header class="home-help-header">
               <h2 id="homeRelatedTitle">ระบบและเว็บไซต์ที่เกี่ยวข้อง</h2>
             </header>
@@ -298,38 +306,38 @@
               <div class="home-related-track">
             <div class="home-related-grid">
               <a class="home-related-card" href="https://www.chula.ac.th" target="_blank" rel="noopener noreferrer" aria-label="จุฬาลงกรณ์มหาวิทยาลัย (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/chula.webp" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>จุฬาลงกรณ์มหาวิทยาลัย</h3><span class="home-related-url">chula.ac.th <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--chula"><img src="img/organizations/chula.webp" alt="" width="1024" height="722" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>จุฬาลงกรณ์มหาวิทยาลัย</h3><span class="home-related-url">chula.ac.th <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" href="https://www.sa.chula.ac.th" target="_blank" rel="noopener noreferrer" aria-label="สำนักบริหารกิจการนิสิต จุฬาลงกรณ์มหาวิทยาลัย (เปิดแท็บใหม่)">
                 <span class="home-related-logo"><img src="img/organizations/student-affairs-official.jpg" alt="" width="100" height="100" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>สำนักบริหารกิจการนิสิต</h3><span class="home-related-url">sa.chula.ac.th <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <div class="home-related-copy"><h3>สำนักบริหารกิจการนิสิต</h3><span class="home-related-url">sa.chula.ac.th <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" href="https://www.instagram.com/sgcu.chula/" target="_blank" rel="noopener noreferrer" aria-label="Instagram องค์การบริหารสโมสรนิสิตจุฬาฯ (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/sgcu.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>องค์การบริหารสโมสรนิสิตจุฬาฯ</h3><span class="home-related-url">@sgcu.chula <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--pink-source"><img src="img/organizations/sgcu.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>องค์การบริหารสโมสรนิสิตจุฬาฯ</h3><span class="home-related-url">@sgcu.chula <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" href="https://www.instagram.com/sapanisitchula/" target="_blank" rel="noopener noreferrer" aria-label="Instagram สภานิสิตจุฬาฯ (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/student-council-official.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>สภานิสิตจุฬาฯ</h3><span class="home-related-url">@sapanisitchula <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--pink-source"><img src="img/organizations/student-council-official.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>สภานิสิตจุฬาฯ</h3><span class="home-related-url">@sapanisitchula <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
             </div>
             <div class="home-related-grid home-related-grid--copy" aria-hidden="true">
               <a class="home-related-card" tabindex="-1" href="https://www.chula.ac.th" target="_blank" rel="noopener noreferrer" aria-label="จุฬาลงกรณ์มหาวิทยาลัย (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/chula.webp" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>จุฬาลงกรณ์มหาวิทยาลัย</h3><span class="home-related-url">chula.ac.th <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--chula"><img src="img/organizations/chula.webp" alt="" width="1024" height="722" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>จุฬาลงกรณ์มหาวิทยาลัย</h3><span class="home-related-url">chula.ac.th <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" tabindex="-1" href="https://www.sa.chula.ac.th" target="_blank" rel="noopener noreferrer" aria-label="สำนักบริหารกิจการนิสิต จุฬาลงกรณ์มหาวิทยาลัย (เปิดแท็บใหม่)">
                 <span class="home-related-logo"><img src="img/organizations/student-affairs-official.jpg" alt="" width="100" height="100" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>สำนักบริหารกิจการนิสิต</h3><span class="home-related-url">sa.chula.ac.th <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <div class="home-related-copy"><h3>สำนักบริหารกิจการนิสิต</h3><span class="home-related-url">sa.chula.ac.th <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" tabindex="-1" href="https://www.instagram.com/sgcu.chula/" target="_blank" rel="noopener noreferrer" aria-label="Instagram องค์การบริหารสโมสรนิสิตจุฬาฯ (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/sgcu.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>องค์การบริหารสโมสรนิสิตจุฬาฯ</h3><span class="home-related-url">@sgcu.chula <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--pink-source"><img src="img/organizations/sgcu.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>องค์การบริหารสโมสรนิสิตจุฬาฯ</h3><span class="home-related-url">@sgcu.chula <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
               <a class="home-related-card" tabindex="-1" href="https://www.instagram.com/sapanisitchula/" target="_blank" rel="noopener noreferrer" aria-label="Instagram สภานิสิตจุฬาฯ (เปิดแท็บใหม่)">
-                <span class="home-related-logo"><img src="img/organizations/student-council-official.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
-                <div class="home-related-copy"><h3>สภานิสิตจุฬาฯ</h3><span class="home-related-url">@sapanisitchula <span class="home-related-arrow" aria-hidden="true">↗</span></span></div>
+                <span class="home-related-logo home-related-logo--pink-source"><img src="img/organizations/student-council-official.jpg" alt="" width="150" height="110" loading="lazy" decoding="async"></span>
+                <div class="home-related-copy"><h3>สภานิสิตจุฬาฯ</h3><span class="home-related-url">@sapanisitchula <svg class="home-related-arrow" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span></div>
               </a>
             </div>
               </div>

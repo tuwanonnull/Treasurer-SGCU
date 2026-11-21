@@ -412,7 +412,7 @@
     ].find((item) => (item.id || "").toString() === id);
     const applicantEmail = (target?.applicantEmail || "").toString().trim().toLowerCase();
     const applicantName = (target?.applicantName || applicantEmail || "-").toString();
-    const ok = window.confirm(`ยืนยันลบคำขอสมาชิกสตาฟของ "${applicantName}" ?`);
+    const ok = await SGCU_DIALOG.confirmDeletion({ title: "ยืนยันลบคำขอสมาชิกสตาฟ", message: `ยืนยันลบคำขอสมาชิกสตาฟของ "${applicantName}" ?`, confirmLabel: "ลบคำขอ" });
     if (!ok) {
       setMessage(approvalMessageEl, "ยกเลิกการลบคำขอ", "#6b7280");
       return false;

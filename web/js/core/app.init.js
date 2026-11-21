@@ -1438,6 +1438,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const host = btn.closest(".nav-group");
       const menu = host?.querySelector(".nav-group-menu");
       if (!host || !menu) return;
+      let keyboardNavigation = true;
+      let lastPointerType = "";
+      host.addEventListener("pointerdown", (event) => {
+        lastPointerType = event.pointerType;
+        keyboardNavigation = false;
+      });
       const openGroup = () => {
         closeDesktopNavGroups();
         btn.setAttribute("aria-expanded", "true");
@@ -1456,13 +1462,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (event.pointerType !== "mouse") return;
         clearNavHoverTimers();
         navHoverCloseTimer = setTimeout(() => {
-          if (!host.contains(document.activeElement)) closeDesktopNavGroups();
+          if (!keyboardNavigation || !host.contains(document.activeElement)) closeDesktopNavGroups();
         }, 250);
       });
       host.addEventListener("focusout", (event) => {
         if (!host.contains(event.relatedTarget)) closeDesktopNavGroups();
       });
       host.addEventListener("keydown", (event) => {
+        keyboardNavigation = true;
         if (event.key !== "Escape") return;
         event.preventDefault();
         closeDesktopNavGroups();
@@ -1470,6 +1477,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       btn.addEventListener("click", (event) => {
         event.preventDefault();
+        // Native keyboard activation has detail 0; touch must still toggle.
+        const pointerType = event.pointerType || lastPointerType;
+        if (event.detail > 0 && pointerType === "mouse") {
+          openGroup();
+          return;
+        }
         const isOpen = menu.classList.contains("show");
         closeDesktopNavGroups();
         if (!isOpen) openGroup();

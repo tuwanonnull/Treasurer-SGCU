@@ -1,6 +1,7 @@
 /* Dialog and focus-trap helpers shared across feature modules */
 const SGCU_DIALOG = (() => {
   const focusTrapHandlers = new Map();
+  let deleteConfirmationOpen = false;
   let activeModalEl = null;
   let lastModalFocusedEl = null;
   let lastMenuFocusedEl = null;
@@ -110,7 +111,72 @@ const SGCU_DIALOG = (() => {
     }
   }
 
+  // Native top-layer dialog keeps a confirmation above an existing editor.
+  function confirmDeletion({ title = "ยืนยันการลบรายการ", message, confirmLabel = "ลบรายการ" } = {}) {
+    if (deleteConfirmationOpen) return Promise.resolve(false);
+    deleteConfirmationOpen = true;
+    const previousFocus = document.activeElement;
+    const dialog = document.createElement("dialog");
+    dialog.id = "sharedDeleteConfirmDialog";
+    dialog.setAttribute("aria-labelledby", "sharedDeleteConfirmTitle");
+    dialog.setAttribute("aria-describedby", "sharedDeleteConfirmMessage");
+    dialog.innerHTML = `
+      <div class="modal-header">
+        <h3 id="sharedDeleteConfirmTitle" class="modal-title"></h3>
+        <button class="modal-close" type="button" data-cancel aria-label="ปิด">×</button>
+      </div>
+      <div id="sharedDeleteConfirmMessage" class="delete-confirm-warning"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" data-cancel autofocus>ยกเลิก</button>
+        <button class="btn-primary" type="button" data-confirm></button>
+      </div>`;
+    dialog.querySelector(".modal-title").textContent = title;
+    dialog.querySelector(".delete-confirm-warning").textContent = message || "ต้องการลบรายการนี้ใช่หรือไม่";
+    dialog.querySelector("[data-confirm]").textContent = confirmLabel;
+    document.body.appendChild(dialog);
+    return new Promise(resolve => {
+      const finish = () => {
+        const confirmed = dialog.returnValue === "confirm";
+        dialog.remove();
+        deleteConfirmationOpen = false;
+        if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+        resolve(confirmed);
+      };
+      dialog.addEventListener("close", finish, { once: true });
+      dialog.querySelectorAll("[data-cancel]").forEach(button => {
+        button.addEventListener("click", () => dialog.close("cancel"));
+      });
+      dialog.querySelector("[data-confirm]").addEventListener("click", () => dialog.close("confirm"));
+      dialog.addEventListener("keydown", event => {
+        // Do not let the app's Escape handler close the editor underneath.
+        if (event.key === "Escape") event.stopPropagation();
+      });
+      dialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        dialog.close("cancel");
+      });
+      let pointerStartedOutside = false;
+      const outside = event => {
+        const rect = dialog.getBoundingClientRect();
+        return event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom);
+      };
+      dialog.addEventListener("pointerdown", event => { pointerStartedOutside = outside(event); });
+      dialog.addEventListener("click", event => {
+        if (pointerStartedOutside && outside(event)) dialog.close("cancel");
+        pointerStartedOutside = false;
+      });
+      try {
+        dialog.showModal();
+        dialog.querySelector("[autofocus]").focus();
+      } catch {
+        dialog.returnValue = "cancel";
+        finish();
+      }
+    });
+  }
+
   return {
+    confirmDeletion,
     closeDialog,
     getActiveDialog,
     openDialog,

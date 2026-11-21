@@ -1,0 +1,194 @@
+/* Shared presentation for destructive confirmations, including native dialogs.
+   Loaded after theme overrides so each feature uses the same danger palette. */
+html body :is(
+  #sharedDeleteConfirmDialog,
+  #budgetRequestDeleteModal,
+  #budgetRequestDeleteConfirmModal,
+  #budgetRoundDeleteModal,
+  #budgetProjectCodeClearModal,
+  #borrowDeleteConfirmModal,
+  #meetingStaffDeleteConfirmModal,
+  #meetingRoomDeleteDialog,
+  #meetingHolidayDeleteDialog,
+  #orgRepresentativeDeleteConfirmModal,
+  #staffBulkDeleteConfirmModal,
+  #staffApprovalDetailModal:has(.org-representative-delete-confirm),
+  .staff-auth-delete-dialog,
+  .borrow-project-delete-dialog
+) {
+  --delete-surface: #fff;
+  --delete-raised: #fffafb;
+  --delete-text: #334155;
+  --delete-muted: #64748b;
+  --delete-border: #f3dce6;
+  --delete-warning-bg: #fff1f2;
+  --delete-warning-text: #9f1239;
+  --delete-warning-border: #fecdd3;
+  --delete-button-bg: #be123c;
+  --delete-button-hover: #9f1239;
+  --delete-button-text: #fff;
+  --delete-button-border: #be123c;
+
+  &:is(dialog), & > .modal-dialog {
+    box-sizing: border-box;
+    width: min(560px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 24px;
+    overflow: auto;
+    border: 1px solid var(--delete-border);
+    border-radius: 20px;
+    background: var(--delete-surface);
+    color: var(--delete-text);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 24%);
+    font-family: inherit;
+  }
+
+  &::backdrop {
+    background: rgb(15 23 42 / 45%);
+    backdrop-filter: blur(6px);
+  }
+
+  & .meeting-settings-dialog-card { padding: 0; background: transparent; }
+
+  & :is(.modal-header, .meeting-settings-dialog-header) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 0 0 16px;
+    border: 0;
+    border-bottom: 1px solid var(--delete-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  & :is(.modal-title, .panel-title, h3) {
+    margin: 0;
+    color: var(--delete-text);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  & :is(.modal-subtitle, .panel-caption, .section-text-sm,
+    .budget-round-delete-step-text, .budget-code-clear-copy, p, small) {
+    color: var(--delete-muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  & :is(.modal-body, .modal-section, .org-representative-delete-body) {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  & :is(.delete-confirm-warning, .budget-round-delete-warning,
+    .budget-code-clear-warning, .borrow-delete-confirm-warning,
+    .borrow-delete-confirm-note, .meeting-delete-warning, .borrow-project-delete-target) {
+    padding: 14px 16px;
+    border: 1px solid var(--delete-warning-border);
+    border-radius: 12px;
+    background: var(--delete-warning-bg);
+    color: var(--delete-warning-text);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  & :is(.budget-round-delete-name, .budget-round-delete-summary,
+    .budget-code-clear-count, .budget-code-clear-copy,
+    .meeting-delete-warning strong, .meeting-delete-warning p,
+    .borrow-project-delete-target strong, .borrow-project-delete-target small) {
+    color: var(--delete-warning-text);
+  }
+
+  & :is(.meeting-delete-warning-icon, .borrow-project-delete-icon, .budget-code-clear-mark) {
+    background: var(--delete-warning-bg);
+    color: var(--delete-warning-text);
+    border: 1px solid var(--delete-warning-border);
+  }
+
+  & :is(.budget-round-delete-export, .budget-code-clear-preview) {
+    background: var(--delete-raised);
+    border-color: var(--delete-border);
+    color: var(--delete-text);
+  }
+
+  & :is(.budget-round-delete-check, .budget-round-delete-step-title, .budget-code-clear-preview-title) {
+    color: var(--delete-text);
+  }
+
+  & :is(.modal-actions, .modal-footer, .meeting-settings-dialog-actions, .borrow-project-delete-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 20px 0 0;
+    padding: 16px 0 0;
+    border: 0;
+    border-top: 1px solid var(--delete-border);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  & :is(.btn-primary, .btn-ghost) { min-height: 44px; }
+  & .btn-primary {
+    background: var(--delete-button-bg);
+    color: var(--delete-button-text);
+    border: 1px solid var(--delete-button-border);
+    box-shadow: none;
+  }
+  & .btn-primary:hover:not(:disabled) {
+    background: var(--delete-button-hover);
+    color: var(--delete-button-text);
+    border-color: var(--delete-button-border);
+    box-shadow: none;
+  }
+  & .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  & :is(.btn-ghost, .modal-close) {
+    background: var(--delete-surface);
+    color: var(--delete-text);
+    border: 1px solid var(--delete-border);
+    box-shadow: none;
+  }
+  & :is(.btn-ghost, .modal-close):hover:not(:disabled) { background: var(--delete-raised); }
+  & .modal-close { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; }
+  & :is(button, input):focus-visible { outline: 3px solid var(--delete-warning-text); outline-offset: 3px; }
+
+  @media (max-width: 640px) {
+    &:is(dialog), & > .modal-dialog { padding: 18px; }
+    & :is(.modal-actions, .modal-footer, .meeting-settings-dialog-actions, .borrow-project-delete-actions) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & :is(.modal-actions, .modal-footer, .meeting-settings-dialog-actions, .borrow-project-delete-actions) > button {
+      width: 100%;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &:is(html[data-theme="dark"] *) {
+    --delete-surface: var(--preview-surface, #211b20);
+    --delete-raised: var(--preview-raised, #2b2429);
+    --delete-text: var(--preview-text, #f3e8ed);
+    --delete-muted: var(--preview-muted, #c4b5bd);
+    --delete-border: var(--preview-border, #53404a);
+    --delete-warning-bg: #3c2529;
+    --delete-warning-text: #ffb4b4;
+    --delete-warning-border: #71444c;
+    --delete-button-bg: #3c2529;
+    --delete-button-hover: #542f35;
+    --delete-button-text: #ffb4b4;
+    --delete-button-border: #a6606a;
+  }
+}
