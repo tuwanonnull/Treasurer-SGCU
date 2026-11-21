@@ -19,6 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
   getFirestore,
+  documentId,
   connectFirestoreEmulator,
   doc,
   collection,
@@ -223,7 +224,7 @@ function getDateKeyInBangkok() {
 }
 
 window.sgcuVisitorCounter.syncDailyVisitorCount = async () => {
-  // Local previews must not consume production reads/writes for visitor statistics.
+  // Local previews may read statistics but must never increment production counters.
   if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) return null;
   const dateKey = getDateKeyInBangkok();
   const dailyRef = doc(db, "site_daily_visitors", dateKey);
@@ -261,6 +262,77 @@ window.sgcuVisitorCounter.syncDailyVisitorCount = async () => {
       allTimeTotal: nextAllTime
     };
   });
+};
+
+// A persistent random browser ID deduplicates concurrent tabs through a transaction.
+window.sgcuVisitorCounter.syncUniqueVisitorCount = async (page = null) => {
+  if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return null;
+  let browserId;
+  try {
+    browserId = localStorage.getItem("sgcuVisitorBrowserId");
+    if (!/^[a-f0-9-]{36}$/.test(browserId || "")) {
+      browserId = crypto.randomUUID();
+      localStorage.setItem("sgcuVisitorBrowserId", browserId);
+    }
+  } catch { return null; } // Without persistence, do not inflate the unique count.
+  const dateKey = getDateKeyInBangkok();
+  const dailyRef = page ? doc(db, "site_page_visitors", page, "unique", dateKey) : doc(db, "site_daily_unique_visitors", dateKey);
+  const markerRef = doc(collection(dailyRef, "browsers"), browserId);
+  return runTransaction(db, async (transaction) => {
+    const daily = await transaction.get(dailyRef);
+    const marker = await transaction.get(markerRef);
+    if (marker.exists()) return daily.data()?.total ?? null;
+    const total = Number(daily.data()?.total || 0) + 1;
+    transaction.set(markerRef, { createdAt: serverTimestamp() });
+    transaction.set(dailyRef, { total, updatedAt: serverTimestamp(), lastBrowserId: browserId });
+    return total;
+  });
+};
+
+let lastCountedVisitorPage = null;
+window.sgcuVisitorCounter.trackPageVisit = async (page) => {
+  if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
+  if (!/^[a-z0-9-]{1,80}$/.test(page)) return;
+  const dateKey = getDateKeyInBangkok();
+  const key = `${dateKey}/${page}`;
+  if (lastCountedVisitorPage === key) return;
+  lastCountedVisitorPage = key;
+  const dailyRef = doc(db, "site_page_visitors", page, "days", dateKey);
+  const totalRef = doc(db, "site_stats", `page_${page}`);
+  const results = await Promise.allSettled([
+    runTransaction(db, async (transaction) => {
+      const daily = await transaction.get(dailyRef);
+      const total = await transaction.get(totalRef);
+      transaction.set(dailyRef, { total: Number(daily.data()?.total || 0) + 1, updatedAt: serverTimestamp() });
+      transaction.set(totalRef, { total: Number(total.data()?.total || 0) + 1, updatedAt: serverTimestamp() });
+    }),
+    window.sgcuVisitorCounter.syncUniqueVisitorCount(page)
+  ]);
+  if (results[0].status === 'rejected' && lastCountedVisitorPage === key) lastCountedVisitorPage = null;
+  for (const result of results) if (result.status === 'rejected') console.warn('Page visitor tracking unavailable', result.reason);
+};
+
+window.sgcuVisitorCounter.getVisitorHistory = async (startDate, endDate, page = 'all') => {
+  if (page !== 'all' && !/^[a-z0-9-]{1,80}$/.test(page)) throw new Error('Invalid visitor page');
+  const visitPath = page === 'all' ? ["site_daily_visitors"] : ["site_page_visitors", page, "days"];
+  const uniquePath = page === 'all' ? ["site_daily_unique_visitors"] : ["site_page_visitors", page, "unique"];
+  const today = getDateKeyInBangkok();
+  const readDays = async (path) => {
+    const snapshot = await getDocs(query(collection(db, ...path), where(documentId(), ">=", startDate), where(documentId(), "<=", endDate)));
+    return Object.fromEntries(snapshot.docs.map((item) => [item.id, Number(item.data().total)]));
+  };
+  const readToday = async (path) => {
+    const snapshot = await getDoc(doc(db, ...path, today));
+    return snapshot.exists() ? Number(snapshot.data().total) : null;
+  };
+  const [visits, unique, allTime, todayVisits, todayUnique] = await Promise.all([
+    readDays(visitPath),
+    readDays(uniquePath).then((days) => ({ days, unavailable: false })).catch(() => ({ days: {}, unavailable: true })),
+    getDoc(doc(db, "site_stats", page === 'all' ? "visitors_all_time" : `page_${page}`)),
+    readToday(visitPath), readToday(uniquePath).catch(() => null)
+  ]);
+  return { visits, unique: unique.days, uniqueUnavailable: unique.unavailable, todayVisits, todayUnique,
+    allTime: allTime.exists() ? Number(allTime.data().total) : null };
 };
 
 // Keep request-only Google verification separate from the application's login session.

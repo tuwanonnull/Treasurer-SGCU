@@ -148,6 +148,10 @@ async function initDailyVisitorCounter() {
   };
 
   setCounterText("...", "...");
+  window.sgcuUniqueVisitorReady = window.sgcuVisitorCounter?.syncUniqueVisitorCount?.()
+      .then((total) => {
+        document.getElementById("visitorUniqueToday").textContent = total == null ? "-" : total.toLocaleString("th-TH");
+      }).catch((error) => console.warn("Unique visitor counter unavailable", error));
   try {
     const result = await window.sgcuVisitorCounter?.syncDailyVisitorCount?.();
     const numericDaily = Number(result?.dailyTotal);
@@ -1309,6 +1313,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     currentPage = page;
+    window.sgcuVisitorCounter?.trackPageVisit?.(page)?.catch((error) => console.warn("Page visitor count unavailable", error));
     if (window.localStorage) {
       localStorage.setItem("lastActivePage", page);
     }

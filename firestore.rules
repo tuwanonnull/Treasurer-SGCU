@@ -989,6 +989,64 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /site_daily_unique_visitors/{dateId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasOnly(["total", "updatedAt", "lastBrowserId"]) &&
+        request.resource.data.total is int &&
+        request.resource.data.lastBrowserId is string &&
+        request.resource.data.lastBrowserId.matches('^[a-f0-9-]{36}$') &&
+        request.resource.data.updatedAt == request.time &&
+        ((!exists(/databases/$(database)/documents/site_daily_unique_visitors/$(dateId)) && request.resource.data.total == 1) ||
+          request.resource.data.total == resource.data.total + 1) &&
+        !exists(/databases/$(database)/documents/site_daily_unique_visitors/$(dateId)/browsers/$(request.resource.data.lastBrowserId)) &&
+        getAfter(/databases/$(database)/documents/site_daily_unique_visitors/$(dateId)/browsers/$(request.resource.data.lastBrowserId)).data.createdAt == request.time;
+      allow delete: if false;
+      match /browsers/{browserId} {
+        allow get: if true;
+        allow create: if browserId.matches('^[a-f0-9-]{36}$') &&
+          request.resource.data.keys().hasOnly(["createdAt"]) &&
+          request.resource.data.createdAt == request.time &&
+          getAfter(/databases/$(database)/documents/site_daily_unique_visitors/$(dateId)).data.lastBrowserId == browserId &&
+          getAfter(/databases/$(database)/documents/site_daily_unique_visitors/$(dateId)).data.updatedAt == request.time;
+        allow update, delete, list: if false;
+      }
+    }
+
+    match /site_page_visitors/{pageId} {
+      match /days/{dateId} {
+        allow read: if true;
+        allow create, update: if pageId.matches('^[a-z0-9-]{1,80}$') && validVisitorCounterWrite(
+          /databases/$(database)/documents/site_page_visitors/$(pageId)/days/$(dateId)
+        );
+        allow delete: if false;
+      }
+      match /unique/{dateId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasOnly(["total", "updatedAt", "lastBrowserId"]) &&
+        request.resource.data.total is int &&
+        request.resource.data.lastBrowserId is string &&
+        request.resource.data.lastBrowserId.matches('^[a-f0-9-]{36}$') &&
+        request.resource.data.updatedAt == request.time &&
+        ((!exists(/databases/$(database)/documents/site_page_visitors/$(pageId)/unique/$(dateId)) && request.resource.data.total == 1) ||
+          request.resource.data.total == resource.data.total + 1) &&
+        !exists(/databases/$(database)/documents/site_page_visitors/$(pageId)/unique/$(dateId)/browsers/$(request.resource.data.lastBrowserId)) &&
+        getAfter(/databases/$(database)/documents/site_page_visitors/$(pageId)/unique/$(dateId)/browsers/$(request.resource.data.lastBrowserId)).data.createdAt == request.time;
+      allow delete: if false;
+      match /browsers/{browserId} {
+        allow get: if true;
+        allow create: if browserId.matches('^[a-f0-9-]{36}$') &&
+          request.resource.data.keys().hasOnly(["createdAt"]) &&
+          request.resource.data.createdAt == request.time &&
+          getAfter(/databases/$(database)/documents/site_page_visitors/$(pageId)/unique/$(dateId)).data.lastBrowserId == browserId &&
+          getAfter(/databases/$(database)/documents/site_page_visitors/$(pageId)/unique/$(dateId)).data.updatedAt == request.time;
+        allow update, delete, list: if false;
+      }
+    }
+
+    }
+
     match /site_stats/{statId} {
       allow read: if true;
       allow create, update: if validVisitorCounterWrite(

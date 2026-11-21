@@ -26,7 +26,10 @@
     "test:build": "node tools/build/build-static.mjs --check && node --test tools/tests/test-build-assets.mjs tools/tests/test-source-includes.mjs",
     "preview:projects": "node tools/preview/serve-project-live-preview.mjs",
     "preview:tour": "npm run build && node tools/preview/serve-onboarding-preview.mjs",
-    "test:tour": "npm run build && node tools/tests/test-onboarding-tour.mjs"
+    "test:tour": "npm run build && node tools/tests/test-onboarding-tour.mjs",
+    "test:visitors": "node tools/tests/test-visitor-comparison.mjs && node tools/tests/test-visitor-page-tracking.mjs",
+    "test:visitors:ui": "node tools/tests/test-visitor-stats-ui.mjs",
+    "test:visitors:rules": "firebase emulators:exec --only firestore --project demo-budget-meeting --config firebase.budget-meeting-emulator.json 'node tools/tests/test-visitor-rules.mjs'"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1"
