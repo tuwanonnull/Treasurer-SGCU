@@ -5,12 +5,13 @@ import { readCssSource } from '../lib/source-includes.mjs';
 const source = await fs.readFile('web/partials/dashboard-staff.html', 'utf8');
 const panel = source.slice(source.indexOf('          <section id="systemVisitorPanel"'), source.indexOf('          <div id="systemHealthSummary"'));
 const css = await readCssSource(new URL('../../web/css/style.css', import.meta.url));
+const darkCss = await fs.readFile('web/css/components/theme-preview.css', 'utf8');
 const script = await fs.readFile('web/js/core/app.visitor-stats.js', 'utf8');
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.route('**/*', route => route.abort());
-  await page.setContent(`<style>${css}body{display:block;margin:0;padding:16px}</style><a data-page="home">หน้าแรก</a><a data-page="project-status">สถานะโครงการ</a><button data-system-data-tab="visitors">สถิติการเข้าใช้งาน</button>${panel.replace(' hidden>', '>')}`);
+  await page.setContent(`<style>${css}${darkCss}body{display:block;margin:0;padding:16px}</style><a data-page="home">หน้าแรก</a><a data-page="project-status">สถานะโครงการ</a><button data-system-data-tab="visitors">สถิติการเข้าใช้งาน</button>${panel.replace(' hidden>', '>')}`);
   await page.evaluate(() => {
     window.requests = [];
     window.Chart = class {
@@ -110,7 +111,41 @@ try {
   assert.ok(positions.every(top => Math.abs(top - positions[0]) < 2));
   assert.equal(await page.locator('.visitor-toolbar #visitorMetric').count(), 0);
   assert.equal(await page.locator('.visitor-trend-card .chart-header #visitorMetric').count(), 1);
-  assert.equal(await page.locator('#systemVisitorPanel > header #visitorRefresh').count(), 1);
+  assert.equal(await page.locator('.visitor-toolbar #visitorRefresh').count(), 1);
   await page.screenshot({ path: '/tmp/visitor-filters-desktop.png', fullPage: true });
+  const detail = await page.locator('.visitor-detail-card').boundingBox();
+  const table = await page.locator('#visitorDetailTable').boundingBox();
+  const trend = await page.locator('.visitor-trend-card').boundingBox();
+  assert.ok(detail.x > trend.x + trend.width, 'Daily details sit beside the chart');
+  assert.ok(Math.abs(detail.y + detail.height - table.y - table.height - 18) < 3, 'Table uses remaining card height');
+  await page.locator('#visitorDays').selectOption('custom'); await ready();
+  await page.locator('#visitorCompare').selectOption('custom'); await ready();
+  for (const [selectId, datesId] of [['visitorDays', 'visitorCustomDates'], ['visitorCompare', 'visitorCompareDates']]) {
+    const select = await page.locator('#' + selectId).boundingBox();
+    const dates = await page.locator('#' + datesId).boundingBox();
+    assert.ok(dates.y >= select.y + select.height && Math.abs(dates.x - select.x) < 2, 'Custom dates sit directly under their selector');
+    assert.ok(dates.width <= select.width + 1, 'Custom dates fit their filter column');
+  }
+  await page.screenshot({ path: '/tmp/visitor-custom-desktop.png', fullPage: true });
+  await page.evaluate(() => document.documentElement.dataset.theme = 'dark');
+  for (const selector of ['#visitorStart', '#visitorCompareStart', '#visitorDays']) {
+    const colors = await page.locator(selector).evaluate(el => {
+      const css = getComputedStyle(el);
+      return { background: css.backgroundColor, color: css.color, scheme: css.colorScheme };
+    });
+    assert.equal(colors.background, 'rgb(34, 34, 34)');
+    assert.equal(colors.color, 'rgb(242, 242, 242)');
+    assert.equal(colors.scheme, 'dark');
+  }
+  assert.equal(await page.locator('.visitor-detail-value').first().evaluate(el => getComputedStyle(el).color), 'rgb(242, 242, 242)');
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.visitor-metrics .dashboard-metric')).backgroundColor === 'rgb(34, 34, 34)');
+  await page.screenshot({ path: '/tmp/visitor-dark-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: '/tmp/visitor-dark-mobile.png', fullPage: true });
+  await page.evaluate(() => document.documentElement.dataset.theme = 'light');
+  assert.equal(await page.locator('#visitorStart').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(255, 255, 255)');
+
+
   console.log('Visitor filters: presets, custom ranges, validation, calendar grouping, no comparison, page scoping, cache, stale requests, error recovery and mobile layout passed.');
 } finally { await browser.close(); }

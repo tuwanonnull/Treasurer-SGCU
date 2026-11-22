@@ -970,3 +970,44 @@
 @media (max-width: 640px) {
   #systemVisitorPanel .visitor-detail-card > .chart-header .chart-caption { flex-basis: 100%; }
 }
+
+/* Keep filters and refresh together, with daily detail beside the trend. */
+#systemVisitorPanel .visitor-toolbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  overflow: visible;
+  margin-top: 0;
+}
+#systemVisitorPanel .visitor-toolbar { align-items: start; }
+#systemVisitorPanel .visitor-toolbar > .visitor-refresh { margin-top: 22px; }
+#systemVisitorPanel .visitor-date-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+#systemVisitorPanel .visitor-date-range .visitor-control-group { width: auto; }
+#systemVisitorPanel .visitor-detail-card { display: flex; flex-direction: column; }
+#systemVisitorPanel .visitor-detail-card > .chart-header { display: block; flex-shrink: 0; }
+#systemVisitorPanel .visitor-table-wrapper td { padding: 9px 12px; }
+#systemVisitorPanel .visitor-table-wrapper th { padding: 10px 12px; }
+#systemVisitorPanel .visitor-detail-date { margin-bottom: 2px; }
+#systemVisitorPanel .visitor-detail-card .visitor-empty { margin: auto 0; }
+#systemVisitorPanel .visitor-refresh { min-height: 38px; justify-content: center; }
+.visitor-analysis-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+#systemVisitorPanel .visitor-analysis-grid > .chart-card { min-width: 0; margin: 0; }
+@media (min-width: 1100px) {
+  .visitor-analysis-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: stretch; }
+  #systemVisitorPanel .visitor-table-wrapper { flex: 1 1 0; contain: size; min-height: 0; max-height: none; }
+}
+@media (max-width: 900px) {
+  #systemVisitorPanel .visitor-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #systemVisitorPanel .visitor-toolbar > .visitor-refresh { grid-column: 1 / -1; justify-self: end; margin-top: 0; }
+}
+@media (max-width: 640px) {
+  #systemVisitorPanel .visitor-date-range .visitor-control-group { width: auto; flex: 1 1 140px; }
+}

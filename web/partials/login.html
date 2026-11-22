@@ -6,11 +6,12 @@
               <h1 class="page-title">เข้าสู่ระบบ</h1>
               <p class="page-subtitle">เข้าสู่ระบบด้วยบัญชี Mail CHULA ที่ได้รับอนุญาต และจัดการข้อมูลผู้ใช้ร่วมทุกระบบ</p>
             </div>
-            <div id="staffModeToggle" class="staff-mode-toggle login-staff-mode-toggle tabs">
-              <button class="staff-mode-btn tab-btn view-toggle-btn is-active" data-staff-mode="normal" type="button">ทั่วไป</button>
-              <button class="staff-mode-btn tab-btn view-toggle-btn" data-staff-mode="staff" type="button">สตาฟ</button>
+            <div id="staffModeToggle" class="staff-mode-toggle login-staff-mode-toggle tabs" role="group" aria-label="โหมดการใช้งาน" data-mode="normal">
+              <button class="staff-mode-btn tab-btn view-toggle-btn is-active" data-staff-mode="normal" type="button" aria-pressed="true">ทั่วไป</button>
+              <button class="staff-mode-btn tab-btn view-toggle-btn" data-staff-mode="staff" type="button" aria-pressed="false">สตาฟ</button>
             </div>
           </div>
+          <div id="staffModeFeedback" class="staff-mode-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
           <div class="login-shell">
             <div class="login-hero">

@@ -1367,3 +1367,32 @@
 @media screen and (max-width: 840px) {
   html[data-theme="dark"] body .page-view[data-page="meeting-room-staff"] .meeting-holiday-day.is-selected { border-color: var(--preview-accent); }
 }
+
+/* Visitor statistics: scoped rules override the panel's light surfaces. */
+@media screen {
+  html[data-theme="dark"] #systemVisitorPanel :is(.visitor-date-range, .visitor-table-wrapper th) {
+    background: var(--preview-raised);
+    border-color: var(--preview-border);
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] #systemVisitorPanel .visitor-toolbar :is(select, input[type="date"]) {
+    color-scheme: dark;
+    background: var(--preview-surface);
+    border-color: var(--preview-border);
+    color: var(--preview-text);
+  }
+  html[data-theme="dark"] #systemVisitorPanel :is(.visitor-control-label, .visitor-detail-date, .visitor-detail-value.is-missing, .chart-caption, .visitor-switch, .visitor-legend button, .visitor-empty, .visitor-empty-icon, .visitor-chart-empty) {
+    color: var(--preview-muted);
+  }
+  html[data-theme="dark"] #systemVisitorPanel :is(.visitor-detail-value, .visitor-empty h4, .visitor-detail-change) { color: var(--preview-text); }
+  html[data-theme="dark"] #systemVisitorPanel #visitorGrowth[data-trend="up"],
+  html[data-theme="dark"] #systemVisitorPanel .visitor-detail-change[data-trend="up"] { color: #6ee7b7; }
+  html[data-theme="dark"] #systemVisitorPanel #visitorGrowth[data-trend="down"],
+  html[data-theme="dark"] #systemVisitorPanel .visitor-detail-change[data-trend="down"],
+  html[data-theme="dark"] #systemVisitorPanel #visitorFilterStatus[data-error="true"] { color: #fda4af; }
+  html[data-theme="dark"] #systemVisitorPanel:not([data-metric="unique"]) .visitor-switch span:first-child,
+  html[data-theme="dark"] #systemVisitorPanel[data-metric="unique"] .visitor-switch span:last-child { color: var(--preview-accent); }
+  html[data-theme="dark"] #systemVisitorPanel #visitorMetric { background: #666; }
+  html[data-theme="dark"] #systemVisitorPanel #visitorMetric:checked { background: #db2777; }
+  html[data-theme="dark"] #systemVisitorPanel :is(.visitor-chart, .visitor-table-wrapper) { scrollbar-color: #666 var(--preview-surface); }
+}

@@ -32,13 +32,24 @@ const personas = {
   affairs_staff: { label: 'บุคลากรที่มีสิทธิ์สตาฟ', type: 'affairs', staff: ['meeting-room-staff'], description: 'โหมดทั่วไปแนะนำจองห้องประชุม โหมดสตาฟแนะนำจัดการห้องประชุม' },
   head: { label: 'หัวหน้าสตาฟ', type: 'student', staff: all.filter(p => p.endsWith('-staff') || p === 'staff-approval'), description: 'ทดลองเมนูจัดการครบทุกกลุ่ม รวมผู้ใช้งานและเนื้อหา' }
 };
+const positionCatalog = window.sgcuPreviewPositionCatalog || { positions: [] };
+const headOnlyPages = ['staff-approval','staff-directory-staff','staff-temporary-access-staff','org-representative-approval-staff'];
+for (const position of positionCatalog.positions) {
+  const head = position.divisionCodeYY === '00';
+  const staffPages = head ? personas.head.staff : (position.allowedPages || []).filter(page => !headOnlyPages.includes(page));
+  personas['position_' + position.divisionCodeYY + '_' + position.levelCodeZZ] = {
+    label: position.name, type: position.divisionCodeYY === '09' ? 'affairs' : 'student',
+    staff: staffPages, head, position: true,
+    description: 'จำลองตำแหน่งที่อนุมัติแล้ว · ' + staffPages.filter(page => page !== 'login').length + ' หน้าฝั่งสตาฟ · ไม่มีสิทธิ์เพิ่มรายบุคคล'
+  };
+}
 if (!Object.hasOwn(personas, persona)) persona = 'student';
 const selectedPersona = personas[persona];
 const specialPersona = !!(selectedPersona.staff || selectedPersona.representative);
 let approved = params.get('approval') === 'approved' || sessionStorage.getItem('demo-approval:' + persona) === 'approved';
 function demoPages(mode) {
   if (mode === 'staff' && selectedPersona.staff && approved) return ['login', ...selectedPersona.staff];
-  return [...general.filter(p => selectedPersona.type !== 'affairs' || p !== 'borrow-assets'), ...(selectedPersona.representative && approved ? ['budget-approval-request'] : [])];
+  return [...general.filter(p => selectedPersona.type !== 'affairs' || p !== 'borrow-assets'), ...((selectedPersona.representative || selectedPersona.head) && approved ? ['budget-approval-request'] : [])];
 }
 const initialMode = params.get('mode') === 'staff' && selectedPersona.staff && approved ? 'staff' : 'normal';
 const rolloutTime = Date.parse(SGCU_APP_CONFIG.onboarding.rolloutAt);
@@ -50,18 +61,48 @@ window.sgcuLoginProfileState = { isAuthenticated: true, isComplete: true, isLoad
 window.demoConsent = true;
 window.demoWrites = [];
 window.sgcuFirestore = { db: {}, doc: (db,col,id) => id, getDoc: async id => ({ exists: () => true, data: () => JSON.parse(localStorage.getItem('demo-remote:'+id) || '{}') }), setDoc: async (id, value) => { if (window.demoOffline) throw Error('offline'); window.demoWrites.push(value); const data = JSON.parse(localStorage.getItem('demo-remote:'+id) || '{}'); data.onboardingTours = { ...data.onboardingTours, ...value.onboardingTours }; localStorage.setItem('demo-remote:'+id, JSON.stringify(data)); } };
-window.sgcuTourNavigation = { consentReady: () => window.demoConsent, navigate: async page => { if (!demoAccount.pages.includes(page)) return; document.querySelectorAll('.page-view').forEach(el => el.classList.toggle('active',el.dataset.page === page)); window.dispatchEvent(new CustomEvent('sgcu:page-active',{detail:{page}})); } };
+window.sgcuTourNavigation = { consentReady: () => window.demoConsent, navigate: async page => { if (!demoAccount.pages.includes(page)) return; closeDemoMenus(); document.querySelectorAll('.page-view').forEach(el => el.classList.toggle('active',el.dataset.page === page)); window.dispatchEvent(new CustomEvent('sgcu:page-active',{detail:{page}})); } };
 document.querySelector('#appLoader')?.remove();
 document.querySelectorAll('.section-appear').forEach(el=>el.classList.add('section-visible'));
 document.querySelector('#meetingRoomName').innerHTML='<option>ห้องประชุมตัวอย่าง</option>';
 document.querySelector('#meetingMyRequestsState').textContent='ยังไม่มีคำขอจอง';
 document.querySelectorAll('[data-role-nav]').forEach(el => el.style.display = el.dataset.roleNav === (demoAccount.mode === 'staff' ? 'staff' : 'general') ? '' : 'none');
 document.querySelectorAll('a[data-page]').forEach(el => { el.style.display = demoAccount.pages.includes(el.dataset.page) ? '' : 'none'; el.onclick = e => { e.preventDefault(); sgcuTourNavigation.navigate(el.dataset.page); }; });
-document.querySelectorAll('.nav-group-toggle').forEach(btn => btn.onclick = () => { const menu = btn.parentElement.querySelector('.nav-group-menu'); btn.setAttribute('aria-expanded','true'); menu.classList.add('show'); menu.setAttribute('aria-hidden','false'); btn.parentElement.classList.add('is-open'); });
-window.setMobileMenuState = (menu,btn,on) => { menu.classList.toggle('show',on); menu.setAttribute('aria-hidden',String(!on)); btn.setAttribute('aria-expanded',String(on)); };
-document.querySelector('#hamburgerBtn').onclick = () => setMobileMenuState(document.querySelector('#mobileMenu'),document.querySelector('#hamburgerBtn'),true);
+function closeDemoDesktopMenus() {
+  document.querySelectorAll('.nav-group-toggle').forEach(btn => btn.setAttribute('aria-expanded','false'));
+  document.querySelectorAll('.nav-group-menu').forEach(menu => { menu.classList.remove('show'); menu.setAttribute('aria-hidden','true'); });
+  document.querySelectorAll('.nav-group').forEach(group => group.classList.remove('is-open'));
+}
+function closeDemoMenus() {
+  closeDemoDesktopMenus();
+  const menu = document.querySelector('#mobileMenu'), button = document.querySelector('#hamburgerBtn');
+  menu.classList.remove('show'); menu.setAttribute('aria-hidden','true');
+  button.setAttribute('aria-expanded','false'); document.body.classList.remove('mobile-menu-open');
+}
+document.querySelectorAll('.nav-group-toggle').forEach(btn => btn.onclick = () => {
+  const menu = btn.parentElement.querySelector('.nav-group-menu');
+  const open = !menu.classList.contains('show'); closeDemoMenus();
+  btn.setAttribute('aria-expanded',String(open)); menu.classList.toggle('show',open);
+  menu.setAttribute('aria-hidden',String(!open)); btn.parentElement.classList.toggle('is-open',open);
+});
+window.setMobileMenuState = (menu,btn,on) => {
+  menu.classList.toggle('show',on); menu.setAttribute('aria-hidden',String(!on)); btn.setAttribute('aria-expanded',String(on));
+  document.body.classList.toggle('mobile-menu-open',on);
+};
+document.querySelector('#hamburgerBtn').onclick = () => {
+  closeDemoDesktopMenus();
+  const menu = document.querySelector('#mobileMenu');
+  setMobileMenuState(menu,document.querySelector('#hamburgerBtn'),!menu.classList.contains('show'));
+};
+document.addEventListener('click',event => {
+  if (event.target.closest('.sgcu-tour')) return;
+  if (!event.target.closest('.nav-group, #mobileMenu, #hamburgerBtn')) closeDemoMenus();
+});
+document.addEventListener('keydown',event => { if (event.key === 'Escape' && !document.querySelector('.sgcu-tour[open]')) closeDemoMenus(); });
+window.matchMedia('(min-width: 841px)').addEventListener('change',closeDemoMenus);
 const demoIdentity = { ...demoAccount.user, displayName: selectedPersona.label + ' (จำลอง)', email: persona + '@example.invalid' };
 function renderDemoAuth(signedIn) {
+  closeDemoMenus();
   demoAccount.user = signedIn ? demoIdentity : null;
   sgcuLoginProfileState.isAuthenticated = signedIn;
   document.querySelector('#loginProfileCard').hidden = !signedIn;
@@ -78,12 +119,24 @@ function renderDemoAuth(signedIn) {
   avatar.hidden = !signedIn; avatar.textContent = signedIn ? 'ผ' : '';
   document.querySelector('#userInfo').textContent = signedIn ? demoIdentity.displayName : 'เข้าสู่ระบบ';
   document.querySelector('#staffModeToggle').style.display = signedIn && selectedPersona.staff && approved ? 'flex' : 'none';
+  renderStaffModeFeedback(demoAccount.mode, !!(signedIn && selectedPersona.staff && approved));
   document.querySelectorAll('[data-staff-mode]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.staffMode === demoAccount.mode));
   const role = signedIn && demoAccount.mode === 'staff' ? 'staff' : 'general';
   document.querySelectorAll('[data-role-nav]').forEach(el => el.style.display = el.dataset.roleNav === role ? '' : 'none');
   document.querySelectorAll('a[data-page]').forEach(el => {
     const allowed = signedIn ? demoAccount.pages : general.filter(p => !['borrow-assets','meeting-room-booking'].includes(p));
     el.style.display = allowed.includes(el.dataset.page) ? '' : 'none';
+  });
+  document.querySelectorAll('[data-mobile-bottom-nav]').forEach(el => {
+    el.style.display = el.dataset.mobileBottomNav === role ? 'contents' : 'none';
+  });
+  document.querySelectorAll('.nav-group, .mobile-menu-group').forEach(group => {
+    const links = [...group.querySelectorAll('a[data-page]')].filter(link => link.style.display !== 'none');
+    group.style.display = links.length && (!group.dataset.mobileNav || group.dataset.mobileNav === role) ? '' : 'none';
+    if (group.classList.contains('mobile-menu-group')) {
+      group.classList.toggle('is-single', links.length === 1);
+      if (links.length === 1) group.open = true;
+    }
   });
   const isStudent = demoAccount.type === 'student';
   const isTemporary = demoAccount.type === 'temporary';
@@ -133,9 +186,10 @@ function demoLogout() { sessionStorage.removeItem('tour-demo-auth'); renderDemoA
 document.querySelector('#loginPageGoogleBtn').onclick = demoLogin;
 document.querySelector('#loginPageLogoutBtn').onclick = demoLogout;
 sgcuTourNavigation.setMode = mode => {
-  if (!demoAccount.user || !selectedPersona.staff || !approved) return;
+  if (!demoAccount.user || !selectedPersona.staff || !approved || demoAccount.mode === mode) return;
+  const snapshot = captureStaffModeMenu();
   demoAccount.mode = mode; demoAccount.pages = demoPages(demoAccount.mode);
-  renderDemoAuth(true); sgcuTourNavigation.navigate('login');
+  renderDemoAuth(true); renderStaffModeFeedback(mode, true, true, snapshot); sgcuTourNavigation.navigate('login');
 };
 document.querySelectorAll('[data-staff-mode]').forEach(btn => btn.onclick = () => sgcuTourNavigation.setMode(btn.dataset.staffMode));
 const bar = document.createElement('section'); bar.className = 'demo-controls'; bar.setAttribute('aria-labelledby','demoTitle');
@@ -166,12 +220,18 @@ document.querySelector('#themePreference').onclick = () => {
 applyDemoTheme();
 const selector = document.querySelector('#demoPersona');
 Object.entries(personas).forEach(([value, data]) => { const option = document.createElement('option'); option.value = value; option.textContent = data.label; selector.append(option); });
+document.querySelector('label[for="demoPersona"]').textContent = 'บัญชี / ตำแหน่งที่ทดลอง';
+if (positionCatalog.fetchedAt) {
+  const note = document.createElement('p');
+  note.textContent = 'ข้อมูลตำแหน่งอ้างอิง ' + new Date(positionCatalog.fetchedAt).toLocaleDateString('th-TH', {timeZone:'Asia/Bangkok'}) + ' · ไม่ใช่การตรวจสิทธิ์บนระบบจริงล่าสุด';
+  bar.querySelector('.demo-heading').append(note);
+}
 selector.value = persona;
 const describe = () => { document.querySelector('#demoDescription').textContent = personas[selector.value].description; };
 selector.onchange = describe; describe();
 document.querySelector('#demoLogin').onclick = () => {
   if (selector.value === persona) { demoLogin(); return; }
-  location.href = '/?persona=' + encodeURIComponent(selector.value) + '&autologin=1';
+  location.href = '/?persona=' + encodeURIComponent(selector.value) + '&autologin=1' + (personas[selector.value].position ? '&approval=approved&legacy=1' : '');
 };
 document.querySelector('#demoLogout').onclick = demoLogout;
 document.querySelector('#demoApprove').onclick = () => {
@@ -217,8 +277,14 @@ export const server = http.createServer(async (req,res) => {
     if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
     let body = await readFile(file);
     const type = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.woff2':'font/woff2'}[path.extname(file)] || 'application/octet-stream';
-    if (relative === 'index.html') body = body.toString().replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</head>', previewStyles + '</head>').replace('</body>', `<script src="/js/core/app.config.js"></script><script src="/js/core/app.dialog.js"></script><script>${bootstrap}</script><script src="/js/core/app.tour-policy.js"></script><script src="/js/core/app.onboarding-tour.js"></script></body>`);
+    const feedbackSource = relative === 'index.html' ? (await readFile(path.join(root, 'js/features/project/app.sorting-auth.js'), 'utf8')).match(/function captureStaffModeMenu\([^]*?\n\}[^]*?function renderStaffModeFeedback\([^]*?\n\}/)[0] : '';
+    let catalog = { positions: [] };
+    if (relative === 'index.html') {
+      try { catalog = JSON.parse(await readFile(new URL('../../.local/staff-position-preview/catalog.json', import.meta.url), 'utf8')); } catch { /* Optional local position snapshot. */ }
+    }
+    const catalogSource = 'window.sgcuPreviewPositionCatalog=' + JSON.stringify(catalog).replaceAll('<', '\\u003c') + ';';
+    if (relative === 'index.html') body = body.toString().replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('</head>', previewStyles + '</head>').replace('</body>', `<script src="/js/core/app.config.js"></script><script src="/js/core/app.dialog.js"></script><script>${feedbackSource}</script><script>${catalogSource}${bootstrap}</script><script src="/js/core/app.tour-policy.js"></script><script src="/js/core/app.onboarding-tour.js"></script></body>`);
     res.writeHead(200, {'Content-Type':type}); res.end(body);
   } catch { res.writeHead(404).end('Not found'); }
 });
-if (process.argv[1] === fileURLToPath(import.meta.url)) server.listen(Number(process.env.PORT || 4187), '127.0.0.1', () => console.log('Tour preview: http://127.0.0.1:4187 (simulated data only)'));
+if (process.argv[1] === fileURLToPath(import.meta.url)) server.listen(Number(process.env.PORT || 4187), '127.0.0.1', () => console.log('Tour preview: http://127.0.0.1:' + server.address().port + ' (simulated data only)'));

@@ -593,18 +593,22 @@
           </div>
 
           <section id="systemVisitorPanel" class="dashboard-overview system-data-main-panel" data-system-data-panel="visitors" hidden>
-            <header class="dashboard-section-header visitor-header">
-              <h2 class="dashboard-section-title">ภาพรวมการเข้าใช้งาน</h2>
-              <button id="visitorRefresh" class="btn-ghost visitor-refresh" type="button"><span aria-hidden="true">↻</span> รีเฟรชสถิติ</button>
-            </header>
             <div class="visitor-toolbar" role="group" aria-label="ตัวกรองสถิติการเข้าใช้งาน">
               <div class="visitor-control-group visitor-period-group">
                 <label class="visitor-control-label" for="visitorDays">ช่วงวันที่</label>
                 <select id="visitorDays"><option value="7">ย้อนหลัง 7 วัน</option><option value="30" selected>ย้อนหลัง 30 วัน</option><option value="90">ย้อนหลัง 90 วัน</option><option value="custom">กำหนดเอง</option></select>
+                <div id="visitorCustomDates" class="visitor-date-range" hidden>
+                  <div class="visitor-control-group"><label class="visitor-control-label" for="visitorStart">ตั้งแต่วันที่</label><input type="date" id="visitorStart" /></div>
+                  <div class="visitor-control-group"><label class="visitor-control-label" for="visitorEnd">ถึงวันที่</label><input type="date" id="visitorEnd" /></div>
+                </div>
               </div>
               <div class="visitor-control-group">
                 <label class="visitor-control-label" for="visitorCompare">เปรียบเทียบกับ</label>
                 <select id="visitorCompare"><option value="previous">ช่วงก่อนหน้า</option><option value="custom">เลือกช่วงเอง</option><option value="none">ไม่เปรียบเทียบ</option></select>
+                <div id="visitorCompareDates" class="visitor-date-range" hidden>
+                  <div class="visitor-control-group"><label class="visitor-control-label" for="visitorCompareStart">ตั้งแต่วันที่</label><input type="date" id="visitorCompareStart" /></div>
+                  <div class="visitor-control-group"><label class="visitor-control-label" for="visitorCompareEnd">ถึงวันที่</label><input type="date" id="visitorCompareEnd" /></div>
+                </div>
               </div>
               <div class="visitor-control-group">
                 <label class="visitor-control-label" for="visitorGrouping">แสดงยอดตาม</label>
@@ -614,14 +618,9 @@
                 <label class="visitor-control-label" for="visitorPage">หน้าที่เข้าชม</label>
                 <select id="visitorPage"><option value="all">ทั้งเว็บไซต์</option></select>
               </div>
-              <div id="visitorCustomDates" class="visitor-date-range" hidden>
-                <div class="visitor-control-group"><label class="visitor-control-label" for="visitorStart">ตั้งแต่วันที่</label><input type="date" id="visitorStart" /></div>
-                <div class="visitor-control-group"><label class="visitor-control-label" for="visitorEnd">ถึงวันที่</label><input type="date" id="visitorEnd" /></div>
-              </div>
-              <div id="visitorCompareDates" class="visitor-date-range" hidden>
-                <div class="visitor-control-group"><label class="visitor-control-label" for="visitorCompareStart">ช่วงเปรียบเทียบเริ่ม</label><input type="date" id="visitorCompareStart" /></div>
-                <div class="visitor-control-group"><label class="visitor-control-label" for="visitorCompareEnd">ช่วงเปรียบเทียบสิ้นสุด</label><input type="date" id="visitorCompareEnd" /></div>
-              </div>
+              <button id="visitorRefresh" class="btn-ghost visitor-refresh" type="button"><span aria-hidden="true">↻</span> รีเฟรชสถิติ</button>
+
+
             </div>
             <p id="visitorFilterStatus" class="chart-caption" role="status" aria-live="polite"></p>
             <div class="dashboard-grid visitor-metrics">
@@ -630,29 +629,31 @@
               <article class="dashboard-metric"><div class="metric-label">คนไม่ซ้ำวันนี้</div><div id="visitorUniqueToday" class="metric-value">—</div><div id="visitorUniqueCaption" class="metric-caption">นับเบราว์เซอร์เดิมวันละ 1 คน</div></article>
               <article class="dashboard-metric"><div id="visitorGrowthLabel" class="metric-label">การเข้าชมเทียบช่วงก่อน</div><div id="visitorGrowth" class="metric-value">—</div><div id="visitorGrowthCaption" class="metric-caption">เปรียบเทียบช่วงละ 30 วัน</div></article>
             </div>
-            <article class="chart-card visitor-trend-card">
-              <header class="chart-header visitor-header">
-                <div><h3 id="visitorChartTitle" class="chart-title">ครั้งเข้าชมรายวัน</h3><p id="visitorComparisonRange" class="chart-caption">เปรียบเทียบสองช่วงเวลา · ไม่รวมวันนี้ที่ยังไม่ครบวัน</p></div>
-              <div class="visitor-control-group visitor-metric-control">
-                <span id="visitorMetricLabel" class="visitor-control-label">ข้อมูลที่แสดง</span>
-                <label class="visitor-switch" aria-describedby="visitorMetricLabel"><span>ครั้งเข้าชม</span><input id="visitorMetric" type="checkbox" role="switch" aria-label="แสดงคนไม่ซ้ำ" /><span>คนไม่ซ้ำ</span></label>
-              </div>
-              </header>
-              <p id="visitorStatus" class="chart-caption" role="status" aria-live="polite">เลือกแท็บเพื่อโหลดสถิติ</p>
-              <div id="visitorChart" class="visitor-chart" aria-labelledby="visitorChartTitle"></div>
-              <div id="visitorLegend" class="dashboard-chart-legend visitor-legend"></div>
-              <p class="chart-caption visitor-note">คนไม่ซ้ำนับแยกตามเบราว์เซอร์ การเปลี่ยนอุปกรณ์หรือล้างข้อมูลจะนับใหม่</p>
-            </article>
-            <article class="chart-card visitor-detail-card">
-              <header class="chart-header"><h3 id="visitorDetailTitle" class="chart-title">รายละเอียดรายวัน</h3><span id="visitorDetailCaption" class="chart-caption">เรียงจากวันที่ล่าสุด</span></header>
-              <div id="visitorDetailEmpty" class="visitor-empty" role="status" hidden>
-                <span class="visitor-empty-icon" aria-hidden="true">▤</span>
-                <h4 id="visitorEmptyTitle">ยังไม่มีข้อมูลในช่วงนี้</h4>
-                <p id="visitorEmptyDescription">ลองเลือกช่วงวันที่อื่น หรือดูข้อมูลทั้งเว็บไซต์</p>
-                <button id="visitorEmptyAction" class="btn-ghost" type="button">ดูทั้งเว็บไซต์ย้อนหลัง 30 วัน</button>
-              </div>
-              <div id="visitorDetailTable" class="table-wrapper visitor-table-wrapper"><table aria-describedby="visitorDetailCaption"><thead><tr><th scope="col">ช่วงที่เลือก</th><th scope="col" data-visitor-previous>ช่วงเปรียบเทียบ</th><th scope="col" data-visitor-previous>เปลี่ยนแปลง</th></tr></thead><tbody id="visitorTableBody"></tbody></table></div>
-            </article>
+            <div class="visitor-analysis-grid">
+              <article class="chart-card visitor-trend-card">
+                <header class="chart-header visitor-header">
+                  <div><h3 id="visitorChartTitle" class="chart-title">ครั้งเข้าชมรายวัน</h3><p id="visitorComparisonRange" class="chart-caption">เปรียบเทียบสองช่วงเวลา · ไม่รวมวันนี้ที่ยังไม่ครบวัน</p></div>
+                <div class="visitor-control-group visitor-metric-control">
+                  <span id="visitorMetricLabel" class="visitor-control-label">ข้อมูลที่แสดง</span>
+                  <label class="visitor-switch" aria-describedby="visitorMetricLabel"><span>ครั้งเข้าชม</span><input id="visitorMetric" type="checkbox" role="switch" aria-label="แสดงคนไม่ซ้ำ" /><span>คนไม่ซ้ำ</span></label>
+                </div>
+                </header>
+                <p id="visitorStatus" class="chart-caption" role="status" aria-live="polite">เลือกแท็บเพื่อโหลดสถิติ</p>
+                <div id="visitorChart" class="visitor-chart" aria-labelledby="visitorChartTitle"></div>
+                <div id="visitorLegend" class="dashboard-chart-legend visitor-legend"></div>
+                <p class="chart-caption visitor-note">คนไม่ซ้ำนับแยกตามเบราว์เซอร์ การเปลี่ยนอุปกรณ์หรือล้างข้อมูลจะนับใหม่</p>
+              </article>
+              <article class="chart-card visitor-detail-card">
+                <header class="chart-header"><h3 id="visitorDetailTitle" class="chart-title">รายละเอียดรายวัน</h3><span id="visitorDetailCaption" class="chart-caption">เรียงจากวันที่ล่าสุด</span></header>
+                <div id="visitorDetailEmpty" class="visitor-empty" role="status" hidden>
+                  <span class="visitor-empty-icon" aria-hidden="true">▤</span>
+                  <h4 id="visitorEmptyTitle">ยังไม่มีข้อมูลในช่วงนี้</h4>
+                  <p id="visitorEmptyDescription">ลองเลือกช่วงวันที่อื่น หรือดูข้อมูลทั้งเว็บไซต์</p>
+                  <button id="visitorEmptyAction" class="btn-ghost" type="button">ดูทั้งเว็บไซต์ย้อนหลัง 30 วัน</button>
+                </div>
+                <div id="visitorDetailTable" class="table-wrapper visitor-table-wrapper"><table aria-describedby="visitorDetailCaption"><thead><tr><th scope="col">ช่วงที่เลือก</th><th scope="col" data-visitor-previous>ช่วงเปรียบเทียบ</th><th scope="col" data-visitor-previous>เปลี่ยนแปลง</th></tr></thead><tbody id="visitorTableBody"></tbody></table></div>
+              </article>
+            </div>
           </section>
 
           <div id="systemHealthSummary" class="system-health-summary system-data-main-panel" data-system-data-panel="health" aria-live="polite" data-view-transition>

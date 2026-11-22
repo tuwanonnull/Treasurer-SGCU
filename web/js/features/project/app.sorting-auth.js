@@ -1351,7 +1351,8 @@ function findAllowedPagesFromPositionCatalog(positionName, yy, zz) {
 function getAllowedStaffPagesByProfile(profile) {
   if (isHeadStaffProfile(profile)) return new Set(STAFF_FULL_ACCESS_PAGES);
 
-  const merged = new Set();
+  // Account controls, including the mode switch, are shared by all staff roles.
+  const merged = new Set(["login"]);
   normalizeAllowedStaffPages(profile?.allowedPages, profile?.divisionCodeYY || profile?.positionCodeYY || "")
     .forEach((page) => merged.add(page));
   const positions = Array.isArray(profile?.positions) ? profile.positions : [];
@@ -1504,19 +1505,155 @@ function getStaffProfileByEmail(email) {
   };
 }
 
-function isCurrentNavVisible() {
-  if (!navLinksAll.length) return true;
-  const currentPage = (window.location.hash || "#home").replace("#", "");
-  const currentLink = navLinksAll.find((link) => link.dataset.page === currentPage);
-  return currentLink ? currentLink.style.display !== "none" && currentLink.offsetParent !== null : true;
-}
-
 function getCurrentPageFromHash() {
   return (window.location.hash || "#home").replace("#", "");
 }
 
 function isNavPageVisible(page) {
   return getAllowedPagesForCurrentState().has(page);
+}
+
+// Capture only the visible menu labels, keeping the live navigation immediately usable.
+function captureStaffModeMenu() {
+  document.querySelectorAll("[data-staff-mode-snapshot]").forEach(snapshot => snapshot.remove());
+  const items = Array.from(document.querySelectorAll(
+    ".desktop-nav-role > a, .desktop-nav-role > .nav-group > .nav-group-toggle, .mobile-bottom-role > a"
+  ));
+  items.forEach(item => item.getAnimations?.().forEach(animation => {
+    if (animation.id === "staff-mode-item") animation.cancel();
+  }));
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+  const snapshot = document.createElement("div");
+  snapshot.dataset.staffModeSnapshot = "";
+  snapshot.setAttribute("aria-hidden", "true");
+  snapshot.inert = true;
+  snapshot.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:1000;overflow:hidden;";
+  items.filter(item => item.getClientRects().length).forEach(item => {
+    const rect = item.getBoundingClientRect();
+    const clone = item.cloneNode(true);
+    const originals = [item, ...item.querySelectorAll("*")];
+    [clone, ...clone.querySelectorAll("*")].forEach((node, index) => {
+      const computed = getComputedStyle(originals[index]);
+      for (const property of computed) node.style.setProperty(property, computed.getPropertyValue(property));
+      for (const attribute of Array.from(node.attributes)) {
+        if (attribute.name === "id" || attribute.name.startsWith("data-") || attribute.name.startsWith("on")) {
+          node.removeAttribute(attribute.name);
+        }
+      }
+      node.style.pointerEvents = "none";
+      node.style.transition = "none";
+      node.style.animation = "none";
+    });
+    Object.assign(clone.style, {
+      position: "absolute", left: `${rect.left}px`, top: `${rect.top}px`,
+      width: `${rect.width}px`, height: `${rect.height}px`, margin: "0", transform: "none"
+    });
+    snapshot.append(clone);
+  });
+  return snapshot.childElementCount ? snapshot : null;
+}
+
+function renderStaffModeFeedback(mode, available, animateMenu = false, snapshot = null) {
+  const toggle = document.getElementById("staffModeToggle");
+  const feedback = document.getElementById("staffModeFeedback");
+  if (toggle) toggle.dataset.mode = mode;
+  document.querySelectorAll("[data-staff-mode]").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.staffMode === mode));
+  });
+  if (feedback) {
+    feedback.hidden = !available;
+    if (available) feedback.textContent = `ขณะนี้อยู่ในโหมด${mode === "staff" ? "สตาฟ" : "ทั่วไป"}`;
+  }
+  document.querySelectorAll("[data-staff-mode-snapshot]").forEach(old => old.remove());
+  const items = Array.from(document.querySelectorAll(
+    ".desktop-nav-role > a, .desktop-nav-role > .nav-group > .nav-group-toggle, .mobile-bottom-role > a"
+  ));
+  items.forEach(item => item.getAnimations?.().forEach(animation => {
+    if (animation.id === "staff-mode-item") animation.cancel();
+  }));
+  if (!available || !animateMenu || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!snapshot?.animate) return;
+  const incoming = captureStaffModeMenu();
+  if (!incoming) return;
+  const mobile = items.some(item => item.closest(".mobile-bottom-role") && item.getClientRects().length);
+  const direction = mode === "staff" ? 1 : -1;
+  const duration = mobile ? 320 : 780;
+  const boundsOf = layer => ({
+    left: Math.min(...Array.from(layer.children, label => parseFloat(label.style.left))),
+    right: Math.max(...Array.from(layer.children, label =>
+      parseFloat(label.style.left) + parseFloat(label.style.width)))
+  });
+  const oldBounds = boundsOf(snapshot);
+  const newBounds = boundsOf(incoming);
+  const labels = [...snapshot.children, ...incoming.children];
+  const left = Math.max(0, Math.min(...labels.map(label => parseFloat(label.style.left))) - 8);
+  const top = Math.min(...labels.map(label => parseFloat(label.style.top))) - 4;
+  const right = Math.min(window.innerWidth, Math.max(...labels.map(label =>
+    parseFloat(label.style.left) + parseFloat(label.style.width))) + 8);
+  const bottom = Math.max(...labels.map(label => parseFloat(label.style.top) + parseFloat(label.style.height))) + 4;
+  // Keep the two rows adjacent even when their widths and alignment differ.
+  const gap = 16;
+  const distance = direction === 1
+    ? oldBounds.right - newBounds.left + gap
+    : newBounds.right - oldBounds.left + gap;
+  const clipFor = bounds => `inset(0 ${Math.max(0, right - bounds.right - 8)}px 0 ${Math.max(0, bounds.left - left - 8)}px)`;
+  const stage = document.createElement("div");
+  stage.dataset.staffModeSnapshot = "";
+  stage.setAttribute("aria-hidden", "true");
+  stage.inert = true;
+  Object.assign(stage.style, {
+    position: "fixed", left: `${left}px`, top: `${top}px`, width: `${right - left}px`,
+    height: `${bottom - top}px`, overflow: "hidden", pointerEvents: "none", zIndex: "1000",
+    maskImage: mobile ? "none" : "linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)"
+  });
+  for (const layer of [snapshot, incoming]) {
+    layer.removeAttribute("data-staff-mode-snapshot");
+    Object.assign(layer.style, {
+      position: "absolute", inset: "auto", left: `${-left}px`, top: `${-top}px`,
+      width: `${window.innerWidth}px`, height: `${window.innerHeight}px`, overflow: "visible"
+    });
+    stage.append(layer);
+  }
+  document.body.append(stage);
+  const startTime = document.timeline.currentTime;
+  const options = { duration, easing: "cubic-bezier(.4,0,.2,1)" };
+  // Bottom navigation uses fixed touch slots: avoid sweeping icons across neighboring slots.
+  const animations = mobile ? [
+    snapshot.animate([
+      { opacity: 1, transform: "translateY(0)" },
+      { opacity: 0, transform: "translateY(-6px)" }
+    ], { duration: 160, easing: "ease-out", fill: "forwards" }),
+    incoming.animate([
+      { opacity: 0, transform: "translateY(6px)" },
+      { opacity: 1, transform: "translateY(0)" }
+    ], { duration: 260, delay: 60, easing: "cubic-bezier(.22,1,.36,1)", fill: "backwards" })
+  ] : [
+    // Follow the actual row width so no outgoing labels remain beside a shorter new row.
+    stage.animate([{ clipPath: clipFor(oldBounds) }, { clipPath: clipFor(newBounds) }], options),
+    snapshot.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-direction * distance}px)` }], options),
+    incoming.animate([{ transform: `translateX(${direction * distance}px)` }, { transform: "translateX(0)" }], options)
+  ];
+  // The real menu is already in the new mode; only its decorative copy moves.
+  items.filter(item => item.getClientRects().length && item.animate).forEach(item => {
+    animations.push(item.animate([{ opacity: 0 }, { opacity: 0 }], {
+      id: "staff-mode-item", duration
+    }));
+  });
+  animations.forEach(animation => { animation.startTime = startTime; });
+  const finish = () => {
+    stage.remove();
+    animations.forEach(animation => animation.cancel());
+    document.removeEventListener("pointerdown", finish, true);
+    document.removeEventListener("focusin", finish, true);
+    window.removeEventListener("resize", finish);
+    window.removeEventListener("scroll", finish, true);
+  };
+  // Restore live labels before interaction, or if their viewport position changes.
+  document.addEventListener("pointerdown", finish, true);
+  document.addEventListener("focusin", finish, true);
+  window.addEventListener("resize", finish);
+  window.addEventListener("scroll", finish, true);
+  Promise.all(animations.map(animation => animation.finished)).then(finish, finish);
 }
 
 function applyStaffViewMode() {
@@ -1536,8 +1673,10 @@ function applyStaffViewMode() {
   staffModeBtns.forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.staffMode === staffViewMode);
   });
+  renderStaffModeFeedback(staffViewMode, canShowStaffMode);
 
-  if (!isCurrentNavVisible() && !suppressStaffApplicationRedirect) {
+  // Shared pages such as login stay open even when their old nav container is hidden.
+  if (!isNavPageVisible(getCurrentPageFromHash()) && !suppressStaffApplicationRedirect) {
     goToFirstVisibleNavPageWithPreference(null);
   }
 }
@@ -1545,11 +1684,12 @@ function applyStaffViewMode() {
 function setStaffViewMode(mode) {
   if (mode !== "staff" && mode !== "normal") return;
   if (staffViewMode === mode) return;
-  const previousPage = getCurrentPageFromHash();
+  const previousMode = staffViewMode;
+  const snapshot = captureStaffModeMenu();
   staffViewMode = mode;
   applyStaffViewMode();
-  if (!isNavPageVisible(previousPage)) {
-    goToFirstVisibleNavPageWithPreference(null);
+  if (staffViewMode !== previousMode) {
+    renderStaffModeFeedback(staffViewMode, hasNavigableStaffPages(staffAuthUser), true, snapshot);
   }
 }
 
