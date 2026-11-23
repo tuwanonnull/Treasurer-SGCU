@@ -28,8 +28,14 @@ export function normalizeSubscription(input) {
   } catch (_) {
     throw new Error("invalid-push-endpoint");
   }
-  if (parsed.protocol !== "https:") throw new Error("invalid-push-endpoint");
-  if (!p256dh || !auth) throw new Error("invalid-push-keys");
+  const host = parsed.hostname;
+  const trustedHost = host === "fcm.googleapis.com" ||
+    host === "updates.push.services.mozilla.com" ||
+    host === "updates.push.services.mozilla.net" ||
+    host === "web.push.apple.com" || host.endsWith(".push.apple.com");
+  if (parsed.protocol !== "https:" || !trustedHost || parsed.username || parsed.password ||
+      parsed.port || parsed.hash) throw new Error("invalid-push-endpoint");
+  if (!/^[A-Za-z0-9_-]{87}={0,2}$/.test(p256dh) || !/^[A-Za-z0-9_-]{22}={0,2}$/.test(auth)) throw new Error("invalid-push-keys");
   return { endpoint, expirationTime: input.expirationTime || null, keys: { p256dh, auth } };
 }
 

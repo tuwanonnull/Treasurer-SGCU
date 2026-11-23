@@ -1,5 +1,7 @@
 /* App configuration (loaded before app.core.js) */
 const SGCU_APP_CONFIG = {
+  // Set the registered reCAPTCHA Enterprise site key before enabling enforcement.
+  appCheck: { siteKey: "" },
   onboarding: { enabled: true, rolloutAt: "2026-11-19T15:25:47Z" },
   sheets: {
     projectSources:

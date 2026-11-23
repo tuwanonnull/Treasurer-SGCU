@@ -45,8 +45,9 @@
     />
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/core/app.helpers.js" defer></script>
-    <script src="js/core/app.config.js" defer></script>
+    <script src="js/core/app.config.js"></script>
     <script type="module">
+      import { setupAppCheck } from "./js/integrations/app.app-check.js";
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
       import {
         getFirestore,
@@ -69,6 +70,7 @@
       };
 
       const app = initializeApp(firebaseConfig);
+      await setupAppCheck(app);
       const db = getFirestore(app);
       window.sgcuFirestore = {
         db,

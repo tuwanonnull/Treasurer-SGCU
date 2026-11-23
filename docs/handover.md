@@ -4,14 +4,16 @@
 
 ## Current Status
 
+ตรวจเทียบกับซอร์สเมื่อ 23 พฤศจิกายน 2569 ดูแผนผังแหล่งข้อมูลล่าสุดใน [Data Model](data-model.md) ข้อความนี้ไม่ยืนยันว่า rules/functions/config ชุดนี้ถูก deploy แล้ว ต้องตรวจ release และ Firebase Console แยกต่างหาก
+
 ระบบตอนนี้ยังเป็น static web app แต่ข้อมูลบางส่วนย้ายมา Firestore แล้ว และบางส่วนยังใช้ Google Sheets เป็น source หลัก
 
 สถานะสำคัญ:
 
-- ข่าวและประกาศอ่านจาก `newsItems` ก่อน แล้ว fallback ไป Google Sheets เดิม
-- เอกสารดาวน์โหลดอ่านจาก `downloadDocuments` ก่อน แล้ว fallback ไป Google Sheets เดิม
+- ข่าวและประกาศใช้ local/public cache และ `newsItems`; fallback Sheets เป็น legacy และต้องมี URL ตั้งไว้
+- เอกสารดาวน์โหลดใช้ local/public cache และ `downloadDocuments`; fallback Sheets เป็น legacy และต้องมี URL ตั้งไว้
 - ทะเบียนองค์กรใช้ `organizationCatalog` ใน Firestore เป็น source หลักแล้ว ไม่ fallback ไป Google Sheets
-- Project Status ยังใช้ Google Sheets CSV เป็น source หลัก
+- Project Status ยังใช้ Google Sheets CSV เป็น source หลัก; หน้าจัดการโครงการจริงใช้ API/Firestore แยกต่างหาก
 - รายการพัสดุยังใช้ Google Sheets CSV เป็น catalog หลักตาม flag `features.borrowAssets.useCsvAssetCatalog`
 - คำขอจริง เช่น งบประมาณ ยืมพัสดุ booking ห้องประชุม และ staff approval อยู่ใน Firestore
 - Activity Log อยู่ใน `auditLogs` และ staff เท่านั้นที่อ่านได้
@@ -22,7 +24,8 @@
 
 แหล่งข้อมูลหลัก:
 
-- Google Sheets CSV: Project Status, org structure, borrow asset catalog
+- Google Sheets CSV: Project Status และ borrow asset catalog ตาม feature flag
+- ทำเนียบทีม: public cache หรือ Firestore (`orgStructureMembers`, `staffProfiles`)
 - Firestore: staff/user profiles, ข่าว, เอกสารดาวน์โหลด, ทะเบียนองค์กร, คำขออนุมัติงบ, คำขอยืมพัสดุ, booking ห้องประชุม, app settings, audit logs
 - Firebase Auth: login ด้วยบัญชี Google/อีเมลที่ระบบรองรับ
 
@@ -78,7 +81,7 @@ Collection ที่เกี่ยวข้อง:
 - `newsItems`: ข่าวและประกาศ
 - `downloadDocuments`: เอกสารดาวน์โหลด
 
-ถ้าข้อมูล Firestore ว่างหรืออ่านไม่ได้ ระบบจะ fallback ไป Google Sheets เดิม แต่ควรถือ Firestore เป็นทางหลักของสอง feature นี้
+หน้าเว็บอ่าน cache ก่อนฐานข้อมูลหลัก และยังมี fallback Sheets แบบ legacy แต่ config ปัจจุบันไม่ได้ตั้ง URL ข่าว/เอกสาร อย่าถือว่ามีข้อมูลสำรองจาก Sheets เสมอ
 
 ### แก้ทะเบียนองค์กร
 
@@ -86,7 +89,7 @@ Collection ที่เกี่ยวข้อง:
 
 ข้อควรจำ:
 
-- หน้าผู้ใช้และ PDF auto-fill อ่าน `organizationCatalog` จาก Firestore เท่านั้น
+- หน้าผู้ใช้และ PDF auto-fill อ่าน `publicCache/organizationCatalog` หรือ `organizationCatalog` จาก Firestore
 - รายการที่ใช้งานควรมี `status: "active"`
 - เก็บ `code`, `documentRunCode`, และ `accountNo` ให้ครบ เพราะถูกใช้กับเอกสารและเลขรัน
 - ก่อน import CSV จำนวนมาก ควร export หรือ backup collection เดิมก่อน
@@ -229,6 +232,15 @@ appSettings/global
 สำหรับข้อมูลที่จะย้ายจาก Google Sheets ไป Firestore ควรเก็บ CSV ต้นฉบับไว้ทุกครั้งก่อน import
 
 ## Troubleshooting
+
+### สถานะเผยแพร่และการป้องกัน abuse
+
+- `.github/workflows/deploy-pages.yml` เป็นแหล่งอ้างอิงการเผยแพร่เว็บ: push `main` → check → build → GitHub Pages
+- `firebase.json` มี Firebase Hosting config และ Push rewrites แต่ไม่ได้หมายความว่า GitHub Pages ใช้ headers/rewrites เหล่านั้น
+- Push: โควตา/จำกัดอุปกรณ์อยู่ฝั่ง Functions; ต้อง deploy Functions จึงมีผล
+- สถิติ: ต้อง deploy Firestore Rules จึงบังคับวันที่/เวลา/ค่าตัวนับใหม่ได้
+- App Check: โค้ดรองรับแล้ว แต่ site key ว่างและ `PUSH_ENFORCE_APP_CHECK=false` โดยค่าเริ่มต้น ไม่ถือว่าเปิด protection บนคลาวด์แล้ว
+- ดูขั้นตอน rollout, ข้อจำกัด และการย้อนกลับใน [Web Push](web-push-setup.md) และ [Operations](operations-monitoring.md)
 
 ### ข้อมูล Google Sheets ไม่ขึ้น
 

@@ -1,3 +1,4 @@
+import { setupAppCheck } from "./app.app-check.js";
 import { setupAccessRequests } from "./app.auth-access-requests.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -53,6 +54,8 @@ const firebaseConfig = {
 
 const meetingEmulator = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('meetingEmulator') === '1';
 const app = initializeApp(meetingEmulator ? { apiKey: 'demo-budget-meeting', projectId: 'demo-budget-meeting', authDomain: 'demo-budget-meeting.firebaseapp.com' } : firebaseConfig);
+// Attestation must initialize before any Firestore requests, including anonymous reads.
+window.sgcuAppCheckHeaders = await setupAppCheck(app, { emulator: meetingEmulator });
 const auth = getAuth(app);
 const db = getFirestore(app);
 if (meetingEmulator) {
@@ -337,6 +340,7 @@ window.sgcuVisitorCounter.getVisitorHistory = async (startDate, endDate, page = 
 
 // Keep request-only Google verification separate from the application's login session.
 const applicantApp = initializeApp(meetingEmulator ? { apiKey: 'demo-budget-meeting', projectId: 'demo-budget-meeting', authDomain: 'demo-budget-meeting.firebaseapp.com' } : firebaseConfig, 'access-requests');
+await setupAppCheck(applicantApp, { emulator: meetingEmulator });
 const applicantAuth = getAuth(applicantApp);
 const applicantDb = getFirestore(applicantApp);
 if (meetingEmulator) {

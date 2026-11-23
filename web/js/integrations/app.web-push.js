@@ -132,7 +132,7 @@
     const user = window.sgcuAuth?.auth?.currentUser;
     if (!user?.getIdToken) throw new Error("push-auth-required");
     const token = await user.getIdToken();
-    return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    return { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(await window.sgcuAppCheckHeaders?.() || {}) };
   };
 
   const loadServerConfig = async () => {
@@ -155,8 +155,9 @@
       headers: await getAuthHeaders(),
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error(`push-backend-${response.status}`);
-    return response.json();
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || `push-backend-${response.status}`);
+    return result;
   };
 
   const requestPermission = async () => {

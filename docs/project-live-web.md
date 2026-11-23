@@ -1,8 +1,12 @@
 # Project management on the main website
 
-The `project-live-staff` page uses the site's existing Google session. The API validates a revoked-token-aware Firebase ID token and reloads the Auth account on every request. This release supports year 2568 only: `6534324223@student.chula.ac.th` is the treasurer; `tuwanon.kimchiang@gmail.com` is the administrator. The year 2569 account is not granted access.
+The `project-live-staff` page uses the site's existing Google session. The API validates a revoked-token-aware Firebase ID token and reloads the Auth account on every request. This release supports year 2568 only: `6534324223@student.chula.ac.th` is the treasurer; `tuwanon.kimchiang@gmail.com` is the administrator. The year 2569 account is not granted access by default. Source verification on 2026-11-23: v1 supports the designated treasurer and administrator; when `projectLiveConfig/2568.recordSchemaVersion === 2`, the server additionally accepts secretary/assistant UIDs explicitly registered in `config.users`, subject to dataset-bound grants. Do not infer deployed schema or actual grants from source alone.
 
 The administrator can edit all available monetary inputs and statuses, inspect history, download backups, suspend/re-enable the treasurer and restore a verified live backup. Formula-derived amounts stay calculated. Project edits retain the actual administrator UID and display name. Access and restore operations are recorded separately in `projectAdminAudit`.
+
+## Runtime versions
+
+`functions/project-live/service.mjs` selects v1 (`projectDatasets`) or v2 (`projectRecordDatasets`) from `recordSchemaVersion`. V2 stores individual projects, requests, followups and audit records; routes include `record-preview`, `record-save`, `record-approve`, `record-reject` and `followup-add`. Use the matching backup format (`SGCU-record-backup` version 2 for v2), not a v1 fixture. The project management API is separate from the CSV-based public Project Status page.
 
 ## Data and authorization
 

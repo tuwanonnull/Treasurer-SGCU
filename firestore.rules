@@ -971,19 +971,30 @@ service cloud.firestore {
       allow create, update, delete: if isHeadStaff();
     }
 
+    // Only today's Bangkok buckets can be written; history remains readable.
+    function currentVisitorDate(dateId) {
+      let today = request.time + duration.value(7, "h");
+      let month = today.month();
+      let day = today.day();
+      return dateId == string(today.year()) + "-" +
+        (month < 10 ? "0" : "") + string(month) + "-" +
+        (day < 10 ? "0" : "") + string(day);
+    }
+
     function validVisitorCounterWrite(counterPath) {
       return request.resource.data.keys().hasOnly(["total", "updatedAt"]) &&
         request.resource.data.total is int &&
         request.resource.data.total >= 1 &&
+        request.resource.data.updatedAt == request.time &&
         (
-          !exists(counterPath) ||
+          (!exists(counterPath) && request.resource.data.total == 1) ||
           request.resource.data.total == resource.data.total + 1
         );
     }
 
     match /site_daily_visitors/{dateId} {
       allow read: if true;
-      allow create, update: if validVisitorCounterWrite(
+      allow create, update: if currentVisitorDate(dateId) && validVisitorCounterWrite(
         /databases/$(database)/documents/site_daily_visitors/$(dateId)
       );
       allow delete: if false;
@@ -991,7 +1002,7 @@ service cloud.firestore {
 
     match /site_daily_unique_visitors/{dateId} {
       allow read: if true;
-      allow create, update: if
+      allow create, update: if currentVisitorDate(dateId) &&
         request.resource.data.keys().hasOnly(["total", "updatedAt", "lastBrowserId"]) &&
         request.resource.data.total is int &&
         request.resource.data.lastBrowserId is string &&
@@ -1016,14 +1027,14 @@ service cloud.firestore {
     match /site_page_visitors/{pageId} {
       match /days/{dateId} {
         allow read: if true;
-        allow create, update: if pageId.matches('^[a-z0-9-]{1,80}$') && validVisitorCounterWrite(
+        allow create, update: if currentVisitorDate(dateId) && pageId.matches('^[a-z0-9-]{1,80}$') && validVisitorCounterWrite(
           /databases/$(database)/documents/site_page_visitors/$(pageId)/days/$(dateId)
         );
         allow delete: if false;
       }
       match /unique/{dateId} {
       allow read: if true;
-      allow create, update: if
+      allow create, update: if currentVisitorDate(dateId) && pageId.matches('^[a-z0-9-]{1,80}$') &&
         request.resource.data.keys().hasOnly(["total", "updatedAt", "lastBrowserId"]) &&
         request.resource.data.total is int &&
         request.resource.data.lastBrowserId is string &&
@@ -1049,7 +1060,7 @@ service cloud.firestore {
 
     match /site_stats/{statId} {
       allow read: if true;
-      allow create, update: if validVisitorCounterWrite(
+      allow create, update: if (statId == "visitors_all_time" || statId.matches('^page_[a-z0-9-]{1,80}$')) && validVisitorCounterWrite(
         /databases/$(database)/documents/site_stats/$(statId)
       );
       allow delete: if false;

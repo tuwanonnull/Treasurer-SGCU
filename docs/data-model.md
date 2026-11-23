@@ -6,18 +6,24 @@
 
 ค่าตั้งต้นของ Google Sheets อยู่ที่ `web/js/core/app.config.js` ใน `SGCU_APP_CONFIG.sheets`
 
-| Key | ใช้ทำอะไร | Source ปัจจุบัน | โค้ดที่อ่าน |
-| --- | --- | --- | --- |
-| `projectSources` | รายชื่อชีต Project Status แยกตามปีการศึกษา และ contact sheet | Google Sheets CSV | `web/js/features/project/app.data.js` |
-| `orgStructure` | แผนผังทีมเหรัญญิกหน้า Home | Google Sheets CSV + `staffProfiles` บางส่วนจาก Firestore | `web/js/features/org/app.org.js` |
-| `downloads` | รายการเอกสารการเงินและลิงก์ดาวน์โหลด | Google Sheets CSV | `web/js/features/docs/app.downloads.js` |
-| `news` | ข่าวและประกาศ | Google Sheets CSV | `web/js/features/news/app.news.js` |
-| `orgFilters` | ประเภทองค์กร ชื่อฝ่าย/ชมรม รหัสองค์กร และข้อมูลเสริมสำหรับ PDF | Google Sheets CSV | `web/js/features/project/app.data.js`, `web/js/features/project/app.project-modal.js` |
-| `borrowAssets` | รายการพัสดุให้ยืม | Google Sheets CSV | `web/js/features/borrow/app.borrow-assets.js` |
+ตรวจเทียบซอร์สเมื่อ 23 พฤศจิกายน 2569; ไม่ใช่การยืนยันข้อมูลหรือ deployment บนคลาวด์
 
-ข้อมูล workflow ที่เป็นคำขอ/การอนุมัติหลายส่วนอยู่ใน Firestore แล้ว เช่น booking, borrow requests, budget requests, staff profiles และ user profiles
+| ส่วน | แหล่งข้อมูลตามโค้ดปัจจุบัน | จุดตรวจ |
+| --- | --- | --- |
+| Project Status / ภาพรวมโครงการจากชีต | Google Sheets CSV ผ่าน `sheets.projectSources` | `web/js/features/project/app.data.js` |
+| จัดการโครงการจริงปี 2568 | `projectLiveApi` → Firestore และ private bucket; แยกจาก Project Status CSV | `functions/project-live/cloud.mjs`, `service.mjs` |
+| ข่าว | local cache → `publicCache` → `newsItems`; legacy Sheets เมื่อมี URL ตั้งไว้ | `web/js/features/news/app.news.js` |
+| เอกสารดาวน์โหลด | local cache → `publicCache` → `downloadDocuments`; legacy Sheets เมื่อมี URL ตั้งไว้ | `web/js/features/docs/app.downloads.js` |
+| ทำเนียบทีม | `publicCache` หรือ `orgStructureMembers` ร่วมกับ `staffProfiles` ตามสิทธิ์ | `web/js/features/org/app.org.js` |
+| ทะเบียนองค์กร / PDF auto-fill | `publicCache/organizationCatalog` หรือ `organizationCatalog` | `web/js/features/project/app.data.js` |
+| คลังพัสดุ | Sheets CSV เมื่อ `features.borrowAssets.useCsvAssetCatalog: true` (ค่าตั้งต้น); มีเส้นทาง Firestore catalog | `web/js/features/borrow/app.borrow-assets.parts/` |
+| คำขอและการอนุมัติ | Firestore: booking, borrow, budget, staff และ user profiles | `firestore.rules` |
+| สถิติผู้เข้าชม | เบราว์เซอร์เขียน Firestore โดยตรง; แยกจำนวนครั้งและ unique browser | `web/js/integrations/app.firebase-bootstrap.js` |
+| Push | HTTP Functions → `pushSubscriptions`, `pushRateLimits`, `pushDeviceLocks`, `pushNotificationEvents` | `functions/index.js`, `push-limits.js` |
 
-## Recommended Firestore Collections
+ใน `app.config.js` ปัจจุบันตั้ง URL Sheets เฉพาะ `projectSources` และ `borrowAssets` จึงไม่ควรอธิบายว่า news/downloads/ทำเนียบยังใช้ Sheets เป็นแหล่งหลัก ตรวจ runtime config และ cache ด้วยเมื่อข้อมูลหน้าเว็บไม่ตรงกับหน้าจัดการ
+
+## Firestore Collections
 
 ใช้ชื่อ collection ตามรายการนี้เป็น canonical schema ของระบบ หลีกเลี่ยงการสร้าง collection ชื่อใกล้เคียงกันซ้ำ เช่น `borrowAssetsRequests` เพราะจะทำให้ rules, หน้า staff, และรายงานแยกข้อมูลกันคนละที่
 
@@ -41,7 +47,14 @@
 | Meeting bookings | `meetingRoomBookings/{bookingId}` | auto id |
 | Meeting holidays | `meetingRoomHolidays/{holidayId}` | `YYYY-MM-DD` when possible |
 | Audit logs | `auditLogs/{logId}` | auto id |
-| Visitor stats | `site_stats/visitors_all_time`, `site_daily_visitors/{date}` | fixed/stat date ids |
+| Visitor stats | `site_stats`, `site_daily_visitors`, `site_daily_unique_visitors`, `site_page_visitors` | วันที่กรุงเทพฯ / page id; unique มี `browsers/{browserId}` |
+| Push subscriptions | `pushSubscriptions/{endpointHash}` | SHA-256 ของ endpoint; Admin SDK เท่านั้น |
+| Push quotas | `pushRateLimits/{uid}/actions/{action}` | subscribe/unsubscribe/test/meeting; ไม่เพิ่มเอกสารต่อคำขอ |
+| Push registration locks | `pushDeviceLocks/{uid}` | serialize การสมัครอุปกรณ์พร้อมกัน |
+| Push deduplication | `pushNotificationEvents/{eventHash}` | สถานะและ version การจอง |
+| Project runtime | `projectLiveConfig/2568`, `projectAccess/2568/members/{uid}`, `projectSystemAdmins/{uid}` | runtime config และสิทธิ์ server-only |
+| Project datasets | `projectDatasets/{datasetId}` (v1), `projectRecordDatasets/{datasetId}` (v2) | เลือกด้วย `recordSchemaVersion` และ `datasetId` |
+| Project backup status | `projectBackupStatus/2568` | สถานะสำรองล่าสุด; ไฟล์จริงอยู่ private bucket |
 
 ทุก document ที่ staff แก้ไขได้ควรมี `createdAt`, `updatedAt`, `createdBy`, `updatedBy` เมื่อสร้าง/แก้จากหน้าเว็บได้จริง ส่วน catalog ควรมี `status` สำหรับซ่อน/archived โดยไม่ต้องลบข้อมูล
 
