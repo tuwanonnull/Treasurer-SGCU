@@ -1,0 +1,31 @@
+
+    <section id="work-panel" class="page-view work-preview" data-page="account-work"><div class="page">
+      <div class="page-header-flex page-heading"><div><h1 class="page-title">งานและคำขอ</h1><p class="page-subtitle" id="page-description">ติดตามคำขอของคุณ และดูสิ่งที่ต้องทำต่อ</p></div><div class="staff-mode-toggle login-staff-mode-toggle tabs mode-switch page-switch" data-mode="normal" role="group" aria-label="โหมดงานและคำขอ"><button type="button" class="staff-mode-btn tab-btn view-toggle-btn is-active" data-staff-mode="normal" aria-pressed="true">ทั่วไป</button><button type="button" class="staff-mode-btn tab-btn view-toggle-btn" data-staff-mode="staff" aria-pressed="false">สตาฟ <span id="staff-count"></span></button></div></div>
+      <div class="list-tools">
+        <div class="filter-group"><label for="service-filter">บริการ</label><select id="service-filter"><option value="all">ทุกบริการ</option><option value="budget">งบประมาณ</option><option value="borrow">ยืม–คืนพัสดุ</option><option value="meeting">ห้องประชุม</option><option value="temporary">สิทธิ์ชั่วคราว</option><option value="representative">ตัวแทนองค์กร</option></select></div>
+        <div class="filter-group"><label for="status-filter">สถานะ</label><select id="status-filter"><option value="all">ทุกสถานะ</option><option value="action">ต้องดำเนินการ</option><option value="waiting">รอผล</option><option value="ready">พร้อมใช้งาน</option><option value="due">ใกล้ครบกำหนด</option><option value="done">เสร็จสิ้น</option></select></div>
+        <div class="filter-group search-field"><label for="work-search">ค้นหาคำขอ</label><div class="search-box"><input id="work-search" type="search" placeholder="ชื่อรายการ เลขคำขอ หรือหน่วยงาน" autocomplete="off"><button id="clear-search" class="search-clear" type="button" aria-label="ล้างตัวกรองทั้งหมด" title="ล้างตัวกรองทั้งหมด" hidden>×</button></div></div>
+      </div>
+      <div class="cards work-summary" aria-label="สรุปรายการ">
+        <button class="card card-hover summary-card" data-bucket="action" type="button" aria-pressed="false"><span class="card-title">ต้องดำเนินการ</span><strong class="card-value" id="count-action">0</strong><small class="card-caption" id="action-caption">รายการที่รอคุณทำต่อ</small></button>
+        <button class="card card-hover summary-card" data-bucket="waiting" type="button" aria-pressed="false"><span class="card-title" id="waiting-label">รอผล</span><strong class="card-value" id="count-waiting">0</strong><small class="card-caption" id="waiting-caption">ส่งแล้ว รอเจ้าหน้าที่ตรวจสอบ</small></button>
+        <button class="card card-hover summary-card" data-bucket="due" type="button" aria-pressed="false"><span class="card-title">ใกล้ครบกำหนด</span><strong class="card-value" id="count-due">0</strong><small class="card-caption">ครบกำหนดภายใน 3 วัน รวมงานเกินกำหนด</small></button>
+      </div>
+      <section class="panel work-list" aria-labelledby="list-title">
+        <div class="panel-header list-heading"><div><h2 class="panel-title" id="list-title">คำขอของฉัน</h2><div id="result-count" class="panel-caption" role="status" aria-live="polite"></div></div></div>
+        <p id="live-work-status" role="status">เข้าสู่ระบบเพื่อดูคำขอ</p><div id="request-list"></div>
+        <button id="work-load-more" class="btn-ghost" type="button" hidden>แสดงเพิ่ม 20 รายการ</button>
+        <div class="empty-state" id="empty-state" hidden><span aria-hidden="true">⌕</span><h3>ไม่พบรายการที่ตรงกับตัวกรอง</h3><p>ลองเปลี่ยนคำค้น หรือกลับไปดูทุกบริการ</p><button class="btn-ghost" id="clear-filters" type="button">ล้างตัวกรอง</button></div>
+      </section>
+    </div></section>
+
+  <dialog id="request-dialog" class="modal-dialog" aria-labelledby="detail-title">
+    <div class="dialog-heading modal-header"><div><span class="detail-service-heading"><span id="detail-icon" aria-hidden="true"></span><span id="detail-service" class="service-label"></span></span><h2 class="modal-title" id="detail-title"></h2><p class="modal-subtitle" id="detail-meta"></p></div><button type="button" id="close-dialog" class="modal-close" aria-label="ปิดรายละเอียด" autofocus>×</button></div>
+    <div class="work-detail-body">
+      <div class="detail-status-line"><span>สถานะปัจจุบัน</span><div id="detail-status"></div></div>
+      <dl class="detail-facts"><div id="detail-purpose-field" hidden><dt>วัตถุประสงค์</dt><dd id="detail-purpose"></dd></div><div><dt>หน่วยงาน</dt><dd id="detail-org"></dd></div><div id="detail-amount-field" hidden><dt>งบประมาณที่ขอ</dt><dd id="detail-amount"></dd></div><div><dt id="detail-date-label">กำหนดการ</dt><dd id="detail-deadline"></dd></div></dl>
+      <section class="next-step modal-section"><h3 id="detail-next-title">สิ่งที่ต้องทำต่อ</h3><p id="detail-next"></p></section>
+      <section id="detail-note-field" class="next-step modal-section" hidden><h3>หมายเหตุ</h3><p id="detail-note"></p></section>
+      <h3 class="timeline-heading">ประวัติรายการ</h3><ol id="detail-timeline"></ol>
+    </div>
+  </dialog>

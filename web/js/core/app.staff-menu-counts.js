@@ -54,7 +54,7 @@
       document.querySelectorAll(`a[data-page="${page}"]`).forEach(link => paintBadge(link, counts.get(page) || 0));
     }
     const staffTotal = [...counts.values()].reduce((sum, count) => sum + count, 0);
-    document.querySelectorAll('[data-staff-mode="staff"]').forEach(button => paintBadge(button, staffTotal));
+    document.querySelectorAll('[data-staff-mode="staff"]:not(#work-panel [data-staff-mode])').forEach(button => paintBadge(button, staffTotal));
     const notice = document.getElementById('staffTemporaryAccessNotice');
     if (notice) {
       const entries = rows.get('staff-temporary-access-staff') || [];

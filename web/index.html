@@ -74,6 +74,7 @@
     <script src="js/core/app.config.js"></script>
     <!-- Firebase Auth (เข้าสู่ระบบ/สิทธิ์ผู้ใช้) -->
     <script type="module" src="js/integrations/app.firebase-bootstrap.js"></script>
+    <link rel="stylesheet" href="css/pages/account-work.css" />
   </head>
   <body>
     <div id="appLoader" class="app-loader" aria-live="polite" aria-busy="true">
@@ -182,7 +183,7 @@
               </div>
             </div>
 
-            <a href="#" data-page="login" class="nav-pill" data-visible="public">เข้าสู่ระบบ</a>
+            <div class="nav-group"><button class="nav-group-toggle" type="button" aria-expanded="false">บัญชีของฉัน</button><div class="nav-group-menu" aria-hidden="true"><a href="#login" data-page="login" data-visible="public">เข้าสู่ระบบ</a><a href="#account-work" data-page="account-work" data-visible="protected">งานและคำขอ</a></div></div>
           </div>
 
           <div id="desktopNavStaff" class="desktop-nav-role" data-role-nav="staff" style="display:none;">
@@ -223,7 +224,7 @@
               </div>
             </div>
 
-            <a href="#" data-page="login" class="nav-pill" data-visible="public">เข้าสู่ระบบ</a>
+            <div class="nav-group"><button class="nav-group-toggle" type="button" aria-expanded="false">บัญชีของฉัน</button><div class="nav-group-menu" aria-hidden="true"><a href="#login" data-page="login" data-visible="public">เข้าสู่ระบบ</a><a href="#account-work" data-page="account-work" data-visible="protected">งานและคำขอ</a></div></div>
           </div>
         </nav>
 
@@ -314,7 +315,7 @@
           <details class="mobile-menu-group">
             <summary>บัญชี</summary>
             <div class="mobile-menu-links">
-              <a href="#" data-page="login" data-visible="public">เข้าสู่ระบบ</a>
+              <a href="#login" data-page="login" data-visible="public">เข้าสู่ระบบ</a><a href="#account-work" data-page="account-work" data-visible="protected">งานและคำขอ</a>
             </div>
           </details>
         </nav>
@@ -615,6 +616,9 @@
 
       <!-- @include partials/budget-approval-staff.html -->
 
+      <!-- work-requests:start -->
+      <!-- @include partials/account-work.html -->
+      <!-- work-requests:end -->
       <!-- @include partials/login.html -->
 
     </main>
@@ -1019,6 +1023,8 @@
     <script src="js/core/app.dialog.js" defer></script>
     <script src="js/core/app.helpers.js" defer></script>
     <script src="js/core/app.staff-menu-counts.js" defer></script>
+    <script src="js/features/account-work/app.account-work-data.js" defer></script>
+    <script src="js/features/account-work/app.account-work.js" defer></script>
     <script src="js/features/project/app.sorting-auth.js" defer></script>
     <script src="js/motion/app.motion.js" defer></script>
     <script>

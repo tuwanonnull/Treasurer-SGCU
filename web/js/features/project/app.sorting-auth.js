@@ -1381,6 +1381,7 @@ function hasNavigableStaffPages(profile) {
 
 function getAllowedPagesForCurrentState(mode = staffViewMode) {
   const withProjectLive = pages => {
+    if (isUserAuthenticated) pages.add("account-work");
     const email = (window.sgcuAuth?.auth?.currentUser?.email || "").toLowerCase();
     if (isUserAuthenticated && (pages.has("project-live-staff") || (globalThis.SGCU_APP_CONFIG?.projectLive?.enabled && (["6534324223@student.chula.ac.th", "tuwanon.kimchiang@gmail.com"].includes(email) || (globalThis.SGCU_APP_CONFIG?.projectLive?.recordV2===true && pages.has("dashboard-staff")))) || pages.has("system-data-staff"))) pages.add("project-live-staff");
     else pages.delete("project-live-staff");
@@ -1698,6 +1699,7 @@ function updateNavForStaff(staffUser) {
   if (staffViewMode !== "staff") return;
 
   const allowedStaffPages = getAllowedStaffPagesByProfile(staffUser);
+  if (isUserAuthenticated) allowedStaffPages.add("account-work");
   // This page is authorized independently of legacy staff position catalogs.
   if (getAllowedPagesForCurrentState().has("project-live-staff")) {
     allowedStaffPages.add("project-live-staff");

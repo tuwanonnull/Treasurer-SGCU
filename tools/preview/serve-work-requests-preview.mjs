@@ -14,7 +14,7 @@ export async function renderWorkPreview() {
   const [original, work] = await Promise.all([
     readFile(path.join(dist, 'index.html'), 'utf8'), readFile(new URL('work-requests/index.html', import.meta.url), 'utf8')
   ]);
-  return original.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+  return original.replace(/<!-- work-requests:start -->[\s\S]*?<!-- work-requests:end -->/, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace('<html lang="th">', '<html lang="th" data-theme="light">')
     .replace(/<a href="#" data-page="login" class="nav-pill" data-visible="public">เข้าสู่ระบบ<\/a>/g, accountLinks)
     .replace('<a href="#" data-page="login" data-visible="public">เข้าสู่ระบบ</a>', '<a href="#login" data-page="login" data-visible="public">ข้อมูลบัญชี</a><a href="#account-work" data-page="account-work" data-visible="protected">งานและคำขอ</a>')
