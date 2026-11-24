@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 import { readCssSource } from '../lib/source-includes.mjs';
 const source = await fs.readFile('web/partials/dashboard-staff.html', 'utf8');
+const updateMeta = source.match(/<p id="visitorUpdateMeta"[\s\S]*?<\/p>/)[0].replace(' hidden>', '>');
 const panel = source.slice(source.indexOf('          <section id="systemVisitorPanel"'), source.indexOf('          <div id="systemHealthSummary"'));
 const css = await readCssSource(new URL('../../web/css/style.css', import.meta.url));
 const darkCss = await fs.readFile('web/css/components/theme-preview.css', 'utf8');
@@ -11,7 +12,7 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.route('**/*', route => route.abort());
-  await page.setContent(`<style>${css}${darkCss}body{display:block;margin:0;padding:16px}</style><a data-page="home">หน้าแรก</a><a data-page="project-status">สถานะโครงการ</a><button data-system-data-tab="visitors">สถิติการเข้าใช้งาน</button>${panel.replace(' hidden>', '>')}`);
+  await page.setContent(`<style>${css}${darkCss}body{display:block;margin:0;padding:16px}</style><a data-page="home">หน้าแรก</a><a data-page="project-status">สถานะโครงการ</a><button data-system-data-tab="visitors">สถิติการเข้าใช้งาน</button>${updateMeta}${panel.replace(' hidden>', '>')}`);
   await page.evaluate(() => {
     window.requests = [];
     window.Chart = class {
@@ -111,7 +112,7 @@ try {
   assert.ok(positions.every(top => Math.abs(top - positions[0]) < 2));
   assert.equal(await page.locator('.visitor-toolbar #visitorMetric').count(), 0);
   assert.equal(await page.locator('.visitor-trend-card .chart-header #visitorMetric').count(), 1);
-  assert.equal(await page.locator('.visitor-toolbar #visitorRefresh').count(), 1);
+  assert.equal(await page.locator('#visitorUpdateMeta #visitorRefresh').count(), 1);
   await page.screenshot({ path: '/tmp/visitor-filters-desktop.png', fullPage: true });
   const detail = await page.locator('.visitor-detail-card').boundingBox();
   const table = await page.locator('#visitorDetailTable').boundingBox();

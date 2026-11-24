@@ -80,6 +80,14 @@ function visitorGroupDays(keys, values, mode) {
     $('visitorGrowthCaption').textContent = 'รอข้อมูลตามตัวกรอง';
     $('visitorUniqueCaption').textContent = 'นับเบราว์เซอร์เดิมวันละ 1 คน';
   }
+  const renderedContent = new Map();
+  function animateChange(element) {
+    element.getAnimations().forEach(animation => animation.cancel());
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    element.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: 180, easing: 'ease-out'
+    });
+  }
   function render() {
     if (!history || !config || loading) return;
     const unique = $('visitorMetric').checked;
@@ -87,7 +95,7 @@ function visitorGroupDays(keys, values, mode) {
     const mode = $('visitorGrouping').value;
     const groupLabel = { day: 'วัน', week: 'สัปดาห์', month: 'เดือน' }[mode];
     const values = unique ? history.unique : history.visits;
-    const { currentDates, previousDates, page, pageLabel } = config;
+    const { currentDates, previousDates } = config;
     const { current, previous, complete, percent } = visitorCompare(values, currentDates, previousDates);
     const comparing = previousDates.length > 0;
     $('visitorChartTitle').textContent = `${label} · ราย${groupLabel}`;
@@ -184,12 +192,24 @@ function visitorGroupDays(keys, values, mode) {
       : missing ? 'ข้อมูลบางวันยังไม่มี · ไม่แทนด้วยศูนย์ และไม่รวมยอดช่วงที่ข้อมูลไม่ครบ'
       : comparing ? 'จับคู่ตามลำดับช่วง · แตะเส้นเพื่อดูวันที่จริงและยอด' : 'แสดงข้อมูลช่วงที่เลือก';
     $('visitorFilterStatus').dataset.error = 'false';
-    $('visitorFilterStatus').textContent = `${pageLabel} · ${page === 'all' ? 'ยอดรวมเดิมนับการโหลดเว็บไซต์' : 'ยอดหน้านี้นับการเปิดหน้าและการเปลี่ยนเข้าหน้า เริ่มเก็บเมื่อเปิดใช้ฟีเจอร์'} · ${mode === 'week' ? 'สัปดาห์จันทร์–อาทิตย์ รวมเฉพาะวันที่เลือก' : mode === 'month' ? 'เดือนปฏิทิน รวมเฉพาะวันที่เลือก' : 'รายวันตามเวลาไทย'}${unique && mode !== 'day' ? ' · รวมยอดคนไม่ซ้ำรายวัน ไม่ใช่คนไม่ซ้ำทั้งช่วง' : ''}`;
+    $('visitorFilterStatus').textContent = '';
+    const chartContent = JSON.stringify({ mode, unique, series });
+    const changes = [[$('visitorChart'), chartContent], [$('visitorTableBody'), $('visitorTableBody').innerHTML]];
+    for (const id of ['dashboardVisitorCount', 'dashboardVisitorAllTimeCount', 'visitorUniqueToday', 'visitorGrowth']) {
+      changes.push([$(id), $(id).textContent]);
+    }
+    for (const [element, content] of changes) {
+      if (renderedContent.has(element.id) && renderedContent.get(element.id) !== content) animateChange(element);
+      renderedContent.set(element.id, content);
+    }
   }
   async function load({ refresh = false } = {}) {
     const id = ++requestId;
-    $('visitorCustomDates').hidden = $('visitorDays').value !== 'custom';
-    $('visitorCompareDates').hidden = $('visitorCompare').value !== 'custom';
+    for (const [datesId, selectId] of [['visitorCustomDates', 'visitorDays'], ['visitorCompareDates', 'visitorCompare']]) {
+      const dates = $(datesId), wasHidden = dates.hidden;
+      dates.hidden = $(selectId).value !== 'custom';
+      if (wasHidden && !dates.hidden) animateChange(dates);
+    }
     let next;
     try { next = readConfig(); }
     catch (error) {
@@ -203,10 +223,12 @@ function visitorGroupDays(keys, values, mode) {
     if (refresh) cache.clear();
     try {
       await window.sgcuUniqueVisitorReady;
+      let fetched = false;
       const read = async keys => {
         if (!keys.length) return { visits: {}, unique: {} };
         const key = `${today()}/${next.page}/${keys[0]}/${keys.at(-1)}`;
         if (!cache.has(key)) {
+          fetched = true;
           const promise = window.sgcuVisitorCounter.getVisitorHistory(keys[0], keys.at(-1), next.page);
           cache.set(key, promise);
           promise.catch(() => { if (cache.get(key) === promise) cache.delete(key); });
@@ -217,11 +239,17 @@ function visitorGroupDays(keys, values, mode) {
       try { await window.sgcuVendorLoader?.ensureChart?.(); } catch (error) { console.warn('Chart library unavailable', error); }
       if (id !== requestId) return;
       config = next; history = { ...main, visits: { ...previous.visits, ...main.visits }, unique: { ...previous.unique, ...main.unique }, uniqueUnavailable: main.uniqueUnavailable || previous.uniqueUnavailable };
+      if (fetched) {
+        const updated = new Date();
+        $('visitorLastUpdated').dateTime = updated.toISOString();
+        $('visitorLastUpdated').textContent = updated.toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        $('visitorLastUpdated').title = updated.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+      }
       loading = false; render();
     } catch (error) {
       if (id !== requestId) return;
       $('visitorStatus').textContent = next.page === 'all' ? 'โหลดสถิติไม่สำเร็จ กรุณากดรีเฟรชสถิติอีกครั้ง' : 'ยังโหลดสถิติแยกหน้าไม่ได้ ต้องเปิดใช้การเก็บข้อมูลและกฎฐานข้อมูลแยกหน้าก่อน';
-      $('visitorFilterStatus').textContent = next.pageLabel;
+      $('visitorFilterStatus').textContent = '';
       setDetailState('error');
       console.warn('Visitor history unavailable', error);
     } finally { if (id === requestId) { loading = false; $('visitorRefresh').disabled = false; } }

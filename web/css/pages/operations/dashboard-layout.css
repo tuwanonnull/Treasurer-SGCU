@@ -924,6 +924,7 @@
 .visitor-date-range { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .visitor-date-range[hidden] { display: none; }
 #visitorFilterStatus { margin: -8px 0 16px; color: #64748b; font-size: 12px; }
+#visitorFilterStatus:empty { display: none; }
 #visitorFilterStatus[data-error="true"] { color: #be123c; }
 .visitor-legend button:only-child i { border-top-style: solid; }
 @media (max-width: 900px) { .visitor-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -974,7 +975,7 @@
 /* Keep filters and refresh together, with daily detail beside the trend. */
 #systemVisitorPanel .visitor-toolbar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: visible;
   margin-top: 0;
 }
@@ -1011,3 +1012,6 @@
 @media (max-width: 640px) {
   #systemVisitorPanel .visitor-date-range .visitor-control-group { width: auto; flex: 1 1 140px; }
 }
+
+#visitorUpdateMeta[hidden] { display: none; }
+.page-view[data-page="system-data-staff"]:has(#visitorUpdateMeta:not([hidden])) .page-header-flex .page-meta:not(#visitorUpdateMeta) { display: none; }

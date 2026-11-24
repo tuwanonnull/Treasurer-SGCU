@@ -579,6 +579,10 @@
           <div class="page-header-flex">
             <div>
               <h1 class="page-title">ข้อมูลระบบ</h1>
+              <p id="visitorUpdateMeta" class="page-meta project-last-updated-meta" data-system-data-panel="visitors" hidden>
+                อัปเดตล่าสุด : <time id="visitorLastUpdated">—</time>
+                <button id="visitorRefresh" class="project-refresh-data-btn" type="button" aria-label="ดึงข้อมูลสถิติใหม่" title="ดึงข้อมูลสถิติใหม่"><span aria-hidden="true">↻</span></button>
+              </p>
               <p class="page-meta">ตรวจสถานะระบบและประวัติการทำงาน</p>
             </div>
             <div class="tabs system-data-main-tabs" role="tablist" aria-label="เลือกหมวดข้อมูลระบบ">
@@ -618,7 +622,7 @@
                 <label class="visitor-control-label" for="visitorPage">หน้าที่เข้าชม</label>
                 <select id="visitorPage"><option value="all">ทั้งเว็บไซต์</option></select>
               </div>
-              <button id="visitorRefresh" class="btn-ghost visitor-refresh" type="button"><span aria-hidden="true">↻</span> รีเฟรชสถิติ</button>
+
 
 
             </div>
