@@ -283,6 +283,12 @@
     void refreshAuthAccessProfilePreview();
   };
 
+  (window.sgcuWorkOpeners ||= {})['staff-temporary-access-staff'] = id => {
+    const item = currentAuthEmailAccessEntries.find(item => item.id === id);
+    if (!item) return false;
+    fillAuthAccessForm(item); openAuthAccessEditor(); return true;
+  };
+
   const replaceAuthAccessRows = (desktop, mobile) => {
     const empty = document.getElementById("staffAuthAccessNoResults");
     if (empty) {

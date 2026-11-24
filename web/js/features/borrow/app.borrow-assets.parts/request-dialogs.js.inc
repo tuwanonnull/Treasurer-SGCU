@@ -291,6 +291,13 @@
     }) || null;
   };
 
+  for (const page of ['borrow-assets','borrow-assets-staff']) {
+  (window.sgcuWorkOpeners ||= {})[page] = id => {
+    const item = getBorrowRequestByKey(id, BORROW_REQUEST_COLLECTION);
+    if (!item) return false;
+    openBorrowDetailModal(item); return true;
+  };
+  }
   const borrowDetailModalEl = (() => {
     const existing = document.getElementById("borrowRequestDetailModal");
     if (existing) return existing;

@@ -1,0 +1,22 @@
+/* Shared slim scrollbars. Individual components still control overflow and sizing. */
+:root { --scrollbar-thumb: #cbd5e1; }
+html[data-theme="dark"] { --scrollbar-thumb: #404040; }
+
+@media screen {
+  :where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  /* Older WebKit browsers use the same rounded, transparent-track treatment. */
+  @supports not (scrollbar-width: thin) {
+    :where(*)::-webkit-scrollbar { width: 6px; height: 6px; }
+    :where(*)::-webkit-scrollbar-track { background: transparent; }
+    :where(*)::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 999px; }
+    :where(*)::-webkit-scrollbar-corner { background: transparent; }
+  }
+}
+
+@media (forced-colors: active) {
+  :where(*) { scrollbar-color: auto; }
+}

@@ -15,10 +15,28 @@
  let state = {}, signature = '', generation = 0, stops = [], results = new Map(), statuses = new Map(), roomNames = new Map(), meetingSnapshots = new Map(), adminSnapshots = new Map();
  window.sgcuWorkShell = { render(mode,role) {
   const toggle = document.querySelector('#work-panel .page-switch');
-  toggle.hidden = role === 'user'; toggle.style.display = role === 'user' ? 'none' : 'flex'; toggle.dataset.mode=mode;
+  toggle.hidden = role === 'user'; toggle.style.display = role === 'user' ? 'none' : 'inline-grid'; toggle.dataset.mode=mode;
   window.sgcuWorkPaintCounts?.(mode);
   toggle.querySelectorAll('[data-staff-mode]').forEach(b => { b.classList.toggle('is-active',b.dataset.staffMode===mode);b.setAttribute('aria-pressed',String(b.dataset.staffMode===mode)); });
  }};
+ window.sgcuWorkAction = row => {
+  if (!state.isAuthenticated || !row?.recordId || row.history) return null;
+  const definition = definitions.find(([service]) => service === row.service);
+  if (!definition) return null;
+  if (row.mode === 'staff') {
+   if (!allowedStaffService(row.service, definition[2])) return null;
+   return {page:definition[2], label:row.service === 'borrow' ? 'จัดการรายการยืม–คืน' : row.service === 'temporary' ? 'ตรวจสอบสิทธิ์' : 'ตรวจคำขอ'};
+  }
+  const pages = {budget:'budget-approval-request',borrow:'borrow-assets',meeting:'meeting-room-booking',temporary:'login'};
+  const labels = {budget:'เปิดรายการงบประมาณ',borrow:'เปิดรายละเอียดการยืม',meeting:'เปิดรายละเอียดการจอง',temporary:'เปิดข้อมูลสิทธิ์ของฉัน'};
+  return pages[row.service] ? {page:pages[row.service],label:labels[row.service]} : null;
+ };
+ window.sgcuWorkHistoryContext = () => ({
+  state: {...state}, definitions: definitions.map(definition => [...definition]),
+  allowedServices: definitions.filter(([service,,page]) => allowedStaffService(service,page)).map(([service]) => service),
+  roomName: id => roomNames.get(id) || '',
+  ownerEmail: service => service === 'budget' ? (window.sgcuNormalizeAccountEmail?.(state.email) || String(state.email || '').replace(/^(\d{10})@alumni\.chula\.ac\.th$/, '$1@student.chula.ac.th')) : state.email
+ });
  function dateText(value) {
   if (!value) return '';
   const d = value.toDate?.() || (value.seconds ? new Date(value.seconds*1000) : new Date(value));
@@ -84,7 +102,7 @@
   if(!next) return null;
   const org=String(d.organizationName || (typeof d.organization==='string'?d.organization:d.organization?.organizationName) || d.organization?.name || 'ไม่ระบุองค์กร');
   const person=String(d.name || d.applicant?.displayName || d.applicant?.name || d.requester?.displayName || d.applicantName || d.applicantEmail || d.email || 'ไม่ระบุผู้ยื่น');
-  return {id:`${mode}-${service}-${encodeURIComponent(doc.id)}`,requestNo:d.requestNo || '',mode,service,title:person,org,status:text,bucket,due,badgeTone:tone,deadline,
+  return {id:`${mode}-${service}-${encodeURIComponent(doc.id)}`,recordId:doc.id,requestNo:d.requestNo || '',mode,service,title:person,org,status:text,bucket,due,badgeTone:tone,deadline,
    next, note:d.staffNote || d.reviewReason || d.rejectionReason || '',
    steps:[d.createdAt || d.requestedAt?'ยื่นคำขอ · '+dateText(d.createdAt || d.requestedAt):null,text+(d.updatedAt?' · '+dateText(d.updatedAt):'')].filter(Boolean)};
  }
@@ -117,7 +135,7 @@
   const title=service==='meeting'?roomName:d.projectName || d.borrowProjectName || (d.assets || []).map(x=>x.name).filter(Boolean).join(', ');
   const updated=dateText(d.updatedAt),created=dateText(d.createdAt || d.createdDate);
   const steps=[created?'ยื่นคำขอ · '+created:null,`${displayStatus}${updated?' · '+updated:''}`].filter(Boolean);
-  return {id:`${mode}-${service}-${encodeURIComponent(doc.id)}`,requestNo:String(d.requestNo || d.projectCodeGenerated || d.bookingNo || '').trim(),purpose:service==='meeting'?String(d.purpose || d.projectName || '').trim():'',mode,service,badgeTone,organization:org.split(' · ')[0],title:title || 'รายการไม่ระบุชื่อ',org,status:bucket==='done' && status==='approved'?'สิ้นสุดเวลาจอง':displayStatus,bucket,due,
+  return {id:`${mode}-${service}-${encodeURIComponent(doc.id)}`,recordId:doc.id,requestNo:String(d.requestNo || d.projectCodeGenerated || d.bookingNo || '').trim(),purpose:service==='meeting'?String(d.purpose || d.projectName || '').trim():'',mode,service,badgeTone,organization:org.split(' · ')[0],title:title || 'รายการไม่ระบุชื่อ',org,status:bucket==='done' && status==='approved'?'สิ้นสุดเวลาจอง':displayStatus,bucket,due,
    deadline:date?`${dateText(date)}${service==='meeting'?' · '+(d.startTime || '—')+'–'+(d.endTime || '—')+' น.':''}`:updated?'อัปเดต '+updated:'ไม่ระบุกำหนดการ',
    next, note:d.staffNote || d.reviewReason || d.rejectionReason || '',steps};
  }
@@ -139,7 +157,7 @@
   window.sgcuWork?.setLiveState([...results.values()].flat(),!!state.hasStaff && window.sgcuWorkAllowedServices.length > 0);
   const messages=[...statuses].filter(([,value])=>value!=='โหลดแล้ว').map(([key,value])=>key==='rooms:catalog' ? `ทะเบียนห้อง: ${value}` : `${labels[key.split(':')[0]]} (${key.endsWith('staff')?'สตาฟ':'ของฉัน'}): ${value}`);
   $('live-work-status').textContent=state.isAuthenticated?messages.join(' · '):'เข้าสู่ระบบด้วยบัญชีของคุณเพื่อดูคำขอจริง';
-  $('live-work-status').hidden = state.isAuthenticated && messages.length === 0;
+  $('live-work-status').hidden = window.sgcuWork?.isHistory?.() || state.isAuthenticated && messages.length === 0;
   const empty=$('empty-state');
   empty.querySelector('h3').textContent=[...statuses.values()].some(s=>s==='กำลังโหลด')?'กำลังโหลดข้อมูลจริง…':'ไม่มีรายการที่แสดงได้';
   empty.querySelector('p').textContent='ตรวจตัวกรองและสถานะการโหลดด้านบน';
@@ -149,6 +167,7 @@
   const key=JSON.stringify([state.isAuthenticated,state.email,state.hasStaff,state.isHeadStaff,state.allowedPages]);
   if(key===signature) return;
   signature=key; const current=++generation;
+  window.sgcuWorkHistory?.resetAccess();
   stops.forEach(stop=>stop());stops=[];results.clear();statuses.clear();roomNames.clear();meetingSnapshots.clear();adminSnapshots.clear();publish();
   if(!state.isAuthenticated || !state.email) return;
   const f=window.sgcuFirestore;
@@ -193,7 +212,7 @@
  function refreshRows() { if (!adminSnapshots.size) return; for (const [id,{service,mode,docs}] of adminSnapshots) results.set(id,docs.map(doc=>normalize(service,doc,mode)).filter(Boolean)); publish(); }
  window.setInterval?.(refreshRows,60000);
  Promise.resolve(window.sgcuRuntimeConfigReady).then(refreshRows).catch(()=>{});
- window.addEventListener('pagehide',()=>{generation++;stops.forEach(stop=>stop());});
+ window.addEventListener('pagehide',()=>{generation++;stops.forEach(stop=>stop());window.sgcuWorkHistory?.resetAccess();});
  document.addEventListener('DOMContentLoaded',()=>{
   publish();
   document.querySelector('#work-panel .page-title').textContent='งานและคำขอ';

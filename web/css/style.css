@@ -1,5 +1,6 @@
 /* Split stylesheet entrypoint. Keep imports ordered to preserve the original cascade. */
 @import url("./core/base.css");
+@import url("./components/scrollbars.css");
 @import url("./core/prelude-layout.css");
 @import url("./pages/operations.css");
 @import url("./pages/meeting-room.css");
@@ -27,6 +28,7 @@
 @import url("./pages/about.css");
 @import url("./pages/budget-meeting.css");
 @import url("./pages/project-live.css");
+@import url("./components/account-mobile-nav.css");
 
 @media (max-width: 840px) {
   .page-view[data-page="dashboard-staff"].active #filterBarStaff:not([data-mobile-filter-mounted]) {

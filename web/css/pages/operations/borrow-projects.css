@@ -301,8 +301,11 @@
   #staffBorrowQueue .borrow-staff-period { grid-template-columns: 1fr 1fr; gap: 12px; }
 }
 #staffBorrowQueue .borrow-staff-requests-wrapper {
-  max-height: none;
-  overflow: visible;
+  max-height: min(640px, 68vh);
+  max-height: min(640px, 68dvh);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
 }
 
 /* Keep frequent request filters visible; disclose detailed conditions on demand. */

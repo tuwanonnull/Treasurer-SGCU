@@ -1412,7 +1412,7 @@ function initBudgetApprovalRequestPage() {
         ? ` data-budget-edit-id="${escapeHtml(item.id || "")}" tabindex="0" title="คลิกเพื่อแก้ไขรายการ"`
         : "";
       return `
-        <tr class="budget-request-history-row${canEdit ? " is-editable" : ""}"${rowEditAttrs}>
+        <tr data-work-budget-id="${escapeHtml(item.id || '')}" class="budget-request-history-row${canEdit ? " is-editable" : ""}"${rowEditAttrs}>
           <td style="text-align:center;" data-label="รหัสโครงการ"><code class="budget-request-project-code">${projectCode}</code></td>
           <td style="text-align:left;" data-label="รายการโครงการ">
             <div class="budget-request-history-project-name">${projectName}</div>
@@ -2579,6 +2579,13 @@ function initBudgetApprovalRequestPage() {
       console.error("delete budget approval request failed - app.budget-request.js:2456", error);
       setFormMessage("ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "#b91c1c");
     }
+  };
+
+  (window.sgcuWorkOpeners ||= {})['budget-approval-request'] = id => {
+    setBudgetRequestView('normal');
+    const row = Array.from(myRequestsTableBodyEl.querySelectorAll('[data-work-budget-id]')).find(el => el.dataset.workBudgetId === id);
+    if (!row) return false;
+    row.tabIndex = 0; row.scrollIntoView({block:'center'}); row.focus(); return true;
   };
 
   myRequestsTableBodyEl.addEventListener("click", (event) => {

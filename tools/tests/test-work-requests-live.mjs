@@ -51,10 +51,23 @@ for(const [data,normal,staff] of [
 }
 for(const status of ['pending','approved','rejected']) {feed('organizationRepresentativeApplications','staff',{status,requestType:'organization_representative',applicant:{displayName:'Person'},organization:{organizationName:'Club'}});assert.equal(row('representative','staff')?.next || null,status==='pending'?'รอพิจารณาคำขอเป็นตัวแทนองค์กร':null);}
 feed('organizationRepresentativeApplications','staff',{status:'pending',requestType:'staff_application'});assert.equal(row('representative','staff'),undefined);
+// Action targets preserve opaque IDs and use the same live staff permissions as queues.
+for (const [service,collection] of [['budget','budgetApprovalRequests'],['borrow','borrowAssetRequests'],['meeting','meetingRoomBookings']]) {
+ feed(collection,'staff',{status:'pending',date:'2099-01-01'});
+ const item=row(service,'staff');
+ assert.equal(item.recordId,'test');
+ assert.equal(window.sgcuWorkAction(item).page,pages[['budget','borrow','meeting'].indexOf(service)]);
+}
+feed('budgetApprovalRequests','normal',{status:'approved'});
+assert.equal(window.sgcuWorkAction(row('budget','normal')).page,'budget-approval-request');
+assert.equal(window.sgcuWorkAction({service:'unknown',recordId:'x',mode:'normal'}),null);
+const savedActionRow=row('meeting','staff');
 const old=sub('budgetApprovalRequests','normal');const start=subscriptions.length;
 auth({isAuthenticated:true,email:'other@example.com',hasStaff:true,isHeadStaff:false,allowedPages:pages});assert.ok(subscriptions.slice(0,start).every(s=>s.stopped));assert.equal(displayed.length,0);
 old.success({size:1,docs:[doc('stale',{status:'pending'})]});assert.equal(displayed.length,0);
+assert.equal(window.sgcuWorkAction({service:'temporary',recordId:'x',mode:'staff'}),null);
 assert.equal(sub('authEmailAccess','staff'),undefined);assert.equal(sub('organizationRepresentativeApplications','staff'),undefined);
 sub('budgetApprovalRequests','normal').failure({code:'permission-denied'});assert.match(node('live-work-status').textContent,/ไม่มีสิทธิ์/);
 events.get('sgcu:auth-state')({detail:{isAuthenticated:false}});assert.equal(displayed.length,0);assert.equal(hasStaff,false);assert.ok(subscriptions.every(s=>s.stopped));
+assert.equal(window.sgcuWorkAction(savedActionRow),null);
 console.log('Work queue: all requested status/role messages and exclusions, per-year council routing, notes, room names, expiry, owner/head access and logout isolation passed.');

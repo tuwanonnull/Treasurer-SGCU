@@ -885,7 +885,7 @@
 #visitorMetric:checked::after { left: 17px; }
 #visitorMetric:focus-visible { outline: 2px solid var(--theme-pink-500); outline-offset: 3px; }
 #visitorStatus { min-height: 18px; }
-.visitor-chart { display: flex; gap: 10px; overflow-x: auto; padding: 16px 0 8px; scrollbar-color: #cbd5e1 transparent; }
+.visitor-chart { display: flex; gap: 10px; overflow-x: auto; padding: 16px 0 8px; }
 .visitor-chart.has-canvas { display: block; position: relative; height: 280px; overflow: hidden; padding: 12px 0; }
 #systemVisitorPanel .visitor-note { line-height: 1.7; margin-top: 12px; }
 #systemVisitorPanel .visitor-table-wrapper { min-height: 0; max-height: 340px; overflow: auto; margin-top: 12px; }

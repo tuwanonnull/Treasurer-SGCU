@@ -3242,6 +3242,12 @@
     }
   };
 
+  (window.sgcuWorkOpeners ||= {})['budget-approval-staff'] = id => {
+    const row = requestRows.find(item => item.id === id);
+    if (!row) return false;
+    fillFormForEdit(row); projectNameInputEl.focus({preventScroll:true}); return true;
+  };
+
   tableBodyEl.addEventListener("click", (event) => {
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (!target) return;

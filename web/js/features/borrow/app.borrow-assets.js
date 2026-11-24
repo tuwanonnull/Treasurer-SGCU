@@ -165,7 +165,7 @@ function initBorrowAssetsApp() {
   const STATUS_REJECTED = "rejected";
   const STATUS_CANCELLED = "cancelled";
   const STATUS_RETURNED = "returned";
-  const STAFF_REQUEST_PAGE_SIZE = 50;
+  const STAFF_REQUEST_PAGE_SIZE = 20;
   const STAFF_ASSETS_PAGE_SIZE = 50;
   const BORROW_REQUEST_ACTIVE_LIST_LIMIT = 500;
   const BORROW_REQUEST_HISTORY_LIST_LIMIT = 300;

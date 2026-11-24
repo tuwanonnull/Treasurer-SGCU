@@ -30,12 +30,20 @@
     'org-representative-approval-staff': 'ตัวแทนองค์กร', 'content-news-staff': 'ข่าวสาร',
     'content-documents-staff': 'เอกสารการเงิน'
   };
+  function buildMenus(account) {
+    const allowed = new Set(account.pages || []);
+    return {key: 'account_menus_v1', title: 'เมนูสำหรับบัญชีของคุณ', steps: [
+      nav('account-work', 'งานและคำขอ', 'ติดตามงาน คำขอของคุณ และประวัติรายการได้จากเมนูนี้'),
+      nav('login', 'หน้าบัญชี', 'จัดการข้อมูลบัญชี สิทธิ์การใช้งาน และการตั้งค่าได้ที่นี่')
+    ].filter(step => allowed.has(step.page))};
+  }
   function build(account, replay = false) {
     if (replay) {
       const normalPages = account.generalPages || account.pages;
       const normal = new Set(normalPages);
       const base = account.type === 'affairs' ? meeting : general;
       const steps = base.filter(s => normal.has(s.page)).map(s => ({ ...s, mode: 'normal' }));
+      steps.push(...buildMenus({...account,pages:normalPages}).steps.map(s=>({...s,mode:'normal'})));
       if (account.staffApproved === true) {
         const staff = build({ ...account, mode: 'staff', pages: account.replayStaffPages || account.staffPages || account.pages });
         steps.push(...staff.steps.map(s => ({ ...s, mode: 'staff' })));
@@ -55,7 +63,7 @@
       };
     }
     if (account.staffApproved !== true) return { key: 'staff_v1', steps: [] };
-    const steps = [{ id: 'mode', page: 'login', selector: '#staffModeToggle', title: 'ขณะนี้คุณอยู่ในโหมดสตาฟ', text: 'เมนูในโหมดนี้ใช้จัดการงานตามสิทธิ์ของคุณ สลับทั่วไป/สตาฟได้ที่หน้าบัญชีผู้ใช้' }];
+    const steps = [{ id: 'mode', page: 'login', selector: '#staffModeToggle', mobileSelector: '[data-account-mobile-mode="login"]', title: 'ขณะนี้คุณอยู่ในโหมดสตาฟ', text: 'เมนูในโหมดนี้ใช้จัดการงานตามสิทธิ์ของคุณ สลับทั่วไป/สตาฟได้ที่หน้าบัญชีผู้ใช้' }];
     staffGroups.forEach(([id, title, pages]) => {
       const visible = pages.filter(p => allowed.has(p));
       if (visible.length) steps.push({ id: `${id}:${visible.join(',')}`, page: visible[0], pageIds: visible, nav: true, group: true, title, text: `เมนูที่คุณใช้ได้: ${visible.map(p => labels[p]).join(' · ')} เปิดเมนูเพื่อดูรายละเอียดและดำเนินการตามสิทธิ์ของคุณ` });
@@ -110,5 +118,5 @@
     ])] };
   }
   const seenIds = step => step.pageIds || [step.id];
-  root.sgcuTourPolicy = { build, pending, eligible, seenIds, recordFor, rolloutBaseline, timestamp };
+  root.sgcuTourPolicy = { build, buildMenus, pending, eligible, seenIds, recordFor, rolloutBaseline, timestamp };
 })(globalThis);

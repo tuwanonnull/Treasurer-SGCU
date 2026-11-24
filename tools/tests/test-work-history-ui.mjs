@@ -1,0 +1,100 @@
+import assert from 'node:assert/strict';
+import {readFile,mkdir} from 'node:fs/promises';
+import path from 'node:path';
+import {chromium} from '@playwright/test';
+const root=path.resolve('dist');
+const html=(await readFile(path.join(root,'index.html'),'utf8')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace('<head>','<head><base href="http://localhost/">').replace('</head>','<style>#appLoader,header,footer,.page-view{display:none!important}#work-panel{display:block!important}</style></head>');
+const browser=await chromium.launch({headless:true});
+const errors=[];
+try {
+ const page=await browser.newPage({viewport:{width:1280,height:900}});
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',async route=>{
+  const url=new URL(route.request().url());
+  if(url.hostname!=='localhost')return route.abort();
+  const file=path.resolve(root,'.'+decodeURIComponent(url.pathname));
+  if(!file.startsWith(root+path.sep))return route.abort();
+  try{await route.fulfill({body:await readFile(file),contentType:file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':'application/octet-stream'});}catch{await route.abort();}
+ });
+ await page.setContent(html);
+ await page.evaluate(()=>{
+  document.documentElement.dataset.theme='light';
+  window.testMode='normal';window.sgcuTourAccount=()=>({mode:window.testMode});window.setStaffViewMode=mode=>window.testMode=mode;
+  window.testReads=[];window.testFailure=false;
+  const rows=Array.from({length:65},(_,i)=>({id:'request-'+String(i).padStart(3,'0'),data:()=>({requesterEmail:'owner@example.com',status:'returned',projectName:'โครงการทดสอบ '+i,requestNo:'BR-'+i,staffNote:'ส่งคืนพัสดุครบถ้วน',updatedAt:new Date(2026,9,1,0,i),createdAt:new Date(2026,8,1)})}));
+  window.sgcuFirestore={db:{},where:(field,op,value)=>({field,op,value}),orderBy:(field,direction)=>({order:field,direction}),limit:n=>({limit:n}),startAfter:doc=>({cursor:doc.id}),collection:(_,name)=>name,doc:(_,collection,id)=>({collection,id}),query:(collection,...constraints)=>({collection,constraints}),onSnapshot:(ref,next)=>{queueMicrotask(()=>next(ref?.id?{exists:()=>false}:{size:0,docs:[]}));return()=>{};},getDoc:async()=>({exists:()=>false}),getDocs:async q=>{
+   window.testReads.push(q);
+   await new Promise(r=>setTimeout(r,20));
+   if(window.testFailure)throw Error('offline');
+   let result=q.collection==='borrowAssetRequests'?[...rows]:[];
+   for(const c of q.constraints.filter(c=>c.field))result=result.filter(doc=>{const value=doc.data()[c.field];return c.op==='=='?value===c.value:c.op==='in'?c.value.includes(value):c.op==='>='?value>=c.value:value<c.value;});
+   result.sort((a,b)=>b.data().updatedAt-a.data().updatedAt);
+   const cursor=q.constraints.find(c=>c.cursor);if(cursor)result=result.slice(result.findIndex(r=>r.id===cursor.cursor)+1);
+   return {docs:result.slice(0,q.constraints.find(c=>c.limit).limit)};
+  }};
+ });
+ for(const file of ['app.account-work-data.js','app.account-work-history.js','app.account-work.js'])await page.addScriptTag({content:await readFile('web/js/features/account-work/'+file,'utf8')});
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('sgcu:staff-auth-updated',{detail:{isAuthenticated:true,email:'owner@example.com',hasStaff:true,isHeadStaff:false,allowedPages:['borrow-assets-staff']}})));
+ assert.equal(await page.evaluate(()=>window.testReads.length),0);
+ await page.getByRole('tab',{name:'ประวัติ',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#result-count').textContent==='โหลดแล้ว 20 รายการ' && document.querySelector('#work-list-content').getAttribute('aria-busy')==='false');
+ assert.equal(await page.locator('#request-list .request-row').count(),20);
+ assert.equal(await page.locator('.work-summary').isVisible(),false);
+ assert.equal(await page.locator('#live-work-status').isVisible(),false);
+ assert.ok(await page.locator('#request-list').evaluate(el=>el.scrollHeight>el.clientHeight && getComputedStyle(el).overflowY==='auto'),'Rows must scroll within the card');
+ assert.ok((await page.locator('.work-list').boundingBox()).height<=760,'Card has a maximum height');
+ await page.locator('#request-list').evaluate(el=>el.scrollTop=el.scrollHeight);
+ await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#work-page-label').textContent==='หน้า 2');
+ assert.equal(await page.locator('#request-list .request-row').count(),20);
+ assert.equal(await page.locator('#request-list').evaluate(el=>el.scrollTop),0,'Changing page resets the inner scroll');
+ await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#work-page-label').textContent==='หน้า 3');
+ await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#work-page-label').textContent==='หน้า 4 / 4');
+ assert.equal(await page.locator('#request-list .request-row').count(),5);
+ assert.equal(await page.locator('#work-page-next').isDisabled(),true);
+ const reads=await page.evaluate(()=>window.testReads.length);
+ await page.getByRole('button',{name:'ก่อนหน้า',exact:true}).click();
+ assert.equal(await page.locator('#request-list .request-row').count(),20);
+ assert.equal(await page.evaluate(()=>window.testReads.length),reads,'Previous page uses already loaded records');
+ await page.getByRole('button',{name:'ถัดไป',exact:true}).click();
+ assert.equal(await page.evaluate(()=>window.testReads.length),reads,'Cached next page must not query again');
+ await page.locator('#work-search').fill('BR-1');await page.locator('#work-search').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#result-count').textContent==='โหลดแล้ว 1 รายการ');
+ assert.match(await page.locator('#request-list').textContent(),/BR-1/);
+ assert.equal(await page.locator('#work-pager').isVisible(),false,'One-page results hide the pager');
+ // Submitting an unchanged search retains the existing results.
+ await page.getByRole('button',{name:'ค้นหาประวัติ',exact:true}).click();assert.equal(await page.locator('#request-list .request-row').count(),1);
+ await page.locator('#request-list .request-row').click();
+ assert.equal(await page.locator('#request-dialog').isVisible(),true);
+ assert.equal(await page.locator('#work-next-action').isVisible(),false);
+ assert.equal(await page.locator('#detail-next-title').textContent(),'สรุปผล');
+ assert.match(await page.locator('#detail-note-field').textContent(),/^หมายเหตุ:/);
+ await page.locator('#close-dialog').click();await page.locator('#request-dialog').waitFor({state:'hidden'});
+ await page.getByRole('tab',{name:'งานปัจจุบัน',exact:true}).click();assert.equal(await page.locator('.work-summary').isVisible(),true);
+ await page.getByRole('tab',{name:'งานปัจจุบัน',exact:true}).press('ArrowRight');
+ assert.equal(await page.getByRole('tab',{name:'ประวัติ',exact:true}).getAttribute('aria-selected'),'true');
+ await page.locator('#clear-search').click();await page.waitForFunction(()=>document.querySelector('#result-count').textContent==='โหลดแล้ว 20 รายการ');
+ await page.locator('#work-history-from').fill('2026-10-01');await page.locator('#work-history-to').fill('2026-10-01');await page.getByRole('button',{name:'ค้นหาประวัติ',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#work-list-content').getAttribute('aria-busy')==='false');
+ await mkdir('.local/work-history-qa',{recursive:true});
+ await page.screenshot({path:'.local/work-history-qa/desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile must not overflow horizontally');
+ assert.ok(await page.locator('#request-list').evaluate(el=>el.scrollHeight>el.clientHeight),'Mobile rows scroll inside the card');
+ await page.screenshot({path:'.local/work-history-qa/mobile.png',fullPage:true});
+ await page.evaluate(()=>document.documentElement.dataset.theme='dark');await page.screenshot({path:'.local/work-history-qa/mobile-dark.png',fullPage:true});
+ // Read failures expose a retry action; refresh can recover.
+ await page.evaluate(()=>window.testFailure=true);await page.locator('#work-history-refresh').click();
+ await page.waitForFunction(()=>document.querySelector('#work-history-status').textContent.includes('โหลดประวัติไม่สำเร็จ'));
+ await page.evaluate(()=>window.testFailure=false);await page.getByRole('button',{name:'ลองโหลดอีกครั้ง',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#result-count').textContent==='โหลดแล้ว 20 รายการ');
+ // Revoking access clears even an open historical detail and in-flight results.
+ await page.locator('#request-list .request-row').first().click();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('sgcu:auth-state',{detail:{isAuthenticated:false}})));
+ await page.waitForFunction(()=>document.querySelector('#request-list').children.length===0);
+ assert.equal(await page.locator('#request-dialog').isVisible(),false);
+ assert.deepEqual(errors,[]);
+ console.log('History UI: desktop/mobile, tab keyboard access, server search, 20-row pagination and cached previous/next, summary/detail isolation, retry and logout passed. Screenshots: .local/work-history-qa/');
+} finally {await browser.close();}

@@ -1669,7 +1669,7 @@ function applyStaffViewMode() {
   updateNavForStaff(staffMode ? staffAuthUser : null);
 
   if (staffModeToggleEl) {
-    staffModeToggleEl.style.display = canShowStaffMode ? "flex" : "none";
+    staffModeToggleEl.style.display = canShowStaffMode ? "inline-grid" : "none";
   }
   staffModeBtns.forEach((btn) => {
     btn.classList.toggle("is-active", btn.dataset.staffMode === staffViewMode);

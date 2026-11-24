@@ -1,0 +1,39 @@
+.account-mobile-subnav, .account-mobile-only { display: none; }
+@media (max-width: 840px) {
+  .account-mobile-subnav.is-visible { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .account-mobile-subnav.is-visible:has(> button[hidden]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .account-mobile-subnav[hidden] { display: none !important; }
+  .account-mobile-subnav small { display: none; }
+  #account-filter-sheet { margin: 0; padding: 0; border: 0; width: 100%; height: 100%; max-width: none; max-height: none; background: transparent; }
+  #account-filter-sheet::backdrop { background: rgba(15,23,42,.38); }
+  #account-filter-sheet .mobile-filter-body { overflow-y: auto; }
+  #account-filter-sheet #work-mobile-filters-done { display: block; margin: 12px 0 0 auto; }
+  .page-view.has-account-mobile-nav #staffModeToggle,
+  #work-panel.has-account-mobile-nav .page-switch,
+  #work-panel.has-account-mobile-nav .work-history-tabs { display: none !important; }
+  #work-panel.has-account-mobile-nav:not(.mobile-work-filters-open) #work-filter-area { display: none; }
+  #work-panel.has-account-mobile-nav #work-mobile-filters-done { display: block; margin: 10px 0 16px auto; }
+  .page-view.has-account-mobile-nav .account-mobile-only { display: block; }
+  #loginMobileSettingsSlot .login-notification-section { margin: 0; padding: 18px; border: 1px solid var(--preview-border, #f9d5e6); border-radius: 18px; background: var(--preview-surface, #fff); }
+  #loginGooglePanel, #loginAccessSection, #loginSettingsSection { scroll-margin-top: calc(var(--account-subnav-top, 0px) + 76px); }
+}
+
+@media (max-width: 840px) {
+  .page-view.has-account-mobile-nav[data-page="login"] .login-hero { gap: 0; }
+  .page-view.has-account-mobile-nav #loginHeroContent { display: none; }
+  .page-view.has-account-mobile-nav .login-hero-panel,
+  .page-view.has-account-mobile-nav .login-grid { gap: 16px; }
+  .page-view.has-account-mobile-nav .login-grid > .login-card,
+  .page-view.has-account-mobile-nav #loginAccessSection,
+  .page-view.has-account-mobile-nav #loginMobileSettingsSlot { margin: 0; }
+  .page-view.has-account-mobile-nav #loginAccessSection {
+    padding: 18px; border-style: solid; background: var(--preview-surface, #fff);
+  }
+  .page-view.has-account-mobile-nav #loginMobileAccessSummary { margin: 0 0 12px; }
+  .page-view.has-account-mobile-nav #loginSettingsSection { padding: 18px; }
+}
+
+@media (max-width: 840px) {
+  /* Preserve rounded clipping without creating a scrollable ancestor for account links. */
+  .page-view.has-account-mobile-nav .login-shell { overflow: clip; }
+}

@@ -11,6 +11,12 @@
               <button class="staff-mode-btn tab-btn view-toggle-btn" data-staff-mode="staff" type="button" aria-pressed="false">สตาฟ</button>
             </div>
           </div>
+          <nav id="login-mobile-nav" class="account-mobile-subnav" aria-label="เมนูบัญชีผู้ใช้" hidden>
+            <button type="button" data-login-mobile-section="account" aria-pressed="true">ข้อมูลบัญชี</button>
+            <button type="button" data-login-mobile-section="access" aria-pressed="false">สิทธิ์การใช้งาน</button>
+            <button type="button" data-login-mobile-section="settings" aria-pressed="false">การตั้งค่า</button>
+            <button type="button" data-account-mobile-mode="login" hidden><span>สลับโหมด</span><small data-mobile-mode-label>ทั่วไป</small></button>
+          </nav>
           <div id="staffModeFeedback" class="staff-mode-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
           <div class="login-shell">
@@ -57,7 +63,7 @@
                     <button id="loginPageGoogleBtn" type="button" class="btn-primary w-full">เข้าสู่ระบบด้วย Mail CHULA</button>
                     <button id="loginPageLogoutBtn" type="button" class="login-logout-btn" style="display:none;">ออกจากระบบ</button>
                     <p class="login-access-note">สำหรับผู้ได้รับสิทธิ์ชั่วคราว: ใช้บัญชี Google ที่ตรงกับอีเมลที่ได้รับอนุญาต</p>
-                    <div class="login-notification-section">
+                    <div id="loginSettingsSection" class="login-notification-section" tabindex="-1">
                       <div class="login-notification-row">
                         <div class="login-notification-description">
                           <h4 class="login-notification-title">การแจ้งเตือน</h4>
@@ -183,7 +189,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="login-help">
+                <div id="loginAccessSection" class="login-help" tabindex="-1">
+                  <p id="loginMobileAccessSummary" class="account-mobile-only section-text-sm"></p>
                   <div id="authAccessSelfService" class="login-notification-row" hidden>
                     <div class="login-notification-description">
                       <h4 class="login-notification-title">สิทธิ์เข้าใช้งาน</h4>
@@ -199,6 +206,7 @@
                     <button id="budgetRepresentativeApplyBtn" class="btn-ghost login-help-cta" type="button" hidden>สมัครเป็นตัวแทนองค์กร</button>
                   </div>
                 </div>
+                <div id="loginMobileSettingsSlot" class="account-mobile-only"></div>
               </div>
             </div>
           </div>

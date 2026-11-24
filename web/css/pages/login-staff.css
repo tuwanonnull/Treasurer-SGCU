@@ -3578,3 +3578,11 @@ html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-confirm-b
   height: 18px;
   font-size: 11px;
 }
+
+/* Equal role-button widths without changing the existing button height. */
+#staffModeToggle { grid-template-columns: repeat(2, minmax(0, 1fr)); width: max-content; max-width: 100%; }
+#staffModeToggle > .staff-mode-btn { min-width: 0; white-space: nowrap; }
+@media (max-width: 640px) {
+  #staffModeToggle { width: 100%; border-radius: 16px; }
+  #staffModeToggle > .staff-mode-btn { min-height: 40px; padding: 8px 12px; }
+}

@@ -364,6 +364,12 @@
       if (item) openOrgRepresentativeDetailModal(item);
     });
 
+  (window.sgcuWorkOpeners ||= {})['org-representative-approval-staff'] = id => {
+    const item = currentOrgRepresentativeApplications.find(item => item.id === id);
+    if (!item) return false;
+    openOrgRepresentativeDetailModal(item); return true;
+  };
+
     orgRepresentativePendingBodyEl.addEventListener("change", (event) => {
       const select = event.target;
       if (!(select instanceof HTMLSelectElement)) return;

@@ -1377,15 +1377,6 @@
     overscroll-behavior: contain;
   }
 
-  .table-wrapper.organization-catalog-table-wrapper::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .table-wrapper.organization-catalog-table-wrapper::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.65);
-  }
-
   .organization-catalog-table {
     display: block;
     min-width: 0;

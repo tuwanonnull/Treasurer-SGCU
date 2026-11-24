@@ -6,6 +6,8 @@
   let active = null, dialog = null, card = null, ring = null, target = null, previousFocus = null;
   let menuRestore = null;
   let transitioning = false;
+  let pageVisit = 0, offeredVisit = -1, currentPage = '';
+  const resolveTarget = step => [step.mobileSelector, step.selector].filter(Boolean).map(selector=>document.querySelector(selector)).find(visible);
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let dirty = false, generation = 0, writeQueue = Promise.resolve(), lastRetry = 0;
   const offered = new Set();
@@ -82,6 +84,7 @@
         .some(el => el !== dialog && visible(el));
   }
   function close() {
+    if (active) offeredVisit = pageVisit;
     generation++;
     transitioning = false;
     target?.classList.remove('sgcu-tour-anchor');
@@ -274,7 +277,7 @@
           await Promise.race([window.sgcuTourNavigation.navigate(step.page), new Promise((_, reject) => setTimeout(() => reject(Error('timeout')), 7000))]);
         }
         if (token !== generation) return;
-        target = document.querySelector(step.selector);
+        target = resolveTarget(step);
       }
       await settleTarget(target, token);
       if (token !== generation) return;
@@ -356,10 +359,11 @@
     active = { key: tour.key, steps, index: 0, mode: account().mode, owner: uid };
     const index = steps.findIndex(s => s.id === record.currentStep);
     if (!replay && index >= 0) active.index = index;
+    offeredVisit = pageVisit;
     offered.add(`${tour.key}:${steps.map(s => s.id).join('|')}`);
     create();
     const resume = !replay && record.started === true;
-    display(resume ? 'ดูคำแนะนำต่อไหม?' : tour.special ? 'สิทธิ์ของคุณพร้อมใช้งานแล้ว' : 'ให้เราพาคุณรู้จักการใช้งาน',
+    display(resume ? 'ดูคำแนะนำต่อไหม?' : tour.title || (tour.special ? 'สิทธิ์ของคุณพร้อมใช้งานแล้ว' : 'ให้เราพาคุณรู้จักการใช้งาน'),
       resume ? 'คุณยังดูคำแนะนำชุดนี้ไม่ครบ สามารถดูต่อจากจุดที่ค้างไว้ได้' : 'แนะนำเมนูและวิธีเริ่มต้นสั้น ๆ ตามสิทธิ์ของคุณ สามารถข้ามหรือกลับมาดูใหม่ได้เสมอ',
       [[resume ? 'ดูต่อ' : 'เริ่มแนะนำ', () => void showStep(), true], ['ไว้ภายหลัง', defer], ['ข้ามชุดนี้', () => finish(true)]]);
   }
@@ -371,7 +375,7 @@
       const nextUid = a?.user?.uid || '';
       if (uid !== nextUid) {
         close(); uid = nextUid; records = {}; loaded = loading = false; dirty = false;
-        pendingWrites.clear(); offered.clear(); unavailable.clear();
+        pendingWrites.clear(); offered.clear(); unavailable.clear(); offeredVisit = -1;
       }
       const enabled = globalThis.SGCU_APP_CONFIG?.onboarding?.enabled !== false;
       if (!uid || !enabled) { close(); return; }
@@ -388,7 +392,16 @@
         const baseline = policy.rolloutBaseline(account(), globalThis.SGCU_APP_CONFIG?.onboarding?.rolloutAt);
         if (baseline) persist('rollout_v1', baseline);
       }
-      const tour = policy.build(account(), replay);
+      if (!replay && offeredVisit === pageVisit) return;
+      let tour = policy.build(account(), replay);
+      if (!replay) {
+        const baseRecord = policy.recordFor(tour, records);
+        const basePending = policy.pending(tour, baseRecord);
+        const baseSignature = `${tour.key}:${basePending.map(s=>s.id).join('|')}`;
+        if (!basePending.length || offered.has(baseSignature) || !policy.eligible(baseRecord, session)) {
+          tour = policy.buildMenus(account());
+        }
+      }
       if (!replay) tour.steps = tour.steps.filter(step => !unavailable.has(`${tour.key}:${step.id}`));
       const record = policy.recordFor(tour, records);
       const signature = `${tour.key}:${policy.pending(tour, record).map(s => s.id).join('|')}`;
@@ -398,14 +411,24 @@
   document.addEventListener('input', event => {
     if (!dialog?.contains(event.target) && event.target.closest('.page-view.active')) dirty = true;
   });
-  window.addEventListener('sgcu:page-active', () => { dirty = false; });
+  window.addEventListener('sgcu:page-active', () => {
+    dirty = false;
+    const page = document.querySelector('.page-view.active')?.dataset.page;
+    if (page !== currentPage) {currentPage = page; pageVisit++;}
+  });
   window.addEventListener('sgcu:user-profile-updated', () => { dirty = false; });
   window.addEventListener('resize', async () => {
+    // Media-query listeners reveal the mobile bar after the resize event.
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if (active && !active.finished && active.steps[active.index]?.nav && target) {
       target = revealNav(active.steps[active.index]);
       const resizedTarget = target;
       await settleTarget(resizedTarget);
       if (resizedTarget !== target) return;
+    }
+    if (active && !active.finished && !active.steps[active.index]?.nav) {
+      const next = resolveTarget(active.steps[active.index]);
+      if (next !== target) {target?.classList.remove('sgcu-tour-anchor');target = next;target?.classList.add('sgcu-tour-anchor');}
     }
     position();
   });

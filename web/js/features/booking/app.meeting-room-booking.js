@@ -3718,6 +3718,12 @@ function initMeetingRoomBookingApp() {
 
   updateManageActionUI();
 
+  (window.sgcuWorkOpeners ||= {})['meeting-room-booking'] = id => {
+    const item = findBooking(item => item.id === id);
+    if (!item) return false;
+    openBookingDetailModal(item); return true;
+  };
+
   window.openMeetingBookingDetailModal = openBookingDetailModal;
   window.openMeetingBookingDayListModal = openDayBookingListModal;
 

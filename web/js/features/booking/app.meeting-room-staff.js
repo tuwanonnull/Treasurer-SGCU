@@ -3061,6 +3061,12 @@ function initMeetingRoomStaffApproval() {
     });
   }
 
+  (window.sgcuWorkOpeners ||= {})['meeting-room-staff'] = id => {
+    const item = bookings.find(item => item.id === id);
+    if (!item || !window.openMeetingBookingDetailModal) return false;
+    window.openMeetingBookingDetailModal(item, {includeContact:true, allowStatusEdit:true}); return true;
+  };
+
   window.__meetingRoomStaffInitDone = true;
   subscribeRooms();
   subscribeHolidays();
