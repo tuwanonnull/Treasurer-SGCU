@@ -3102,6 +3102,7 @@ function initAuthUI() {
         detail: {
           isAuthenticated: isAuth,
           hasStaff,
+          isHeadStaff: hasStaff && isHeadStaffProfile(staffAuthUser),
           email: (firebaseUser?.email || "").toString().trim().toLowerCase(),
           allowedPages: hasStaff ? Array.from(getAllowedStaffPagesByProfile(staffAuthUser)) : []
         }

@@ -49,6 +49,7 @@ npm run serve:dist
 เปิดเว็บที่ http://localhost:4173 หลัง build แล้ว
 
 - `npm run preview:site`: build และเปิดเว็บทั้งชุดที่ http://127.0.0.1:4181 (เข้าสู่ระบบและใช้ข้อมูลจริง การบันทึกมีผลกับฐานข้อมูลจริง)
+- `npm run preview:work-requests`: ตัวอย่างหน้า “งานและคำขอ” ที่ http://127.0.0.1:4189 ใช้โครงหน้า เมนู ฟอนต์ และ CSS จากเว็บจริงที่ build แล้ว พร้อมข้อมูลจำลอง ไม่เชื่อม Firebase; สลับทั่วไป/สตาฟ กรองรายการ เปิดรายละเอียด และลองบทบาทสตาฟเฉพาะห้องประชุมได้ ทดสอบด้วย `npm run test:work-requests`
 - `npm run preview:documents`: พรีวิวเอกสารที่ http://127.0.0.1:4174
 - `npm run preview:staff-positions`: ทดลองหน้าจัดการตำแหน่งสตาฟที่ http://127.0.0.1:4177 (ชุดตำแหน่งและสิทธิ์ที่อ่านจากระบบจริง แก้ไขเฉพาะในเบราว์เซอร์); รหัสและสิทธิ์ที่จำลองอาจต่างจากระบบจริง
 - `npm run preview:staff-positions:refresh`: อ่าน `staffPositionCatalog` แบบ read-only ผ่านบัญชี Firebase CLI ที่ลงชื่อเข้าใช้ เก็บ snapshot ใน `.local/staff-position-preview/catalog.json` ไม่เขียนฐานข้อมูลจริง; หน้าทดลองใช้รายการหน้าจาก `STAFF_PAGE_OPTIONS` ในโค้ดโดยตรง แต่ละ snapshot มี draft ในเบราว์เซอร์แยกกัน
@@ -74,3 +75,14 @@ npm run serve:dist
 - หน้าพรีวิวตรวจ UI และสถานะจำลอง การตรวจข้ามอุปกรณ์กับ Firebase จริงควรทำด้วยบัญชีทดสอบก่อนเผยแพร่
 
 ทัวร์สิทธิ์พิเศษตรวจสถานะอนุมัติจริง: ตัวแทนองค์กรแนะนำเฉพาะยื่นงบประมาณ สตาฟแนะนำเมื่อเข้าโหมดสตาฟ และกรองเมนูที่เคยดูแล้วออก บัญชีจำลองสิทธิ์พิเศษเริ่มจากรออนุมัติและมีประวัติผ่านทัวร์พื้นฐานแล้ว กด “จำลองได้รับอนุมัติ” เพื่อทดลอง (สตาฟต้องสลับโหมดต่อ) ปุ่ม “เริ่มทัวร์ใหม่” จะคืนบัญชีจำลองที่เลือกเป็นสถานะรออนุมัติ
+
+### Work requests: local real-data preview
+
+Run `npm run preview:work-requests:live`, then open `http://127.0.0.1:4190/#login`.
+Sign in with the existing Google account, then select **งานและคำขอ** in the navigation.
+The preview uses the built site's authentication and Firestore rules. Personal requests are queried by account email; staff queries are started only for the services in the authenticated staff page permissions. The added work page only reads records; the site's existing service pages retain their normal behavior.
+Staff queries select only pending work statuses used by the existing service menus; expired meeting requests are excluded. The work-page staff badge counts its service queues, including temporary-access and organization-representative work only for authorized head staff, while the account-page staff badge may also include staff-application work. Each service/mode query reads up to 300 records and displays loading, errors, or the limit notice. Lists reveal 20 rows at a time; “แสดงเพิ่ม” reveals the next 20. This is a local preview, not a deployment. The mock preview remains at port 4189. No service-account credentials or rule changes are required.
+
+Temporary access uses an owner document subscription for personal requests; administrative subscriptions require head-staff status and the corresponding allowed page. Its staff queue contains pending requests and active access expiring within seven days. Organization representative staff work includes pending representative applications only. These adapters read records without changing decisions or access.
+
+The real-data work queue follows the agreed per-service/per-role visibility and next-step copy. Completed/rejected/cancelled work is excluded; representative applications appear only in the authorized staff queue. Approved budget requests use `documents.signersByAcademicYear[budgetRoundYear].approvalMeetingBody` to select council versus Student Affairs instructions (the same council default as advance-loan documents). Requests without an identifiable academic year show a neutral instruction to check the submission route. Staff notes remain separate from next-step instructions.

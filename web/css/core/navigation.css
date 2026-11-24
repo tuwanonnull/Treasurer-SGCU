@@ -110,6 +110,11 @@
 
 .nav-pill,
 .nav-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(1.25rem + 18px);
+  box-sizing: border-box;
   border: none;
   background: rgba(255, 255, 255, 0.84);
   color: #4b5563;
@@ -139,6 +144,8 @@
 }
 
 .nav-group {
+  display: flex;
+  align-items: center;
   position: relative;
 }
 
@@ -1641,5 +1648,102 @@
   .mobile-directory-action-bar.is-visible,
   html.sgcu-standalone .mobile-directory-action-bar.is-visible {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Staff queue totals stay visible on menu links and collapsed groups. */
+.has-staff-menu-count {
+  position: relative;
+}
+.nav-group-menu a.has-staff-menu-count,
+.mobile-menu-links a.has-staff-menu-count,
+.nav-group-toggle.has-staff-menu-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-group-menu a.has-staff-menu-count,
+.mobile-menu-links a.has-staff-menu-count {
+  display: flex;
+}
+.nav-group-menu a > .staff-menu-count,
+.mobile-menu-links a > .staff-menu-count,
+.mobile-menu-group > summary > .staff-menu-count {
+  margin-left: auto;
+}
+.nav-group-toggle.has-staff-menu-count::after {
+  margin-left: 0;
+}
+.staff-mode-btn.has-staff-menu-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.staff-menu-count {
+  position: static;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: #be185d;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.staff-menu-count[hidden] { display: none; }
+.mobile-bottom-item > .staff-menu-count {
+  position: absolute;
+  top: 0;
+  right: max(0.2rem, calc(50% - 1.75rem));
+}
+
+/* Mobile group headings retain full-width alignment with their child rows. */
+.mobile-menu-group > summary.has-staff-menu-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mobile-bottom-item > .staff-menu-count {
+  min-width: 1rem;
+  height: 1rem;
+  padding-inline: 0.2rem;
+  font-size: 0.625rem;
+  line-height: 1;
+  z-index: 1;
+  transform: none;
+}
+
+.staff-temporary-access-notice { padding: 12px 16px; border-radius: 12px; background: var(--preview-raised, #fdf2f8); color: var(--preview-text, #831843); }
+.staff-temporary-access-notice[hidden] { display: none; }
+
+/* Compact desktop navigation, with matching heights in both modes. */
+@media (min-width: 841px) {
+  .header-inner { padding-block: 8px; }
+  .desktop-nav { padding: 4px; }
+  .desktop-nav .nav-pill,
+  .desktop-nav .nav-group-toggle {
+    min-height: 2.125rem;
+    padding: 8px 11px;
+  }
+  .desktop-nav .staff-menu-count {
+    min-width: 1.125rem;
+    height: 1.125rem;
+    font-size: 0.6875rem;
+  }
+  .desktop-nav .nav-group-toggle.has-staff-menu-count { gap: 6px; }
+}
+@media (max-width: 840px) {
+  #mobileMenu .mobile-menu-group summary,
+  #mobileMenu .mobile-menu-links a {
+    gap: 6px;
+    padding-inline: 8px;
   }
 }

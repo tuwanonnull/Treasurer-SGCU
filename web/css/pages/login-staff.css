@@ -3565,3 +3565,16 @@ html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-warning-i
 html[data-theme="dark"] body .staff-auth-delete-dialog .meeting-delete-confirm-btn { background: #3c2529; color: #ffb4b4; border: 1px solid #71444c; box-shadow: none; }
 @media (max-width: 640px) { .staff-auth-delete-dialog .meeting-settings-dialog-card { padding: 18px; } }
 @media (prefers-reduced-motion: reduce) { .staff-auth-delete-dialog[open] { animation: none; } }
+
+/* Keep the original mode switch sizing; align only its contents. */
+#staffModeToggle > .staff-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+#staffModeToggle .staff-menu-count {
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+}
