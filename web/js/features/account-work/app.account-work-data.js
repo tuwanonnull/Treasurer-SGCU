@@ -141,20 +141,25 @@
  }
  window.sgcuWorkPaintCounts = (mode = window.sgcuTourAccount?.().mode || 'normal') => {
   const data=[...results.values()].flat();
+  const oppositeMode=mode==='staff'?'normal':'staff';
+  const total=data.filter(row=>row.mode===oppositeMode && row.bucket==='action').length;
   for(const link of document.querySelectorAll('a[data-page="account-work"]')) {
-   const scope=link.closest('[data-role-nav]')?.dataset.roleNav;
-   const navMode=scope==='staff'?'staff':scope==='general'?'normal':mode;
-   const count=data.filter(row=>row.mode===navMode && row.bucket==='action').length;
-   let badge=link.querySelector('.work-menu-count');
-   if(!badge) {badge=document.createElement('span');badge.className='staff-menu-count work-menu-count';link.append(badge);}
-   badge.hidden=!count;badge.textContent=count>99?'99+':String(count);badge.setAttribute('aria-label',`รายการที่ต้องดำเนินการ ${count} รายการ`);
-   link.classList.toggle('has-staff-menu-count',count>0);
+   const group=link.closest('.nav-group, .mobile-menu-group');
+   const toggle=group?.querySelector('.nav-group-toggle, summary');
+   for(const target of [link,toggle].filter(Boolean)) {
+    let badge=target.querySelector(':scope > .work-menu-count');
+    if(!badge) {badge=document.createElement('span');badge.className='staff-menu-count work-menu-count';target.append(badge);}
+    const label=`งานโหมด${oppositeMode==='staff'?'สตาฟ':'ทั่วไป'}ที่ต้องดำเนินการ ${total} รายการ`;
+    badge.hidden=!total;badge.textContent=total>99?'99+':String(total);badge.setAttribute('aria-label',label);badge.title=label;
+    target.classList.toggle('has-staff-menu-count',total>0);
+   }
   }
  };
  function publish() {
   document.querySelectorAll('header a[data-page="login"]').forEach(link => {link.textContent=state.isAuthenticated?'ข้อมูลบัญชี':'เข้าสู่ระบบ';});
   window.sgcuWorkAllowedServices = definitions.filter(([service, ,page]) => allowedStaffService(service,page)).map(([service]) => service);
   window.sgcuWork?.setLiveState([...results.values()].flat(),!!state.hasStaff && window.sgcuWorkAllowedServices.length > 0);
+  window.sgcuWorkPaintCounts();
   const messages=[...statuses].filter(([,value])=>value!=='โหลดแล้ว').map(([key,value])=>key==='rooms:catalog' ? `ทะเบียนห้อง: ${value}` : `${labels[key.split(':')[0]]} (${key.endsWith('staff')?'สตาฟ':'ของฉัน'}): ${value}`);
   $('live-work-status').textContent=state.isAuthenticated?messages.join(' · '):'เข้าสู่ระบบด้วยบัญชีของคุณเพื่อดูคำขอจริง';
   $('live-work-status').hidden = window.sgcuWork?.isHistory?.() || state.isAuthenticated && messages.length === 0;

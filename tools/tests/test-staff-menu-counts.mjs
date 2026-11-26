@@ -49,6 +49,18 @@ try {
   }
   assert.equal(await page.locator('[data-staff-mode="staff"] > .staff-menu-count').textContent(), '10', 'Mode switch sums each queue once');
   assert.equal(await page.locator('[data-staff-mode="normal"] > .staff-menu-count').count(), 0);
+  for (const selector of ['#hamburgerBtn', '[data-account-mobile-mode="login"]']) {
+    assert.equal(await page.locator(`${selector} > .staff-menu-count`).textContent(), '10', 'General-mode entry points include staff queues');
+    assert.equal(await page.locator(`${selector} > .staff-menu-count`).getAttribute('title'), 'งานสตาฟรอดำเนินการ 10 รายการ', 'Shared totals must identify staff work, not personal requests');
+  }
+  for (const name of ['news', 'financial-docs', 'staff-directory-staff', 'content-news-staff', 'content-documents-staff', 'system-data-staff', 'account-work', 'meeting-room-booking', 'borrow-assets', 'budget-approval-request']) {
+    assert.equal(await page.locator(`a[data-page="${name}"] > .staff-menu-count`).count(), 0, 'Informational and personal menus must not inherit staff counts');
+  }
+  await page.evaluate(() => window.deliver('staffApplications', []));
+  assert.equal(await page.locator('a[data-page="staff-approval"] > .staff-menu-count:not([hidden])').count(), 0, 'A submenu with no pending work hides its count');
+  assert.equal(await page.locator('#hamburgerBtn > .staff-menu-count').textContent(), '9', 'Shared totals update when a queue is cleared');
+  await page.evaluate(() => window.deliver('staffApplications', [{ status: 'pending' }]));
+  assert.equal(await page.locator('#hamburgerBtn > span:last-child').textContent(), 'เมนู', 'Badge must preserve the animated mobile label');
   assert.equal(await page.locator('#desktopNavStaff .nav-group-toggle > .staff-menu-count').first().textContent(), '8');
   await page.evaluate(() => window.deliver('budgetApprovalRequests', Array.from({ length: 123 }, () => ({ status: 'pending' }))));
   const badge = page.locator('a[data-page="budget-approval-staff"] > .staff-menu-count').first();

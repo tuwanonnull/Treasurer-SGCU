@@ -111,17 +111,21 @@
     $('work-history-to').value = historyDates[mode].to;
     $('clear-search').hidden = false;
     const visible = visibleRows();
+    const isEmpty = historyState.started && !historyState.loading && !historyState.error && !historyState.hasMore && !visible.length;
+    const hasFilters = filter.service !== 'all' || filter.status !== 'all' || filter.query || filter.from || filter.to;
     historyPage = Math.min(historyPage, Math.max(1, Math.ceil(visible.length / PAGE_SIZE)));
     renderRows(visible.slice((historyPage - 1) * PAGE_SIZE, historyPage * PAGE_SIZE));
     $('result-count').textContent = `โหลดแล้ว ${visible.length} รายการ`;
     $('work-list-content').setAttribute('aria-busy', String(historyState.loading));
     $('work-history-status').textContent = historyState.error || (historyState.loading ? 'กำลังโหลดประวัติ…' : !visible.length && historyState.hasMore ? 'ยังไม่พบประวัติที่ตรงตัวกรองในชุดนี้ กดถัดไปเพื่อค้นต่อ' : !visible.length ? 'ไม่พบประวัติที่ตรงตัวกรอง' : historyState.hasMore ? '' : 'แสดงประวัติครบตามตัวกรองแล้ว');
-    $('work-history-status').hidden = !$('work-history-status').textContent;
+    $('work-history-status').hidden = isEmpty || !$('work-history-status').textContent;
     $('work-history-refresh').disabled = historyState.loading;
     renderPager(visible.length, historyPage, historyState.hasMore, historyState.loading);
     $('work-history-retry').hidden = !historyState.error;
     $('work-history-retry').disabled = historyState.loading;
-    $('empty-state').hidden = true;
+    $('empty-state').querySelector('h3').textContent = hasFilters ? 'ไม่พบประวัติที่ตรงกับตัวกรอง' : filter.year === 'all' ? 'ยังไม่มีประวัติงาน' : 'ยังไม่มีประวัติงานในปีการศึกษานี้';
+    $('empty-state').querySelector('p').textContent = hasFilters ? 'ลองเปลี่ยนเลขคำขอ ปีการศึกษา หรือช่วงวันที่ หรือกดล้างตัวกรอง' : 'รายการที่ดำเนินการสิ้นสุดแล้วจะแสดงที่นี่ ลองเลือกปีการศึกษาอื่นเพื่อดูประวัติที่ผ่านมา';
+    $('empty-state').hidden = !isEmpty;
     // Defer until after rendering; configure deduplicates identical requests.
     Promise.resolve().then(() => { if (inHistory()) window.sgcuWorkHistory.configure(mode, historyFilters[mode]); });
   }

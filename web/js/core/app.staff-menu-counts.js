@@ -31,7 +31,7 @@
       starts <= now && ends > now && ends <= now + expiryWindowMs;
   }
 
-  function paintBadge(target, count) {
+  function paintBadge(target, count, label = 'รายการรอดำเนินการ') {
     let badge = target.querySelector(':scope > .staff-menu-count');
     if (!badge && !count) return;
     if (!badge) {
@@ -45,8 +45,8 @@
     target.classList.toggle('has-staff-menu-count', count > 0);
     badge.hidden = !count;
     badge.textContent = count > 99 ? '99+' : String(count);
-    badge.setAttribute('aria-label', `รายการรอดำเนินการ ${count} รายการ`);
-    badge.title = `รายการรอดำเนินการ ${count} รายการ`;
+    badge.setAttribute('aria-label', `${label} ${count} รายการ`);
+    badge.title = `${label} ${count} รายการ`;
   }
 
   function render() {
@@ -54,7 +54,11 @@
       document.querySelectorAll(`a[data-page="${page}"]`).forEach(link => paintBadge(link, counts.get(page) || 0));
     }
     const staffTotal = [...counts.values()].reduce((sum, count) => sum + count, 0);
-    document.querySelectorAll('[data-staff-mode="staff"]:not(#work-panel [data-staff-mode])').forEach(button => paintBadge(button, staffTotal));
+    const paintStaffTotal = target => paintBadge(target, staffTotal, 'งานสตาฟรอดำเนินการ');
+    document.querySelectorAll('[data-staff-mode="staff"]:not(#work-panel [data-staff-mode])').forEach(paintStaffTotal);
+    // These entry points remain visible in general mode, including mobile where
+    // the desktop mode switch and staff navigation are hidden.
+    document.querySelectorAll('#hamburgerBtn, [data-account-mobile-mode]').forEach(paintStaffTotal);
     const notice = document.getElementById('staffTemporaryAccessNotice');
     if (notice) {
       const entries = rows.get('staff-temporary-access-staff') || [];
@@ -65,6 +69,8 @@
     }
     // Surface totals even while desktop dropdowns and mobile groups are closed.
     document.querySelectorAll('#desktopNavStaff .nav-group, .mobile-menu-group[data-mobile-nav="staff"]').forEach(group => {
+      // The account group uses the actionable work queue, not all staff queues.
+      if (group.querySelector('a[data-page="account-work"]')) return;
       const pages = new Set([...group.querySelectorAll('a[data-page]')].map(link => link.dataset.page));
       const total = [...pages].reduce((sum, page) => sum + (counts.get(page) || 0), 0);
       const toggle = group.querySelector('.nav-group-toggle, summary');

@@ -20,7 +20,7 @@ try {
   if(url.origin!==origin) return route.abort();
   if(url.pathname==='/') {
    const response=await route.fetch();
-   const html=(await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>tag.includes('/account-work/')?tag:'');
+   const html=(await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,tag=>tag.includes('/account-work/') || tag.includes('app.staff-menu-counts.js')?tag:'');
    return route.fulfill({response,body:html});
   }
   return route.continue();
@@ -41,7 +41,31 @@ try {
  await page.locator('#request-dialog').waitFor({state:'hidden'});
  await page.locator('#work-panel [data-staff-mode="staff"]').click();
  assert.equal(await page.locator('#list-title').innerText(),'งานที่ต้องจัดการ');
+ await page.evaluate(()=>{
+  window.dispatchEvent(new CustomEvent('sgcu:staff-auth-updated',{detail:{isAuthenticated:true,email:'user@example.com',hasStaff:true,allowedPages:['budget-approval-staff']}}));
+  for(const sub of window.testSubscriptions.filter(s=>!s.stopped && s.ref.collection==='budgetApprovalRequests')) {
+   const personal=sub.ref.constraints.some(c=>c.field==='requester.accountEmail');
+   const statuses=personal?['approved','pending','reviewing']:['pending','reviewing'];
+   sub.success({size:statuses.length,docs:statuses.map((status,i)=>({id:String(i),data:()=>({status,budgetRoundYear:2569,projectName:'ทดสอบยอดงาน'})}))});
+  }
+ });
+ for(const mode of ['normal','staff','normal']) {
+  await page.evaluate(mode=>{window.testMode=mode;window.sgcuWorkPaintCounts(mode);window.dispatchEvent(new CustomEvent('sgcu:page-active'));},mode);
+  const expected=mode==='normal'?'2':'1';
+  const label=`งานโหมด${mode==='normal'?'สตาฟ':'ทั่วไป'}ที่ต้องดำเนินการ ${expected} รายการ`;
+  for(const selector of ['#desktopNavGeneral','#desktopNavStaff','#mobileMenu']) {
+   const link=page.locator(`${selector} a[data-page="account-work"]`);
+   assert.equal(await link.locator('.work-menu-count').textContent(),expected,'Work submenu shows only actionable rows from the opposite mode');
+   assert.equal(await link.locator('.work-menu-count').getAttribute('title'),label);
+   const heading=page.locator(`${selector} :is(.nav-group,.mobile-menu-group):has(a[data-page="account-work"]) > :is(.nav-group-toggle,summary)`);
+   assert.equal(await heading.locator('.staff-menu-count').count(),1,'Only one owner paints the account total');
+   assert.equal(await heading.locator('.work-menu-count').textContent(),expected,'Account heading shows the opposite mode after staff badge refresh');
+   assert.equal(await heading.locator('.work-menu-count').getAttribute('title'),label);
+  }
+  assert.equal(await page.locator('a[data-page="login"] .staff-menu-count').count(),0,'Profile links never show work counts');
+ }
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('sgcu:auth-state',{detail:{isAuthenticated:false}})));
+ assert.equal(await page.locator('.work-menu-count:not([hidden])').count(),0,'Logout clears submenu and account totals');
  assert.equal(await page.locator('#request-list .request-row').count(),0);
  assert.ok(await page.evaluate(()=>window.testSubscriptions.every(s=>s.stopped)));
  for(const width of [390,1440]) {await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}

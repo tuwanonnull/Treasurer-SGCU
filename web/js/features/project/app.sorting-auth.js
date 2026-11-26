@@ -1524,6 +1524,8 @@ function captureStaffModeMenu() {
     if (animation.id === "staff-mode-item") animation.cancel();
   }));
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+  // Mobile animates the live touch slots; copying their computed styles is expensive.
+  if (items.some(item => item.closest(".mobile-bottom-role") && item.getClientRects().length)) return null;
   const snapshot = document.createElement("div");
   snapshot.dataset.staffModeSnapshot = "";
   snapshot.setAttribute("aria-hidden", "true");
@@ -1573,12 +1575,20 @@ function renderStaffModeFeedback(mode, available, animateMenu = false, snapshot 
     if (animation.id === "staff-mode-item") animation.cancel();
   }));
   if (!available || !animateMenu || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const mobile = items.some(item => item.closest(".mobile-bottom-role") && item.getClientRects().length);
+  if (mobile) {
+    items.filter(item => item.closest(".mobile-bottom-role") && item.getClientRects().length && item.animate)
+      .forEach(item => item.animate([
+        { opacity: 0, transform: "translateY(6px)" },
+        { opacity: 1, transform: getComputedStyle(item).transform }
+      ], { id: "staff-mode-item", duration: 320, easing: "cubic-bezier(.22,1,.36,1)" }));
+    return;
+  }
   if (!snapshot?.animate) return;
   const incoming = captureStaffModeMenu();
   if (!incoming) return;
-  const mobile = items.some(item => item.closest(".mobile-bottom-role") && item.getClientRects().length);
   const direction = mode === "staff" ? 1 : -1;
-  const duration = mobile ? 320 : 780;
+  const duration = 780;
   const boundsOf = layer => ({
     left: Math.min(...Array.from(layer.children, label => parseFloat(label.style.left))),
     right: Math.max(...Array.from(layer.children, label =>
@@ -1605,7 +1615,7 @@ function renderStaffModeFeedback(mode, available, animateMenu = false, snapshot 
   Object.assign(stage.style, {
     position: "fixed", left: `${left}px`, top: `${top}px`, width: `${right - left}px`,
     height: `${bottom - top}px`, overflow: "hidden", pointerEvents: "none", zIndex: "1000",
-    maskImage: mobile ? "none" : "linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)"
+    maskImage: "linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)"
   });
   for (const layer of [snapshot, incoming]) {
     layer.removeAttribute("data-staff-mode-snapshot");
@@ -1616,19 +1626,8 @@ function renderStaffModeFeedback(mode, available, animateMenu = false, snapshot 
     stage.append(layer);
   }
   document.body.append(stage);
-  const startTime = document.timeline.currentTime;
   const options = { duration, easing: "cubic-bezier(.4,0,.2,1)" };
-  // Bottom navigation uses fixed touch slots: avoid sweeping icons across neighboring slots.
-  const animations = mobile ? [
-    snapshot.animate([
-      { opacity: 1, transform: "translateY(0)" },
-      { opacity: 0, transform: "translateY(-6px)" }
-    ], { duration: 160, easing: "ease-out", fill: "forwards" }),
-    incoming.animate([
-      { opacity: 0, transform: "translateY(6px)" },
-      { opacity: 1, transform: "translateY(0)" }
-    ], { duration: 260, delay: 60, easing: "cubic-bezier(.22,1,.36,1)", fill: "backwards" })
-  ] : [
+  const animations = [
     // Follow the actual row width so no outgoing labels remain beside a shorter new row.
     stage.animate([{ clipPath: clipFor(oldBounds) }, { clipPath: clipFor(newBounds) }], options),
     snapshot.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-direction * distance}px)` }], options),
@@ -1640,7 +1639,6 @@ function renderStaffModeFeedback(mode, available, animateMenu = false, snapshot 
       id: "staff-mode-item", duration
     }));
   });
-  animations.forEach(animation => { animation.startTime = startTime; });
   const finish = () => {
     stage.remove();
     animations.forEach(animation => animation.cancel());
@@ -1675,6 +1673,7 @@ function applyStaffViewMode() {
     btn.classList.toggle("is-active", btn.dataset.staffMode === staffViewMode);
   });
   renderStaffModeFeedback(staffViewMode, canShowStaffMode);
+  window.sgcuWorkPaintCounts?.(staffViewMode);
 
   // Shared pages such as login stay open even when their old nav container is hidden.
   if (!isNavPageVisible(getCurrentPageFromHash()) && !suppressStaffApplicationRedirect) {

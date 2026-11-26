@@ -1,4 +1,12 @@
 .account-mobile-subnav, .account-mobile-only { display: none; }
+.account-mobile-subnav [data-account-mobile-mode] > .staff-menu-count {
+  position: absolute;
+  top: 0;
+  right: max(0.2rem, calc(50% - 1.75rem));
+  min-width: 1rem;
+  height: 1rem;
+  font-size: 0.625rem;
+}
 @media (max-width: 840px) {
   .account-mobile-subnav.is-visible { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .account-mobile-subnav.is-visible:has(> button[hidden]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
